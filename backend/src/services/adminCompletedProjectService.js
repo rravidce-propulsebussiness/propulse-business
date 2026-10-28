@@ -75,13 +75,13 @@ async function list({page=1,pageSize=20}={}){
   const result=await pool.query(`
     SELECT p.id,p.title,p.project_type,p.description,p.location_text,p.completion_year,p.area_text,
       p.budget_text,p.cover_image_url,p.image_urls,p.package_name,p.video_url,p.plan_url,
-      p.is_published,p.published_at,p.created_at,u.id AS business_user_id,bp.business_name
+      p.is_published,p.published_at,p.created_at,p.video_reward_status,p.video_reward_review_note,p.video_reward_reviewed_at,u.id AS business_user_id,bp.business_name
     FROM business_profile_projects p
     JOIN business_profiles bp ON bp.id=p.business_profile_id
     JOIN users u ON u.id=bp.user_id
     ORDER BY p.updated_at DESC,p.id DESC LIMIT $1 OFFSET $2
   `,[size,(n-1)*size]);
-  const data=await Promise.all(result.rows.map(async row=>({...row,cover_image_display_url:row.cover_image_url?await imageService.displayUrl(row.cover_image_url):''})));
+  const data=await Promise.all(result.rows.map(async row=>({...row,cover_image_display_url:row.cover_image_url?await imageService.displayUrl(row.cover_image_url):'',video_display_url:row.video_url?await videoService.displayUrl(row.video_url):''})));
   return {data,pagination:{page:n,pageSize:size,total,totalPages:Math.ceil(total/size),hasNextPage:n*size<total,hasPreviousPage:n>1}};
 }
 async function save(payload,{id=null}={}){
@@ -121,6 +121,12 @@ async function save(payload,{id=null}={}){
       title=$2,project_type=$3,description=$4,location_text=$5,completion_year=$6,area_text=$7,
       budget_text=$8,cover_image_url=$9,image_urls=$10::jsonb,package_name=$11,video_url=$12,
       plan_url=$13,is_published=$14,
+      video_reward_status=CASE WHEN COALESCE(video_url,'')<>COALESCE($12,'') THEN 'pending' ELSE video_reward_status END,
+      video_reward_fingerprint=CASE WHEN COALESCE(video_url,'')<>COALESCE($12,'') THEN NULL ELSE video_reward_fingerprint END,
+      video_reward_approved_url=CASE WHEN COALESCE(video_url,'')<>COALESCE($12,'') THEN NULL ELSE video_reward_approved_url END,
+      video_reward_reviewed_by=CASE WHEN COALESCE(video_url,'')<>COALESCE($12,'') THEN NULL ELSE video_reward_reviewed_by END,
+      video_reward_reviewed_at=CASE WHEN COALESCE(video_url,'')<>COALESCE($12,'') THEN NULL ELSE video_reward_reviewed_at END,
+      video_reward_review_note=CASE WHEN COALESCE(video_url,'')<>COALESCE($12,'') THEN NULL ELSE video_reward_review_note END,
       published_at=CASE WHEN $14 THEN COALESCE(published_at,CURRENT_TIMESTAMP) ELSE NULL END,
       updated_at=CURRENT_TIMESTAMP
     WHERE id=$1 RETURNING id,is_published

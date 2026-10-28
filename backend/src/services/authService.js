@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const pool = require('../config/database');
+const {recordSignupIdentity}=require('./signupRewardAntiAbuseService');
 const { getMembershipAccess } = require('./membershipAccessService');
 const companyProofStorage = require('./companyProofStorageService');
 const securityRiskService = require('./securityRiskService');
@@ -119,7 +120,7 @@ async function validateBusinessSelections(client, services, locations) {
   return { services: normalizedServices, locations: normalizedLocations };
 }
 
-async function signup({ name, email, password, phone, businessName, businessDetails, services, locations, role = 'business', googleCredential = null }) {
+async function signup({ name, email, password, phone, businessName, businessDetails, services, locations, role = 'business', googleCredential = null, rewardDeviceToken=null, rewardIp=null }) {
   const signupRole = normalizePublicSignupRole(role);
   if (!signupRole) throw Object.assign(new Error('Only User or Lead Partner accounts can be created through public signup'), { code: 'INVALID_SIGNUP_ROLE' });
   const normalizedPhone = String(phone || '').replace(/\D/g, '');
@@ -170,6 +171,9 @@ async function signup({ name, email, password, phone, businessName, businessDeta
       validatedSelections.locations.map(x=>x.stateId),
       validatedSelections.locations.map(x=>x.cityId)
     ]);
+    if(signupRole==='business'){
+      await recordSignupIdentity(client,user.id,{deviceToken:rewardDeviceToken,ip:rewardIp});
+    }
     const profile = await getBusinessProfile(user.id, client);
     await client.query('COMMIT');
     return { user: await publicUser(user, profile), token: signToken(user) };

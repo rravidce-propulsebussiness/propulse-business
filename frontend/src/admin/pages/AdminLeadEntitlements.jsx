@@ -479,6 +479,17 @@ export default function AdminLeadEntitlements(){
 
     {error&&<div className="entitlement-alert error">{error}</div>}
     {message&&<div className="entitlement-alert success">{message}</div>}
+    {Array.isArray(data?.signupRiskFlags)&&data.signupRiskFlags.length>0&&<section className="entitlement-signup-risk">
+      <h2>Signup reward checks needing review</h2>
+      <p>Repeat browser devices or shared public IPs do not receive another automatic signup reward. Account creation remains allowed. Check legitimate shared workplaces and grant manually where appropriate.</p>
+      <div className="entitlement-signup-risk-list">
+        {data.signupRiskFlags.map(flag=><div key={flag.user_id+'-'+flag.reason}>
+          <strong>{flag.business_name||flag.name}</strong>
+          <span>{flag.reason==='shared_ip'?'Shared IP — review needed':flag.reason==='device_reused'?'Already rewarded device':'No device identity'}</span>
+          <small>{new Date(flag.created_at).toLocaleString()}</small>
+        </div>)}
+      </div>
+    </section>}
 
     <section className="entitlement-action-bar">
       <span className="entitlement-action-description">One reward workflow · registration, verification, completed projects, Basic / Premium credits and configurable expiry</span>
