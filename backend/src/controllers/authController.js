@@ -1,4 +1,5 @@
 const authService = require('../services/authService');
+const crypto = require('node:crypto');
 const emailService = require('../services/emailService');
 const { sendPasswordResetEmail } = emailService;
 const operationalMonitoringService = require('../services/operationalMonitoringService');
@@ -7,25 +8,38 @@ const supabaseAuthService = require('../services/supabaseAuthService');
 const { sendProofDescriptor } = require('../utils/proofResponse');
 
 const AUTH_COOKIE = 'propulse_auth';
+const REWARD_DEVICE_COOKIE='propulse_reward_device';
 const AUTH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
 function setAuthCookie(res, token, { remember = true } = {}) {
   const parts = [`${AUTH_COOKIE}=${encodeURIComponent(token)}`, 'HttpOnly', 'Path=/', 'SameSite=Lax'];
   if (remember) parts.push(`Max-Age=${Math.floor(AUTH_COOKIE_MAX_AGE / 1000)}`);
   if (process.env.NODE_ENV === 'production') parts.push('Secure');
-  res.setHeader('Set-Cookie', parts.join('; '));
+  res.append('Set-Cookie',parts.join('; '));
 }
 
 function clearAuthCookie(res) {
   const parts = [`${AUTH_COOKIE}=`, 'HttpOnly', 'Path=/', 'SameSite=Lax', 'Max-Age=0'];
   if (process.env.NODE_ENV === 'production') parts.push('Secure');
-  res.setHeader('Set-Cookie', parts.join('; '));
+  res.append('Set-Cookie',parts.join('; '));
 }
 
 function publicAuthResult(res, result, status = 200, { remember = true } = {}) {
   setAuthCookie(res, result.token, { remember });
   const { token, ...safeResult } = result;
   return res.status(status).json(safeResult);
+}
+
+function rewardDeviceToken(req,res){
+  const cookie=String(req.headers.cookie||'').split(';')
+    .map(part=>part.trim()).find(part=>part.startsWith(REWARD_DEVICE_COOKIE+'='));
+  const existing=cookie?.slice(REWARD_DEVICE_COOKIE.length+1)||'';
+  if(/^[a-f0-9]{64}$/i.test(existing))return existing.toLowerCase();
+  const value=crypto.randomBytes(32).toString('hex');
+  const parts=[REWARD_DEVICE_COOKIE+'='+value,'HttpOnly','Path=/','SameSite=Lax','Max-Age=31536000'];
+  if(process.env.NODE_ENV==='production')parts.push('Secure');
+  res.append('Set-Cookie',parts.join('; '));
+  return value;
 }
 
 function validatePassword(password) {
@@ -70,6 +84,7 @@ async function signup(req, res) {
 
     const result = await authService.signup({
       name, email, password, phone, businessName, businessDetails, services, locations, role, googleCredential,
+      rewardDeviceToken:rewardDeviceToken(req,res),rewardIp:req.ip||req.socket?.remoteAddress||null,
     });
     return publicAuthResult(res, result, 201);
   } catch (error) {
@@ -246,6 +261,7 @@ async function logout(req, res) {
 
 
 async function session(req, res) {
+  rewardDeviceToken(req,res);
   const header = req.headers.authorization || '';
   const cookieHeader = String(req.headers.cookie || '');
   const cookieToken = cookieHeader
