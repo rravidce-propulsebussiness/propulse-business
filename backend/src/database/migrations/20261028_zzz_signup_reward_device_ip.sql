@@ -28,4 +28,3 @@ CREATE TABLE IF NOT EXISTS signup_reward_review_flags (
  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
  PRIMARY KEY(user_id,reason)
 );
-
