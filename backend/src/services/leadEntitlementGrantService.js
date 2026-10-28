@@ -1096,7 +1096,7 @@ async function deleteGrant(grantId,adminId,client=pool){
 }
 
 async function getAdminOverview(client=pool){
-  const [registrationRules,businessCampaigns,summaryResult,grantsResult]=await Promise.all([
+  const [registrationRules,businessCampaigns,summaryResult,grantsResult,riskFlags]=await Promise.all([
     listRegistrationRules(client),
     listBusinessCampaigns(client),
     client.query(`
@@ -1138,13 +1138,21 @@ async function getAdminOverview(client=pool){
       GROUP BY g.id,u.name,u.email,bp.business_name
       ORDER BY COALESCE(g.updated_at,g.created_at) DESC,g.id DESC
       LIMIT 100
+    `),
+    client.query(`
+      SELECT f.user_id,f.reason,f.created_at,u.name,u.email,bp.business_name
+      FROM signup_reward_review_flags f
+      JOIN users u ON u.id=f.user_id
+      LEFT JOIN business_profiles bp ON bp.user_id=u.id
+      ORDER BY f.created_at DESC LIMIT 100
     `)
   ]);
   return{
     registrationRules,
     businessCampaigns,
     summary:summaryResult.rows[0]||{},
-    grants:grantsResult.rows
+    grants:grantsResult.rows,
+    signupRiskFlags:riskFlags.rows
   };
 }
 
