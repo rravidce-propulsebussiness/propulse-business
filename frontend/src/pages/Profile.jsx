@@ -20,7 +20,8 @@ const emptyLocation=()=>({stateId:'',cityId:''})
 // Keeps the bottom Save action usable even after an accordion editor is closed.
 const profileFingerprint=(form,services,locations,projects,plans)=>JSON.stringify({form,services,locations,projects,plans})
 const draftKey=()=>Math.random().toString(36).slice(2)+Date.now().toString(36)
-const emptyProject=()=>({_draftKey:draftKey(),title:'',projectType:'',description:'',locationText:'',completionYear:'',areaText:'',budgetText:'',packageName:'',coverImageUrl:'',imageUrls:[],imageDisplayUrls:[],videoUrl:'',videoDisplayUrl:'',videoPublishedAt:'',planUrl:'',planDisplayUrl:'',brochureUrl:'',brochureDisplayUrl:'',isPublished:true})
+const projectSlug=value=>String(value||'').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,100).replace(/-+$/,'')
+const emptyProject=()=>({_draftKey:draftKey(),seoSlug:'',seoTitle:'',seoDescription:'',seoKeyword:'',title:''projectType:'',description:'',locationText:'',completionYear:'',areaText:'',budgetText:'',packageName:'',coverImageUrl:'',imageUrls:[],imageDisplayUrls:[],videoUrl:'',videoDisplayUrl:'',videoPublishedAt:'',planUrl:'',planDisplayUrl:'',brochureUrl:'',brochureDisplayUrl:'',isPublished:true})
 const canonicalProjectType=value=>/interior|design/i.test(String(value||''))?'Interior Design':/estate|property|plot/i.test(String(value||''))?'Real Estate':/construction|build|villa|commercial|residential/i.test(String(value||''))?'Construction':''
 const projectIndustry=value=>value==='Interior Design'?'design':value==='Real Estate'?'property':value==='Construction'?'construction':''
 const INDUSTRY_OPTIONS=[{value:'construction',label:'Construction'},{value:'design',label:'Interior Design'},{value:'property',label:'Real Estate'}]
@@ -30,6 +31,10 @@ function mapProject(item){
   return {
     id:item.id,
     title:item.title||'',
+    seoSlug:item.seo_slug||'',
+    seoTitle:item.seo_title||'',
+    seoDescription:item.seo_description||'',
+    seoKeyword:item.seo_keyword||'',
     projectType:canonicalProjectType(item.project_type),
     description:item.description||'',
     locationText:item.location_text||'',
@@ -288,7 +293,7 @@ export default function Profile(){
     setActiveLocationIndex(current=>current===null?null:current===index?null:current>index?current-1:current)
     setError('');setMessage('Location removed from this profile. Tap Save Changes to apply.')
   }
-  function updateProject(index,field,value){setProjects(items=>items.map((item,i)=>i!==index?item:field==='projectType'?{...item,projectType:value,packageName:''}:field==='videoUrl'?{...item,videoUrl:value,videoDisplayUrl:value}:field==='planUrl'?{...item,planUrl:value,planDisplayUrl:value}:field==='brochureUrl'?{...item,brochureUrl:value,brochureDisplayUrl:value}:{...item,[field]:value}));setMessage('')}
+  function updateProject(index,field,value){setProjects(items=>items.map((item,i)=>i!==index?item:field==='title'?{...item,title:value,seoSlug:(!item.seoSlug||item.seoSlug===projectSlug(item.title))?projectSlug(value):item.seoSlug}:field==='projectType'?{...item,projectType:value,packageName:''}:field==='videoUrl'?{...item,videoUrl:value,videoDisplayUrl:value}:field==='planUrl'?{...item,planUrl:value,planDisplayUrl:value}:field==='brochureUrl'?{...item,brochureUrl:value,brochureDisplayUrl:value}:{...item,[field]:value}));setMessage('')}
   function updatePlan(index,field,value){setPlans(items=>items.map((item,i)=>i===index?field==='brochureUrl'?{...item,brochureUrl:value,brochureDisplayUrl:value}:{...item,[field]:value}:item));setMessage('')}
 
   async function uploadProjectImages(index,files){
@@ -397,7 +402,14 @@ export default function Profile(){
         }).catch(()=>{})
       }
       playSound('warning')
-      setError(err.message||'Unable to upload project video. Please retry.')
+      const reason=!navigator.onLine
+        ? 'Your internet connection is offline. Reconnect and retry the video upload.'
+        :err?.status===403
+          ? 'Video upload was blocked (403). This may be an access permission, session, CSRF or hosting firewall restriction. Refresh the page and sign in again; if it continues, check the 403 response body and Hostinger security logs.'
+          :err?.status===503
+            ? 'Video storage or login service is temporarily unavailable (503). Retry when the site is stable.'
+            :err.message||'Unable to upload project video. Please retry.'
+      setError(reason)
     }finally{
       setVideoUploads(current=>({...current,[index]:false}))
     }
@@ -735,6 +747,15 @@ export default function Profile(){
                     {plans.filter(plan=>plan.isPublished&&plan.title&&plan.industry===projectIndustry(project.projectType)).map(plan=><option value={plan.title} key={plan.id||plan.title}>{plan.title}</option>)}
                   </select>
                 </label><label className="wide">Description<textarea rows="3" value={project.description} maxLength="3000" onChange={e=>updateProject(index,'description',e.target.value)} placeholder="Scope completed, design approach, materials and outcome…"/></label><label className="wide">Cover image URL<input value={project.coverImageUrl} onChange={e=>updateProject(index,'coverImageUrl',e.target.value)} placeholder="https://… image"/></label>
+                <details className="profile-project-seo-settings">
+                  <summary>SEO &amp; Search Visibility <small>Set how this project appears in Google and AI search</small></summary>
+                  <div className="profile-project-seo-grid">
+                    <label>SEO page title <input value={project.seoTitle||''} maxLength="160" onChange={e=>updateProject(index,'seoTitle',e.target.value)} placeholder={project.title||'Modern 3BHK interiors in Hyderabad'}/><small>Search results use this title, or your project title if blank.</small></label>
+                    <label>Primary SEO keyword <input value={project.seoKeyword||''} maxLength="160" onChange={e=>updateProject(index,'seoKeyword',e.target.value)} placeholder="3BHK interior design in Uppal Hyderabad"/></label>
+                    <label className="wide">SEO URL slug <input value={project.seoSlug||''} maxLength="100" onChange={e=>updateProject(index,'seoSlug',projectSlug(e.target.value))} placeholder="3bhk-interior-design-uppal-hyderabad"/><small>Public URL: https://propulsetechnologies.online/projects/{project.seoSlug||'project-'+(project.id||'new')} · use lowercase letters, numbers and hyphens. Changing a published slug changes its URL.</small></label>
+                    <label className="wide">Meta description <textarea rows="3" value={project.seoDescription||''} maxLength="320" onChange={e=>updateProject(index,'seoDescription',e.target.value)} placeholder="Explore modern 3BHK interiors in Uppal, Hyderabad, featuring a modular kitchen, false ceilings and customized wardrobes."/><small>{(project.seoDescription||'').length}/320 characters. Aim for about 150–160 characters.</small></label>
+                  </div>
+                </details>
                 <div className="profile-project-gallery-field">
                   <label className="profile-gallery-upload">
                     <span>{imageUploads[index]?'Uploading photos…':'Add project gallery photos'}</span>
