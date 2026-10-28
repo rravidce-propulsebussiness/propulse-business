@@ -37,11 +37,59 @@ export default function NotificationBell({className=''}) {
 
   useEffect(()=>{
     let active=true;
-    const refresh=()=>authRequest('/notifications/unread-count').then(r=>{if(active)applyUnread(r?.unread)}).catch(()=>{});
+    let timer=null;
+    let pending=false;
+    let failures=0;
+    let blockedUntil=0;
+    const schedule=(delay)=>{
+      window.clearTimeout(timer);
+      if(active)timer=window.setTimeout(refresh,delay);
+    };
+    const refresh=async()=>{
+      if(!active||pending)return;
+      // Unavailable networks and hidden tabs must not hammer auth/WAF endpoints.
+      if(!navigator.onLine||document.visibilityState==='hidden'){
+        schedule(60000);
+        return;
+      }
+      if(Date.now()<blockedUntil){
+        schedule(Math.max(1000,blockedUntil-Date.now()));
+        return;
+      }
+      pending=true;
+      try{
+        const result=await authRequest('/notifications/unread-count');
+        if(!active)return;
+        applyUnread(result?.unread);
+        failures=0;
+        schedule(60000);
+      }catch(error){
+        if(!active)return;
+        failures+=1;
+        // 403 (forbidden / temporary WAF blocks) is not fixed by retrying.
+        // 401 is handled by apiRequest; never create a redirect/retry loop.
+        if(error?.status===403||error?.status===401){
+          blockedUntil=Date.now()+15*60000;
+          schedule(15*60000);
+        }else{
+          schedule(Math.min(10*60000,60000*2**Math.min(failures,4)));
+        }
+      }finally{pending=false;}
+    };
+    const onWake=()=>{
+      if(!active||!navigator.onLine||document.visibilityState==='hidden')return;
+      if(Date.now()>=blockedUntil)schedule(0);
+    };
     queueMicrotask(refresh);
-    const timer=setInterval(refresh,60000);
-    window.addEventListener('propulse-notifications-refresh',refresh);
-    return()=>{active=false;clearInterval(timer);window.removeEventListener('propulse-notifications-refresh',refresh)}
+    window.addEventListener('propulse-notifications-refresh',onWake);
+    window.addEventListener('online',onWake);
+    document.addEventListener('visibilitychange',onWake);
+    return()=>{
+      active=false;window.clearTimeout(timer);
+      window.removeEventListener('propulse-notifications-refresh',onWake);
+      window.removeEventListener('online',onWake);
+      document.removeEventListener('visibilitychange',onWake);
+    };
   },[applyUnread]);
 
   useEffect(()=>{

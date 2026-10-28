@@ -525,3 +525,14 @@
   .profile-brochure-upload,.profile-brochure-file{width:100%}
   .profile-save button{width:100%}
 }
+
+/* Per-project search metadata, separate from descriptive project content. */
+.profile-project-seo-settings{grid-column:1/-1;border:1px solid #f2d4c3;border-radius:13px;padding:13px 15px;background:#fffaf6}
+.profile-project-seo-settings>summary{cursor:pointer;font-size:14px;font-weight:850;color:#c84f20}
+.profile-project-seo-settings>summary small{display:block;margin:5px 0;color:#697b89;font-weight:500;font-size:12px}
+.profile-project-seo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+.profile-project-seo-grid label{display:grid;gap:7px;min-width:0;font-size:13px;font-weight:750;color:#273c4a}
+.profile-project-seo-grid label.wide{grid-column:1/-1}
+.profile-project-seo-grid :is(input,textarea){width:100%;box-sizing:border-box;border:1px solid #e5d2c4;border-radius:9px;padding:10px 12px;color:#1b374c;font:inherit;outline-offset:2px;background:white}
+.profile-project-seo-grid label small{font-size:12px;line-height:1.5;color:#627889;font-weight:500;overflow-wrap:anywhere}
+@media(max-width:640px){.profile-project-seo-grid{grid-template-columns:1fr}.profile-project-seo-grid label.wide{grid-column:auto}}

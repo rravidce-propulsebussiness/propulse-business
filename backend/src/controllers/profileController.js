@@ -34,7 +34,11 @@ async function updateProfile(req, res) {
     return res.json(result);
   } catch (error) {
     const map={INVALID_PROFILE_SELECTION:400,PROFILE_ACCOUNT_NOT_FOUND:404,PROFILE_NOT_FOUND:404};
-    if(error.code==='23505')return res.status(409).json({error:'Email address is already in use'});
+    if(error.code==='23505'){
+      if(error.constraint==='uq_business_profile_projects_seo_slug')
+        return res.status(409).json({error:'That project SEO URL is already used. Choose a different slug for this project.'});
+      return res.status(409).json({error:'An email address or unique value is already in use'});
+    }
     const status=map[error.code]||500;
     if(status===500)console.error('Update profile failed:', error);
     return sendError(res,status,error,'Failed to update profile',{code:error.code});

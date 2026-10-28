@@ -29,6 +29,14 @@ function cleanUrl(value,label){
   return text;
 }
 
+function cleanProjectSlug(value){
+  const text=String(value??'').trim().toLowerCase();
+  if(!text)return null;
+  if(text.length>100||!/^([a-z0-9]+)(-[a-z0-9]+)*$/.test(text)||/^project-[1-9]\d*$/.test(text)||/^sample-/.test(text))
+    throw profileError('SEO URL slug must contain lowercase letters, numbers and hyphens (maximum 100), and cannot use a reserved project URL');
+  return text;
+}
+
 function normalizeProjects(projects){
   if(projects==null)return [];
   if(!Array.isArray(projects))throw profileError('Projects must be a list');
@@ -42,6 +50,10 @@ function normalizeProjects(projects){
     return {
       id:Number.isInteger(Number(item?.id))&&Number(item.id)>0?Number(item.id):null,
       title:cleanText(item?.title,180,'Project title',{required:true}),
+      seoSlug:cleanProjectSlug(item?.seoSlug),
+      seoTitle:cleanText(item?.seoTitle,160,'SEO title'),
+      seoDescription:cleanText(item?.seoDescription,320,'SEO meta description'),
+      seoKeyword:cleanText(item?.seoKeyword,160,'Primary SEO keyword'),
       projectType,
       description:cleanText(item?.description,3000,'Project description'),
       locationText:cleanText(item?.locationText,180,'Project location'),
@@ -136,7 +148,7 @@ async function getProfile(userId, client = pool) {
     ),
     client.query(
       `SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,
-              cover_image_url,image_urls,package_name,video_url,video_published_at,plan_url,brochure_url,published_at,sort_order,is_published
+              cover_image_url,image_urls,package_name,video_url,video_published_at,plan_url,brochure_url,published_at,sort_order,is_published,seo_slug,seo_title,seo_description,seo_keyword
        FROM business_profile_projects
        WHERE business_profile_id=$1
        ORDER BY sort_order,id`, [profile.id]
@@ -245,6 +257,8 @@ async function updateProfile(userId, payload) {
   }=payload||{};
   const normalizedProjects=normalizeProjects(projects);
   const normalizedPlans=normalizePlans(plans);
+  const usedSlugs=normalizedProjects.map(item=>item.seoSlug).filter(Boolean);
+  if(new Set(usedSlugs).size!==usedSlugs.length)throw profileError('Each project needs a unique SEO URL slug.');
   // Single source of truth: users only edit their core business details.
   // Mirror them into the already-public columns when they save. Keeping the
   // columns lets existing Expert Directory and search clients work unchanged.
@@ -368,14 +382,14 @@ async function updateProfile(userId, payload) {
     if(projectsForSave.length){
       await client.query(`
         INSERT INTO business_profile_projects
-          (id,business_profile_id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,video_url,video_published_at,plan_url,brochure_url,published_at,sort_order,is_published)
-        SELECT COALESCE(x.id,nextval(pg_get_serial_sequence('business_profile_projects','id'))),$1,x.title,x.project_type,x.description,x.location_text,x.completion_year,x.area_text,x.budget_text,x.cover_image_url,x.image_urls,x.package_name,x.video_url,x.video_published_at,x.plan_url,x.brochure_url,x.published_at,x.sort_order,x.is_published
+          (id,business_profile_id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,video_url,video_published_at,plan_url,brochure_url,published_at,sort_order,is_published,seo_slug,seo_title,seo_description,seo_keyword)
+        SELECT COALESCE(x.id,nextval(pg_get_serial_sequence('business_profile_projects','id'))),$1,x.title,x.project_type,x.description,x.location_text,x.completion_year,x.area_text,x.budget_text,x.cover_image_url,x.image_urls,x.package_name,x.video_url,x.video_published_at,x.plan_url,x.brochure_url,x.published_at,x.sort_order,x.is_published,x.seo_slug,x.seo_title,x.seo_description,x.seo_keyword
         FROM jsonb_to_recordset($2::jsonb) AS x(
           id int,title text,project_type text,description text,location_text text,completion_year int,area_text text,budget_text text,
-          cover_image_url text,image_urls jsonb,package_name text,video_url text,video_published_at timestamp,plan_url text,brochure_url text,published_at timestamp,sort_order int,is_published boolean
+          cover_image_url text,image_urls jsonb,package_name text,video_url text,video_published_at timestamp,plan_url text,brochure_url text,published_at timestamp,sort_order int,is_published boolean,seo_slug text,seo_title text,seo_description text,seo_keyword text
         )
       `,[profileId,JSON.stringify(projectsForSave.map(item=>({
-        id:item.id,title:item.title,project_type:item.projectType,description:item.description,location_text:item.locationText,
+        id:item.id,title:item.title,seo_slug:item.seoSlug,seo_title:item.seoTitle,seo_description:item.seoDescription,seo_keyword:item.seoKeyword,project_type:item.projectType,description:item.description,location_text:item.locationText,
         completion_year:item.completionYear,area_text:item.areaText,budget_text:item.budgetText,cover_image_url:item.coverImageUrl,image_urls:item.imageUrls,package_name:item.packageName,
         video_url:item.videoUrl,video_published_at:item.videoPublishedAt?new Date(item.videoPublishedAt).toISOString():null,plan_url:item.planUrl,brochure_url:item.brochureUrl,published_at:new Date(item.publishedAt).toISOString(),sort_order:item.sortOrder,is_published:item.isPublished,
       })))]);
