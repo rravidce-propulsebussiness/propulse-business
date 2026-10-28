@@ -223,6 +223,10 @@ async function ensureProjectQualifiedCampaignGrants(userId,client=pool){
       SELECT p.created_at FROM business_profile_projects p
       JOIN business_profiles bp ON bp.id=p.business_profile_id
       WHERE bp.user_id=$1 AND p.is_published=TRUE AND p.completion_year IS NOT NULL
+         AND NULLIF(BTRIM(p.video_url),'') IS NOT NULL
+         AND p.video_reward_status='approved'
+         AND p.video_reward_fingerprint IS NOT NULL
+         AND p.video_reward_approved_url=p.video_url
     `,[userId])).rows
     :[];
   for(const campaign of campaigns){
@@ -689,6 +693,10 @@ async function campaignAudienceUserIds(client,campaign){
       JOIN business_profiles bp5 ON bp5.id=p.business_profile_id
       WHERE bp5.user_id=u.id AND p.is_published=TRUE
         AND p.completion_year IS NOT NULL
+        AND NULLIF(BTRIM(p.video_url),'') IS NOT NULL
+        AND p.video_reward_status='approved'
+        AND p.video_reward_fingerprint IS NOT NULL
+        AND p.video_reward_approved_url=p.video_url
         AND (${windowDays}::int=0 OR (p.created_at>=u.created_at
           AND p.created_at<=u.created_at+(${windowDays}::int * INTERVAL '1 day')))
       )>=${min}`);
@@ -714,6 +722,15 @@ async function syncBusinessCampaign(client,campaignId){
   if(!campaign)fail('Business entitlement not found','BUSINESS_CAMPAIGN_NOT_FOUND');
 
   const targetIds=await campaignAudienceUserIds(client,campaign);
+  // Existing project-award grants must retain their validity after policy
+  // changes; do not revoke credit already earned under earlier criteria.
+  if(Number(campaign.min_completed_projects||0)>0){
+    const previous=(await client.query(
+      'SELECT user_id FROM lead_entitlement_grants WHERE campaign_id=$1 AND revoked_at IS NULL',
+      [campaignId]
+    )).rows;
+    for(const row of previous)if(!targetIds.includes(Number(row.user_id)))targetIds.push(Number(row.user_id));
+  }
   const targetSet=new Set(targetIds);
   await client.query('SELECT id FROM lead_entitlement_grants WHERE campaign_id=$1 FOR UPDATE',[campaignId]);
   const existing=(await client.query(`
