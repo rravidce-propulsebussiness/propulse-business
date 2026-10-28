@@ -100,7 +100,7 @@ export default function Experts(){
             {expert.is_featured&&!expert.is_official&&<span className="featured-badge"><Icon name="star" size={12}/> Featured</span>}
           </div>
           <div className="expert-card-identity">
-            <div className="expert-avatar">{initials(expert.business_name)}</div>
+            <div className="expert-avatar">{expert.is_official?<img src="/brand/propulse-logo.png" alt=""/>:initials(expert.business_name)}</div>
             <div className="expert-card-title"><h3>{expert.business_name}</h3><p>{expert.public_headline||industriesForExpert[0]||'Professional services'}</p></div>
             <span className={`expert-membership ${expert.plan_group||'grow'}`}>{String(expert.plan_group||'member').toUpperCase()}</span>
           </div>
