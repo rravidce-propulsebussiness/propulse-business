@@ -22,3 +22,10 @@ CREATE TABLE IF NOT EXISTS signup_reward_policy (
  activated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 INSERT INTO signup_reward_policy(id) VALUES(1) ON CONFLICT(id) DO NOTHING;
+CREATE TABLE IF NOT EXISTS signup_reward_review_flags (
+ user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ reason TEXT NOT NULL CHECK(reason IN ('missing_device','device_reused','shared_ip')),
+ created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ PRIMARY KEY(user_id,reason)
+);
+
