@@ -1,12 +1,60 @@
-import { CONSTRUCTION_PACKAGE_CATALOG } from '../data/constructionPackageCatalog.js'
-
-// The public construction package catalogue remains the single source of
-// default pricing/specifications. Each business may customise its own copy.
+// The same three construction package tiers and editable material fields as
+// Business OS. Starter text is illustrative, not an endorsed contractor offer:
+// every company must review its copy, set its own rate and explicitly publish.
 export const PROFILE_PACKAGE_TIERS = [
-  {key:'standard',name:'Standard',description:'Dependable materials and practical finishes for a quality home.'},
-  {key:'premium',name:'Premium',description:'Upgraded branded materials, fittings and finish allowances.'},
-  {key:'royal',name:'Royal',description:'Higher-spec construction with premium finishes and allowances.'},
+  {key:'standard',name:'Standard',description:'Standard construction materials and essential finishes. Edit every specification to match your company.'},
+  {key:'premium',name:'Premium',description:'Enhanced materials, finishes and allowances. Confirm brands, grades and inclusions.'},
+  {key:'royal',name:'Royal',description:'High-spec construction with premium finishes. Specify your actual brands and scope.'},
 ]
+
+// Mirrors the Business OS construction package editor's default 16 categories;
+// all brand, rate and allowance fields remain blank until the professional edits them.
+const CONSTRUCTION_STARTERS=[
+  ['Architectural plans','2D floor plans, structural drawings, 3D elevation, soil test','none','included'],
+  ['Steel / TMT','As per approved structural engineer design','none','included'],
+  ['Cement','Structural and masonry grades as specified','none','included'],
+  ['Sand & aggregates','Approved quarry and applicable aggregate sizes','none','included'],
+  ['Bricks / blocks','Wall thickness and material specifications','none','included'],
+  ['Flooring tiles','Tiles for living, dining and bedrooms','sqft','allowance'],
+  ['Bathroom fittings','Sanitary ware, taps, showers and CP fittings','bathroom','allowance'],
+  ['Main door','Main entrance door, frame, hardware and finish','door','allowance'],
+  ['Internal doors','Door shutter, frame, fittings and polish','door','allowance'],
+  ['Windows','UPVC / aluminium windows including hardware','sqft','allowance'],
+  ['Kitchen & countertop','Kitchen platform, sink and backsplash','sqft','allowance'],
+  ['Electrical','Copper wiring, conduits and switches','none','included'],
+  ['Plumbing','Water supply and drainage, pipe brand and grade','none','included'],
+  ['Painting','Putty, primer and interior / exterior finish coats','none','included'],
+  ['Railings & metal works','Staircase railings, gates and grills','running_ft','allowance'],
+  ['Exclusions & warranty','Clarify exclusions, workmanship and warranty','none','included'],
+]
+const INTERIOR_STARTERS=[
+  ['Design & drawings','Layout, elevations, 3D views and revision allowance','none','included'],
+  ['Kitchen cabinetry','Carcass material, shutters and laminate','running_ft','included'],
+  ['Kitchen hardware','Hinges, channels, baskets and handle brand','none','included'],
+  ['Wardrobes','Carcass grade, shutter finish and accessories','sqft','included'],
+  ['TV unit & furniture','Dimensions, cabinet material and finish','none','included'],
+  ['False ceiling','Gypsum brand, frame and paint scope','sqft','included'],
+  ['Lighting & electrical','Point, fixture, switch and wiring specification','point','included'],
+  ['Painting & polishing','Surface preparation, brands and coats','none','included'],
+  ['Countertop','Quartz, granite or other surface and allowance','sqft','allowance'],
+  ['Delivery & installation','Transport, handling, installation and site cleaning','none','included'],
+  ['Warranty & exclusions','Workmanship, hardware warranty and scope exclusions','none','included'],
+]
+const PROPERTY_STARTERS=[
+  ['Consultation','Scope of property consultation and coordination','none','included'],
+  ['Site visit','Number of visits and locations included','none','included'],
+  ['Documentation','Document review and available services','none','included'],
+  ['Legal due diligence','Clearly identify included and excluded legal checks','none','excluded'],
+  ['Registration coordination','Clarify fee and registration support','none','included'],
+  ['Taxes & government fees','Specify charges payable directly by customer','none','excluded'],
+]
+
+export const editableStarterSpecifications=(industry='construction')=>{
+  const source=industry==='design'?INTERIOR_STARTERS:industry==='property'?PROPERTY_STARTERS:CONSTRUCTION_STARTERS
+  return source.map(([title,description,unit,pricingTreatment])=>({
+    title,description,unit,pricingTreatment,brand:'',grade:'',allowanceValue:'',
+  }))
+}
 
 export function getPreferredPackageIndustry(selectedServices=[],industries=[]){
   const names=selectedServices.map(item=>industries.find(industry=>String(industry.id)===String(item.industryId))?.name||'').join(' ').toLowerCase()
@@ -17,30 +65,26 @@ export function getPreferredPackageIndustry(selectedServices=[],industries=[]){
 }
 
 export function createDefaultProfilePackages(industry='construction'){
-  const construction=industry==='construction'
-  return PROFILE_PACKAGE_TIERS.map(tier=>{
-    const details=CONSTRUCTION_PACKAGE_CATALOG[tier.key]
-    return {
-      _draftKey:'default-'+tier.key,
-      industry,
-      title:tier.name,
-      description:construction?tier.description:'',
-      priceFrom:construction?details.rate:'',
-      priceUnit:construction?'sqft':'unspecified',
-      durationLabel:'',
-      inclusions:construction?Object.entries(details.specs).map(([name,value])=>name+': '+value).join('\n'):'',
-      brochureUrl:'',
-      brochureDisplayUrl:'',
-      // Unconfigured non-construction plans must never be published with
-      // made-up pricing or specifications.
-      isPublished:construction,
-    }
-  })
+  const unit=industry==='property'?'project':'sqft'
+  return PROFILE_PACKAGE_TIERS.map(tier=>({
+    _draftKey:'default-'+tier.key,
+    industry,
+    title:tier.name,
+    description:industry==='construction'?tier.description:'',
+    priceFrom:'', // never treat ProPulse catalogue reference prices as company prices
+    priceUnit:unit,
+    durationLabel:'',
+    inclusions:'', // source of truth is the structured, itemized specification
+    specSections:editableStarterSpecifications(industry),
+    brochureUrl:'',
+    brochureDisplayUrl:'',
+    isPublished:false, // explicit rate + professional confirmation required
+  }))
 }
 
-// Show exactly the three familiar slots. Match saved packages by tier name
-// before falling back to their saved order; this preserves previous edits,
-// documents and industry choices even when the package title was changed.
+// Keep exactly three slots. Never replace a saved business rate, brochure or
+// edited specification. Fill only missing structured rows in the editor, as
+// unsaved suggestions for the professional to review before their next save.
 export function resolveProfilePackages(savedPlans=[],industry='construction'){
   const templates=createDefaultProfilePackages(industry)
   const used=new Set()
@@ -54,12 +98,18 @@ export function resolveProfilePackages(savedPlans=[],industry='construction'){
     return savedPlans[index]
   })
   return slots.map((saved,index)=>{
-    if(saved)return {...saved,industry:saved.industry||industry}
-    const other=savedPlans.findIndex((_,i)=>!used.has(i))
-    if(other>=0){
-      used.add(other)
-      return {...savedPlans[other],industry:savedPlans[other].industry||industry}
+    if(!saved){
+      const other=savedPlans.findIndex((_,i)=>!used.has(i))
+      if(other>=0){used.add(other);saved=savedPlans[other]}
     }
-    return templates[index]
+    if(!saved)return templates[index]
+    const selectedIndustry=saved.industry||industry
+    return {
+      ...saved,
+      industry:selectedIndustry,
+      specSections:Array.isArray(saved.specSections)&&saved.specSections.length
+        ? saved.specSections
+        : editableStarterSpecifications(selectedIndustry),
+    }
   })
 }
