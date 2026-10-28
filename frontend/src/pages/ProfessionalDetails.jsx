@@ -4,6 +4,8 @@ import { Link, useParams } from 'react-router-dom'
 import { PublicHeader, PublicFooter } from '../components/PublicSiteChrome'
 import { publicRequest } from '../utils/auth'
 import {formatPublishedPackagePrice} from '../utils/packagePricing'
+import {calculateProfessionalPackageQuote} from '../utils/professionalPackageQuote'
+import {downloadProfessionalPackageQuotePdf} from '../utils/requirementQuotePdf'
 import ProfessionalCallbackRequirementForm, {emptyProfessionalCallback} from '../components/ProfessionalCallbackRequirementForm'
 import './ProfessionalDetails.css'
 
@@ -26,6 +28,9 @@ export default function ProfessionalDetails(){
   const [sending,setSending]=useState(false)
   const [sent,setSent]=useState(false)
   const [requestError,setRequestError]=useState('')
+  const [quoteAreas,setQuoteAreas]=useState({})
+  const [activeQuote,setActiveQuote]=useState(null)
+  const [quoteError,setQuoteError]=useState('')
   useEffect(()=>{
     let live=true
     publicRequest('/experts/'+encodeURIComponent(expertId),{timeoutMs:12000})
@@ -43,6 +48,30 @@ export default function ProfessionalDetails(){
   const locationNames=unique(locations.map(x=>[x.subcityName,x.cityName].filter(Boolean).join(', ')))
   const videos=projects.filter(x=>x.video_url).slice().sort((a,b)=>new Date(b.video_published_at||0)-new Date(a.video_published_at||0))
   const drawings=projects.filter(x=>x.plan_url)
+
+  function preparePublishedQuote(plan){
+    const quote=calculateProfessionalPackageQuote({
+      packageRecord:plan,
+      industry:plan.industry,
+      areaSqft:quoteAreas[plan.id],
+      professionalName:profile.business_name,
+    })
+    if(!quote){
+      setActiveQuote(null)
+      setQuoteError('Enter a valid chargeable area and ensure the package has a published per-square-foot or fixed-project rate.')
+      return
+    }
+    setQuoteError('')
+    setActiveQuote({id:plan.id,quotation:quote})
+  }
+
+  async function downloadPublishedQuote(){
+    if(!activeQuote?.quotation)return
+    try{
+      setQuoteError('')
+      await downloadProfessionalPackageQuotePdf({quotation:activeQuote.quotation})
+    }catch(error){setQuoteError(error.message||'Unable to generate package quotation PDF.')}
+  }
 
   async function sendCallback(event){
     event.preventDefault()
@@ -69,7 +98,7 @@ export default function ProfessionalDetails(){
               <div className="pr-meta">{profile.years_experience!=null&&<span>{profile.years_experience} years experience</span>}{locationNames.length>0&&<span>{locationNames.slice(0,2).join(' · ')}</span>}</div>
             </div>
           </div>
-          <div className="pr-cover-actions"><a href="#callback" className="pr-primary">Request a Callback →</a><a href="#completed-projects" className="pr-secondary">View Completed Projects</a></div>
+          <div className="pr-cover-actions"><a href="#pricing" className="pr-primary">Get Instant Package Quote →</a><a href="#callback" className="pr-secondary">Request Callback</a></div>
         </header>
 
         <nav className="pr-sticky-nav" aria-label="Professional profile sections">
@@ -108,8 +137,48 @@ export default function ProfessionalDetails(){
             </section>
 
             <section id="pricing" className="pr-panel">
-              <span className="pr-label">PRICING & PACKAGES</span><h2>Published Packages</h2>
-              {plans.length?<div className="pr-plan-grid">{plans.map(plan=><article key={plan.id} className="pr-plan"><span>{plan.industry==='construction'?'CONSTRUCTION PACKAGE':plan.industry==='design'?'INTERIOR DESIGN PACKAGE':plan.industry==='property'?'REAL ESTATE PACKAGE':'SERVICE PACKAGE'}</span><h3>{plan.title}</h3><strong>{formatPublishedPackagePrice(plan.price_from,plan.price_unit)}</strong><small>Published starting rate · confirm unit and final scope with the professional</small>{plan.duration_label&&<small>{plan.duration_label}</small>}{plan.description&&<p>{plan.description}</p>}{Array.isArray(plan.inclusions)&&plan.inclusions.length>0&&<ul>{plan.inclusions.map((item,i)=><li key={i}>{item}</li>)}</ul>}{plan.brochure_url&&<a className="pr-plan-brochure" href={safeUrl(plan.brochure_url)||'#pricing'} target="_blank" rel="noopener noreferrer">View Package Brochure (PDF) ↗</a>}<a href="#callback">Request details →</a></article>)}</div>:<div className="pr-empty">No public packages yet. Request a callback for a personalized quotation.</div>}
+              <span className="pr-label">PRICING &amp; PACKAGES</span>
+              <h2>Published Packages &amp; Instant Quotations</h2>
+              <p>Choose a professional's published package and enter the covered area to calculate an indicative quotation. Review every material, brand and inclusion before downloading the ProPulse PDF.</p>
+              {plans.length?<div className="pr-plan-grid">{plans.map(plan=>{
+                const needsArea=['sqft','sqyd'].includes(plan.price_unit)
+                const canEstimate=needsArea||plan.price_unit==='project'
+                const calculated=activeQuote?.id===plan.id?activeQuote.quotation:null
+                return <article key={plan.id} className="pr-plan">
+                  <span>{plan.industry==='construction'?'CONSTRUCTION PACKAGE':plan.industry==='design'?'INTERIOR DESIGN PACKAGE':plan.industry==='property'?'REAL ESTATE PACKAGE':'SERVICE PACKAGE'}</span>
+                  <h3>{plan.title}</h3>
+                  <strong>{formatPublishedPackagePrice(plan.price_from,plan.price_unit)}</strong>
+                  <small>Published package rate · final scope and measurements require confirmation</small>
+                  {plan.duration_label&&<small>{plan.duration_label}</small>}
+                  {plan.description&&<p>{plan.description}</p>}
+                  {Array.isArray(plan.spec_sections)&&plan.spec_sections.length>0&&<details className="pr-spec-detail"><summary>{plan.spec_sections.length} detailed material &amp; scope specifications</summary>
+                    <div className="pr-spec-list">{plan.spec_sections.map((spec,i)=><div key={i} className="pr-spec-item">
+                      <b>{spec.title}</b>
+                      {spec.description&&<span>{spec.description}</span>}
+                      {(spec.brand||spec.grade)&&<small>{[spec.brand&&'Brand: '+spec.brand,spec.grade&&'Grade / model: '+spec.grade].filter(Boolean).join(' · ')}</small>}
+                      <small>{({included:'Included',allowance:'Included allowance',extra:'Extra charge',excluded:'Excluded'})[spec.pricingTreatment]||'Included'}{spec.allowanceValue!=null?' · Allowance ₹'+Number(spec.allowanceValue).toLocaleString('en-IN')+(spec.unit&&spec.unit!=='none'?' / '+spec.unit:''):''}</small>
+                    </div>)}</div>
+                  </details>}
+                  {Array.isArray(plan.inclusions)&&plan.inclusions.length>0&&<details className="pr-spec-detail"><summary>Included works ({plan.inclusions.length})</summary><ul>{plan.inclusions.map((item,i)=><li key={i}>{item}</li>)}</ul></details>}
+                  {plan.brochure_url&&<a className="pr-plan-brochure" href={safeUrl(plan.brochure_url)||'#pricing'} target="_blank" rel="noopener noreferrer">View Package Brochure (PDF) ↗</a>}
+                  {canEstimate?<div className="pr-instant-quote">
+                    <strong>Calculate your instant quote</strong>
+                    {needsArea&&<label>Chargeable work area (sq ft)
+                      <input aria-label={'Chargeable area for '+plan.title} type="number" inputMode="decimal" min="1" max="1000000" step=".01" value={quoteAreas[plan.id]||''} placeholder="e.g. 1500" onChange={e=>{setQuoteAreas(v=>({...v,[plan.id]:e.target.value}));if(activeQuote?.id===plan.id)setActiveQuote(null);setQuoteError('')}}/>
+                    </label>}
+                    <button type="button" onClick={()=>preparePublishedQuote(plan)}>Calculate Quotation</button>
+                    {calculated&&<div className="pr-quote-preview">
+                      <small>INDICATIVE PACKAGE AMOUNT</small>
+                      <strong>{calculated.amountText}</strong>
+                      <p>{calculated.packageName} · {calculated.quantity.toLocaleString('en-IN',{maximumFractionDigits:2})} {calculated.unitLabel} × ₹{calculated.rate.toLocaleString('en-IN')}</p>
+                      <button type="button" onClick={downloadPublishedQuote}>↓ Download Detailed Quotation PDF</button>
+                      <a href="#callback">Request a confirmed commercial quote</a>
+                    </div>}
+                    {quoteError&&activeQuote?.id!==plan.id&&<small className="pr-quote-error" role="alert">{quoteError}</small>}
+                    {quoteError&&calculated&&<small className="pr-quote-error" role="alert">{quoteError}</small>}
+                  </div>:<a href="#callback">Request a measured, custom quotation →</a>}
+                </article>
+              })}</div>:<div className="pr-empty">No public packages yet. Request a callback for a personalized quotation.</div>}
             </section>
 
             <section id="media" className="pr-panel">
