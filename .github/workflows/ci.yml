@@ -62,6 +62,8 @@ jobs:
         run: npm run test:investor-faq-layout
       - name: Premium profile workspace no-duplicate regression
         run: node scripts/check-profile-workspace.mjs
+      - name: Professional package calculation regression
+        run: node scripts/check-professional-package-quote.mjs
       - name: Scroll preservation regression
         run: npm run test:scroll-preservation
       - name: Professional vs homeowner portal navigation regression
@@ -494,7 +496,8 @@ jobs:
       - frontend
       - backend
       - backend-startup
-    runs-on: ubuntu-latest
+    # Playwright 1.55 Chromium does not support ubuntu26.04 runner images.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     services:
       postgres:

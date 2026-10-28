@@ -134,3 +134,12 @@
   flex:0 0 18px;width:18px;height:18px;margin:2px 0 0;
   accent-color:#d95827;
 }
+
+
+.pq-quote-result{margin:20px auto;padding:22px;border:1px solid #f5c6a8;background:#fff8f2;border-radius:16px;max-width:720px;display:grid;gap:11px;text-align:center}
+.pq-quote-result>span{font-size:.76rem;letter-spacing:.12em;font-weight:900;color:#bc470b}
+.pq-quote-result>strong{font-size:clamp(2rem,5vw,3.2rem);color:#163953}
+.pq-quote-result>p{margin:0;color:#5e7081;line-height:1.5}
+.pq-quote-result>button{min-height:47px;border:0;background:#f97316;color:#fff;border-radius:12px;cursor:pointer;padding:12px 18px;font-weight:800;font:inherit}
+.pq-quote-result>button:hover{background:#d85c10}
+@media(max-width:620px){.pq-quote-result{padding:14px;margin:15px 0}}

@@ -789,3 +789,81 @@ export async function downloadProjectPackagePdf({project,plan=null}={}){
   const slug=String(project.id||project.title).toLowerCase().replace(/[^a-z0-9-]+/g,'-').slice(0,65)||'project';
   savePdf(pages,'propulse-'+slug+'-package-guide.pdf');
 }
+
+
+/**
+ * Public, ProPulse-branded indicative quotation for one professional's own
+ * published package. This intentionally omits private professional contacts,
+ * while displaying the verified business name and the buyer's own information.
+ */
+export async function downloadProfessionalPackageQuotePdf({quotation,customerName='',city='',phone='',email=''}={}){
+  if(!quotation||quotation.kind!=='professional-package')throw new Error('Select a published package with a measurable price before downloading a quotation.');
+  const logo=await loadLogo();
+  const pages=[];
+  const next=(title='Professional Package Quote')=>{
+    const page=createPage(logo,pages.length+1,title);
+    pages.push(page);
+    return page;
+  };
+  const first=next('Package Quotation');
+  drawHero(first,'Your package quotation',quotation.projectTitle||quotation.packageName,'INDICATIVE PROFESSIONAL QUOTATION');
+  drawMetaGrid(first,[
+    ['Reference',quotation.referenceId?'PP-'+quotation.referenceId:'Instant estimate'],
+    ['Quotation Date',shortDate(quotation.generatedAt)],
+    ['Valid Until',shortDate(quotation.validUntil)],
+    ['Professional',quotation.professionalName],
+    ['Customer',customerName||'Customer'],
+    ['Location',city||'To be confirmed'],
+  ]);
+  drawSectionHeading(first,'Project pricing','Calculated from the professional’s published package rate.');
+  drawKeyValueRows(first,[
+    ['Industry',quotation.industry==='design'?'Interior Design':quotation.industry==='construction'?'Construction':'Other'],
+    ['Selected Package',quotation.packageName],
+    ['Published Rate',money(quotation.rate)+' / '+quotation.unitLabel],
+    ['Quantity',quotation.priceUnit==='project'?'1 project':Number(quotation.quantity).toLocaleString('en-IN',{maximumFractionDigits:2})+' '+quotation.unitLabel],
+    ['Indicative Total',quotation.amountText],
+  ]);
+  const details=next('Scope and specifications');
+  drawSectionHeading(details,'Package scope','Owner-published description and inclusions.');
+  drawBullets(details,[
+    quotation.description||'The package scope and details are set by the publishing professional.',
+    ...(quotation.inclusions||[]).slice(0,12),
+  ]);
+  if(quotation.duration){
+    details.y=Math.min(1450,details.y+14);
+    drawKeyValueRows(details,[['Indicative Duration',quotation.duration]]);
+  }
+  const specifications=Array.isArray(quotation.specifications)?quotation.specifications:[];
+  const treatment={included:'Included in package',allowance:'Included allowance',extra:'Chargeable extra — not in total',excluded:'Excluded from package'};
+  const unitNames={none:'as specified',sqft:'per sq ft',running_ft:'per running ft',piece:'per piece',bathroom:'per bathroom',door:'per door',point:'per point',kg:'per kg',bag:'per bag',lumpsum:'lump sum'};
+  const rows=specifications.map(spec=>[
+    String(spec.title||'Specification'),
+    [
+      spec.description,spec.brand&&'Brand: '+spec.brand,spec.grade&&'Grade / model: '+spec.grade,
+      treatment[spec.pricingTreatment]||'Included in package',
+      spec.allowanceValue!==null&&spec.allowanceValue!==undefined&&spec.allowanceValue!==''&&'Allowance: '+money(spec.allowanceValue)+' '+(unitNames[spec.unit]||''),
+    ].filter(Boolean).join(' · ')
+  ]);
+  if(!rows.length){
+    const page=next('Package Specifications');
+    drawSectionHeading(page,'Specification detail','Confirm the complete work schedule and materials before contracting.');
+    drawBullets(page,['No itemized specification rows have been published. Ask ProPulse for written confirmation of scope, brands and excluded works.']);
+  }else{
+    for(let offset=0;offset<rows.length;offset+=7){
+      const page=next('Package Specifications');
+      drawSectionHeading(page,quotation.packageName+' specifications',offset?'Continued specification schedule.':'Published materials, finishes, inclusions and exclusions.');
+      drawSpecificationCards(page,rows.slice(offset,offset+7));
+    }
+  }
+  const terms=next('Commercial notes');
+  drawSectionHeading(terms,'Important notes','The final negotiated commercial quotation may differ.');
+  drawBullets(terms,[
+    quotation.disclaimer,
+    'Illustrative total = published package rate × stated quantity. It excludes any rows marked chargeable extra, taxes not explicitly included, and works not listed as included.',
+    'Allowances are part of the published package scope and must not be added to the total again without written agreement.',
+    'Package validity is indicative; confirm current rates, payment milestones, applicable GST and agreement terms with ProPulse before making a payment.',
+    'Professional contact information is protected. Communicate and coordinate through ProPulse.',
+  ]);
+  const slug=String(quotation.referenceId||Date.now()).replace(/[^0-9a-z-]/gi,'');
+  savePdf(pages,'propulse-professional-package-quotation-'+slug+'.pdf');
+}

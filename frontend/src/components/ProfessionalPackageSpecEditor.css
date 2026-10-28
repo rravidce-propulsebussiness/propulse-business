@@ -1,0 +1,20 @@
+.pps-spec-studio{margin-top:18px;padding:16px;border:1px solid #f6d5c2;border-radius:20px;background:linear-gradient(135deg,#fff9f5,#fff)}
+.pps-spec-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.pps-spec-head h4{margin:0 0 7px;font-size:1.1rem;color:#1d3449}
+.pps-spec-head p{margin:0;max-width:550px;color:#667788;line-height:1.5;font-size:.9rem}
+.pps-spec-buttons{display:flex;gap:8px;flex-wrap:wrap}
+.pps-spec-buttons button{border:1px solid #f0a57f;border-radius:11px;background:#fff;color:#bd4a15;padding:10px 13px;font-weight:800;cursor:pointer}
+.pps-spec-buttons button:disabled{opacity:.5;cursor:not-allowed}
+.pps-spec-empty{padding:16px;border:1px dashed #e1b7a5;border-radius:12px;color:#546879}
+.pps-spec-rows{display:grid;gap:12px;margin-top:16px}
+.pps-spec-row{border:1px solid #e9e9e9;border-radius:14px;padding:13px;background:#fff}
+.pps-spec-row-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.pps-spec-row-head strong{font-size:.94rem;color:#cc521b}
+.pps-spec-row-head button{border:0;background:#fff0eb;color:#b42318;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700}
+.pps-spec-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.pps-spec-grid label{display:grid;gap:6px;min-width:0;font-size:.82rem;font-weight:750;color:#44586b}
+.pps-spec-grid input,.pps-spec-grid select,.pps-spec-grid textarea{box-sizing:border-box;width:100%;min-width:0;background:#fff;border:1px solid #cbd5df;border-radius:10px;padding:11px;font:inherit;color:#172d42}
+.pps-spec-grid input:focus,.pps-spec-grid select:focus,.pps-spec-grid textarea:focus{outline:2px solid #ffba96;border-color:#f97316}
+.pps-spec-grid .pps-spec-description{grid-column:1/-1}
+.pps-spec-studio>small{display:block;margin-top:12px;color:#768597}
+@media(max-width:650px){.pps-spec-studio{padding:12px}.pps-spec-grid{grid-template-columns:1fr}.pps-spec-buttons button{flex:1}.pps-spec-row{padding:12px}.pps-spec-buttons{width:100%}}

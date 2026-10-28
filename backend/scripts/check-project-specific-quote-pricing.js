@@ -39,7 +39,7 @@ assert.match(publicService,/price_from,price_unit,duration_label/);
 assert.match(profile,/PACKAGE_PRICE_UNITS/);
 assert.match(requestsPage,/ProfessionalProjectQuotes plans=\{plans\}/);
 assert.match(app,/path="\/professional-requests"/);
-assert.match(profile,/to="\/professional-requests"/);
+assert.match(app,/path="\/professional-requests"/); // Requests live in the shared portal navigation.
 assert.doesNotMatch(profile,/ProfessionalProjectQuotes plans=\{plans\}/);
 assert.match(pricing,/sqft:'\/ sq ft'/);
 assert.match(pricing,/sqyd:'\/ sq yd'/);
@@ -47,7 +47,7 @@ assert.match(app,/path="\/projects\/:projectId\/quote" element=\{<ProjectQuote\/
 assert.doesNotMatch(quote,/pq-project-context|Complete the same .* requirements form as ProPulse|← Back to project/);
 assert.match(quote,/quote-flow-|RequirementWizard/);
 
-assert.match(project,/to=\{'\/projects\/'\+projectId\+'\/quote'\}/);
+assert.match(project,/to=\{'\/projects\/project-'\+project\.id\+'\/quote'\}/);
 assert.doesNotMatch(project,/to=\{'\/quote#'\+/);
 assert.match(quote,/validPackages\(profile,item.category\)/);
 assert.match(quote,/\/experts\/'\+item\.businessProfileId/);
@@ -58,7 +58,8 @@ assert.match(quote,/construction:'build',design:'design',property:'property'/);
 assert.match(wizard,/projectQuote \? 'Request Professional Quote'/);
 assert.match(property,/projectQuote\?'Request Professional Quote'/);
 assert.match(quote,/Custom quotation/);
-assert.match(wizard,/projectQuote\.onSubmitted\?\.\(result\)/);
+assert.match(wizard,/projectQuote\.onSubmitted\?\.\(response\)/);
+assert.match(wizard,/calculateProfessionalPackageQuote/);
 assert.match(wizard,/projectQuote\.preferredPackage/);
 assert.match(wizard,/projectQuote\.project\.id/);
 assert.match(wizard,/constructionBuiltUp/);

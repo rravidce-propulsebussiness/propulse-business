@@ -173,7 +173,7 @@ assert.match(popup,/\[open,closePopup\]/);
 assert.match(quoteLocationFields,/queueMicrotask\(\(\)=>\{/);
 assert.match(notificationBell,/const applyUnread=useCallback/);
 assert.match(notificationBell,/queueMicrotask\(refresh\)/);
-assert.match(notificationBell,/if\(active\)applyUnread/);
+assert.match(notificationBell,/if\(!active\)return;\s*applyUnread\(result\?\.unread\)|if\(active\)applyUnread/);
 assert.doesNotMatch(popup,/const selectedCity=useMemo/);
 
 // Unified detailed quote flow.

@@ -14,8 +14,8 @@ must('src/server.js',["/api/profile/projects/video","express.raw","video/quickti
 must('src/server.js',["/api/profile/projects/plan","application/pdf","image/webp","limit:'16mb'"]);
 if(read('src/services/publicExpertService.js').includes('bp.business_details'))throw new Error('Public expert API must not expose private business_details');
 must('src/services/profileService.js',['projects','service_plans','public_headline','public_profile_enabled']);
-must('../frontend/src/pages/Profile.jsx',['Completed Projects','Service Packages','Public profile','Upload project video','Cloudflare R2','/profile/projects/video','Packages']);
-must('../frontend/src/pages/Profile.jsx',['activeSection','selectSection','Upload plan / drawing','PDF, JPG, PNG or WebP','/profile/projects/plan']);
+must('../frontend/src/pages/Profile.jsx',['Completed Projects','Service Packages','Public expert listing','Upload project video','Cloudflare R2','/profile/projects/video','Packages']);
+must('../frontend/src/pages/Profile.jsx',['openProfileCard','toggleCard','Upload plan / drawing','PDF, JPG, PNG or WebP','/profile/projects/plan']);
 must('src/database/migrations/20261008_project_photo_gallery.sql',['image_urls','jsonb_array_length(image_urls)<=8']);
 must('src/services/projectImageService.js',['MAX_IMAGE_BYTES','image/jpeg','image/png','image/webp','saveProjectImage','managedImageInfo']);
 must('src/services/profileService.js',['imageUrls','image_urls','image_display_urls','removeManagedProjectImages']);
@@ -47,7 +47,7 @@ must('../frontend/src/pages/Profile.jsx',['uploadBrochure','ProfileBrochureField
 must('../frontend/src/pages/ProfessionalDetails.jsx',['View Package Brochure (PDF)','Specifications PDF']);
 must('../frontend/src/pages/ProjectDetail.jsx',['project.brochure||linkedPlan?.brochure_url','Download Package','downloadPackage']);
 if(read('../frontend/src/pages/Experts.jsx').includes('experts-hero'))throw new Error('Experts page hero section must remain removed');
-must('../frontend/src/admin/pages/AdminExpertDirectory.jsx',['Expert Directory','Allowed membership','Featured','Hidden']);
-must('../frontend/src/admin/pages/AdminExpertDirectory.jsx',['businessRequest=useRef(0)','searchReady=useRef(false)','requestId!==businessRequest.current','queueMicrotask']);
+must('../frontend/src/admin/pages/AdminExpertDirectory.jsx',['Expert Directory','Require active membership','Featured','Hidden']);
+must('../frontend/src/admin/pages/AdminExpertDirectory.jsx',['businessRequest=useRef(0)','searchInitialized=useRef(false)','businessRequest.current!==requestId','queueMicrotask']);
 if(/useEffect\(\(\)=>\{\s*if\(loading\)return\s*const timer/.test(read('../frontend/src/admin/pages/AdminExpertDirectory.jsx')))throw new Error('Expert Directory search effect must not drop searches typed during initial loading');
 console.log('Expert directory portfolio checks passed.');

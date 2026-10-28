@@ -248,7 +248,7 @@
   font-size:12px;font-weight:900;line-height:1.4;
 }
 .wallet-add-modal .wallet-proof-heading small{
-  color:#8393a8;font-size:11px;font-weight:650;line-height:1.45;
+  color:#8393a8;font-size:12px;font-weight:650;line-height:1.45;
 }
 .wallet-add-modal .wallet-proof-input{
   position:absolute!important;
@@ -285,12 +285,12 @@
 }
 .wallet-add-modal .wallet-proof-selected span{
   flex:1 1 120px;min-width:0;overflow-wrap:anywhere;
-  color:#246a52;font-size:11px;font-weight:750;
+  color:#246a52;font-size:12px;font-weight:750;
 }
 .wallet-add-modal .wallet-proof-selected button{
   flex:0 0 auto;border:1px solid #dfc8c3;border-radius:7px;
   padding:6px 10px;background:#fff;color:#ab4d3b;
-  font-size:11px;font-weight:850;cursor:pointer;
+  font-size:12px;font-weight:850;cursor:pointer;
 }
 .wallet-add-modal .wallet-proof-selected button:disabled{
   opacity:.55;cursor:not-allowed;
