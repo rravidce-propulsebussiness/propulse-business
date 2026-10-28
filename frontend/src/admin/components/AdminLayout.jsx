@@ -163,7 +163,7 @@ export default function AdminLayout(){
     <aside id="admin-navigation" className="admin-sidebar">
       <div className="admin-sidebar-brand-row">
         <Link className="admin-sidebar-brand" to="/admin" aria-label="Propulse Admin home" onClick={closeMobileNav}>
-          <span className="admin-sidebar-mark">P</span>
+          <img className="admin-sidebar-logo" src="/brand/propulse-logo.png" alt=""/>
           <span><b>PRO<span>PULSE</span></b><small>ADMIN CONSOLE</small></span>
         </Link>
         <button type="button" className="admin-sidebar-close" aria-label="Close navigation" onClick={closeMobileNav}>×</button>

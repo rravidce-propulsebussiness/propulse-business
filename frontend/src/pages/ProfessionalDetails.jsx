@@ -63,7 +63,7 @@ export default function ProfessionalDetails(){
       {!loading&&profile&&<>
         <header className="pr-cover">
           <div className="pr-ident">
-            <div className="pr-avatar">{initials(profile.business_name)}</div>
+            <div className="pr-avatar">{profile.is_official?<img src="/brand/propulse-logo.png" alt=""/>:initials(profile.business_name)}</div>
             <div><span className="pr-kicker">{profile.is_official?'♛ OFFICIAL PROPULSE':profile.is_verified?'VERIFIED PROFESSIONAL':'EXPERT PROFESSIONAL'}</span><h1>{profile.business_name}</h1>
               <p>{profile.public_headline||unique(services.map(x=>x.industryName)).join(' · ')||'Construction, interior and property professionals'}</p>
               <div className="pr-meta">{profile.years_experience!=null&&<span>{profile.years_experience} years experience</span>}{locationNames.length>0&&<span>{locationNames.slice(0,2).join(' · ')}</span>}</div>

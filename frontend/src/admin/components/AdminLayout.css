@@ -536,3 +536,5 @@
 .admin-topbar{border-bottom:1px solid #f0e9e1;background:rgba(255,255,255,.96)}
 .admin-topbar:has(+.admin-content .expert-v2){background:#fffcfa}
 @media(max-width:850px){.admin-sidebar{background:#fff!important}.admin-sidebar-close{display:grid}}
+
+.admin-sidebar-logo{display:block;flex:0 0 48px;width:48px;height:48px;object-fit:contain;border-radius:9px;background:#fff}
