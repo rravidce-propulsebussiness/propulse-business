@@ -363,6 +363,7 @@ async function getPublicProject(projectId){
       COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) AS published_at,
       bp.id AS business_profile_id,bp.business_name,
       EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
+      COALESCE(beds.is_official,FALSE) AS is_official,
       mem.plan_group
      FROM business_profile_projects bpp
      JOIN business_profiles bp ON bp.id=bpp.business_profile_id
