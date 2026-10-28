@@ -1,9 +1,28 @@
 const crypto=require('node:crypto');
+const net=require('node:net');
 
 function tokenHash(value,scope){
   const secret=process.env.SIGNUP_REWARD_HASH_SECRET||process.env.JWT_SECRET;
   if(!secret||secret.length<32)throw new Error('Signup reward hash secret is not configured');
   return crypto.createHmac('sha256',secret).update(scope+':'+value).digest('hex');
+}
+
+// Ignore reverse-proxy, loopback and private-network addresses; otherwise
+// a single origin gateway IP could withhold every customer's signup reward.
+function publicIp(value){
+  const v=String(value||'').trim().toLowerCase();
+  const addr=v.startsWith('::ffff:')?v.slice(7):v;
+  const family=net.isIP(addr);
+  if(!family)return null;
+  if(family===4){
+    const parts=addr.split('.').map(Number);
+    if(parts[0]===0||parts[0]===10||parts[0]===127||parts[0]>=224||
+      (parts[0]===172&&parts[1]>=16&&parts[1]<=31)||
+      (parts[0]===192&&parts[1]===168)||
+      (parts[0]===169&&parts[1]===254)||
+      (parts[0]===100&&parts[1]>=64&&parts[1]<=127))return null;
+  }else if(addr==='::1'||addr==='::'||addr.startsWith('fc')||addr.startsWith('fd')||addr.startsWith('fe80:'))return null;
+  return addr;
 }
 
 async function recordSignupIdentity(client,userId,{deviceToken,ip}={}){
@@ -12,7 +31,7 @@ async function recordSignupIdentity(client,userId,{deviceToken,ip}={}){
   const deviceHash=tokenHash(String(deviceToken).toLowerCase(),'signup-device-v1');
   // Never persist raw IP addresses. IP is a shared-network risk signal,
   // not a reliable physical device identifier.
-  const normalizedIp=String(ip||'').trim().toLowerCase().slice(0,128);
+  const normalizedIp=publicIp(ip);
   const ipHash=normalizedIp?tokenHash(normalizedIp,'signup-ip-v1'):null;
   await client.query(`
     INSERT INTO signup_reward_identities(user_id,device_hash,ip_hash)
