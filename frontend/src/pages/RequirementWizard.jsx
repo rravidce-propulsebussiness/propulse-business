@@ -620,6 +620,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
           professionalName:projectQuote.project.businessName,
           projectTitle:projectQuote.project.title,
           referenceId:result.requestId,
+          issuedAt:result.quoteIssuedAt,
         })
         const response={...result,quotation,customerName:contact.name.trim(),city:[selectedCity?.name,selectedCity?.state_name].filter(Boolean).join(', '),phone,email:contact.email.trim()}
         setSubmissionResult(response)

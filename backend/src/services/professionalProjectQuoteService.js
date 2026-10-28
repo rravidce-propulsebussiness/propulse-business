@@ -27,6 +27,18 @@ function redact(value){
     .replace(/(?:\+?\d[\d \-().]{8,}\d)/g,'[phone protected]')
     .replace(/(?:https?:\/\/|www\.)\S+/gi,'[link protected]');
 }
+function savedPackage(row,industry){
+  if(!row?.preferred_package)return null;
+  return {
+    title:row.preferred_package,industry,
+    price_from:row.package_price_from_snapshot,
+    price_unit:row.package_price_unit_snapshot,
+    description:row.package_description_snapshot||'',
+    duration_label:row.package_duration_snapshot||'',
+    inclusions:Array.isArray(row.package_inclusions_snapshot)?row.package_inclusions_snapshot:[],
+    spec_sections:Array.isArray(row.package_spec_sections_snapshot)?row.package_spec_sections_snapshot:[],
+  };
+}
 async function submit(projectId,input={}){
   const id=Number(projectId);
   if(!Number.isSafeInteger(id)||id<1)throw bad('Project not found','PROJECT_NOT_FOUND');
@@ -76,33 +88,46 @@ async function submit(projectId,input={}){
     `INSERT INTO professional_project_quote_requests
       (project_id,project_title,business_user_id,customer_name,customer_phone,customer_email,
        requirement,site_location,area_text,budget_text,preferred_package,
-       package_price_from_snapshot,package_price_unit_snapshot,package_spec_sections_snapshot)
+       package_price_from_snapshot,package_price_unit_snapshot,package_spec_sections_snapshot,
+       package_description_snapshot,package_duration_snapshot,package_inclusions_snapshot)
      SELECT $1::integer,$2::varchar(180),$3::integer,$4::varchar(160),
             $5::varchar(16),$6::varchar(255),$7::text,$8::varchar(180),
             $9::varchar(120),$10::varchar(120),$11::varchar(160),
-            $12::numeric(12,2),$13::varchar(24),$14::jsonb
+            $12::numeric(12,2),$13::varchar(24),$14::jsonb,
+            $15::text,$16::text,$17::jsonb
      WHERE NOT EXISTS(
        SELECT 1 FROM professional_project_quote_requests
        WHERE project_id=$1::integer AND customer_phone=$5::varchar(16)
        AND created_at>CURRENT_TIMESTAMP-INTERVAL '1 hour'
-     ) RETURNING id`,
+     ) RETURNING id,created_at`,
     [id,String(project.title).slice(0,180),project.owner_id,name,phone,email||null,requirement,
      siteLocation||null,area||null,budget||null,selectedPackage?.title||null,
-     selectedPackage?.price_from??null,selectedPackage?.price_unit||null,JSON.stringify(selectedPackage?.spec_sections||[])]
+     selectedPackage?.price_from??null,selectedPackage?.price_unit||null,JSON.stringify(selectedPackage?.spec_sections||[]),
+      selectedPackage?.description||null,selectedPackage?.duration_label||null,JSON.stringify(selectedPackage?.inclusions||[])]
   );
   if(!saved.rowCount){
     const prior=await pool.query(
-      `SELECT id FROM professional_project_quote_requests
+      `SELECT id,created_at,preferred_package,area_text,package_price_from_snapshot,package_price_unit_snapshot,
+              package_spec_sections_snapshot,package_description_snapshot,package_duration_snapshot,package_inclusions_snapshot
+       FROM professional_project_quote_requests
        WHERE project_id=$1 AND customer_phone=$2
          AND created_at>CURRENT_TIMESTAMP-INTERVAL '1 hour'
        ORDER BY created_at DESC,id DESC LIMIT 1`,
       [id,phone]
     );
-    const requestId=prior.rows[0]?.id||null;
-    if(!requestId)return {accepted:true,duplicate:true};
+    const previous=prior.rows[0]||null;
+    const requestId=previous?.id||null;
+    if(!requestId)return {accepted:true,duplicate:true,quotePackage:null};
     await marketplace.flagPending('quote',requestId,pincode);
     const market=await marketplace.sync('quote',requestId);
-    return {accepted:true,duplicate:true,requestId,marketplaceLeadId:market.leadId||null,marketplaceStatus:market.status,quotePackage:selectedPackage};
+    const unchanged=String(previous.preferred_package||'').trim().toLowerCase()===String(preferredPackage||'').trim().toLowerCase()
+      &&String(previous.area_text||'').trim()===String(area||'').trim();
+    return {
+      accepted:true,duplicate:true,requestId,marketplaceLeadId:market.leadId||null,marketplaceStatus:market.status,
+      quotePackage:unchanged?savedPackage(previous,industry):null,
+      quoteIssuedAt:previous.created_at,
+      quoteNotice:unchanged?'':'You already submitted a different package or area for this project within the last hour. Your earlier request remains recorded; the new selection was not saved. Please request a revised quote through ProPulse.',
+    };
   }
   const quoteId=saved.rows[0].id;
   await marketplace.flagPending('quote',quoteId,pincode);
@@ -125,7 +150,7 @@ async function submit(projectId,input={}){
       dedupeKey:'admin-professional-quote-'+quoteId,
     });
   }catch(error){console.error('Admin quotation notification failed:',error.message)}
-  return {accepted:true,requestId:quoteId,marketplaceLeadId:market.leadId||null,marketplaceStatus:market.status,quotePackage:selectedPackage};
+  return {accepted:true,requestId:quoteId,marketplaceLeadId:market.leadId||null,marketplaceStatus:market.status,quotePackage:selectedPackage,quoteIssuedAt:saved.rows[0].created_at};
 }
 async function listForProfessional(userId){
   const id=Number(userId);
