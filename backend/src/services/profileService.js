@@ -420,7 +420,7 @@ async function updateProfile(userId, payload) {
     // Do not roll back a published profile if a credit service is unavailable;
     // opening lead entitlements will also retry this idempotently.
     try{
-      await ensureProjectQualifiedCampaignGrants(userId);
+      await ensureProjectQualifiedCampaignGrants(userId,client);
     }catch(error){
       console.error('Automatic completed-project reward grant failed after profile save:',error?.message||error);
     }
