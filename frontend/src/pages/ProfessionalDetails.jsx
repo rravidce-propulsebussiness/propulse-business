@@ -31,6 +31,7 @@ export default function ProfessionalDetails(){
   const [quoteAreas,setQuoteAreas]=useState({})
   const [activeQuote,setActiveQuote]=useState(null)
   const [quoteError,setQuoteError]=useState('')
+  const [quoteErrorPlanId,setQuoteErrorPlanId]=useState(null)
   useEffect(()=>{
     let live=true
     publicRequest('/experts/'+encodeURIComponent(expertId),{timeoutMs:12000})
@@ -58,10 +59,12 @@ export default function ProfessionalDetails(){
     })
     if(!quote){
       setActiveQuote(null)
+      setQuoteErrorPlanId(plan.id)
       setQuoteError('Enter a valid chargeable area and ensure the package has a published per-square-foot or fixed-project rate.')
       return
     }
     setQuoteError('')
+    setQuoteErrorPlanId(null)
     setActiveQuote({id:plan.id,quotation:quote})
   }
 
@@ -69,8 +72,9 @@ export default function ProfessionalDetails(){
     if(!activeQuote?.quotation)return
     try{
       setQuoteError('')
+      setQuoteErrorPlanId(null)
       await downloadProfessionalPackageQuotePdf({quotation:activeQuote.quotation})
-    }catch(error){setQuoteError(error.message||'Unable to generate package quotation PDF.')}
+    }catch(error){setQuoteError(error.message||'Unable to generate package quotation PDF.');setQuoteErrorPlanId(activeQuote.id)}
   }
 
   async function sendCallback(event){
@@ -164,7 +168,7 @@ export default function ProfessionalDetails(){
                   {canEstimate?<div className="pr-instant-quote">
                     <strong>Calculate your instant quote</strong>
                     {needsArea&&<label>Chargeable work area (sq ft)
-                      <input aria-label={'Chargeable area for '+plan.title} type="number" inputMode="decimal" min="1" max="1000000" step=".01" value={quoteAreas[plan.id]||''} placeholder="e.g. 1500" onChange={e=>{setQuoteAreas(v=>({...v,[plan.id]:e.target.value}));if(activeQuote?.id===plan.id)setActiveQuote(null);setQuoteError('')}}/>
+                      <input aria-label={'Chargeable area for '+plan.title} type="number" inputMode="decimal" min="1" max="1000000" step=".01" value={quoteAreas[plan.id]||''} placeholder="e.g. 1500" onChange={e=>{setQuoteAreas(v=>({...v,[plan.id]:e.target.value}));if(activeQuote?.id===plan.id)setActiveQuote(null);setQuoteError('');setQuoteErrorPlanId(null)}}/>
                     </label>}
                     <button type="button" onClick={()=>preparePublishedQuote(plan)}>Calculate Quotation</button>
                     {calculated&&<div className="pr-quote-preview">
@@ -174,8 +178,7 @@ export default function ProfessionalDetails(){
                       <button type="button" onClick={downloadPublishedQuote}>↓ Download Detailed Quotation PDF</button>
                       <a href="#callback">Request a confirmed commercial quote</a>
                     </div>}
-                    {quoteError&&activeQuote?.id!==plan.id&&<small className="pr-quote-error" role="alert">{quoteError}</small>}
-                    {quoteError&&calculated&&<small className="pr-quote-error" role="alert">{quoteError}</small>}
+                    {quoteError&&quoteErrorPlanId===plan.id&&<small className="pr-quote-error" role="alert">{quoteError}</small>}
                   </div>:<a href="#callback">Request a measured, custom quotation →</a>}
                 </article>
               })}</div>:<div className="pr-empty">No public packages yet. Request a callback for a personalized quotation.</div>}
