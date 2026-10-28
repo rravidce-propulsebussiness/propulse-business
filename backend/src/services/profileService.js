@@ -94,6 +94,25 @@ function normalizePlans(plans){
       ? item.inclusions.map(value=>cleanText(value,160,'Plan inclusion')).filter(Boolean)
       : String(item?.inclusions||'').split('\n').map(value=>cleanText(value,160,'Plan inclusion')).filter(Boolean);
     if(inclusions.length>20)throw profileError('Each plan can contain at most 20 inclusions');
+    const rawSections=item?.specSections??[];
+    if(!Array.isArray(rawSections)||rawSections.length>24)throw profileError('A package supports at most 24 detailed specifications');
+    const validUnits=['none','sqft','running_ft','piece','bathroom','door','point','kg','bag','lumpsum'];
+    const validTreatments=['included','allowance','extra','excluded'];
+    const specSections=rawSections.map((section,index)=>{
+      const title=cleanText(section?.title,120,'Specification name',{required:true});
+      const unit=String(section?.unit||'none');
+      const pricingTreatment=String(section?.pricingTreatment||'included');
+      if(!validUnits.includes(unit)||!validTreatments.includes(pricingTreatment))throw profileError('Invalid measurement unit or inclusion type in specification '+(index+1));
+      const rawAllowance=section?.allowanceValue;
+      const allowanceValue=rawAllowance===null||rawAllowance===undefined||rawAllowance===''?null:Number(rawAllowance);
+      if(allowanceValue!==null&&(!Number.isFinite(allowanceValue)||allowanceValue<0||allowanceValue>100000000))throw profileError('Invalid allowance in specification '+(index+1));
+      return{
+        title,description:cleanText(section?.description,700,'Specification description')||'',
+        brand:cleanText(section?.brand,120,'Brand')||'',
+        grade:cleanText(section?.grade,120,'Grade')||'',
+        unit,pricingTreatment,allowanceValue,
+      };
+    });
     return {
       title:cleanText(item?.title,160,'Plan title',{required:true}),
       industry:industry||null,
@@ -103,6 +122,7 @@ function normalizePlans(plans){
       durationLabel:cleanText(item?.durationLabel,120,'Plan duration'),
       brochureUrl:cleanUrl(item?.brochureUrl,'Package brochure'),
       inclusions,
+      specSections,
       sortOrder:index,
       isPublished:item?.isPublished!==false,
     };
@@ -155,7 +175,7 @@ async function getProfile(userId, client = pool) {
        ORDER BY sort_order,id`, [profile.id]
     ),
     client.query(
-      `SELECT id,title,industry,description,price_from,price_unit,duration_label,inclusions,brochure_url,sort_order,is_published
+      `SELECT id,title,industry,description,price_from,price_unit,duration_label,inclusions,spec_sections,brochure_url,sort_order,is_published
        FROM business_profile_service_plans
        WHERE business_profile_id=$1
        ORDER BY sort_order,id`, [profile.id]
@@ -403,14 +423,14 @@ async function updateProfile(userId, payload) {
     if(normalizedPlans.length){
       await client.query(`
         INSERT INTO business_profile_service_plans
-          (business_profile_id,title,industry,description,price_from,price_unit,duration_label,inclusions,brochure_url,sort_order,is_published)
-        SELECT $1,x.title,x.industry,x.description,x.price_from,x.price_unit,x.duration_label,x.inclusions,x.brochure_url,x.sort_order,x.is_published
+          (business_profile_id,title,industry,description,price_from,price_unit,duration_label,inclusions,spec_sections,brochure_url,sort_order,is_published)
+        SELECT $1,x.title,x.industry,x.description,x.price_from,x.price_unit,x.duration_label,x.inclusions,x.spec_sections,x.brochure_url,x.sort_order,x.is_published
         FROM jsonb_to_recordset($2::jsonb) AS x(
-          title text,industry text,description text,price_from numeric,price_unit text,duration_label text,inclusions jsonb,brochure_url text,sort_order int,is_published boolean
+          title text,industry text,description text,price_from numeric,price_unit text,duration_label text,inclusions jsonb,spec_sections jsonb,brochure_url text,sort_order int,is_published boolean
         )
       `,[profileId,JSON.stringify(normalizedPlans.map(item=>({
         title:item.title,industry:item.industry,description:item.description,price_from:item.priceFrom,price_unit:item.priceUnit,duration_label:item.durationLabel,
-        inclusions:item.inclusions,brochure_url:item.brochureUrl,sort_order:item.sortOrder,is_published:item.isPublished,
+        inclusions:item.inclusions,spec_sections:item.specSections,brochure_url:item.brochureUrl,sort_order:item.sortOrder,is_published:item.isPublished,
       })))]);
     }
 
