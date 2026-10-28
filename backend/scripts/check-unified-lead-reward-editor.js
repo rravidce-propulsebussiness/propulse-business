@@ -12,6 +12,8 @@ assert.match(source,/changeRewardType\('registration'\)/,'Registration is a rewa
 assert.match(source,/changeRewardType\('campaign'\)/,'Project-based conditions share the editor');
 assert.match(source,/disabled=\{Boolean\(editingReward\)\}/,'Changing an existing reward type cannot reinterpret persisted awards');
 assert.match(source,/onClick=\{registrationReward\?saveRule:saveCampaign\}/,'Save retains the correct server-side grant machinery');
+assert.match(source,/\{error&&<div className="entitlement-modal-error" role="alert"/,'A rejected campaign must show the API reason inside the open dialog');
+assert.match(css,/entitlement-unified-modal > \.entitlement-modal-error/,'Save errors are visible directly above the modal actions');
 assert.match(source,/onClick=\{openCreateReward\}/,'Create action opens the common editor');
 assert.match(source,/onClick=\{\(\)=>openEditRule\(item\)\}/,'Existing registration rewards remain editable');
 assert.match(source,/onClick=\{\(\)=>openEditCampaign\(item\)\}/,'Existing conditional rewards remain editable');
