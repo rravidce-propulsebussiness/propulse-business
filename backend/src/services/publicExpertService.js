@@ -252,6 +252,7 @@ async function listRecentProjectVideos({page=1,pageSize=12}={}){
        bp.id AS business_profile_id,
        bp.business_name,
        EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
+       COALESCE(beds.is_official,FALSE) AS is_official,
        mem.plan_group
      FROM business_profile_projects bpp
      JOIN business_profiles bp ON bp.id=bpp.business_profile_id
@@ -319,6 +320,7 @@ async function listRecentProjects({page=1,pageSize=18}={}){
        bp.id AS business_profile_id,
        bp.business_name,
        EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
+       COALESCE(beds.is_official,FALSE) AS is_official,
        mem.plan_group
      FROM business_profile_projects bpp
      JOIN business_profiles bp ON bp.id=bpp.business_profile_id
