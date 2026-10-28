@@ -144,12 +144,12 @@ async function ensureNewBusinessGrant(userId,client=pool){
   const allowAutoRelease=bool(rule.allow_auto_release,true);
   const allowExclusive=bool(rule.allow_exclusive,false);
   if(!allowSingle&&!allowShared&&!allowAutoRelease)return null;
-  if(!await allowAutomaticSignupReward(client,userId,business.created_at))return null;
 
   const registeredAt=new Date(business.created_at);
   const windowDays=int(rule.window_days,1,365,7);
   const expiresAt=new Date(registeredAt.getTime()+windowDays*86400000);
   if(!Number.isFinite(expiresAt.getTime())||expiresAt<=new Date())return null;
+  if(!await allowAutomaticSignupReward(client,userId,business.created_at))return null;
 
   const result=await client.query(`
     INSERT INTO lead_entitlement_grants(
