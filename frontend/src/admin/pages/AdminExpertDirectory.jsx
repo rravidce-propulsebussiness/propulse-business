@@ -282,7 +282,7 @@ export default function AdminExpertDirectory(){
 
     {(settingsOpen||section==='settings')&&<section className="expert-v2-directory-settings">
       <div className="expert-v2-settings-heading"><div><h2>Directory Settings</h2><p>Control public listing eligibility, project visibility and subscription rules.</p></div>
-        <button type="button" onClick={()=>{setSettingsOpen(false);if(section==='settings')setSection('all')}} aria-label="Close directory settings">×</button></div>
+        <button type="button" onClick={()=>{setSettingsOpen(false);if(section==='settings')switchSection('all')}} aria-label="Close directory settings">×</button></div>
       <div className="expert-v2-switches">
         {[['directoryEnabled','Enable public directory','Make /experts available'],['requireActiveMembership','Require active membership','Only subscribed professionals appear'],['requireVerified','Verified companies only','Require approved company documents'],['showProjects','Show completed projects','Display project portfolio'],['showVideos','Show project videos','Display videos on public pages'],['showPlans','Show service plans','Display published packages']].map(([key,title,description])=>
           <label key={key}><input type="checkbox" checked={key==='requireVerified'?settings[key]===true:settings[key]!==false} onChange={e=>patchSetting(key,e.target.checked)}/>
