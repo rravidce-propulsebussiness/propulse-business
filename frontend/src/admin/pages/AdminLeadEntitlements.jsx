@@ -30,6 +30,7 @@ const defaultCampaign=()=>({
   name:'',
   audienceScope:'all',
   registrationScope:'any',
+  registrationEligibilityDays:0,
   verificationScope:'any',
   minCompletedProjects:0,
   projectRegistrationWindowDays:0,
@@ -305,6 +306,7 @@ export default function AdminLeadEntitlements(){
       name:item.name||'',
       audienceScope:item.audience_scope||'all',
       registrationScope:item.registration_scope||'any',
+      registrationEligibilityDays:Number(item.registration_eligibility_days||0),
       verificationScope:item.verification_scope||'any',
       minCompletedProjects:Number(item.min_completed_projects||0),
       projectRegistrationWindowDays:Number(item.project_registration_window_days||0),
@@ -347,6 +349,7 @@ export default function AdminLeadEntitlements(){
 
   async function saveCampaign(){
     if(!campaign.name.trim())return setError('Give this business entitlement a name.')
+    if(!Number.isInteger(Number(campaign.registrationEligibilityDays))||Number(campaign.registrationEligibilityDays)<0||Number(campaign.registrationEligibilityDays)>365)return setError('Registration eligibility must be between 0 and 365 days.')
     if(campaign.projectRegistrationWindowDays>0&&campaign.minCompletedProjects<=0)return setError('Select at least one completed project when using a signup deadline.')
     if(campaign.audienceScope==='specific_users'&&!campaign.userIds.length)return setError('Choose at least one business.')
     if(!hasBuyerAccess(campaign))return setError('Enable at least one buyer-access type.')
@@ -524,6 +527,7 @@ export default function AdminLeadEntitlements(){
             const targets=[audience,item.registration_scope==='new_registration'?'New registrations only':'Any registration date',verificationLabel(item.verification_scope),
               Number(item.min_completed_projects)>0?`${item.min_completed_projects}+ published completed projects`:'No project condition',
               Number(item.project_registration_window_days)>0?`Uploaded within ${item.project_registration_window_days} days of signup`:'Any upload date',
+              Number(item.registration_eligibility_days)>0?`Qualify within ${item.registration_eligibility_days} days of signup`:'No registration-age deadline',
               item.industry_name||'All industries',locationLabel(item)]
             const access=accessLabels(item)
             return <article className="entitlement-history-card campaign-history-card" key={`campaign-${item.id}`}>
@@ -632,6 +636,14 @@ export default function AdminLeadEntitlements(){
               <small>{campaign.registrationScope==='new_registration'
                 ?'Only companies that sign up after this reward is created qualify. You can also require verification and project uploads below.'
                 :'Existing and future businesses can qualify when they meet the conditions below.'}</small>
+            </label>}
+            {!registrationReward&&<label>Signup eligibility window
+              <div className="entitlement-input-suffix">
+                <input type="number" min="0" max="365" step="1" value={campaign.registrationEligibilityDays}
+                  onChange={e=>setCampaign(v=>({...v,registrationEligibilityDays:clamp(e.target.value,0,365)}))}/>
+                <span>{Number(campaign.registrationEligibilityDays)===0?'No limit':'days'}</span>
+              </div>
+              <small>Qualify within this many days after registering: 7, 8 or 30, for example. 0 means no age limit. This is separate from project uploads and free-credit validity.</small>
             </label>}
             <label>Company verification
               <select value={currentReward.verificationScope}
@@ -747,6 +759,7 @@ export default function AdminLeadEntitlements(){
               ? <small>Valid until {rule.windowDays} day(s) after registration. Claimed leads:
                   {Number(rule.claimExpiryDays)>0?' '+rule.claimExpiryDays+' day(s)':' lifetime'}.</small>
               : <small>{campaign.registrationScope==='new_registration'?'New registrations only. ':'Existing and new registrations. '}
+                {Number(campaign.registrationEligibilityDays)>0?'Must qualify within '+campaign.registrationEligibilityDays+' days of signup. ':'No signup-age cutoff. '}
                 {Number(campaign.minCompletedProjects)>0
                   ?'At least '+campaign.minCompletedProjects+' completed project(s)'+
                     (Number(campaign.projectRegistrationWindowDays)>0?' uploaded within '+campaign.projectRegistrationWindowDays+' days of signup':'')

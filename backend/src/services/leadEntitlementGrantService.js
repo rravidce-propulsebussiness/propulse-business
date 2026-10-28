@@ -185,6 +185,18 @@ function qualifiesCampaignSignup(campaign,registered){
   return Number.isFinite(signupAt)&&Number.isFinite(launchedAt)&&signupAt>=launchedAt;
 }
 
+// The account-age limit gates NEW awards, not the expiry of credits
+// already granted. Credit expiry is managed separately by valid_days.
+function qualifiesCampaignRegistrationAge(campaign,registered,now=new Date()){
+  const days=Number(campaign.registration_eligibility_days||0);
+  if(!Number.isInteger(days)||days<0||days>365)return false;
+  if(days===0)return true;
+  const signupAt=new Date(registered).getTime();
+  const checkedAt=new Date(now).getTime();
+  return Number.isFinite(signupAt)&&Number.isFinite(checkedAt)
+    &&checkedAt>=signupAt&&checkedAt<=signupAt+days*86400000;
+}
+
 async function ensureProjectQualifiedCampaignGrants(userId,client=pool){
   const campaigns=(await client.query(`
     SELECT bc.* FROM lead_entitlement_business_campaigns bc
@@ -206,6 +218,7 @@ async function ensureProjectQualifiedCampaignGrants(userId,client=pool){
     :[];
   for(const campaign of campaigns){
     if(!qualifiesCampaignSignup(campaign,business.created_at))continue;
+    if(!qualifiesCampaignRegistrationAge(campaign,business.created_at))continue;
     const days=Number(campaign.project_registration_window_days||0);
     const eligible=projects.filter(project=>qualifiesProjectSignupWindow(
       project.created_at,business.created_at,campaign.created_at,days,campaign.registration_scope)).length;
@@ -553,6 +566,7 @@ function normalizeBusinessCampaign(input){
     name:String(input?.name||'').trim().slice(0,120),
     audienceScope,
     registrationScope,
+    registrationEligibilityDays:int(input?.registrationEligibilityDays,0,365,0),
     verificationScope,
     minCompletedProjects:int(input?.minCompletedProjects,0,20,0),
     projectRegistrationWindowDays:int(input?.projectRegistrationWindowDays,0,365,0),
@@ -609,6 +623,22 @@ async function campaignAudienceUserIds(client,campaign){
   if(campaign.registration_scope==='new_registration'){
     const start=bind(campaign.created_at);
     conditions.push(`u.created_at>=${start}::timestamp`);
+  }
+  const maxRegistrationAge=Number(campaign.registration_eligibility_days||0);
+  if(maxRegistrationAge>0){
+    const days=bind(maxRegistrationAge);
+    const campaignId=bind(Number(campaign.id));
+    // Already awarded companies keep their credits while the credit validity
+    // remains active, even once they pass the initial signup-age limit.
+    conditions.push(`(
+      (u.created_at<=CURRENT_TIMESTAMP
+        AND u.created_at+(${days}::int * INTERVAL '1 day')>=CURRENT_TIMESTAMP)
+      OR EXISTS(
+        SELECT 1 FROM lead_entitlement_grants age_grant
+        WHERE age_grant.user_id=u.id AND age_grant.campaign_id=${campaignId}
+          AND age_grant.revoked_at IS NULL
+      )
+    )`);
   }
   if(campaign.verification_scope==='verified'){
     conditions.push("EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified')");
@@ -784,9 +814,9 @@ async function createBusinessCampaign(input,adminId){
         name,audience_scope,verification_scope,industry_id,state_id,city_id,
         shared_quantity,premium_quantity,valid_days,claim_expiry_days,min_completed_projects,project_registration_window_days,
         allow_single,allow_shared,allow_auto_release,allow_exclusive,
-        notes,created_by,updated_by,registration_scope
+        notes,created_by,updated_by,registration_scope,registration_eligibility_days
       )
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$17,$18,$11,$12,$13,$14,$15,$16,$16,$19)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$17,$18,$11,$12,$13,$14,$15,$16,$16,$19,$20)
       RETURNING *
     `,[
       campaign.name,campaign.audienceScope,campaign.verificationScope,
@@ -794,7 +824,7 @@ async function createBusinessCampaign(input,adminId){
       campaign.sharedQuantity,campaign.premiumQuantity,campaign.validDays,campaign.claimExpiryDays,
       campaign.allowSingle,campaign.allowShared,campaign.allowAutoRelease,campaign.allowExclusive,
       campaign.notes||null,adminId||null,campaign.minCompletedProjects,campaign.projectRegistrationWindowDays,
-      campaign.registrationScope
+      campaign.registrationScope,campaign.registrationEligibilityDays
     ])).rows[0];
     await replaceCampaignUsers(client,inserted.id,campaign.audienceScope==='specific_users'?campaign.userIds:[]);
     const sync=await syncBusinessCampaign(client,inserted.id);
@@ -819,6 +849,7 @@ async function updateBusinessCampaign(campaignId,input,adminId){
       name:input?.name??existing.name,
       audienceScope:input?.audienceScope??existing.audience_scope,
       registrationScope:input?.registrationScope??existing.registration_scope,
+      registrationEligibilityDays:input?.registrationEligibilityDays??existing.registration_eligibility_days,
       verificationScope:input?.verificationScope??existing.verification_scope,
       minCompletedProjects:input?.minCompletedProjects??existing.min_completed_projects,
       projectRegistrationWindowDays:input?.projectRegistrationWindowDays??existing.project_registration_window_days,
@@ -842,7 +873,7 @@ async function updateBusinessCampaign(campaignId,input,adminId){
       SET name=$2,audience_scope=$3,verification_scope=$4,industry_id=$5,state_id=$6,city_id=$7,
           shared_quantity=$8,premium_quantity=$9,valid_days=$10,claim_expiry_days=$11,
           allow_single=$12,allow_shared=$13,allow_auto_release=$14,allow_exclusive=$15,
-          notes=$16,updated_by=$17,min_completed_projects=$18,project_registration_window_days=$19,registration_scope=$20,updated_at=CURRENT_TIMESTAMP
+          notes=$16,updated_by=$17,min_completed_projects=$18,project_registration_window_days=$19,registration_scope=$20,registration_eligibility_days=$21,updated_at=CURRENT_TIMESTAMP
       WHERE id=$1
       RETURNING *
     `,[
@@ -851,7 +882,7 @@ async function updateBusinessCampaign(campaignId,input,adminId){
       campaign.sharedQuantity,campaign.premiumQuantity,campaign.validDays,campaign.claimExpiryDays,
       campaign.allowSingle,campaign.allowShared,campaign.allowAutoRelease,campaign.allowExclusive,
       campaign.notes||null,adminId||null,campaign.minCompletedProjects,campaign.projectRegistrationWindowDays,
-      campaign.registrationScope
+      campaign.registrationScope,campaign.registrationEligibilityDays
     ])).rows[0];
     await replaceCampaignUsers(client,id,campaign.audienceScope==='specific_users'?campaign.userIds:[]);
     const sync=await syncBusinessCampaign(client,id);
@@ -1088,5 +1119,5 @@ module.exports={
   listBusinesses,listBusinessCampaigns,createBusinessCampaign,updateBusinessCampaign,deleteBusinessCampaign,
   createManualGrant,updateGrant,deleteGrant,
   getAdminOverview,remainingFor,grantAllowsLead,
-  qualifiesProjectSignupWindow,qualifiesCampaignSignup
+  qualifiesProjectSignupWindow,qualifiesCampaignSignup,qualifiesCampaignRegistrationAge
 };
