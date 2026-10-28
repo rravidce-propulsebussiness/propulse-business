@@ -16,11 +16,12 @@ assert.match(source,/onClick=\{openCreateReward\}/,'Create action opens the comm
 assert.match(source,/onClick=\{\(\)=>openEditRule\(item\)\}/,'Existing registration rewards remain editable');
 assert.match(source,/onClick=\{\(\)=>openEditCampaign\(item\)\}/,'Existing conditional rewards remain editable');
 assert.match(source,/Registration window/);
-assert.match(source,/projectRegistrationWindowDays:clamp\(e.target.value,0,365\)/,'Project upload window stays configurable');
+assert.match(source,/registrationEligibilityDays:clamp\(e.target.value,0,365\)/,'Conditional registration window also applies to project uploads');
+assert.doesNotMatch(source,/Project upload after signup/,'The duplicate upload-window field must not return');
 assert.match(source,/windowDays:clamp\(e.target.value,1,365\)/,'Registration window stays configurable');
 assert.match(source,/validDays:clamp\(e.target.value,0,3650\)/,'Credit validity stays configurable');
 assert.match(source,/claimExpiryDays:clamp\(e.target.value,0,3650\)/,'Claim duration stays configurable');
-assert.match(source,/minCompletedProjects:count/,'Completed projects remain optional and configurable');
+assert.match(source,/minCompletedProjects:clamp\(e.target.value,0,20\)/,'Completed projects remain optional and configurable');
 assert.match(source,/sharedQuantity:clamp\(e.target.value,0,1000\)/);
 assert.match(source,/premiumQuantity:clamp\(e.target.value,0,1000\)/);
 assert.match(source,/Verified only \(admin approved\)/,'Verification is a separate eligibility condition');

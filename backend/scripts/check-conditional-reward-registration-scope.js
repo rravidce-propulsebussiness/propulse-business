@@ -52,7 +52,7 @@ assert.match(timeLimitSection,/Registration window[\s\S]*?value=\{campaign.regis
 assert.match(editor,/registrationEligibilityDays:clamp\(e.target.value,0,365\)/,
   'Conditional signup-age window remains configurable independently of registration reward');
 assert.match(editor,/registrationEligibilityDays:clamp\(e.target.value,0,365\)/,'Signup age window stays editable');
-assert.match(editor,/registrationEligibilityDays:Number\(item.registration_eligibility_days\|\|0\)/,'Editing a reward restores the saved age window');
+assert.match(editor,/registrationEligibilityDays:Number\(item.registration_eligibility_days\|\|item.project_registration_window_days\|\|0\)/,'Legacy project rewards open with the original window value');
 assert.match(editor,/Anyone \(existing and new businesses\)/);
 assert.match(editor,/New registrations only/);
 assert.match(editor,/registrationScope:item\.registration_scope/,'Existing rewards load saved registration filtering');
@@ -60,6 +60,8 @@ assert.match(editor,/registrationScope:'new_registration'/,'Project welcome pres
 assert.match(source,/if\(!qualifiesCampaignSignup\(campaign,business\.created_at\)\)continue/,'Lazy grant path enforces signup scope');
 assert.match(source,/if\(!qualifiesCampaignRegistrationAge\(campaign,business.created_at\)\)continue/,'Lazy awards enforce account-age cutoff');
 assert.match(source,/registration_eligibility_days=\$21/,'Editing a campaign saves account-age cutoff');
+assert.match(source,/projectRegistrationWindowDays:minCompletedProjects>0\?registrationEligibilityDays:0/,'Project upload and reward qualification use the same deadline');
+assert.doesNotMatch(editor,/Project upload after signup/,'Conditional editor has only one deadline input');
 assert.match(source,/u.created_at\+\(\$\{days\}::int \* INTERVAL '1 day'\)>=CURRENT_TIMESTAMP/,'Bulk award queries enforce account-age cutoff');
 assert.match(source,/age_grant.revoked_at IS NULL/,'Previously awarded credits are not revoked merely for aging');
 assert.match(source,/if\(campaign\.registration_scope==='new_registration'\)/,'Bulk grant matching enforces signup scope');
