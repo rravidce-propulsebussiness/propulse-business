@@ -25,3 +25,27 @@
 @media(max-width:1000px){.pr-layout{grid-template-columns:1fr}.pr-side{position:static;grid-row:1}.pr-cover{align-items:flex-start}.pr-cover-actions{min-width:195px}}
 @media(max-width:700px){.pr-details-main{padding:20px 14px 48px}.pr-cover{padding:27px 20px;flex-direction:column;border-radius:18px}.pr-ident{align-items:flex-start;gap:14px}.pr-avatar{width:58px;height:58px;flex-basis:58px;font-size:18px;border-radius:13px}.pr-cover h1{font-size:28px}.pr-cover-actions{width:100%}.pr-panel{padding:20px}.pr-side-card{padding:20px}.pr-project-grid,.pr-plan-grid{grid-template-columns:1fr}.pr-stats{gap:22px}.pr-sticky-nav a{padding:10px 12px}}
 @media(prefers-reduced-motion:reduce){.pr-details *{scroll-behavior:auto!important}}
+
+
+/* Customer-facing professional package estimation studio */
+.pr-spec-detail{margin:13px 0;border:1px solid #e6e9ed;border-radius:12px;padding:12px;background:#fff}
+.pr-spec-detail summary{cursor:pointer;color:#b64a1d;font-weight:800;line-height:1.45}
+.pr-spec-detail ul{margin:10px 0 0;padding-left:20px}
+.pr-spec-list{display:grid;gap:10px;margin-top:12px}
+.pr-spec-item{display:grid;gap:5px;padding:11px;background:#fff8f4;border-radius:10px}
+.pr-spec-item>b{font-size:.92rem;color:#173953}
+.pr-spec-item>span{font-size:.86rem;color:#4f6172}
+.pr-spec-item>small{font-size:.78rem;color:#637688}
+.pr-instant-quote{display:grid;gap:11px;margin-top:14px;padding:15px;background:linear-gradient(135deg,#fffaf7,#fff1e8);border:1px solid #ffd6c2;border-radius:14px}
+.pr-instant-quote>strong{color:#283d50;font-size:1rem}
+.pr-instant-quote>label{display:grid;gap:7px;color:#536373;font-weight:750;font-size:.85rem}
+.pr-instant-quote input{min-height:44px;border:1px solid #ced7dd;border-radius:10px;padding:12px;font:inherit;color:#173953;background:#fff;width:100%;box-sizing:border-box}
+.pr-instant-quote button{border:0;border-radius:10px;cursor:pointer;padding:12px 15px;background:#f97316;color:white;font:inherit;font-weight:800}
+.pr-instant-quote button:hover{background:#d65a0d}
+.pr-quote-preview{display:grid;gap:10px;padding:16px;border-radius:12px;border:1px solid #fbb98d;background:#fff}
+.pr-quote-preview>small{color:#bd4d1d;letter-spacing:.1em;font-size:.74rem;font-weight:800}
+.pr-quote-preview>strong{color:#193d57;font-size:clamp(1.65rem,4vw,2.35rem)}
+.pr-quote-preview>p{margin:0;font-size:.88rem;line-height:1.5;color:#5c6c7a}
+.pr-quote-preview>a{color:#ad4210;font-weight:800}
+.pr-quote-error{color:#b42318}
+@media(max-width:620px){.pr-instant-quote{padding:12px}.pr-quote-preview{padding:12px}}
