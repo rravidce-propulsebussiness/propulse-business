@@ -1,8 +1,12 @@
+import {useState} from 'react'
+import ProjectMediaViewer from './ProjectMediaViewer'
+
 /**
  * Shared upload widget for a package specification PDF or a project brochure.
  * The file is stored through the existing authenticated project-plan upload API.
  */
 export default function ProfileBrochureField({title,description,url,displayUrl,busy,onUpload,onRemove}){
+  const [previewOpen,setPreviewOpen]=useState(false)
   return <section className="profile-brochure-field" aria-label={title}>
     <div className="profile-brochure-head">
       <span className="profile-brochure-mark" aria-hidden="true">▤</span>
@@ -20,10 +24,11 @@ export default function ProfileBrochureField({title,description,url,displayUrl,b
       </label>
       {url&&<div className="profile-brochure-file">
         <span>PDF document ready</span>
-        {displayUrl&&<a href={displayUrl} target="_blank" rel="noopener noreferrer">Preview ↗</a>}
+        {displayUrl&&<button type="button" className="profile-brochure-preview" onClick={()=>setPreviewOpen(true)}>Preview on ProPulse</button>}
         <button type="button" onClick={onRemove} disabled={busy}>Remove</button>
       </div>}
     </div>
     {url&&<small className="profile-brochure-note">Click Save Changes below to publish this attachment.</small>}
+    {previewOpen&&<ProjectMediaViewer url={displayUrl||url} type="plan" title={title} onClose={()=>setPreviewOpen(false)}/>}
   </section>
 }
