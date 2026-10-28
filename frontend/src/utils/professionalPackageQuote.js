@@ -1,6 +1,6 @@
 // Instant *indicative* quote from a published, server-verified professional
 // package. Never silently substitute global ProPulse catalogue rates.
-export function calculateProfessionalPackageQuote({packageRecord,industry,areaSqft,professionalName='',projectTitle='',referenceId=null}={}){
+export function calculateProfessionalPackageQuote({packageRecord,industry,areaSqft,professionalName='',projectTitle='',referenceId=null,issuedAt=null}={}){
   if(!packageRecord)return null
   const rate=Number(packageRecord.price_from)
   const unit=String(packageRecord.price_unit||'unspecified')
@@ -16,6 +16,7 @@ export function calculateProfessionalPackageQuote({packageRecord,industry,areaSq
   const amount=Math.round(quantity*rate)
   if(!Number.isFinite(amount)||amount<=0||amount>1e12)return null
   const specs=Array.isArray(packageRecord.spec_sections)?packageRecord.spec_sections:[]
+  const referenceDate=issuedAt&&Number.isFinite(new Date(issuedAt).getTime())?new Date(issuedAt):new Date()
   return{
     kind:'professional-package',
     packageName:String(packageRecord.title||'Published package'),
@@ -23,8 +24,8 @@ export function calculateProfessionalPackageQuote({packageRecord,industry,areaSq
     professionalName:String(professionalName||'Selected professional'),
     projectTitle:String(projectTitle||''),
     referenceId,
-    generatedAt:new Date().toISOString(),
-    validUntil:new Date(Date.now()+30*24*60*60*1000).toISOString(),
+    generatedAt:referenceDate.toISOString(),
+    validUntil:new Date(referenceDate.getTime()+30*24*60*60*1000).toISOString(),
     rate,quantity,unitLabel,areaSqft:unit==='project'?null:area,
     amount,amountText:new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(amount),
     priceUnit:unit,
