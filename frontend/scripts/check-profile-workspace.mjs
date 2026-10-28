@@ -166,7 +166,7 @@ assert.deepEqual(defaultPackages.map(plan=>plan.title),['Standard','Premium','Ro
 check(defaultPackages.every(plan=>plan.priceUnit==='sqft'&&plan.specSections.length===16),'The three construction tiers must contain all 16 editable Business OS categories')
 check(defaultPackages.every(plan=>plan.specSections.every(item=>item.brand===''&&item.grade===''&&item.allowanceValue==='')),'Do not assume a contractor uses any particular brand, grade or allowance')
 check(defaultPackages.every(plan=>plan.inclusions===''&&plan.brochureUrl===''),'Do not duplicate the catalogue text or require a brochure')
-check(defaultPackages.every(plan=>plan.priceUnit==='sqft'&&plan.inclusions.includes('Steel:')),'Starter packages must inherit current construction specifications')
+check(defaultPackages.every(plan=>plan.specSections.some(section=>section.title==='Steel / TMT')),'Starter material categories must be present as editable specifications, not duplicate inclusion text')
 const customised={...defaultPackages[1],id:42,priceFrom:1950,description:'Our updated package',brochureUrl:'https://example.com/package.pdf'}
 const merged=resolveProfilePackages([customised],'construction')
 check(merged.length===3&&merged[1].priceFrom===1950&&merged[1].id===42&&merged[1].brochureUrl===customised.brochureUrl,'Saved price, description and brochure must survive tier reconciliation')
