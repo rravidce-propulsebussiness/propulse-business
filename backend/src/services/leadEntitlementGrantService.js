@@ -560,16 +560,20 @@ function normalizeBusinessCampaign(input){
   const verificationScope=['any','verified','unverified'].includes(String(input?.verificationScope||'').toLowerCase())
     ?String(input.verificationScope).toLowerCase()
     :'any';
+  const registrationEligibilityDays=int(input?.registrationEligibilityDays,0,365,0);
+  const minCompletedProjects=int(input?.minCompletedProjects,0,20,0);
   const userIds=[...new Set((Array.isArray(input?.userIds)?input.userIds:[])
     .map(value=>int(value,1,2147483647,0)).filter(Boolean))].slice(0,5000);
   const normalized={
     name:String(input?.name||'').trim().slice(0,120),
     audienceScope,
     registrationScope,
-    registrationEligibilityDays:int(input?.registrationEligibilityDays,0,365,0),
+    registrationEligibilityDays,
     verificationScope,
-    minCompletedProjects:int(input?.minCompletedProjects,0,20,0),
-    projectRegistrationWindowDays:int(input?.projectRegistrationWindowDays,0,365,0),
+    minCompletedProjects,
+    // Keep the legacy DB field synchronized without exposing two deadlines.
+    // Project uploads and all other conditions share the same signup window.
+    projectRegistrationWindowDays:minCompletedProjects>0?registrationEligibilityDays:0,
     userIds,
     industryId:int(input?.industryId,1,2147483647,0)||null,
     stateId:int(input?.stateId,1,2147483647,0)||null,
@@ -585,7 +589,6 @@ function normalizeBusinessCampaign(input){
     notes:String(input?.notes||'').trim().slice(0,1000)
   };
   if(!normalized.name)fail('Give this business entitlement a name','INVALID_BUSINESS_CAMPAIGN');
-  if(normalized.projectRegistrationWindowDays>0&&!normalized.minCompletedProjects)fail('A signup upload window requires at least one completed project','INVALID_BUSINESS_CAMPAIGN');
   if(normalized.audienceScope==='specific_users'&&!normalized.userIds.length)fail('Choose at least one business','INVALID_BUSINESS_CAMPAIGN');
   if(normalized.sharedQuantity<=0&&normalized.premiumQuantity<=0)fail('Configure at least one Basic or Premium entitlement','INVALID_ENTITLEMENT_SETTINGS');
   if(!normalized.allowSingle&&!normalized.allowShared&&!normalized.allowAutoRelease)fail('Enable at least one buyer-access type','INVALID_ENTITLEMENT_ACCESS');
@@ -852,7 +855,6 @@ async function updateBusinessCampaign(campaignId,input,adminId){
       registrationEligibilityDays:input?.registrationEligibilityDays??existing.registration_eligibility_days,
       verificationScope:input?.verificationScope??existing.verification_scope,
       minCompletedProjects:input?.minCompletedProjects??existing.min_completed_projects,
-      projectRegistrationWindowDays:input?.projectRegistrationWindowDays??existing.project_registration_window_days,
       userIds:input?.userIds??selected,
       industryId:input?.industryId===undefined?existing.industry_id:input.industryId,
       stateId:input?.stateId===undefined?existing.state_id:input.stateId,
