@@ -14,7 +14,7 @@ const emptyCallback=emptyProfessionalCallback
 export default function ProjectDetail(){
   const {projectId}=useParams()
   const archived=/^sample-[a-z0-9-]+$/.test(projectId||'')
-  const realId=/^project-([1-9]\d*)$/.exec(projectId||'')?.[1]||''
+  const realId=/^project-([1-9]\d*)$/.exec(projectId||'')?.[1]||(/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(projectId||'')?projectId:'')
   const [project,setProject]=useState(null)
   const [loading,setLoading]=useState(Boolean(realId))
   const [error,setError]=useState('')
@@ -83,10 +83,38 @@ export default function ProjectDetail(){
 
   useEffect(()=>{
     if(!project)return undefined
-    const original=document.title
-    document.title=project.title+' | Completed Projects | ProPulse'
-    return()=>{document.title=original}
-  },[project?.title])
+    const title=(project.seoTitle||project.title)+' | ProPulse'
+    const description=(project.seoDescription||project.description||'Explore this completed construction or interior design project on ProPulse.').slice(0,320)
+    const canonical='https://propulsetechnologies.online/projects/'+(project.seoSlug||'project-'+project.id)
+    const named=(name,content)=>{
+      let meta=document.head.querySelector('meta[name="'+name+'"]')
+      if(!meta){meta=document.createElement('meta');meta.name=name;document.head.append(meta)}
+      meta.content=content
+    }
+    const property=(name,content)=>{
+      let meta=document.head.querySelector('meta[property="'+name+'"]')
+      if(!meta){meta=document.createElement('meta');meta.setAttribute('property',name);document.head.append(meta)}
+      meta.content=content
+    }
+    document.title=title
+    named('description',description)
+    named('robots','index,follow,max-image-preview:large')
+    named('googlebot','index,follow,max-image-preview:large')
+    named('twitter:title',title)
+    named('twitter:description',description)
+    property('og:title',title)
+    property('og:description',description)
+    property('og:url',canonical)
+    property('og:type','article')
+    let link=document.head.querySelector('link[rel="canonical"]')
+    if(!link){link=document.createElement('link');link.rel='canonical';document.head.append(link)}
+    link.href=canonical
+    let jsonLd=document.head.querySelector('script[data-propulse-project-seo]')
+    if(!jsonLd){jsonLd=document.createElement('script');jsonLd.type='application/ld+json';jsonLd.dataset.propulseProjectSeo='';document.head.append(jsonLd)}
+    jsonLd.textContent=JSON.stringify({'@context':'https://schema.org','@type':'CreativeWork',name:project.seoTitle||project.title,description,url:canonical,keywords:project.seoKeyword||undefined,
+      contentLocation:project.location?{'@type':'Place',name:project.location}:undefined})
+    return()=>{document.head.querySelector('script[data-propulse-project-seo]')?.remove()}
+  },[project])
 
   useEffect(()=>{
     if(!callbackOpen)return undefined
@@ -227,7 +255,7 @@ export default function ProjectDetail(){
                   <span className="pjd-cta-copy"><strong>{callbackSuccess?'Callback Requested':'Request a Callback'}</strong><small>ProPulse coordinates your enquiry</small></span>
                   <span className="pjd-cta-arrow" aria-hidden="true">↗</span>
                 </button>
-                <Link className="pjd-action-button pjd-main-cta" to={'/projects/'+projectId+'/quote'}>
+                <Link className="pjd-action-button pjd-main-cta" to={'/projects/project-'+project.id+'/quote'}>
                   <span className="pjd-cta-symbol" aria-hidden="true">✧</span>
                   <span className="pjd-cta-copy"><strong>Get Quote</strong><small>Submit requirements to this professional</small></span>
                   <span className="pjd-cta-arrow" aria-hidden="true">↗</span>
@@ -241,7 +269,7 @@ export default function ProjectDetail(){
           <div className="pjd-mobile-actions" aria-label="Quick project actions">
             <button type="button" onClick={downloadPackage} disabled={packageDownloading}><Icon name="file" size={17}/><span>{packageDownloading?'Preparing…':'Package'}</span></button>
             <button type="button" onClick={()=>setCallbackOpen(true)}><span aria-hidden="true">☎</span><span>Callback</span></button>
-            <Link to={'/projects/'+projectId+'/quote'}>Get Quote <Icon name="arrow" size={14}/></Link>
+            <Link to={'/projects/project-'+project.id+'/quote'}>Get Quote <Icon name="arrow" size={14}/></Link>
           </div>
         </>}
       </div>
