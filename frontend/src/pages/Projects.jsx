@@ -47,6 +47,10 @@ export function normalizeProject(project, index) {
     category,
     type: clean(project.project_type) || categoryLabel(category),
     title: clean(project.title) || 'Professional Project',
+    seoSlug: clean(project.seo_slug),
+    seoTitle: clean(project.seo_title),
+    seoDescription: clean(project.seo_description),
+    seoKeyword: clean(project.seo_keyword),
     description: clean(project.description),
     location: clean(project.location_text),
     area: clean(project.area_text),
@@ -94,7 +98,7 @@ export function Icon({ name, size = 18 }) {
 }
 
 export function projectPath(project){
-  return '/projects/project-'+project.id
+  return '/projects/'+(project.seoSlug||'project-'+project.id)
 }
 
 export default function Projects() {
