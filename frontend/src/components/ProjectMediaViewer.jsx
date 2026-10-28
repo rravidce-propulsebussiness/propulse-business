@@ -15,6 +15,7 @@ export function projectMediaPreview(raw, type='video'){
   }catch{return {kind:'unsupported'}}
   const host=url.hostname.toLowerCase().replace(/^www\./,'')
   const pathname=url.pathname
+  const directMediaAllowed=url.origin===window.location.origin||host.endsWith('.r2.cloudflarestorage.com')
   if(type==='video'){
     let id=''
     if(host==='youtu.be')id=pathname.split('/')[1]||''
@@ -29,12 +30,12 @@ export function projectMediaPreview(raw, type='video'){
     if(host==='player.vimeo.com'&&pathname.startsWith('/video/'))vimeoId=pathname.split('/')[2]||''
     if(/^\d+$/.test(vimeoId))
       return {kind:'embed',provider:'Vimeo',src:'https://player.vimeo.com/video/'+vimeoId}
-    if(/\.(mp4|webm|mov)(?:$)/i.test(pathname)||pathname.startsWith('/uploads/business-projects/'))
+    if(directMediaAllowed&&(/\.(mp4|webm|mov)(?:$)/i.test(pathname)||pathname.startsWith('/uploads/business-projects/')))
       return {kind:'video',src:url.href}
     return {kind:'unsupported'}
   }
-  if(/\.(jpg|jpeg|png|webp)$/i.test(pathname))return {kind:'image',src:url.href}
-  if(/\.pdf$/i.test(pathname))return {kind:'pdf',src:url.href}
+  if(directMediaAllowed&&/\.(jpg|jpeg|png|webp)$/i.test(pathname))return {kind:'image',src:url.href}
+  if(directMediaAllowed&&/\.pdf$/i.test(pathname))return {kind:'pdf',src:url.href}
   if(host==='drive.google.com'){
     const match=pathname.match(/^\/file\/d\/([a-zA-Z0-9_-]+)(?:\/|$)/)
     const id=match?.[1]||(pathname==='/open'?url.searchParams.get('id'):'')
