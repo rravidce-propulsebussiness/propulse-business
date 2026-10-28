@@ -189,7 +189,7 @@ export default function AdminExpertDirectory(){
         <div className="expert-v2-list">
           {visible.map(item=><button type="button" className={'expert-v2-person'+(selected?.id===item.id?' selected':'')} key={item.id}
             onClick={()=>{setSelectedId(item.id);setProfileTab('projects')}} aria-pressed={selected?.id===item.id}>
-            <span className="expert-v2-avatar">{initials(item.business_name||item.name)}</span>
+            <span className="expert-v2-avatar">{item.is_official?<img src="/brand/propulse-logo.png" alt=""/>:initials(item.business_name||item.name)}</span>
             <span className="expert-v2-person-copy">
               <strong>{item.business_name||item.name}</strong>
               <small>⌖ {item.city_names||'Locations not set'}</small>
@@ -212,7 +212,7 @@ export default function AdminExpertDirectory(){
       <section className="expert-v2-detail-panel" aria-label="Selected professional profile">
         {!selected?<div className="expert-v2-empty">Select a professional to view its project portfolio and directory controls.</div>:<>
           <div className="expert-v2-profile-header">
-            <span className="expert-v2-profile-avatar">{initials(selected.business_name||selected.name)}</span>
+            <span className="expert-v2-profile-avatar">{selected.is_official?<img src="/brand/propulse-logo.png" alt=""/>:initials(selected.business_name||selected.name)}</span>
             <div className="expert-v2-profile-title">
               <h2>{selected.business_name||selected.name}</h2>
               <div className="expert-v2-badge-line">{selected.is_official&&<Badge type="official">♛ Official ProPulse</Badge>}
