@@ -105,7 +105,7 @@ export default function AdminCompletedProjects({businessUserId,filter='all'}){
                 <button type="button" className="approve" disabled={busy!==null||item.video_reward_status==='approved'}
                   onClick={()=>review(item,'approve')}>{busy===item.id?'Reviewing…':'✓ Approve video'}</button>
                 <button type="button" className="reject" disabled={busy!==null}
-                  onClick={()=>review(item,'reject')}>Reject</button>
+                  onClick={()=>review(item,'reject')}>Reject video</button>
               </div>
             </div>}
           </div>
