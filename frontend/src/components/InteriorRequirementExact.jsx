@@ -100,7 +100,7 @@ function Chips({ question, value, onChange }) {
 }
 
 export default function InteriorRequirementExact(props) {
-  const { embedded = false, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion, projectQuote = null, marketplaceConsent=false, setMarketplaceConsent=()=>{} } = props
+  const { embedded = false, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion, projectQuote = null, marketplaceConsent=false, setMarketplaceConsent=()=>{}, quoteAreaSqft='', setQuoteAreaSqft=()=>{} } = props
   const fileRef = useRef(null)
   const previewUrlsRef = useRef(new Set())
   const [referenceFiles, setReferenceFiles] = useState([])
@@ -379,6 +379,11 @@ export default function InteriorRequirementExact(props) {
                   </button>
                 })}
               </div>
+              {projectQuote&&selectedProfessionalPlan&&['sqft','sqyd'].includes(selectedProfessionalPlan.price_unit)&&<label className="irx-preference-field" style={{display:'grid',gap:8,marginTop:16}}>
+                <b>Chargeable interior work area (sq ft) — required for instant quotation</b>
+                <input aria-label="Chargeable interior work area in square feet" type="number" inputMode="decimal" required min="1" max="1000000" step=".01" value={quoteAreaSqft} onChange={event=>setQuoteAreaSqft(event.target.value)} placeholder="e.g. 1200" style={{width:'100%',minHeight:48,padding:12,border:'1px solid #d7dce2',borderRadius:12}}/>
+                <small>Enter the area covered by this package, not necessarily the full flat area. ProPulse calculates an indicative amount based on the professional's published rate.</small>
+              </label>}
               <small className="irx-package-note">{projectQuote ? 'Published rates come directly from this professional’s profile. Final project pricing depends on measurements, materials, selections and site conditions.' : 'Package rates are brochure references only. Final interior price depends on measurements, selected work, design, materials and site conditions.'}</small>
               {projectQuote&&selectedProfessionalPlan?.brochure_url&&<a className="irx-project-brochure" href={selectedProfessionalPlan.brochure_url} target="_blank" rel="noopener noreferrer">Download selected package specifications (PDF) ↗</a>}
             </div>
