@@ -5,7 +5,15 @@ import './AdminLayout.css'
 import NotificationBell from '../../components/NotificationBell'
 
 const navigation=[
-  {type:'link',to:'/admin',label:'Overview',icon:'⌂',end:true},
+  {type:'link',to:'/admin',label:'Dashboard',icon:'⌂',end:true},
+  {type:'group',key:'expert-directory',label:'Expert Directory',icon:'▦',children:[
+    {to:'/admin/expert-directory',label:'All Professionals',end:true},
+    {to:'/admin/expert-directory?view=featured',label:'Featured Professionals'},
+    {to:'/admin/expert-directory?view=pending',label:'Video Approvals'},
+    {to:'/admin/expert-directory?view=verified',label:'Verification Requests'},
+    {to:'/admin/expert-directory?view=badges',label:'Manage Badges'},
+    {to:'/admin/expert-directory?view=settings',label:'Directory Settings'}
+  ]},
   {type:'group',key:'leads',label:'Leads',icon:'◈',children:[
     {to:'/admin/leads',label:'Manage Leads',end:true},
     {to:'/admin/professional-enquiries',label:'Professional Enquiries'},
@@ -30,7 +38,6 @@ const navigation=[
   ]},
   {type:'group',key:'memberships',label:'Memberships',icon:'★',children:[
     {to:'/admin/memberships',label:'GROW & SCALE',aliases:['/admin/membership-plans','/admin/service-pricing']},
-    {to:'/admin/expert-directory',label:'Expert Directory'},
     {to:'/admin/coupons',label:'Coupons'},
     {to:'/admin/offers',label:'Offers & Announcements'}
   ]},
@@ -62,7 +69,14 @@ const navigation=[
 
 function routeMatches(item,pathname){
   const paths=[item.to,...(item.aliases||[])]
-  return paths.some(path=>pathname===path||(!item.end&&pathname.startsWith(path+'/')))
+  return paths.some(path=>{
+    const [base,search]=path.split('?')
+    const [current,currentSearch]=pathname.split('?')
+    if(current!==base && (item.end||!current.startsWith(base+'/')))return false
+    if(search)return current===base && currentSearch===search
+    if(base==='/admin/expert-directory'&&current===base)return !currentSearch
+    return true
+  })
 }
 
 function findCurrent(pathname){
@@ -80,7 +94,7 @@ export default function AdminLayout(){
   const navigate=useNavigate()
   const location=useLocation()
   const user=getUser()
-  const current=useMemo(()=>findCurrent(location.pathname),[location.pathname])
+  const current=useMemo(()=>findCurrent(location.pathname+location.search),[location.pathname,location.search])
   const [openGroup,setOpenGroup]=useState(current.group?.key||null)
   const [mobileNavOpen,setMobileNavOpen]=useState(false)
   const [systemStatus,setSystemStatus]=useState('checking')
@@ -94,7 +108,7 @@ export default function AdminLayout(){
       setMobileNavOpen(false)
     })
     return()=>{active=false}
-  },[current.group,location.pathname])
+  },[current.group,location.pathname,location.search])
 
   useEffect(()=>{
     let active=true
