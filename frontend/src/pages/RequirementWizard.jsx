@@ -7,6 +7,7 @@ import RealEstateRequirementExact from '../components/RealEstateRequirementExact
 import QuoteLocationFields from '../components/QuoteLocationFields'
 import { createDetailedQuotationPdfDataUrl, downloadConstructionBrochurePdf, downloadInteriorBrochurePdf, downloadRequirementQuotePdf } from '../utils/requirementQuotePdf'
 import { calculateRequirementQuotation } from '../utils/customerQuotation'
+import { calculateProfessionalPackageQuote } from '../utils/professionalPackageQuote'
 import { getInteriorPackage } from '../data/interiorPackageCatalog'
 import './RequirementWizard.css'
 
@@ -214,6 +215,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
   const [cities, setCities] = useState([])
   const [contactData, setContactData] = useState({})
   const [answers, setAnswers] = useState({})
+  const [quoteAreaSqft, setQuoteAreaSqft] = useState('')
   const [cityId, setCityId] = useState('')
   const [locationStateId, setLocationStateId] = useState('')
   const [pinLookup, setPinLookup] = useState({ status: '', message: '' })
@@ -591,6 +593,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
           'Quotation industry: ' + (flowKey === 'build' ? 'Construction' : flowKey === 'design' ? 'Interior Design' : 'Real Estate'),
           ...(sitePincode && sitePincode !== '—' ? ['Site PIN code: ' + sitePincode] : []),
           ...(constructionBuiltUp && !questions.some(question => question.questionKey === 'built_up_area') ? ['Planned built-up area: ' + constructionBuiltUp] : []),
+          ...(flowKey==='design'&&Number(quoteAreaSqft)>0?['Interior chargeable area: '+quoteAreaSqft+' sq ft']:[]),
           ...detailRows,
         ].join('\n').slice(0, 3000)
         const result = await publicRequest('/experts/projects/' + encodeURIComponent(projectQuote.project.id) + '/quote-request', {
@@ -601,7 +604,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
             email: contact.email.trim(),
             requirement,
             siteLocation: [selectedCity?.name, selectedCity?.state_name].filter(Boolean).join(', '),
-            area: (constructionBuiltUp || (areaQuestion ? fieldLabel(areaQuestion, answers) : '')).slice(0,120),
+            area: (constructionBuiltUp || (flowKey==='design'&&Number(quoteAreaSqft)>0?quoteAreaSqft+' sq ft':'') || (areaQuestion ? fieldLabel(areaQuestion, answers) : '')).slice(0,120),
             budget: budgetQuestion ? fieldLabel(budgetQuestion, answers).slice(0,120) : '',
             preferredPackage: projectQuote.preferredPackage,
             pincode: locationQuestion ? String(answers[locationQuestion.questionKey]||'') : '',
@@ -610,9 +613,18 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
             website,
           }),
         })
-        setSubmissionResult(result)
+        const quotation=calculateProfessionalPackageQuote({
+          packageRecord:result.quotePackage,
+          industry:flowKey==='build'?'construction':flowKey==='design'?'design':'property',
+          areaSqft:flowKey==='build'?answers.built_up_area:quoteAreaSqft,
+          professionalName:projectQuote.project.businessName,
+          projectTitle:projectQuote.project.title,
+          referenceId:result.requestId,
+        })
+        const response={...result,quotation,customerName:contact.name.trim(),city:[selectedCity?.name,selectedCity?.state_name].filter(Boolean).join(', '),phone,email:contact.email.trim()}
+        setSubmissionResult(response)
         setState({ loading: false, saving: false, error: '', success: true })
-        projectQuote.onSubmitted?.(result)
+        projectQuote.onSubmitted?.(response)
         onCompletionChangeRef.current?.(true)
         window.scrollTo({ top: 0, behavior: 'smooth' })
         return
@@ -781,6 +793,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
       completion={completion}
       projectQuote={projectQuote}
       marketplaceConsent={marketplaceConsent} setMarketplaceConsent={setMarketplaceConsent}
+      quoteAreaSqft={quoteAreaSqft} setQuoteAreaSqft={setQuoteAreaSqft}
     />
   }
 
