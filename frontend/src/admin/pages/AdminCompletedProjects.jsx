@@ -30,6 +30,8 @@ export default function AdminCompletedProjects({ businesses=[] }) {
   const [uploading,setUploading]=useState(false)
   const [photoPreview,setPhotoPreview]=useState('')
   const [loading,setLoading]=useState(true)
+  const [reviewing,setReviewing]=useState(null)
+  const [reviewNote,setReviewNote]=useState('')
   const [error,setError]=useState('')
   const [notice,setNotice]=useState('')
 
@@ -95,6 +97,23 @@ export default function AdminCompletedProjects({ businesses=[] }) {
       setNotice('Real project photos uploaded. Save the project to publish them.')
     } catch(err) {setError(err.message||'Photo upload failed.')}
     finally {setUploading(false)}
+  }
+
+  async function reviewVideo(item,decision) {
+    const note=reviewNote.trim()
+    if(decision==='reject'&&!note){setError('Give a reason before rejecting the video.');return}
+    setError('')
+    setNotice('')
+    try{
+      setReviewing(item.id)
+      await authRequest('/admin/expert-directory/projects/'+item.id+'/review-video',{
+        method:'POST',body:JSON.stringify({decision,note})
+      })
+      await load(pagination.page||1)
+      setReviewNote('')
+      setNotice(decision==='approve'?'Video approved. Eligible lead rewards can now be issued.':'Video rejected. No project reward will be issued for it.')
+    }catch(err){setError(err.message||'Unable to review project video.')}
+    finally{setReviewing(null)}
   }
 
   async function submit(event) {
@@ -197,7 +216,24 @@ export default function AdminCompletedProjects({ businesses=[] }) {
               <small>{item.budget_text||'Budget not entered'} · {item.completion_year||'Draft'}</small>
               <span className={item.is_published?'published':'draft'}>{item.is_published?'Published':'Draft'}</span>
             </div>
-            <button type="button" onClick={()=>edit(item)} disabled={busy}>Edit</button>
+            <div className="project-admin-review-actions">
+              {item.video_url&&<div className="project-admin-video-review">
+                <strong>Video review: {item.video_reward_status||'pending'}</strong>
+                {item.video_display_url&&<video controls playsInline preload="none" src={item.video_display_url} aria-label={item.title+' submitted video'}/>}
+                {item.video_reward_review_note&&<small>Review note: {item.video_reward_review_note}</small>}
+                <label>Reason or review note
+                  <input value={reviewing===item.id?reviewNote:reviewNote} maxLength={1000}
+                    onChange={event=>setReviewNote(event.target.value)}
+                    placeholder="Required when rejecting"/>
+                </label>
+                <div className="project-admin-review-buttons">
+                  <button type="button" disabled={Boolean(reviewing)||busy||item.video_reward_status==='approved'} onClick={()=>reviewVideo(item,'approve')}>Approve video</button>
+                  <button type="button" disabled={Boolean(reviewing)||busy} onClick={()=>reviewVideo(item,'reject')}>Reject video</button>
+                </div>
+              </div>}
+              {!item.video_url&&<small>No video uploaded · not eligible for project reward</small>}
+              <button type="button" onClick={()=>edit(item)} disabled={busy||Boolean(reviewing)}>Edit</button>
+            </div>
           </article>)}
         <div className="completed-project-list-pages">
           <button type="button" disabled={loading||pagination.page<=1} onClick={()=>load(pagination.page-1)}>Previous</button>
