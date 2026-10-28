@@ -108,7 +108,7 @@ export default function ProjectQuote(){
         {pdfError&&<p role="alert">{pdfError}</p>}
       </div>}
       {submitted.quoteNotice&&<p role="status" className="pq-price-disclaimer">{submitted.quoteNotice}</p>}
-      {submitted.requestId&&<strong className="pq-request-id">Reference #{submitted.requestId}</strong>
+      {submitted.requestId&&<strong className="pq-request-id">Reference #{submitted.requestId}</strong>}
       {submitted.marketplaceStatus==='review_required'?<p role="status">Your enquiry reached the selected professional. Marketplace listing is awaiting admin review.</p>:submitted.marketplaceLeadId?<p role="status">Also registered in the ProPulse professional marketplace for matching experts.</p>:null}
       <div className="pq-success-actions"><Link to={'/projects/'+projectId}>Back to project</Link><Link to="/projects">View other projects</Link></div>
     </section>:<>
