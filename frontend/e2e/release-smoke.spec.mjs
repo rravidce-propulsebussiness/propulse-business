@@ -549,7 +549,13 @@ test('professional interior quote reuses the exact interiors wizard with no cust
   await page.locator('.irx-summary-card button[type=submit]').click()
   await expect(page.getByRole('heading',{name:'Your package quotation is ready'})).toBeVisible()
   await expect(page.locator('.pq-quote-result')).toContainText('₹19,20,000')
-  await expect(page.getByRole('button',{name:'↓ Download Detailed Quotation PDF'})).toBeVisible()
+  const downloadButton=page.getByRole('button',{name:'↓ Download Detailed Quotation PDF'})
+  await expect(downloadButton).toBeVisible()
+  const downloadPromise=page.waitForEvent('download',{timeout:15000})
+  await downloadButton.click()
+  const download=await downloadPromise
+  expect(download.suggestedFilename()).toBe('propulse-professional-package-quotation-83.pdf')
+  await expect(page.locator('.pq-quote-result [role="alert"]')).toHaveCount(0)
   await expect(page.getByText('Reference #83')).toBeVisible()
   expect(submitted).toMatchObject({
     name:'Example Customer',phone:'9876543210',
