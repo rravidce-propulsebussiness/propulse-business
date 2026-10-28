@@ -1,4 +1,5 @@
 const pool = require('../config/database');
+const {ensureProjectQualifiedCampaignGrants}=require('./leadEntitlementGrantService');
 const expertDirectoryService = require('./expertDirectoryService');
 const projectVideoService = require('./projectVideoService');
 const projectPlanService = require('./projectPlanService');
@@ -291,7 +292,7 @@ async function updateProfile(userId, payload) {
 
     const profileId = profile.rows[0].id;
     const existingProjects=(await client.query(
-      'SELECT id,video_url,video_published_at,plan_url,brochure_url,image_urls,published_at FROM business_profile_projects WHERE business_profile_id=$1',
+      'SELECT id,created_at,video_url,video_published_at,plan_url,brochure_url,image_urls,published_at FROM business_profile_projects WHERE business_profile_id=$1',
       [profileId]
     )).rows;
     const existingById=new Map(existingProjects.map(item=>[Number(item.id),item]));
@@ -335,7 +336,10 @@ async function updateProfile(userId, payload) {
       if(item.brochureUrl)validateOwnedBrochure(item.brochureUrl,'Project brochure');
       const previous=item.id?existingById.get(item.id):null;
       const publishedAt=previous?.published_at||new Date();
-      return {...item,videoPublishedAt,publishedAt};
+      // Editing a project must never reset its first-upload timestamp.
+      // The completed-project signup reward uses this immutable creation date.
+      const createdAt=previous?.created_at||new Date();
+      return {...item,videoPublishedAt,publishedAt,createdAt};
     });
     const isManagedVideo=url=>{try{return Boolean(projectVideoService.managedVideoInfo(userId,url))}catch{return false}};
     const isManagedPlan=url=>{try{return Boolean(projectPlanService.managedPlanInfo(userId,url))}catch{return false}};
@@ -382,14 +386,14 @@ async function updateProfile(userId, payload) {
     if(projectsForSave.length){
       await client.query(`
         INSERT INTO business_profile_projects
-          (id,business_profile_id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,video_url,video_published_at,plan_url,brochure_url,published_at,sort_order,is_published,seo_slug,seo_title,seo_description,seo_keyword)
-        SELECT COALESCE(x.id,nextval(pg_get_serial_sequence('business_profile_projects','id'))),$1,x.title,x.project_type,x.description,x.location_text,x.completion_year,x.area_text,x.budget_text,x.cover_image_url,x.image_urls,x.package_name,x.video_url,x.video_published_at,x.plan_url,x.brochure_url,x.published_at,x.sort_order,x.is_published,x.seo_slug,x.seo_title,x.seo_description,x.seo_keyword
+          (id,business_profile_id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,video_url,video_published_at,plan_url,brochure_url,published_at,sort_order,is_published,seo_slug,seo_title,seo_description,seo_keyword,created_at)
+        SELECT COALESCE(x.id,nextval(pg_get_serial_sequence('business_profile_projects','id'))),$1,x.title,x.project_type,x.description,x.location_text,x.completion_year,x.area_text,x.budget_text,x.cover_image_url,x.image_urls,x.package_name,x.video_url,x.video_published_at,x.plan_url,x.brochure_url,x.published_at,x.sort_order,x.is_published,x.seo_slug,x.seo_title,x.seo_description,x.seo_keyword,x.created_at
         FROM jsonb_to_recordset($2::jsonb) AS x(
           id int,title text,project_type text,description text,location_text text,completion_year int,area_text text,budget_text text,
-          cover_image_url text,image_urls jsonb,package_name text,video_url text,video_published_at timestamp,plan_url text,brochure_url text,published_at timestamp,sort_order int,is_published boolean,seo_slug text,seo_title text,seo_description text,seo_keyword text
+          cover_image_url text,image_urls jsonb,package_name text,video_url text,video_published_at timestamp,plan_url text,brochure_url text,published_at timestamp,sort_order int,is_published boolean,seo_slug text,seo_title text,seo_description text,seo_keyword text,created_at timestamp
         )
       `,[profileId,JSON.stringify(projectsForSave.map(item=>({
-        id:item.id,title:item.title,seo_slug:item.seoSlug,seo_title:item.seoTitle,seo_description:item.seoDescription,seo_keyword:item.seoKeyword,project_type:item.projectType,description:item.description,location_text:item.locationText,
+        id:item.id,title:item.title,seo_slug:item.seoSlug,seo_title:item.seoTitle,seo_description:item.seoDescription,seo_keyword:item.seoKeyword,created_at:new Date(item.createdAt).toISOString(),project_type:item.projectType,description:item.description,location_text:item.locationText,
         completion_year:item.completionYear,area_text:item.areaText,budget_text:item.budgetText,cover_image_url:item.coverImageUrl,image_urls:item.imageUrls,package_name:item.packageName,
         video_url:item.videoUrl,video_published_at:item.videoPublishedAt?new Date(item.videoPublishedAt).toISOString():null,plan_url:item.planUrl,brochure_url:item.brochureUrl,published_at:new Date(item.publishedAt).toISOString(),sort_order:item.sortOrder,is_published:item.isPublished,
       })))]);
@@ -412,6 +416,14 @@ async function updateProfile(userId, payload) {
 
     const result = await getProfile(userId, client);
     await client.query('COMMIT');
+    // Issue qualifying completed-project rewards when Save succeeds.
+    // Do not roll back a published profile if a credit service is unavailable;
+    // opening lead entitlements will also retry this idempotently.
+    try{
+      await ensureProjectQualifiedCampaignGrants(userId);
+    }catch(error){
+      console.error('Automatic completed-project reward grant failed after profile save:',error?.message||error);
+    }
     projectVideoService.removeManagedProjectVideos(userId,removedManagedUrls)
       .catch(error=>console.error('Remove unused project video failed:',error?.message||error));
     projectImageService.removeManagedProjectImages(userId,removedManagedImageUrls)
