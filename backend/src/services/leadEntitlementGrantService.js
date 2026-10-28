@@ -1,4 +1,5 @@
 const pool=require('../config/database');
+const {allowAutomaticSignupReward}=require('./signupRewardAntiAbuseService');
 
 function fail(message,code){throw Object.assign(new Error(message),{code});}
 const number=(value,fallback=0)=>Number.isFinite(Number(value))?Number(value):fallback;
@@ -143,6 +144,7 @@ async function ensureNewBusinessGrant(userId,client=pool){
   const allowAutoRelease=bool(rule.allow_auto_release,true);
   const allowExclusive=bool(rule.allow_exclusive,false);
   if(!allowSingle&&!allowShared&&!allowAutoRelease)return null;
+  if(!await allowAutomaticSignupReward(client,userId,business.created_at))return null;
 
   const registeredAt=new Date(business.created_at);
   const windowDays=int(rule.window_days,1,365,7);
