@@ -238,6 +238,7 @@ async function listRecentProjectVideos({page=1,pageSize=12}={}){
     `SELECT
        bpp.id AS project_id,
        bpp.title,
+       bpp.seo_slug,bpp.seo_title,bpp.seo_description,bpp.seo_keyword,
        bpp.project_type,
        bpp.description,
        bpp.location_text,
@@ -300,6 +301,7 @@ async function listRecentProjects({page=1,pageSize=18}={}){
     `SELECT
        bpp.id AS project_id,
        bpp.title,
+       bpp.seo_slug,bpp.seo_title,bpp.seo_description,bpp.seo_keyword,
        bpp.project_type,
        bpp.description,
        bpp.location_text,
@@ -340,15 +342,17 @@ async function listRecentProjects({page=1,pageSize=18}={}){
 }
 
 async function getPublicProject(projectId){
-  const id=Number(projectId);
-  if(!Number.isSafeInteger(id)||id<=0)return null;
+  const value=String(projectId||'').trim();
+  const id=/^[1-9]\d*$/.test(value)?Number(value):null;
+  const slug=!id&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)&&value.length<=100?value:null;
+  if(!slug&&(!Number.isSafeInteger(id)||id<=0))return null;
   const settings=await expertDirectoryService.getSettings();
   if(!settings.directoryEnabled||!settings.showProjects)return null;
-  const params=[id];
-  const conditions=['bpp.id=$1','bpp.is_published=TRUE','bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)'];
+  const params=[slug||id];
+  const conditions=[slug?'bpp.seo_slug=$1':'bpp.id=$1','bpp.is_published=TRUE','bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)'];
   addEligibilityConditions(settings,params,conditions);
   const result=await pool.query(
-    `SELECT bpp.id AS project_id,bpp.title,bpp.project_type,bpp.description,
+    `SELECT bpp.id AS project_id,bpp.title,bpp.seo_slug,bpp.seo_title,bpp.seo_description,bpp.seo_keyword,bpp.project_type,bpp.description,
       bpp.location_text,bpp.completion_year,bpp.area_text,bpp.budget_text,
       bpp.cover_image_url,bpp.image_urls,bpp.package_name,bpp.brochure_url,
       ${settings.showVideos?'bpp.video_url':'NULL::text AS video_url'},
