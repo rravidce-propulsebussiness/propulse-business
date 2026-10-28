@@ -58,6 +58,7 @@ export function normalizeProject(project, index) {
     completionYear: clean(project.completion_year),
     businessName: clean(project.business_name),
     verified: project.is_verified === true,
+    official: project.is_official === true,
     image: publicMediaUrl(project.cover_image_url),
     images:Array.isArray(project.image_urls)?project.image_urls.map(publicMediaUrl).filter(Boolean):[],
     document: publicMediaUrl(project.plan_url),
@@ -197,7 +198,7 @@ export default function Projects() {
                 {projectPhotos(project).length?<img src={projectPhotos(project)[0]} loading={index<3?'eager':'lazy'} alt={project.title}/>:<div className="pj-image-placeholder"><Icon name="layers" size={30}/>Project photo not provided</div>}
                 {projectPhotos(project).length>1&&<span className="pj-card-photo-count">{projectPhotos(project).length} Photos</span>}
                 {project.video&&<span className="pj-card-video-badge">Video Available</span>}
-                {project.verified&&<span className="pj-card-verified">Verified professional</span>}
+                {project.official?<span className="pj-card-verified pj-card-official">♛ Official ProPulse</span>:project.verified&&<span className="pj-card-verified">Verified professional</span>}
                 <span className="pj-category-badge">{'COMPLETED · '+categoryLabel(project.category).toUpperCase()}</span>
               </div>
               <div className="pj-project-copy">
