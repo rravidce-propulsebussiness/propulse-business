@@ -761,6 +761,10 @@ export default function AdminLeadEntitlements(){
               :'Save to award current eligible recipients. Future signups are checked automatically. For a completed-project reward, businesses can qualify after uploading and approval; each qualifying business is awarded only once.'}
           </div>
         </div>
+        {error&&<div className="entitlement-modal-error" role="alert" aria-live="assertive">
+          <strong>Unable to save reward</strong>
+          <span>{error}</span>
+        </div>}
         <div className="entitlement-modal-actions">
           {editingReward&&<button className="danger" type="button"
             onClick={()=>registrationReward?deleteRule(editingRule):deleteCampaign(editingCampaign)}

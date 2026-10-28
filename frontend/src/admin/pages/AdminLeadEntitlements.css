@@ -1463,3 +1463,18 @@
     transition:none;
   }
 }
+
+/* Keep validation feedback visible even while the scrollable editor is open. */
+.admin-lead-entitlements .entitlement-unified-modal > .entitlement-modal-error{
+  flex:0 0 auto;display:grid;gap:3px;max-height:120px;overflow:auto;
+  margin:0 17px 0;padding:12px 15px;border:1px solid #efb4a2;
+  border-radius:11px;background:#fff3ed;color:#a3361e;
+  font-size:13px;line-height:1.45;overflow-wrap:anywhere;
+}
+.admin-lead-entitlements .entitlement-modal-error strong{font-size:13px;font-weight:900}
+.admin-lead-entitlements .entitlement-modal-error span{font-size:13px;font-weight:650}
+@media(max-width:600px){
+  .admin-lead-entitlements .entitlement-unified-modal > .entitlement-modal-error{
+    margin:0 10px;padding:10px 12px;
+  }
+}
