@@ -3,7 +3,8 @@ import {useEffect,useRef,useState} from 'react'
 import {Link,Navigate,useParams} from 'react-router-dom'
 import {publicRequest} from '../utils/auth'
 import {PublicHeader,PublicFooter} from '../components/PublicSiteChrome'
-import {normalizeProject,projectPhotos,categoryLabel,playableProjectVideo,Icon} from './Projects'
+import {normalizeProject,projectPhotos,categoryLabel,Icon} from './Projects'
+import ProjectMediaViewer,{ProjectMediaContent,projectMediaPreview} from '../components/ProjectMediaViewer'
 import './Projects.css'
 import ProfessionalCallbackRequirementForm, {emptyProfessionalCallback} from '../components/ProfessionalCallbackRequirementForm'
 import './ProjectDetail.css'
@@ -19,6 +20,7 @@ export default function ProjectDetail(){
   const [error,setError]=useState('')
   const [photoIndex,setPhotoIndex]=useState(0)
   const [showVideo,setShowVideo]=useState(false)
+  const [mediaPreview,setMediaPreview]=useState(null)
   const [linkedPlan,setLinkedPlan]=useState(null)
   const [contactData,setContactData]=useState({})
   const [callbackOpen,setCallbackOpen]=useState(false)
@@ -98,6 +100,7 @@ export default function ProjectDetail(){
 
   const photos=project?projectPhotos(project):[]
   const activePhoto=photos[photoIndex]||photos[0]||''
+  const videoPreview=projectMediaPreview(project?.video,'video')
   const phone=contactData.phone||contactData.phone_number||contactData.mobile||''
   const email=contactData.email||contactData.support_email||''
 
@@ -173,8 +176,8 @@ export default function ProjectDetail(){
           <div className="pjd-main-grid">
             <section className="pjd-gallery-block" aria-label="Completed project photos">
               <div className="pjd-main-image">
-                {showVideo&&project.video&&playableProjectVideo(project.video)
-                  ?<video key={project.video} poster={activePhoto||undefined} src={project.video} controls playsInline preload="metadata" className="pjd-feature-media"/>
+                {showVideo&&project.video
+                  ?<ProjectMediaContent key={project.video} preview={videoPreview} title={project.title+' project video'} className="pjd-feature-media"/>
                   :activePhoto?<img className="pjd-feature-media" src={activePhoto} alt={project.title+' completed work photo '+(photoIndex+1)}/>
                   :<div className="pjd-no-photo"><Icon name="layers" size={34}/><strong>Photos not published yet</strong><span>This professional has not added project images.</span></div>}
                 {activePhoto&&!showVideo&&<div className="pjd-image-caption">
@@ -189,9 +192,7 @@ export default function ProjectDetail(){
               </div>
               {(photos.length>1||project.video)&&<div className="pjd-thumbnails" aria-label="Choose project photo or video">
                 {photos.map((url,index)=><button key={url+index} type="button" className={!showVideo&&photoIndex===index?'active':''} onClick={()=>{setPhotoIndex(index);setShowVideo(false)}} aria-label={'View image '+(index+1)} aria-pressed={!showVideo&&photoIndex===index}><img src={url} alt=""/></button>)}
-                {project.video&&(playableProjectVideo(project.video)
-                  ?<button type="button" className={'pjd-video-thumb'+(showVideo?' active':'')} aria-pressed={showVideo} onClick={()=>setShowVideo(true)}>▶ Video</button>
-                  :<a className="pjd-video-thumb" href={project.video} target="_blank" rel="noopener noreferrer">▶ Video ↗</a>)}
+                {project.video&&<button type="button" className={'pjd-video-thumb'+(showVideo?' active':'')} aria-pressed={showVideo} onClick={()=>setShowVideo(true)}>▶ Video</button>}
               </div>}
               <div className="pjd-gallery-caption">
                 <span aria-hidden="true">▣</span> Images and project details are supplied by the publishing professional.
@@ -211,6 +212,11 @@ export default function ProjectDetail(){
               {project.cost&&<div className="pjd-price"><small>REPORTED PROJECT COST / BUDGET</small><strong>{project.cost}</strong></div>}
               <div className="pjd-action-intro"><span>INTERESTED IN A PROJECT LIKE THIS?</span><strong>Take the next step.</strong><small>Choose one of the three options below.</small></div>
               <div className="pjd-action-stack" aria-label="Project next steps">
+                {project.document&&<button type="button" className="pjd-action-button pjd-download" onClick={()=>setMediaPreview({url:project.document,type:'plan',title:project.title+' plan / drawing'})}>
+                  <span className="pjd-cta-symbol"><Icon name="file" size={20}/></span>
+                  <span className="pjd-cta-copy"><strong>View Plan / Drawing</strong><small>Preview here without leaving ProPulse</small></span>
+                  <span className="pjd-cta-arrow" aria-hidden="true">▣</span>
+                </button>}
                 <button type="button" className="pjd-action-button pjd-download" disabled={packageDownloading} onClick={downloadPackage}>
                   <span className="pjd-cta-symbol"><Icon name="file" size={20}/></span>
                   <span className="pjd-cta-copy"><strong>{packageDownloading?'Preparing PDF…':'Download Package'}</strong><small>{project.brochure||linkedPlan?.brochure_url?'Professional specifications · PDF':'Published project guide · PDF'}</small></span>
@@ -241,6 +247,7 @@ export default function ProjectDetail(){
       </div>
     </section>
     <PublicFooter phone={phone} email={email}/>
+    {mediaPreview&&<ProjectMediaViewer url={mediaPreview.url} type={mediaPreview.type} title={mediaPreview.title} onClose={()=>setMediaPreview(null)}/>}
     {project&&callbackOpen&&<div className="pjd-dialog-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeCallback()}}>
       <section ref={dialogRef} tabIndex={-1} className="pjd-dialog" role="dialog" aria-modal="true" aria-labelledby="pjd-dialog-heading">
         <button type="button" className="pjd-dialog-close" onClick={closeCallback} aria-label="Close callback form">×</button>

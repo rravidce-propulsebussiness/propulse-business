@@ -1,0 +1,37 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const root=path.resolve(__dirname,'../..');
+const source=p=>fs.readFileSync(path.join(root,p),'utf8');
+const profile=source('frontend/src/pages/Profile.jsx');
+const publicProject=source('frontend/src/pages/ProjectDetail.jsx');
+const viewer=source('frontend/src/components/ProjectMediaViewer.jsx');
+const brochure=source('frontend/src/components/ProfileBrochureField.jsx');
+const csp=source('frontend/index.html');
+const backend=source('backend/src/server.js');
+
+assert.match(profile,/ProjectMediaViewer/,'Profile uses the shared on-site preview');
+assert.match(profile,/Preview video on ProPulse/);
+assert.match(profile,/View plan on ProPulse/);
+assert.doesNotMatch(profile,/Open external video ↗|View PDF plan ↗|Open plan \/ drawing ↗/,'Profile no longer sends project media to a new tab');
+assert.match(publicProject,/ProjectMediaContent/,'Public project gallery plays embedded media inside the page');
+assert.match(publicProject,/View Plan \/ Drawing/,'Public viewers can preview the plan without leaving the project');
+assert.doesNotMatch(publicProject,/<a className="pjd-video-thumb" href=\{project.video\}/);
+assert.match(brochure,/ProjectMediaViewer/,'Brochure previews stay inside the website');
+assert.doesNotMatch(brochure,/target="_blank"/,'Brochure preview never opens an external tab');
+
+assert.match(viewer,/host==='youtu.be'/);
+assert.match(viewer,/youtube-nocookie.com\/embed/);
+assert.match(viewer,/player.vimeo.com\/video/);
+assert.match(viewer,/drive.google.com\/file\/d/);
+assert.match(viewer,/directMediaAllowed/,'Untrusted arbitrary links are not loaded into a project iframe');
+assert.match(viewer,/sandbox="allow-scripts allow-same-origin allow-presentation"/);
+assert.match(viewer,/sandbox="allow-same-origin"/);
+assert.match(viewer,/onKey=event=>\{if\(event.key==='Escape'\)onClose\(\)\}/);
+assert.doesNotMatch(viewer,/window.open\(|location.href\s*=|target="_blank"/);
+assert.match(csp,/frame-src https:\/\/accounts.google.com\/gsi\/ 'self' https:\/\/www.youtube-nocookie.com https:\/\/player.vimeo.com https:\/\/drive.google.com https:\/\/\*\.r2.cloudflarestorage.com/);
+assert.match(backend,/const publicPlanPdf=/,'Public PDF previews have a narrow backend allowlist');
+assert.match(backend,/X-Frame-Options','SAMEORIGIN'/);
+assert.match(backend,/X-Frame-Options','DENY'/);
+assert.match(backend,/frame-ancestors 'none'/,'Private uploads retain their strict policy');
+console.log('Project video, plan and brochure previews remain inside ProPulse, with safe external provider handling.');

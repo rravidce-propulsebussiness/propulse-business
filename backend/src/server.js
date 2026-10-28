@@ -129,7 +129,23 @@ app.use((req,res,next)=>{
   if(shouldBypassCorsForPublicAssets(req,serveFrontendFromBackend))return next();
   return protectedCors(req,res,next);
 });
-app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');if(!backendOnlyPath(req.path))res.setHeader('Cross-Origin-Opener-Policy','same-origin-allow-popups');if(backendOnlyPath(req.path))res.setHeader('Content-Security-Policy',"default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'");if(isProduction)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');next();});
+app.use((req,res,next)=>{
+  // Only public project PDF documents can be framed by this same site.
+  // Keep every other upload, private resource and API response non-frameable.
+  const publicPlanPdf=(req.method==='GET'||req.method==='HEAD')
+    &&/^\/uploads\/business-projects\/\d+-plan-\d{13}-[a-f0-9]{24}\.pdf$/.test(req.path);
+  res.setHeader('X-Content-Type-Options','nosniff');
+  if(publicPlanPdf)res.setHeader('X-Frame-Options','SAMEORIGIN');
+  else res.setHeader('X-Frame-Options','DENY');
+  res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');
+  if(!backendOnlyPath(req.path))res.setHeader('Cross-Origin-Opener-Policy','same-origin-allow-popups');
+  if(backendOnlyPath(req.path))res.setHeader('Content-Security-Policy',publicPlanPdf
+    ?"default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'self'; form-action 'none'"
+    :"default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'");
+  if(isProduction)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');
+  next();
+});
 app.get('/favicon.ico',(req,res)=>res.redirect(308,'/favicon.svg'));
 app.use('/',seoRoutes);
 app.use('/api/payment-webhooks/razorpay',express.raw({type:'application/json',limit:'256kb'}),paymentWebhookRoutes);
