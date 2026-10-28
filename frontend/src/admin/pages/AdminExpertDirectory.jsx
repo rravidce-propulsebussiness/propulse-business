@@ -1,3 +1,4 @@
+import {useLocation,useNavigate} from 'react-router-dom'
 import BootLoader from '../../components/BootLoader'
 import {useEffect,useMemo,useRef,useState} from 'react'
 import {authRequest} from '../../utils/auth'
@@ -11,6 +12,8 @@ function Badge({type,children}){return <span className={'expert-v2-badge '+type}
 const SECTIONS=[['all','All Professionals'],['featured','Featured Professionals'],['pending','Video Approvals'],['verified','Verification'],['badges','Manage Badges'],['settings','Directory Settings']]
 
 export default function AdminExpertDirectory(){
+  const pageLocation=useLocation()
+  const navigate=useNavigate()
   const [overview,setOverview]=useState(null)
   const [businesses,setBusinesses]=useState([])
   const [pagination,setPagination]=useState({page:1,total:0,totalPages:0})
@@ -59,6 +62,17 @@ export default function AdminExpertDirectory(){
     window.addEventListener('propulse:expert-directory-refresh',refresh)
     return()=>{live=false;businessRequest.current++;window.removeEventListener('propulse:expert-directory-refresh',refresh)}
   },[])
+
+  useEffect(()=>{
+    const allowed=new Set(SECTIONS.map(item=>item[0]))
+    const next=new URLSearchParams(pageLocation.search).get('view')||'all'
+    const view=allowed.has(next)?next:'all'
+    setSection(view)
+    setSettingsOpen(view==='settings')
+    if(view==='verified')setProfileTab('verification')
+    else if(view==='badges')setProfileTab('badges')
+    else setProfileTab('projects')
+  },[pageLocation.search])
 
   useEffect(()=>{
     if(!searchInitialized.current){searchInitialized.current=true;return undefined}
@@ -127,6 +141,7 @@ export default function AdminExpertDirectory(){
     finally{setSaving('')}
   }
   function switchSection(value){
+    navigate('/admin/expert-directory'+(value==='all'?'':'?view='+encodeURIComponent(value)))
     setSection(value)
     setError('')
     if(value==='settings')setSettingsOpen(true)
