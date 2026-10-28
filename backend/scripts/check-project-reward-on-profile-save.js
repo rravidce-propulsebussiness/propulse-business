@@ -6,8 +6,8 @@ const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const profile=read('backend/src/services/profileService.js');
 const rewards=read('backend/src/services/leadEntitlementGrantService.js');
 
-assert.match(profile,/ensureProjectQualifiedCampaignGrants\(userId\)/,'A saved profile must trigger conditional reward issuance');
-assert.match(profile,/await client.query\('COMMIT'\);[\s\S]{0,450}await ensureProjectQualifiedCampaignGrants\(userId\)/,
+assert.match(profile,/ensureProjectQualifiedCampaignGrants\(userId,client\)/,'A saved profile must trigger conditional reward issuance');
+assert.match(profile,/await client.query\('COMMIT'\);[\s\S]{0,450}await ensureProjectQualifiedCampaignGrants\(userId,client\)/,
   'Reward issuance occurs after successful profile commit, without breaking an otherwise valid profile save');
 assert.match(profile,/SELECT id,created_at,video_url/,'Existing project upload timestamp is selected');
 assert.match(profile,/const createdAt=previous\?\.created_at\|\|new Date\(\)/,'Editing retains original upload date');
