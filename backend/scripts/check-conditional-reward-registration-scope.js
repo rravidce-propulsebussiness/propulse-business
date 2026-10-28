@@ -58,7 +58,7 @@ assert.match(editor,/New registrations only/);
 assert.match(editor,/registrationScope:item\.registration_scope/,'Existing rewards load saved registration filtering');
 assert.match(editor,/registrationScope:'new_registration'/,'Project welcome preset defaults to new registrants');
 assert.match(source,/if\(!qualifiesCampaignSignup\(campaign,business\.created_at\)\)continue/,'Lazy grant path enforces signup scope');
-assert.match(source,/if\(!qualifiesCampaignRegistrationAge\(campaign,business.created_at\)\)continue/,'Lazy awards enforce account-age cutoff');
+assert.match(source,/Number\(campaign.min_completed_projects\|\|0\)===0&&!qualifiesCampaignRegistrationAge\(campaign,business.created_at\)/,'Non-project rewards use account-age cutoff while project uploads can be approved later');
 assert.match(source,/registration_eligibility_days=\$21/,'Editing a campaign saves account-age cutoff');
 assert.match(source,/projectRegistrationWindowDays:minCompletedProjects>0\?registrationEligibilityDays:0/,'Project upload and reward qualification use the same deadline');
 assert.doesNotMatch(editor,/Project upload after signup/,'Conditional editor has only one deadline input');

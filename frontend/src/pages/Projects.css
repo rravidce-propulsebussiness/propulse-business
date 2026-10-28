@@ -759,3 +759,5 @@
 .pj-page .pj-empty-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px}
 .pj-page .pj-empty-professional{background:#fff;color:#173a50;border:1px solid #d7e2e7}
 .pj-page .pj-empty-professional:hover{background:#eef3f5;color:#173a50}
+
+.pj-card-verified.pj-card-official{background:#fff0bb;color:#a25206;border-color:#efd083;font-weight:900}

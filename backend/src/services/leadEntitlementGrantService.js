@@ -1,4 +1,5 @@
 const pool=require('../config/database');
+const {allowAutomaticSignupReward}=require('./signupRewardAntiAbuseService');
 
 function fail(message,code){throw Object.assign(new Error(message),{code});}
 const number=(value,fallback=0)=>Number.isFinite(Number(value))?Number(value):fallback;
@@ -148,6 +149,7 @@ async function ensureNewBusinessGrant(userId,client=pool){
   const windowDays=int(rule.window_days,1,365,7);
   const expiresAt=new Date(registeredAt.getTime()+windowDays*86400000);
   if(!Number.isFinite(expiresAt.getTime())||expiresAt<=new Date())return null;
+  if(!await allowAutomaticSignupReward(client,userId,business.created_at))return null;
 
   const result=await client.query(`
     INSERT INTO lead_entitlement_grants(
@@ -220,17 +222,24 @@ async function ensureProjectQualifiedCampaignGrants(userId,client=pool){
   // Only the initial project upload time counts, not later publication/review.
   const projects=campaigns.some(c=>Number(c.min_completed_projects)>0)
     ?(await client.query(`
-      SELECT p.created_at FROM business_profile_projects p
+      SELECT p.created_at,p.video_published_at FROM business_profile_projects p
       JOIN business_profiles bp ON bp.id=p.business_profile_id
       WHERE bp.user_id=$1 AND p.is_published=TRUE AND p.completion_year IS NOT NULL
+         AND NULLIF(BTRIM(p.video_url),'') IS NOT NULL
+         AND p.video_reward_status='approved'
+         AND p.video_reward_fingerprint IS NOT NULL
+         AND p.video_reward_approved_url=p.video_url
     `,[userId])).rows
     :[];
   for(const campaign of campaigns){
     if(!qualifiesCampaignSignup(campaign,business.created_at))continue;
-    if(!qualifiesCampaignRegistrationAge(campaign,business.created_at))continue;
+    // The upload deadline is enforced on project/video timestamps, not the review date.
+    if(Number(campaign.min_completed_projects||0)===0&&!qualifiesCampaignRegistrationAge(campaign,business.created_at))continue;
     const days=Number(campaign.project_registration_window_days||0);
     const eligible=projects.filter(project=>qualifiesProjectSignupWindow(
-      project.created_at,business.created_at,campaign.created_at,days,campaign.registration_scope)).length;
+      project.created_at,business.created_at,campaign.created_at,days,campaign.registration_scope)
+      &&project.video_published_at&&qualifiesProjectSignupWindow(
+        project.video_published_at,business.created_at,campaign.created_at,days,campaign.registration_scope)).length;
     if(eligible<Number(campaign.min_completed_projects))continue;
     if(campaign.verification_scope==='verified'&&!business.is_verified)continue;
     if(campaign.verification_scope==='unverified'&&business.is_verified)continue;
@@ -637,7 +646,7 @@ async function campaignAudienceUserIds(client,campaign){
     conditions.push(`u.created_at>=${start}::timestamp`);
   }
   const maxRegistrationAge=Number(campaign.registration_eligibility_days||0);
-  if(maxRegistrationAge>0){
+  if(maxRegistrationAge>0&&Number(campaign.min_completed_projects||0)===0){
     const days=bind(maxRegistrationAge);
     const campaignId=bind(Number(campaign.id));
     // Already awarded companies keep their credits while the credit validity
@@ -689,8 +698,15 @@ async function campaignAudienceUserIds(client,campaign){
       JOIN business_profiles bp5 ON bp5.id=p.business_profile_id
       WHERE bp5.user_id=u.id AND p.is_published=TRUE
         AND p.completion_year IS NOT NULL
+        AND NULLIF(BTRIM(p.video_url),'') IS NOT NULL
+        AND p.video_reward_status='approved'
+        AND p.video_reward_fingerprint IS NOT NULL
+        AND p.video_reward_approved_url=p.video_url
+        AND p.video_published_at IS NOT NULL
         AND (${windowDays}::int=0 OR (p.created_at>=u.created_at
-          AND p.created_at<=u.created_at+(${windowDays}::int * INTERVAL '1 day')))
+          AND p.created_at<=u.created_at+(${windowDays}::int * INTERVAL '1 day')
+          AND p.video_published_at>=u.created_at
+          AND p.video_published_at<=u.created_at+(${windowDays}::int * INTERVAL '1 day')))
       )>=${min}`);
   }
   if(campaign.audience_scope==='specific_users'){
@@ -714,6 +730,15 @@ async function syncBusinessCampaign(client,campaignId){
   if(!campaign)fail('Business entitlement not found','BUSINESS_CAMPAIGN_NOT_FOUND');
 
   const targetIds=await campaignAudienceUserIds(client,campaign);
+  // Existing project-award grants must retain their validity after policy
+  // changes; do not revoke credit already earned under earlier criteria.
+  if(Number(campaign.min_completed_projects||0)>0){
+    const previous=(await client.query(
+      'SELECT user_id FROM lead_entitlement_grants WHERE campaign_id=$1 AND revoked_at IS NULL',
+      [campaignId]
+    )).rows;
+    for(const row of previous)if(!targetIds.includes(Number(row.user_id)))targetIds.push(Number(row.user_id));
+  }
   const targetSet=new Set(targetIds);
   await client.query('SELECT id FROM lead_entitlement_grants WHERE campaign_id=$1 FOR UPDATE',[campaignId]);
   const existing=(await client.query(`
@@ -1071,7 +1096,7 @@ async function deleteGrant(grantId,adminId,client=pool){
 }
 
 async function getAdminOverview(client=pool){
-  const [registrationRules,businessCampaigns,summaryResult,grantsResult]=await Promise.all([
+  const [registrationRules,businessCampaigns,summaryResult,grantsResult,riskFlags]=await Promise.all([
     listRegistrationRules(client),
     listBusinessCampaigns(client),
     client.query(`
@@ -1113,13 +1138,21 @@ async function getAdminOverview(client=pool){
       GROUP BY g.id,u.name,u.email,bp.business_name
       ORDER BY COALESCE(g.updated_at,g.created_at) DESC,g.id DESC
       LIMIT 100
+    `),
+    client.query(`
+      SELECT f.user_id,f.reason,f.created_at,u.name,u.email,bp.business_name
+      FROM signup_reward_review_flags f
+      JOIN users u ON u.id=f.user_id
+      LEFT JOIN business_profiles bp ON bp.user_id=u.id
+      ORDER BY f.created_at DESC LIMIT 100
     `)
   ]);
   return{
     registrationRules,
     businessCampaigns,
     summary:summaryResult.rows[0]||{},
-    grants:grantsResult.rows
+    grants:grantsResult.rows,
+    signupRiskFlags:riskFlags.rows
   };
 }
 

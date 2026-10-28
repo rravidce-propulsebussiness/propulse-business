@@ -1,1 +1,0 @@
-import{t as e}from"./vendor-qzkkfB9L.js";import{n as t,t as n}from"./PublicSiteChrome-2za54A9N.js";import{t as r}from"./UserFAQ-BRu8EaBu.js";var i=e();function a(){return(0,i.jsxs)(`div`,{className:`website-faq-page customer-faq-page`,children:[(0,i.jsx)(t,{}),(0,i.jsx)(r,{variant:`page`,audience:`homeowner`}),(0,i.jsx)(n,{})]})}export{a as default};

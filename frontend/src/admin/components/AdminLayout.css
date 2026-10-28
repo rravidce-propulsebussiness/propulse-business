@@ -503,3 +503,38 @@
   .admin-topbar-right{margin-left:auto;justify-content:flex-end;min-width:0}
   .admin-mobile-menu{flex:0 0 auto;order:-1}
 }
+
+/* ProPulse premium light administration: one orange navigation system on every page. */
+.admin-shell{background:linear-gradient(180deg,#fff9f4,#f7f8fa 42%,#fafbfd);color:#1c2b3d}
+.admin-sidebar{background:#fff!important;border-right:1px solid #eceef0;box-shadow:4px 0 23px rgba(37,44,57,.035)}
+.admin-sidebar-brand{color:#1b2e42}
+.admin-sidebar-brand b{color:#17273c}
+.admin-sidebar-brand small{color:#c05a2a}
+.admin-sidebar-mark{background:linear-gradient(145deg,#ff7e36,#ed4e1d);box-shadow:0 8px 20px #ec5b2830}
+.admin-sidebar-close{border-color:#eee3dd;background:#fff8f3;color:#d95926}
+.admin-nav-label{color:#a4a8b0}
+.admin-nav>a,.admin-nav-group-toggle{color:#314154;font-size:12px}
+.admin-nav>a i,.admin-nav-group-toggle i{background:#fff3ec;color:#e85c25;font-size:15px}
+.admin-nav>a:hover,.admin-nav-group-toggle:hover{border-color:#ffdac7;background:#fff5ed;color:#df5925}
+.admin-nav>a.active,.admin-nav-group-toggle.active{border-color:#fa7848;background:linear-gradient(125deg,#ff792f,#f04c20);color:white;box-shadow:0 7px 16px #f4743331}
+.admin-nav>a.active:before,.admin-nav-group.current>.admin-nav-group-toggle:before{background:#fff;box-shadow:none}
+.admin-nav>a.active i,.admin-nav-group-toggle.active i{background:#ffffff30;color:white}
+.admin-nav-group-toggle>b{color:#9c8d87}.admin-nav-group-toggle>b.expanded{color:#fff}
+.admin-nav-submenu{border-left-color:#f4e3d8}
+.admin-nav-subitem>a{color:#5c6c7a;font-size:11px}
+.admin-nav-subitem>a:hover{color:#e86325;background:#fff6ed}
+.admin-nav-subitem>a.active{background:#fff0e8;color:#df5925}
+.admin-nav-subdot{background:#e4b49b}.admin-nav-subitem>a.active .admin-nav-subdot{background:#f36a2d;box-shadow:0 0 0 4px #ffede0}
+.admin-nav-subsection{color:#b58c7a;font-size:9px}
+.admin-sidebar-signature{background:#fff7ee;border:1px solid #f5e0d0;box-shadow:none}
+.admin-sidebar-signature>span{background:#ffebdc;color:#e96126}
+.admin-sidebar-signature b{color:#344559;font-size:11px}
+.admin-sidebar-signature small{color:#957e71;font-size:10px}
+.admin-sidebar-logout{color:#b65b39;font-size:11px}
+.admin-sidebar-logout:hover{background:#fff1e5;color:#e96327}
+.admin-breadcrumb span.current{color:#dc5d26}
+.admin-topbar{border-bottom:1px solid #f0e9e1;background:rgba(255,255,255,.96)}
+.admin-topbar:has(+.admin-content .expert-v2){background:#fffcfa}
+@media(max-width:850px){.admin-sidebar{background:#fff!important}.admin-sidebar-close{display:grid}}
+
+.admin-sidebar-logo{display:block;flex:0 0 48px;width:48px;height:48px;object-fit:contain;border-radius:9px;background:#fff}

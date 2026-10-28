@@ -144,6 +144,7 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
        bp.years_experience,
        EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
        COALESCE(beds.is_featured,FALSE) AS is_featured,
+        COALESCE(beds.is_official,FALSE) AS is_official,
        COALESCE(beds.sort_order,0) AS sort_order,
        mem.plan_group,
        (SELECT COUNT(*)::int FROM business_profile_projects bpp WHERE bpp.business_profile_id=bp.id AND bpp.is_published=TRUE AND bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)) AS project_count,
@@ -251,6 +252,7 @@ async function listRecentProjectVideos({page=1,pageSize=12}={}){
        bp.id AS business_profile_id,
        bp.business_name,
        EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
+       COALESCE(beds.is_official,FALSE) AS is_official,
        mem.plan_group
      FROM business_profile_projects bpp
      JOIN business_profiles bp ON bp.id=bpp.business_profile_id
@@ -318,6 +320,7 @@ async function listRecentProjects({page=1,pageSize=18}={}){
        bp.id AS business_profile_id,
        bp.business_name,
        EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
+       COALESCE(beds.is_official,FALSE) AS is_official,
        mem.plan_group
      FROM business_profile_projects bpp
      JOIN business_profiles bp ON bp.id=bpp.business_profile_id
@@ -360,6 +363,7 @@ async function getPublicProject(projectId){
       COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) AS published_at,
       bp.id AS business_profile_id,bp.business_name,
       EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
+      COALESCE(beds.is_official,FALSE) AS is_official,
       mem.plan_group
      FROM business_profile_projects bpp
      JOIN business_profiles bp ON bp.id=bpp.business_profile_id
@@ -387,6 +391,7 @@ async function getPublicExpert(expertId){
             bp.public_headline,COALESCE(NULLIF(bp.public_summary,''),'') AS public_summary,bp.years_experience,
             EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
             COALESCE(beds.is_featured,FALSE) AS is_featured,
+        COALESCE(beds.is_official,FALSE) AS is_official,
             mem.plan_group
      FROM users u
      JOIN business_profiles bp ON bp.user_id=u.id

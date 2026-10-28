@@ -499,3 +499,7 @@
 /* Profile cards are now accessible links to dedicated public pages. */
 .expert-card-actions a{text-decoration:none;text-align:center}
 .expert-card-actions a:focus-visible{outline:3px solid #ff8a58;outline-offset:3px}
+
+.expert-card-cover .official-badge{position:absolute;top:12px;left:12px;display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:99px;background:#ffe8a8;color:#a45100;font-size:11px;font-weight:900;box-shadow:0 4px 14px #0002;z-index:3}
+
+.expert-avatar img{width:100%;height:100%;object-fit:contain;padding:4px;border-radius:inherit;background:#fff}
