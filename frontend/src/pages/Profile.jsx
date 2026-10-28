@@ -7,6 +7,7 @@ import {PACKAGE_PRICE_UNITS,formatPublishedPackagePrice} from '../utils/packageP
 import { PROFILE_PACKAGE_TIERS, getPreferredPackageIndustry, resolveProfilePackages } from '../utils/profilePackageTemplates'
 import { ALL_SERVICES_VALUE, selectAllIndustryServices } from '../utils/profileServiceSelection'
 import ProfileBrochureField from '../components/ProfileBrochureField'
+import ProfessionalPackageSpecEditor from '../components/ProfessionalPackageSpecEditor'
 import ProjectMediaViewer from '../components/ProjectMediaViewer'
 import ProfessionalBrochures from './ProfessionalBrochures'
 import './Profile.css'
@@ -66,6 +67,7 @@ function mapPlan(item){
     priceUnit:item.price_unit||'unspecified',
     durationLabel:item.duration_label||'',
     inclusions:Array.isArray(item.inclusions)?item.inclusions.join('\n'):'',
+    specSections:Array.isArray(item.spec_sections)?item.spec_sections:[],
     brochureUrl:item.brochure_url||'',
     brochureDisplayUrl:item.brochure_display_url||'',
     isPublished:item.is_published!==false,
@@ -545,6 +547,8 @@ export default function Profile(){
     if(missingYearProject>=0)return revealProjectError(missingYearProject,'To publish a completed project, enter its actual completion year. Uncheck Public to save unfinished work privately.')
     const untitledPlan=plans.findIndex(item=>!item.title.trim())
     if(untitledPlan>=0)return revealPlanError(untitledPlan,'Every service package needs a name.')
+    const badSpecPlan=plans.findIndex(plan=>(plan.specSections||[]).some(section=>!String(section.title||'').trim()))
+    if(badSpecPlan>=0)return revealPlanError(badSpecPlan,'Name every material or work item, or remove the unfinished row before saving.')
     const missingIndustryPlan=plans.findIndex(item=>item.isPublished&&!INDUSTRY_OPTIONS.some(option=>option.value===item.industry))
     if(missingIndustryPlan>=0)return revealPlanError(missingIndustryPlan,'Select an industry for this published package before saving. Existing packages without an industry must be classified.')
     const mismatchedPackageProject=projects.findIndex(item=>item.packageName&&!plans.some(plan=>plan.isPublished&&plan.title===item.packageName&&plan.industry===projectIndustry(item.projectType)))
@@ -557,7 +561,7 @@ export default function Profile(){
         services:serviceSelections.map(x=>({industryId:Number(x.industryId),serviceId:Number(x.serviceId),subserviceId:x.subserviceId?Number(x.subserviceId):null})),
         locations:locationSelections.map(x=>({stateId:Number(x.stateId),cityId:Number(x.cityId)})),
         projects:projects.map(item=>({...item,completionYear:item.completionYear===''?null:Number(item.completionYear)})),
-        plans:plans.map(item=>({...item,priceFrom:item.priceFrom===''?null:Number(item.priceFrom),inclusions:item.inclusions.split('\n').map(v=>v.trim()).filter(Boolean)})),
+        plans:plans.map(item=>({...item,priceFrom:item.priceFrom===''?null:Number(item.priceFrom),inclusions:item.inclusions.split('\n').map(v=>v.trim()).filter(Boolean),specSections:item.specSections||[]})),
       })})
       saveSession({user:result.user})
       const savedProfile=result.user?.profile
@@ -781,7 +785,7 @@ export default function Profile(){
                   <button type="button" className={packageView==='brochures'?'selected':''} onClick={()=>setPackageView('brochures')}>Company Brochures</button>
                 </div>
                 <div className="profile-package-pane" hidden={packageView!=='plans'}><form id="business-profile-form" className="profile-accordion-form profile-accordion-editor" onSubmit={save}><section className="profile-panel profile-plan-panel" id="profile-plans">
-            <div className="panel-title"><div><span>06</span><h2>Service Packages</h2><p>Your three familiar packages: Standard, Premium and Royal. Edit prices, inclusions and brochures for each; no additional package setup needed.</p></div></div>
+            <div className="panel-title"><div><span>06</span><h2>Service Packages</h2><p>Configure your three Standard, Premium and Royal packages with full material-by-material specifications, brands, allowances and pricing. Customers can receive an instant indicative quote from your published rates.</p></div></div>
             <div className="profile-showcase-list">{plans.map((plan,index)=>{const isExpanded=expandedPlan===planKey(plan);return <article className={"profile-showcase-card compact profile-entry-card"+(isExpanded?" is-expanded":"")} key={planKey(plan)}><div className="profile-showcase-card-head profile-entry-head">
                 <div className="profile-entry-overview">
                   <div className="profile-entry-thumbnail profile-entry-plan-icon" aria-hidden="true">₹</div>
@@ -797,8 +801,9 @@ export default function Profile(){
                 </div>
               </div>
               {isExpanded&&<div className="profile-entry-body" id={'package-editor-'+index}>
-                <div className="profile-entry-controls"><label className="profile-inline-check"><input type="checkbox" checked={plan.isPublished} onChange={e=>updatePlan(index,'isPublished',e.target.checked)}/> Publish this package</label></div><div className="profile-showcase-grid"><label>Industry <select value={plan.industry||''} onChange={e=>updatePlan(index,'industry',e.target.value)} required={plan.isPublished}><option value="">Select industry</option>{INDUSTRY_OPTIONS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select><small>Packages only appear in quotations for projects in this industry.</small></label><label>Package name<input value={plan.title} maxLength="160" onChange={e=>updatePlan(index,'title',e.target.value)} placeholder="Premium turnkey interiors"/></label><label>Starting price (₹)<input type="number" min="0" value={plan.priceFrom} onChange={e=>updatePlan(index,'priceFrom',e.target.value)} placeholder="500000"/></label><label>Price unit<select value={plan.priceUnit} onChange={e=>updatePlan(index,'priceUnit',e.target.value)}>{PACKAGE_PRICE_UNITS.map(unit=><option key={unit.value} value={unit.value}>{unit.label}</option>)}</select><small>Important for ₹/sq ft, ₹/sq yd and fixed-price packages.</small></label><label>Duration<input value={plan.durationLabel} maxLength="120" onChange={e=>updatePlan(index,'durationLabel',e.target.value)} placeholder="8–10 weeks"/></label><label className="wide">Description<textarea rows="3" value={plan.description} maxLength="2000" onChange={e=>updatePlan(index,'description',e.target.value)} placeholder="Who this plan is for and what customers should expect…"/></label><label className="wide">Package inclusions <small>Add one inclusion per line</small><textarea rows="4" value={plan.inclusions} onChange={e=>updatePlan(index,'inclusions',e.target.value)} placeholder="Design consultation; material selection; execution management"/></label></div>
-              <ProfileBrochureField title="Package brochure / technical specifications" description="Upload your detailed package PDF: plywood grades, laminate and hardware brands, inclusions, exclusions, milestones and warranty terms." url={plan.brochureUrl} displayUrl={plan.brochureDisplayUrl} busy={Boolean(brochureUploads['plan-'+index])} onUpload={file=>uploadBrochure('plan',index,file)} onRemove={()=>updatePlan(index,'brochureUrl','')}/>
+                <div className="profile-entry-controls"><label className="profile-inline-check"><input type="checkbox" checked={plan.isPublished} onChange={e=>updatePlan(index,'isPublished',e.target.checked)}/> Publish this package</label></div><div className="profile-showcase-grid"><label>Industry <select value={plan.industry||''} onChange={e=>updatePlan(index,'industry',e.target.value)} required={plan.isPublished}><option value="">Select industry</option>{INDUSTRY_OPTIONS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select><small>Packages only appear in quotations for projects in this industry.</small></label><label>Package name<input value={plan.title} maxLength="160" onChange={e=>updatePlan(index,'title',e.target.value)} placeholder="Premium turnkey interiors"/></label><label>Package rate (₹)<input type="number" min="0" value={plan.priceFrom} onChange={e=>updatePlan(index,'priceFrom',e.target.value)} placeholder="500000"/></label><label>Price unit<select value={plan.priceUnit} onChange={e=>updatePlan(index,'priceUnit',e.target.value)}>{PACKAGE_PRICE_UNITS.map(unit=><option key={unit.value} value={unit.value}>{unit.label}</option>)}</select><small>Important for ₹/sq ft, ₹/sq yd and fixed-price packages.</small></label><label>Duration<input value={plan.durationLabel} maxLength="120" onChange={e=>updatePlan(index,'durationLabel',e.target.value)} placeholder="8–10 weeks"/></label><label className="wide">Description<textarea rows="3" value={plan.description} maxLength="2000" onChange={e=>updatePlan(index,'description',e.target.value)} placeholder="Who this plan is for and what customers should expect…"/></label><label className="wide">Package inclusions <small>Add one inclusion per line</small><textarea rows="4" value={plan.inclusions} onChange={e=>updatePlan(index,'inclusions',e.target.value)} placeholder="Design consultation; material selection; execution management"/></label></div>
+              <ProfessionalPackageSpecEditor industry={plan.industry} sections={plan.specSections||[]} onChange={sections=>updatePlan(index,'specSections',sections)}/>
+               <ProfileBrochureField title="Package brochure / technical specifications" description="Upload your detailed package PDF: plywood grades, laminate and hardware brands, inclusions, exclusions, milestones and warranty terms." url={plan.brochureUrl} displayUrl={plan.brochureDisplayUrl} busy={Boolean(brochureUploads['plan-'+index])} onUpload={file=>uploadBrochure('plan',index,file)} onRemove={()=>updatePlan(index,'brochureUrl','')}/>
               </div>}
             </article>})}</div>
           </section></form></div>
