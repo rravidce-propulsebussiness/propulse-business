@@ -604,7 +604,7 @@ export default function AdminLeadEntitlements(){
                 aria-pressed={!registrationReward} disabled={Boolean(editingReward)}
                 onClick={()=>changeRewardType('campaign')}>
                 <strong>Meet eligibility conditions</strong>
-                <small>Require verification, completed projects, selected businesses or another condition</small>
+                <small>Require verification, completed projects or selected businesses, with a separate registration window</small>
               </button>
             </div>
             {editingReward&&<small>Existing reward types are locked to protect previously issued credits. You can edit all eligibility settings for this type.</small>}
@@ -636,14 +636,6 @@ export default function AdminLeadEntitlements(){
               <small>{campaign.registrationScope==='new_registration'
                 ?'Only companies that sign up after this reward is created qualify. You can also require verification and project uploads below.'
                 :'Existing and future businesses can qualify when they meet the conditions below.'}</small>
-            </label>}
-            {!registrationReward&&<label>Signup eligibility window
-              <div className="entitlement-input-suffix">
-                <input type="number" min="0" max="365" step="1" value={campaign.registrationEligibilityDays}
-                  onChange={e=>setCampaign(v=>({...v,registrationEligibilityDays:clamp(e.target.value,0,365)}))}/>
-                <span>{Number(campaign.registrationEligibilityDays)===0?'No limit':'days'}</span>
-              </div>
-              <small>Qualify within this many days after registering: 7, 8 or 30, for example. 0 means no age limit. This is separate from project uploads and free-credit validity.</small>
             </label>}
             <label>Company verification
               <select value={currentReward.verificationScope}
@@ -682,6 +674,14 @@ export default function AdminLeadEntitlements(){
                 </div>
                 <small>Eligible businesses receive credits until this many days after signup. Their unclaimed credits expire at the end of this window.</small>
               </label> : <>
+                <label>Registration window
+                  <div className="entitlement-input-suffix">
+                    <input type="number" min="0" max="365" step="1" value={campaign.registrationEligibilityDays}
+                      onChange={e=>setCampaign(v=>({...v,registrationEligibilityDays:clamp(e.target.value,0,365)}))}/>
+                    <span>{Number(campaign.registrationEligibilityDays)===0?'No limit':'days'}</span>
+                  </div>
+                  <small>Companies must qualify within this many days after signup. Set 7, 8, 30 or any value up to 365. 0 = no signup-age limit. This is separate from project uploads and free-credit validity.</small>
+                </label>
                 <label>Completed projects required
                   <input type="number" min="0" max="20" step="1" value={campaign.minCompletedProjects}
                     onChange={e=>setCampaign(v=>{const count=clamp(e.target.value,0,20);return {...v,minCompletedProjects:count,
