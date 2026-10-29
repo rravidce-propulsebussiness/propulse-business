@@ -128,6 +128,7 @@ export default function ProjectDetail(){
 
   const photos=project?projectPhotos(project):[]
   const activePhoto=photos[photoIndex]||photos[0]||''
+  const videoSelected=Boolean(project?.video)&&(showVideo||photos.length===0)
   const videoPreview=projectMediaPreview(project?.video,'video')
   const phone=contactData.phone||contactData.phone_number||contactData.mobile||''
   const email=contactData.email||contactData.support_email||''
@@ -202,28 +203,28 @@ export default function ProjectDetail(){
           </header>
 
           <div className="pjd-main-grid">
-            <section className="pjd-gallery-block" aria-label="Completed project photos">
+            <section className="pjd-gallery-block" aria-label="Completed project photos and videos">
               <div className="pjd-main-image">
-                {showVideo&&project.video
+                {videoSelected
                   ?<ProjectMediaContent key={project.video} preview={videoPreview} title={project.title+' project video'} className="pjd-feature-media"/>
                   :activePhoto?<img className="pjd-feature-media" src={activePhoto} alt={project.title+' completed work photo '+(photoIndex+1)}/>
                   :<div className="pjd-no-photo"><Icon name="layers" size={34}/><strong>Photos not published yet</strong><span>This professional has not added project images.</span></div>}
-                {activePhoto&&!showVideo&&<div className="pjd-image-caption">
+                {activePhoto&&!videoSelected&&<div className="pjd-image-caption">
                   <span className="pjd-caption-line"/>
                   <span>PROJECT GALLERY<small>{String(photoIndex+1).padStart(2,'0')} / {String(photos.length).padStart(2,'0')}</small></span>
                 </div>}
-                {photos.length>1&&!showVideo&&<div className="pjd-photo-nav">
+                {photos.length>1&&!videoSelected&&<div className="pjd-photo-nav">
                   <button type="button" aria-label="Previous image" onClick={()=>setPhotoIndex(n=>(n+photos.length-1)%photos.length)}>‹</button>
                   <span>{photoIndex+1} / {photos.length}</span>
                   <button type="button" aria-label="Next image" onClick={()=>setPhotoIndex(n=>(n+1)%photos.length)}>›</button>
                 </div>}
               </div>
               {(photos.length>1||project.video)&&<div className="pjd-thumbnails" aria-label="Choose project photo or video">
-                {photos.map((url,index)=><button key={url+index} type="button" className={!showVideo&&photoIndex===index?'active':''} onClick={()=>{setPhotoIndex(index);setShowVideo(false)}} aria-label={'View image '+(index+1)} aria-pressed={!showVideo&&photoIndex===index}><img src={url} alt=""/></button>)}
-                {project.video&&<button type="button" className={'pjd-video-thumb'+(showVideo?' active':'')} aria-pressed={showVideo} onClick={()=>setShowVideo(true)}>▶ Video</button>}
+                {photos.map((url,index)=><button key={url+index} type="button" className={!videoSelected&&photoIndex===index?'active':''} onClick={()=>{setPhotoIndex(index);setShowVideo(false)}} aria-label={'View image '+(index+1)} aria-pressed={!videoSelected&&photoIndex===index}><img src={url} alt=""/></button>)}
+                {project.video&&<button type="button" className={'pjd-video-thumb'+(videoSelected?' active':'')} aria-pressed={videoSelected} onClick={()=>setShowVideo(true)}>▶ Video</button>}
               </div>}
               <div className="pjd-gallery-caption">
-                <span aria-hidden="true">▣</span> Images and project details are supplied by the publishing professional.
+                <span aria-hidden="true">▣</span> Photos, videos, and project details are supplied by the publishing professional.
               </div>
             </section>
 
