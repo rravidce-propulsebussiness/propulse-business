@@ -22,6 +22,7 @@ export default function AdminExpertDirectory(){
   const [service,setService]=useState('')
   const [status,setStatus]=useState('')
   const [videoStatus,setVideoStatus]=useState('')
+  const [badgeFilter,setBadgeFilter]=useState('')
   const [sort,setSort]=useState('featured')
   const [section,setSection]=useState('all')
   const [selectedId,setSelectedId]=useState(null)
@@ -30,7 +31,6 @@ export default function AdminExpertDirectory(){
   const [saving,setSaving]=useState('')
   const [error,setError]=useState('')
   const [message,setMessage]=useState('')
-  const [settingsOpen,setSettingsOpen]=useState(false)
   const businessRequest=useRef(0)
   const searchInitialized=useRef(false)
 
@@ -68,7 +68,6 @@ export default function AdminExpertDirectory(){
     const next=new URLSearchParams(pageLocation.search).get('view')||'all'
     const view=allowed.has(next)?next:'all'
     setSection(view)
-    setSettingsOpen(view==='settings')
     if(view==='verified')setProfileTab('verification')
     else if(view==='badges')setProfileTab('badges')
     else setProfileTab('projects')
@@ -83,13 +82,15 @@ export default function AdminExpertDirectory(){
   const settings=overview?.settings||{}
   const stats=overview?.stats||{}
   const planGroups=overview?.availablePlanGroups||['grow','scale']
-  const selected=businesses.find(item=>item.id===selectedId)||null
   const locations=useMemo(()=>[...new Set(businesses.flatMap(item=>String(item.city_names||'').split(',').map(x=>x.trim()).filter(Boolean)))].sort(),[businesses])
   const serviceLabels=useMemo(()=>[...new Set(businesses.map(item=>String(item.public_headline||'').trim()).filter(Boolean))].sort(),[businesses])
   const visible=useMemo(()=>{
     let rows=businesses.filter(item=>{
       if(location&&!String(item.city_names||'').toLowerCase().includes(location.toLowerCase()))return false
       if(service&&item.public_headline!==service)return false
+      if(badgeFilter==='official'&&!item.is_official)return false
+      if(badgeFilter==='verified'&&!item.is_verified)return false
+      if(badgeFilter==='featured'&&!item.is_featured)return false
       if(status==='verified'&&!item.is_verified)return false
       if(status==='unverified'&&item.is_verified)return false
       if(status==='visible'&&!item.eligible_by_rule)return false
@@ -108,7 +109,8 @@ export default function AdminExpertDirectory(){
     else if(sort==='name')rows=rows.sort((a,b)=>String(a.business_name||a.name).localeCompare(String(b.business_name||b.name)))
     else rows=rows.sort((a,b)=>Number(b.is_featured)-Number(a.is_featured)||Number(b.is_official)-Number(a.is_official))
     return rows
-  },[businesses,location,service,status,videoStatus,section,sort])
+  },[businesses,location,service,badgeFilter,status,videoStatus,section,sort])
+  const selected=visible.find(item=>item.id===selectedId)||visible[0]||null
 
   function patchSetting(key,value){
     setOverview(current=>({...current,settings:{...(current?.settings||{}),[key]:value}}))
@@ -144,7 +146,6 @@ export default function AdminExpertDirectory(){
     navigate('/admin/expert-directory'+(value==='all'?'':'?view='+encodeURIComponent(value)))
     setSection(value)
     setError('')
-    if(value==='settings')setSettingsOpen(true)
     else if(value==='pending')setProfileTab('projects')
     else if(value==='verified')setProfileTab('verification')
     else if(value==='badges')setProfileTab('badges')
@@ -170,7 +171,7 @@ export default function AdminExpertDirectory(){
       <article><span className="expert-v2-metric-icon gold">☆</span><div><small>Featured Professionals</small><strong>{stats.featured_businesses||0}</strong><span>Prioritized profiles</span></div></article>
     </div>
 
-    <div className="expert-v2-workspace">
+    {section!=='settings'&&<div className="expert-v2-workspace">
       <section className="expert-v2-list-panel" aria-label="Search and filter professionals">
         <div className="expert-v2-section-heading"><h2>Search &amp; Filter Professionals</h2><span>{pagination.total||0} accounts</span></div>
         <div className="expert-v2-search"><span>⌕</span><input aria-label="Search professionals" value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search by name, company, location..."/></div>
@@ -178,12 +179,9 @@ export default function AdminExpertDirectory(){
           <label><span>Location</span><select value={location} onChange={e=>setLocation(e.target.value)}><option value="">All Locations</option>{locations.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
           <label><span>Services</span><select value={service} onChange={e=>setService(e.target.value)}><option value="">All Services</option>{serviceLabels.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
           <label><span>Status</span><select value={status} onChange={e=>setStatus(e.target.value)}><option value="">All Status</option><option value="verified">Verified</option><option value="unverified">Unverified</option><option value="visible">Public eligible</option><option value="hidden">Hidden</option><option value="official">Official ProPulse</option></select></label>
-          <label><span>Badges</span><select value={section==='featured'?'featured':section==='badges'?'badges':''} onChange={e=>switchSection(e.target.value||'all')}><option value="">All Badges</option><option value="featured">Featured</option><option value="badges">Badge holders</option></select></label>
+          <label><span>Badges</span><select value={badgeFilter} onChange={e=>setBadgeFilter(e.target.value)}><option value="">All Badges</option><option value="official">Official ProPulse</option><option value="verified">Verified</option><option value="featured">Featured</option></select></label>
           <label><span>Video Status</span><select value={videoStatus} onChange={e=>setVideoStatus(e.target.value)}><option value="">All Videos</option><option value="with">With Video</option><option value="pending">Pending Review</option></select></label>
           <label><span>Sort by</span><select value={sort} onChange={e=>setSort(e.target.value)}><option value="featured">Featured first</option><option value="projects">Most projects</option><option value="latest">Recently joined</option><option value="name">Company name</option></select></label>
-        </div>
-        <div className="expert-v2-section-links" role="group" aria-label="Directory sections">
-          {SECTIONS.map(([key,title])=><button key={key} type="button" className={section===key?'active':''} onClick={()=>switchSection(key)}>{title}{key==='pending'&&Number(stats.pending_video_reviews)>0&&<b>{stats.pending_video_reviews}</b>}</button>)}
         </div>
         <div className="expert-v2-list-label">Showing {visible.length} on this page <small>of {pagination.total||0} professionals</small></div>
         <div className="expert-v2-list">
@@ -278,11 +276,11 @@ export default function AdminExpertDirectory(){
           </div>
         </>}
       </section>
-    </div>
+    </div>}
 
-    {(settingsOpen||section==='settings')&&<section className="expert-v2-directory-settings">
+    {section==='settings'&&<section className="expert-v2-directory-settings">
       <div className="expert-v2-settings-heading"><div><h2>Directory Settings</h2><p>Control public listing eligibility, project visibility and subscription rules.</p></div>
-        <button type="button" onClick={()=>{setSettingsOpen(false);if(section==='settings')switchSection('all')}} aria-label="Close directory settings">×</button></div>
+        <button type="button" onClick={()=>switchSection('all')} aria-label="Close directory settings">×</button></div>
       <div className="expert-v2-switches">
         {[['directoryEnabled','Enable public directory','Make /experts available'],['requireActiveMembership','Require active membership','Only subscribed professionals appear'],['requireVerified','Verified companies only','Require approved company documents'],['showProjects','Show completed projects','Display project portfolio'],['showVideos','Show project videos','Display videos on public pages'],['showPlans','Show service plans','Display published packages']].map(([key,title,description])=>
           <label key={key}><input type="checkbox" checked={key==='requireVerified'?settings[key]===true:settings[key]!==false} onChange={e=>patchSetting(key,e.target.checked)}/>
