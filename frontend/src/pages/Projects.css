@@ -108,6 +108,14 @@
 .pj-project-card:hover img,.pj-idea-card:hover img{transform:scale(1.045)}
 .pj-project-photo::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,transparent 38%,rgba(6,26,44,.4) 100%)}
 .pj-image-placeholder{display:flex;flex-direction:column;gap:13px;align-items:center;justify-content:center;min-height:100%;background:linear-gradient(145deg,#dde8ee,#b9ccd8);color:#2b5671;font-size:12px;font-weight:800;text-align:center;padding:15px}
+/* A video-only project uses its paused video frame as a card thumbnail. */
+.pj-page .pj-project-photo .pj-video-cover{position:absolute;inset:0;overflow:hidden;background:linear-gradient(135deg,#183e51,#477286)}
+.pj-page .pj-project-photo .pj-video-cover video{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;pointer-events:none}
+.pj-page .pj-video-cover-pending{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:linear-gradient(135deg,#203f53,#527b88);color:#fff;font-size:13px;font-weight:800;text-align:center}
+.pj-page .pj-video-cover-play{display:grid;place-items:center;width:62px;height:62px;padding-left:4px;border:1px solid rgba(255,255,255,.65);border-radius:50%;background:rgba(255,255,255,.19);color:#fff;font-size:24px;box-shadow:0 8px 27px #10273538}
+.pj-page .pj-video-cover-cue{position:absolute;z-index:1;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;place-items:center;width:62px;height:62px;padding-left:4px;border:1px solid #fff9;border-radius:50%;background:#101e2baa;color:#fff;font-size:24px;box-shadow:0 6px 22px #0a192955;pointer-events:none}
+.pj-page .pj-project-card:hover .pj-video-cover-cue{background:#e75c20}
+
 .pj-category-badge{
   position:absolute;z-index:2;top:14px;left:14px;
   display:inline-flex;padding:8px 12px;border:1px solid rgba(255,255,255,.18);
