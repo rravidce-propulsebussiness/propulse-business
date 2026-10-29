@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
@@ -80,6 +80,50 @@ export function projectPhotos(project){
     seen.add(key)
     return true
   })
+}
+
+// Video-only projects can show a real paused frame without uploading a separate photo.
+// Defer remote video requests until the card approaches the viewport, and keep a
+// visible fallback if the browser cannot decode or load a video preview.
+export function ProjectVideoCover({src}) {
+  const ref=useRef(null)
+  const [inView,setInView]=useState(false)
+  const [ready,setReady]=useState(false)
+  const [failed,setFailed]=useState(false)
+
+  useEffect(()=>{
+    setReady(false)
+    setFailed(false)
+    const element=ref.current
+    if(!element)return undefined
+    if(!('IntersectionObserver' in window)){setInView(true);return undefined}
+    const observer=new IntersectionObserver(entries=>{
+      if(entries[0]?.isIntersecting){
+        setInView(true)
+        observer.disconnect()
+      }
+    },{rootMargin:'240px'})
+    observer.observe(element)
+    return()=>observer.disconnect()
+  },[src])
+
+  function selectPreviewFrame(event){
+    const video=event.currentTarget
+    if(Number.isFinite(video.duration)&&video.duration>1){
+      try{video.currentTime=Math.min(0.8,video.duration/3)}catch{/* A non-seekable stream can still display its first frame. */}
+    }
+  }
+
+  return <div className={'pj-video-cover'+(ready&&!failed?' is-ready':'')}>
+    <video ref={ref} src={inView?src:undefined} muted playsInline preload="metadata"
+      tabIndex={-1} aria-hidden="true" onLoadedMetadata={selectPreviewFrame}
+      onLoadedData={()=>setReady(true)} onError={()=>setFailed(true)}/>
+    {(!ready||failed)&&<div className="pj-video-cover-pending" aria-hidden="true">
+      <span className="pj-video-cover-play">▶</span>
+      <span>{failed?'Watch the project video':'Project video preview'}</span>
+    </div>}
+    {ready&&!failed&&<span className="pj-video-cover-cue" aria-hidden="true">▶</span>}
+  </div>
 }
 
 export function playableProjectVideo(url){
@@ -195,7 +239,9 @@ export default function Projects() {
           {filtered.map((project,index)=><article key={'business-'+project.id} className="pj-project-card">
             <Link to={projectPath(project)} className="pj-card-open" aria-label={'View details for '+project.title}>
               <div className="pj-project-photo">
-                {projectPhotos(project).length?<img src={projectPhotos(project)[0]} loading={index<3?'eager':'lazy'} alt={project.title}/>:<div className="pj-image-placeholder"><Icon name="layers" size={30}/>Project photo not provided</div>}
+                {projectPhotos(project).length?<img src={projectPhotos(project)[0]} loading={index<3?'eager':'lazy'} alt={project.title}/>
+                  :project.video?<ProjectVideoCover src={project.video}/>
+                  :<div className="pj-image-placeholder"><Icon name="layers" size={30}/>Project photo not provided</div>}
                 {projectPhotos(project).length>1&&<span className="pj-card-photo-count">{projectPhotos(project).length} Photos</span>}
                 {project.video&&<span className="pj-card-video-badge">Video Available</span>}
                 {project.official?<span className="pj-card-verified pj-card-official">♛ Official ProPulse</span>:project.verified&&<span className="pj-card-verified">Verified professional</span>}
