@@ -146,7 +146,7 @@ export default function AdminExpertDirectory(){
     navigate('/admin/expert-directory'+(value==='all'?'':'?view='+encodeURIComponent(value)))
     setSection(value)
     setError('')
-    else if(value==='pending')setProfileTab('projects')
+    if(value==='pending')setProfileTab('projects')
     else if(value==='verified')setProfileTab('verification')
     else if(value==='badges')setProfileTab('badges')
     else setProfileTab('projects')
