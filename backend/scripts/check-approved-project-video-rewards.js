@@ -60,7 +60,7 @@ assert.match(service,/Existing project-award grants must retain their validity/)
 assert.match(profile,/sameVideo\?previous.video_reward_status:'pending'/);
 assert.match(profile,/video_reward_fingerprint:item.videoRewardFingerprint/);
 assert.match(adminService,/video_reward_status=CASE WHEN COALESCE\(video_url/);
-assert.match(adminPage,/Approve video/);
+assert.match(adminPage,/Approve & release video/);
 assert.match(adminPage,/Reject video/);
 assert.match(routes,/projects\/:projectId\/review-video/);
 assert.match(migrations,/uq_approved_project_video_fingerprint/);
