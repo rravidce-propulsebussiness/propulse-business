@@ -769,3 +769,32 @@
 .pj-page .pj-empty-professional:hover{background:#eef3f5;color:#173a50}
 
 .pj-card-verified.pj-card-official{background:#fff0bb;color:#a25206;border-color:#efd083;font-weight:900}
+
+/* Clear processing state for video-only projects without mislabeling the
+   missing public derivative as a missing project photograph. */
+.pj-page .pj-video-processing-placeholder{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  width:100%;height:100%;padding:42px 22px 25px;text-align:center;
+  background:linear-gradient(145deg,#e7f1f4 0%,#c6d9e2 100%);
+  color:#183e57;
+}
+.pj-page .pj-video-processing-icon{
+  display:grid;place-items:center;width:56px;height:56px;padding-left:3px;
+  border-radius:50%;background:rgba(255,255,255,.88);border:1px solid #c5d3dc;
+  box-shadow:0 8px 24px rgba(15,51,73,.12);color:#e7682d;font-size:23px;
+}
+.pj-page .pj-video-processing-placeholder strong{
+  font-size:16px;line-height:1.3;color:#173d56;font-weight:850;
+}
+.pj-page .pj-video-processing-placeholder small{
+  max-width:260px;font-size:12px;line-height:1.45;color:#486a7d;font-weight:600;
+}
+.pj-page .pj-card-video-badge.pj-card-video-status{
+  max-width:calc(100% - 28px);top:62px;right:14px;
+  font-size:11px;line-height:1.25;white-space:normal;text-align:center;
+  background:#bd5b31;
+}
+@media(max-width:680px){
+  .pj-page .pj-video-processing-placeholder{padding-top:48px}
+  .pj-page .pj-card-video-badge.pj-card-video-status{max-width:calc(100% - 28px)}
+}
