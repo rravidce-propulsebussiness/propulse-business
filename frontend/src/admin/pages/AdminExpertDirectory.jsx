@@ -241,7 +241,6 @@ export default function AdminExpertDirectory(){
                 <div><dt>Location</dt><dd>{selected.city_names||'Not set'}</dd></div>
                 <div><dt>Membership</dt><dd>{selected.plan_name||'No active paid membership'}</dd></div>
               </dl>
-              {selected.business_profile_id&&<a target="_blank" rel="noopener noreferrer" className="expert-v2-outline-action" href={'/experts/'+selected.business_profile_id}>View Public Profile ↗</a>}
             </div>}
             {profileTab==='verification'&&<div className="expert-v2-info">
               <h3>Company Verification</h3>
@@ -269,10 +268,6 @@ export default function AdminExpertDirectory(){
               <div><dt>Submitted videos</dt><dd>{selected.video_count||0}</dd></div></dl>
               <a href="/admin/audit-timeline" className="expert-v2-outline-action">Open Audit Timeline ↗</a>
             </div>}
-          </div>
-          <div className="expert-v2-profile-footer">
-            {selected.business_profile_id&&<a href={'/experts/'+selected.business_profile_id} target="_blank" rel="noopener noreferrer">View Public Profile ↗</a>}
-            <span>Only professionals can add or edit projects. Admins review video submissions.</span>
           </div>
         </>}
       </section>
