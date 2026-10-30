@@ -45,12 +45,14 @@ async function videoContentFingerprint(userId,reference){
   return{fingerprint:digest.digest('hex'),fingerprintMode:full?'full':'sampled',size:meta.size};
 }
 
-async function review(projectId,adminId,{decision,note}={}){
+async function review(projectId,adminId,{decision,note,contactDetailsChecked=false}={}){
   const id=Number(projectId);
   if(!Number.isSafeInteger(id)||id<1)throw invalid('Invalid project identifier');
   if(!['approve','reject'].includes(decision))throw invalid('Choose Approve or Reject.');
   const safeNote=String(note||'').trim().slice(0,1000);
   if(decision==='reject'&&!safeNote)throw invalid('Give the business a reason for rejection.');
+  if(decision==='approve'&&contactDetailsChecked!==true)
+    throw invalid('Watch the full video and confirm that it shows and says no phone numbers, email, website, social handles, QR codes or other direct contact details. Reject and request a redacted re-upload if any appear.','PROJECT_VIDEO_CONTACT_PRIVACY_REQUIRED');
   const client=await pool.connect();
   try{
     await client.query('BEGIN');
@@ -68,10 +70,12 @@ async function review(projectId,adminId,{decision,note}={}){
       UPDATE business_profile_projects SET
         video_reward_status=$2,video_reward_fingerprint=$3,
         video_reward_approved_url=$4,video_reward_reviewed_by=$5,
-        video_reward_reviewed_at=CURRENT_TIMESTAMP,video_reward_review_note=$6
+        video_reward_reviewed_at=CURRENT_TIMESTAMP,video_reward_review_note=$6,
+        video_privacy_cleared_url=$7
       WHERE id=$1 RETURNING id,video_reward_status,video_reward_fingerprint,video_reward_review_note
     `,[id,decision==='approve'?'approved':'rejected',digest?.fingerprint||null,
-      decision==='approve'?project.video_url:null,adminId,safeNote||null]);
+      decision==='approve'?project.video_url:null,adminId,safeNote||null,
+      decision==='approve'&&contactDetailsChecked===true?project.video_url:null]);
     await client.query('COMMIT');
     if(decision==='approve')await ensureProjectQualifiedCampaignGrants(project.user_id).catch(error=>{
       console.error('Video approved, but automatic reward grant retry failed:',error.message);
