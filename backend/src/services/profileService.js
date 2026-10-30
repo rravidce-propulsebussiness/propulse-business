@@ -386,6 +386,9 @@ async function updateProfile(userId, payload) {
       if(item.brochureUrl)validateOwnedBrochure(item.brochureUrl,'Package brochure');
       return item;
     });
+    const currentRedactedUrls=new Set(projectsForSave.map(item=>item.videoRedactedUrl).filter(Boolean));
+    const removedRedactedUrls=existingProjects.map(item=>item.video_redacted_url)
+      .filter(url=>url&&!currentRedactedUrls.has(url));
     const currentManagedUrls=new Set(projectsForSave.map(item=>item.videoUrl).filter(isManagedVideo));
     const removedManagedUrls=existingProjects.map(item=>item.video_url).filter(url=>isManagedVideo(url)&&!currentManagedUrls.has(url));
     const isManagedImage=url=>{try{return Boolean(projectImageService.managedImageInfo(userId,url))}catch{return false}};
@@ -472,6 +475,8 @@ async function updateProfile(userId, payload) {
     }catch(error){
       console.error('Automatic completed-project reward grant failed after profile save:',error?.message||error);
     }
+    projectVideoService.removeManagedRedactedVideos(userId,removedRedactedUrls)
+      .catch(error=>console.error('Remove unused redacted project video failed:',error?.message||error));
     projectVideoService.removeManagedProjectVideos(userId,removedManagedUrls)
       .catch(error=>console.error('Remove unused project video failed:',error?.message||error));
     projectImageService.removeManagedProjectImages(userId,removedManagedImageUrls)
