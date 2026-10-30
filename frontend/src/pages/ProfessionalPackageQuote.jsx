@@ -51,6 +51,9 @@ export default function ProfessionalPackageQuote(){
     ||(!chosenId?plans[0]:null)
   const needsArea=plan?.price_unit==='sqft'||plan?.price_unit==='sqyd'
   const industry=plan?.industry||'construction'
+  const brochureUrl=(()=>{
+    try{const url=new URL(plan?.brochure_url||'',window.location.origin);return ['https:','http:'].includes(url.protocol)?url.href:''}catch{return ''}
+  })()
 
   useEffect(()=>{
     setQuotation(null)
@@ -170,7 +173,7 @@ export default function ProfessionalPackageQuote(){
                     {spec.allowanceValue!=null?' · ₹'+Number(spec.allowanceValue).toLocaleString('en-IN')+(spec.unit?' / '+spec.unit:''):''}</small>
                 </div>)}
               </div>}
-              {plan.brochure_url&&<a className="ppq-brochure" href={plan.brochure_url} target="_blank" rel="noopener noreferrer">View professional package brochure ↗</a>}
+              {brochureUrl&&<a className="ppq-brochure" href={brochureUrl} target="_blank" rel="noopener noreferrer">View professional package brochure ↗</a>}
             </section>
 
             <section className="ppq-panel" id="request-quote">
