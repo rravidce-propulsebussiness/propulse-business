@@ -10,6 +10,14 @@ import ProfessionalCallbackRequirementForm, {emptyProfessionalCallback} from '..
 import './ProjectDetail.css'
 
 const emptyCallback=emptyProfessionalCallback
+// SEO copy remains visible in an expandable section, not in the first-screen hero.
+function projectHighlight(value){
+  const text=String(value||'').replace(/\s+/g,' ').trim()
+  if(text.length<=185)return text
+  const slice=text.slice(0,185)
+  const end=slice.lastIndexOf(' ')
+  return slice.slice(0,end>=135?end:185).replace(/[\s,;:.]+$/,'')+'…'
+}
 
 export default function ProjectDetail(){
   const {projectId}=useParams()
@@ -55,7 +63,9 @@ export default function ProjectDetail(){
       try{
         const value=await publicRequest('/experts/projects/'+realId)
         if(!active)return
-        setProject(normalizeProject(value))
+        const item=normalizeProject(value)
+        setProject(item)
+        if(initial)setShowVideo(Boolean(item.video))
         setError('')
       }catch(err){
         if(active&&initial){setError(err?.status===404?'This completed project is no longer published.':'Unable to load this project. Please try again.');setProject(null)}
@@ -132,6 +142,7 @@ export default function ProjectDetail(){
   const videoPreview=projectMediaPreview(project?.video,'video')
   const phone=contactData.phone||contactData.phone_number||contactData.mobile||''
   const email=contactData.email||contactData.support_email||''
+   const highlight=projectHighlight(project?.seoDescription||project?.description||'Explore the completed project, watch the video and view the finished spaces.')
 
   function closeCallback(){
     setCallbackOpen(false)
@@ -188,7 +199,7 @@ export default function ProjectDetail(){
             <div>
               <span className="pjd-overline"><span className="pjd-kicker-dot"/>COMPLETED PROJECT · {categoryLabel(project.category).toUpperCase()}</span>
               <h1>{project.title}</h1>
-              <p>{project.description||'Explore this completed project, review published specifications and connect through ProPulse.'}</p>
+              <p className="pjd-highlight">{highlight}</p>
               <div className="pjd-hero-micro">
                 <span>Completed {project.completionYear}</span>
                 {project.location&&<span>{project.location}</span>}
@@ -266,6 +277,13 @@ export default function ProjectDetail(){
               <div className="pjd-privacy"><span aria-hidden="true">✓</span><span>Customer contact information stays protected. Verify project claims and scope directly before hiring.</span></div>
             </aside>
           </div>
+
+          {project.description&&<section className="pjd-project-story" aria-label="Complete project description">
+            <details>
+              <summary>Read full project description <span aria-hidden="true">⌄</span></summary>
+              <div className="pjd-project-story-copy"><h2>About this completed project</h2><p>{project.description}</p></div>
+            </details>
+          </section>}
 
           <div className="pjd-mobile-actions" aria-label="Quick project actions">
             <button type="button" onClick={downloadPackage} disabled={packageDownloading}><Icon name="file" size={17}/><span>{packageDownloading?'Preparing…':'Package'}</span></button>
