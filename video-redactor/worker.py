@@ -1,8 +1,9 @@
 """Private R2 -> privacy-redacted R2. No original media is published.
 
 This worker is fail-closed: processing does NOT grant public access. A
-ProPulse admin must review the derivative (including visual checks) before
-release. Audio is deliberately stripped pending a speech-redaction service.
+A completed, source-matched derivative becomes eligible for automatic public
+playback. Lead-credit rewards still require separate admin review. Audio is
+stripped to prevent spoken contact disclosure.
 """
 import contextlib
 import logging
@@ -278,7 +279,7 @@ def process_one(connection, client, job):
         client.delete_object(Bucket=bucket,Key=derivative_key)
         LOG.warning("Project %s changed before derivative commit; discarded",job["id"])
     else:
-        LOG.info("Project %s processed; %s frames, %s masked, audio removed; awaiting admin review",
+        LOG.info("Project %s processed for public playback; %s frames, %s masked, audio removed; reward review separate",
                  job["id"],stats["frames"],stats["masked_frames"])
 
 
