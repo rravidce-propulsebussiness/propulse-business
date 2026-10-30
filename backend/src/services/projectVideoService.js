@@ -143,6 +143,17 @@ async function abortVideoUpload(userId,{reference,uploadId}={}){
   return{aborted:true};
 }
 
+async function removeManagedRedactedVideos(userId,refs){
+  const unique=[...new Set((refs||[]).filter(Boolean))];
+  for(const ref of unique){
+    if(!s3.isReference(ref))continue;
+    const key=s3.parseReference(ref);
+    if(!/^business-project-redacted\/[1-9]\d*-[1-9]\d*-[a-f0-9]{32}\.mp4$/.test(key))continue;
+    if(!key.startsWith('business-project-redacted/'+Number(userId)+'-'))continue;
+    await s3.deleteObject(key).catch(error=>{if(error?.providerStatus!==404)throw error});
+  }
+}
+
 async function removeManagedProjectVideos(userId,urls){
   const unique=[...new Set((urls||[]).map(value=>String(value||'').trim()).filter(Boolean))];
   for(const url of unique){
@@ -165,5 +176,5 @@ module.exports={
   displayUrl,
   saveProjectVideo,
   prepareVideoUpload,presignVideoPart,finishVideoUpload,abortVideoUpload,
-  removeManagedProjectVideos,
+  removeManagedProjectVideos,removeManagedRedactedVideos,
 };
