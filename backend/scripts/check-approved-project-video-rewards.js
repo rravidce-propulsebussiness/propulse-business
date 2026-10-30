@@ -50,7 +50,7 @@ assert.match(serverSource,/requireAuth\(req,res/,
 assert.match(privacyMigration,/ADD COLUMN IF NOT EXISTS video_privacy_cleared_url TEXT/,
   'No older video should be assumed privacy-safe after migration');
 assert.match(videoRedactionMigration,/ADD COLUMN IF NOT EXISTS video_redacted_url TEXT/);
-assert.match(videoRedactionMigration,/video_redaction_status='pending'/,
+assert.match(videoRedactionMigration,/video_reward_status='pending'/,
   'Existing approvals must require re-processing and manual re-review');
 assert.match(publicVideoService,/THEN \${alias}\.video_redacted_url ELSE NULL::text END AS video_url/,
   'Public URLs must always refer to the redacted derivative, never original');
