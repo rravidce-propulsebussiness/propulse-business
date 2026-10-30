@@ -25,3 +25,23 @@ A failed job stays private with an error; investigate and re-upload if needed. T
 - OCR sampling is **not a guarantee** of removing all contact details. There is residual privacy risk in automatic publication; regularly audit processed videos, remove leaks quickly, and instruct professionals not to include direct contact information.
 - MP4/MOV/WebM uploads from R2 are supported; external links and legacy local videos remain private and are marked failed until re-uploaded.
 - This is not enabled on the live website until the separate Docker worker has been deployed and the backend migration has run.
+
+## No VPS: automated GitHub Actions alternative
+
+The repository also includes `.github/workflows/project-video-redaction.yml`. For a small number of uploaded project videos, this GitHub-hosted job can process **one pending video per scheduled run**, so you do not need to purchase Cloudflare Containers or deploy a dedicated VPS. It runs on `main` every 15 minutes or by pressing **Actions → Process ProPulse Project Videos → Run workflow**.
+
+The job deliberately does nothing until you configure these **GitHub repository Actions secrets** (Settings → Secrets and variables → Actions → New repository secret):
+
+| Secret | Value |
+|---|---|
+| `PROPULSE_VIDEO_DATABASE_URL` | ProPulse PostgreSQL connection URL, preferably a restricted DB role with only the required SELECT/UPDATE access |
+| `PROPULSE_VIDEO_R2_ENDPOINT` | Cloudflare R2 S3 API endpoint (not a public bucket URL) |
+| `PROPULSE_VIDEO_R2_BUCKET` | Private ProPulse R2 bucket name |
+| `PROPULSE_VIDEO_R2_ACCESS_KEY_ID` | R2 API key for the private bucket |
+| `PROPULSE_VIDEO_R2_SECRET_ACCESS_KEY` | Corresponding R2 secret access key |
+
+Never put these values in source files, PR descriptions, screenshots, or chat. Restrict who can edit the GitHub repository and Actions workflows since a workflow editor can read action secrets.
+
+After secrets have been configured, run the workflow manually once and check that the expected project changes from `video_redaction_status=pending` to `ready`. Failed jobs stay private. This is a best-effort queue worker (GitHub cron can run late), suitable for initial low traffic; move to a Docker worker for heavier uploads. The frontend/backend must already be running the matching automatic-publication code.
+
+**Privacy:** The processor can miss some small or moving contact details; automatic publication carries residual risk. Instruct professionals to avoid direct contact details in uploaded videos, monitor released content, and support takedowns. Admin verification is required only to award lead credits.
