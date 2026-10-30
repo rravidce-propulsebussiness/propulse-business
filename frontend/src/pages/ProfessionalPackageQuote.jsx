@@ -10,14 +10,13 @@ import ProfessionalCallbackRequirementForm,{emptyProfessionalCallback} from '../
 import './ProfessionalPackageQuote.css'
 
 const supportedUnit=unit=>['sqft','sqyd','project'].includes(unit)
-const flowKeyFor=industry=>industry==='design'?'design':industry==='property'?'property':'build'
 
 /** A package-specific estimate using only the chosen professional's published rate.
  * It intentionally does not reuse the generic marketplace price catalogue.
  */
 export default function ProfessionalPackageQuote(){
   const {expertId}=useParams()
-  const [searchParams,setSearchParams]=useSearchParams()
+  const [searchParams]=useSearchParams()
   const chosenId=searchParams.get('package')||''
   const [profile,setProfile]=useState(null)
   const [loading,setLoading]=useState(true)
@@ -102,7 +101,7 @@ export default function ProfessionalPackageQuote(){
       const packageContext='Requested package: '+plan.title+(quotation?' · Indicative amount: '+quotation.amountText:'')
       await publicRequest('/experts/'+encodeURIComponent(expertId)+'/callback',{
         method:'POST',
-        body:JSON.stringify({...callback,flowKey:flowKeyFor(industry),
+        body:JSON.stringify({...callback,
           message:[packageContext,callback.message].filter(Boolean).join(' | '),
           marketplaceConsent:callback.consent,
         }),
