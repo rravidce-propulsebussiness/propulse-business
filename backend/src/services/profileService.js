@@ -170,7 +170,7 @@ async function getProfile(userId, client = pool) {
     ),
     client.query(
       `SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,
-              cover_image_url,image_urls,package_name,video_url,video_published_at,plan_url,brochure_url,published_at,sort_order,is_published,seo_slug,seo_title,seo_description,seo_keyword
+              cover_image_url,image_urls,package_name,video_url,video_published_at,video_redaction_status,video_redaction_error,plan_url,brochure_url,published_at,sort_order,is_published,seo_slug,seo_title,seo_description,seo_keyword
        FROM business_profile_projects
        WHERE business_profile_id=$1
        ORDER BY sort_order,id`, [profile.id]
@@ -313,7 +313,7 @@ async function updateProfile(userId, payload) {
 
     const profileId = profile.rows[0].id;
     const existingProjects=(await client.query(
-      'SELECT id,created_at,video_url,video_published_at,video_reward_status,video_reward_fingerprint,video_reward_approved_url,video_reward_reviewed_by,video_reward_reviewed_at,video_reward_review_note,video_privacy_cleared_url,plan_url,brochure_url,image_urls,published_at FROM business_profile_projects WHERE business_profile_id=$1',
+      'SELECT id,created_at,video_url,video_published_at,video_reward_status,video_reward_fingerprint,video_reward_approved_url,video_reward_reviewed_by,video_reward_reviewed_at,video_reward_review_note,video_privacy_cleared_url,video_redaction_status,video_redaction_source_url,video_redacted_url,video_redaction_error,video_redaction_started_at,video_redaction_finished_at,video_redaction_token,plan_url,brochure_url,image_urls,published_at FROM business_profile_projects WHERE business_profile_id=$1',
       [profileId]
     )).rows;
     const existingById=new Map(existingProjects.map(item=>[Number(item.id),item]));
@@ -370,7 +370,14 @@ async function updateProfile(userId, payload) {
         videoRewardReviewedBy:sameVideo?previous.video_reward_reviewed_by:null,
         videoRewardReviewedAt:sameVideo?previous.video_reward_reviewed_at:null,
         videoRewardReviewNote:sameVideo?previous.video_reward_review_note:null,
-        videoPrivacyClearedUrl:sameVideo?previous.video_privacy_cleared_url:null
+        videoPrivacyClearedUrl:sameVideo?previous.video_privacy_cleared_url:null,
+        videoRedactionStatus:sameVideo?previous.video_redaction_status||'pending':'pending',
+        videoRedactionSourceUrl:sameVideo?previous.video_redaction_source_url:null,
+        videoRedactedUrl:sameVideo?previous.video_redacted_url:null,
+        videoRedactionError:sameVideo?previous.video_redaction_error:null,
+        videoRedactionStartedAt:sameVideo?previous.video_redaction_started_at:null,
+        videoRedactionFinishedAt:sameVideo?previous.video_redaction_finished_at:null,
+        videoRedactionToken:sameVideo?previous.video_redaction_token:null
       };
     });
     const isManagedVideo=url=>{try{return Boolean(projectVideoService.managedVideoInfo(userId,url))}catch{return false}};
@@ -379,6 +386,9 @@ async function updateProfile(userId, payload) {
       if(item.brochureUrl)validateOwnedBrochure(item.brochureUrl,'Package brochure');
       return item;
     });
+    const currentRedactedUrls=new Set(projectsForSave.map(item=>item.videoRedactedUrl).filter(Boolean));
+    const removedRedactedUrls=existingProjects.map(item=>item.video_redacted_url)
+      .filter(url=>url&&!currentRedactedUrls.has(url));
     const currentManagedUrls=new Set(projectsForSave.map(item=>item.videoUrl).filter(isManagedVideo));
     const removedManagedUrls=existingProjects.map(item=>item.video_url).filter(url=>isManagedVideo(url)&&!currentManagedUrls.has(url));
     const isManagedImage=url=>{try{return Boolean(projectImageService.managedImageInfo(userId,url))}catch{return false}};
@@ -418,12 +428,12 @@ async function updateProfile(userId, payload) {
     if(projectsForSave.length){
       await client.query(`
         INSERT INTO business_profile_projects
-          (id,business_profile_id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,video_url,video_published_at,plan_url,brochure_url,published_at,sort_order,is_published,seo_slug,seo_title,seo_description,seo_keyword,created_at,video_reward_status,video_reward_fingerprint,video_reward_approved_url,video_reward_reviewed_by,video_reward_reviewed_at,video_reward_review_note,video_privacy_cleared_url)
+          (id,business_profile_id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,video_url,video_published_at,plan_url,brochure_url,published_at,sort_order,is_published,seo_slug,seo_title,seo_description,seo_keyword,created_at,video_reward_status,video_reward_fingerprint,video_reward_approved_url,video_reward_reviewed_by,video_reward_reviewed_at,video_reward_review_note,video_privacy_cleared_url,video_redaction_status,video_redaction_source_url,video_redacted_url,video_redaction_error,video_redaction_started_at,video_redaction_finished_at,video_redaction_token)
         SELECT COALESCE(x.id,nextval(pg_get_serial_sequence('business_profile_projects','id'))),$1,x.title,x.project_type,x.description,x.location_text,x.completion_year,x.area_text,x.budget_text,x.cover_image_url,x.image_urls,x.package_name,x.video_url,x.video_published_at,x.plan_url,x.brochure_url,x.published_at,x.sort_order,x.is_published,x.seo_slug,x.seo_title,x.seo_description,x.seo_keyword,x.created_at,
-          x.video_reward_status,x.video_reward_fingerprint,x.video_reward_approved_url,x.video_reward_reviewed_by,x.video_reward_reviewed_at,x.video_reward_review_note,x.video_privacy_cleared_url
+          x.video_reward_status,x.video_reward_fingerprint,x.video_reward_approved_url,x.video_reward_reviewed_by,x.video_reward_reviewed_at,x.video_reward_review_note,x.video_privacy_cleared_url,x.video_redaction_status,x.video_redaction_source_url,x.video_redacted_url,x.video_redaction_error,x.video_redaction_started_at,x.video_redaction_finished_at,x.video_redaction_token
         FROM jsonb_to_recordset($2::jsonb) AS x(
           id int,title text,project_type text,description text,location_text text,completion_year int,area_text text,budget_text text,
-          cover_image_url text,image_urls jsonb,package_name text,video_url text,video_published_at timestamp,plan_url text,brochure_url text,published_at timestamp,sort_order int,is_published boolean,seo_slug text,seo_title text,seo_description text,seo_keyword text,created_at timestamp,video_reward_status text,video_reward_fingerprint char(64),video_reward_approved_url text,video_reward_reviewed_by int,video_reward_reviewed_at timestamp,video_reward_review_note text,video_privacy_cleared_url text
+          cover_image_url text,image_urls jsonb,package_name text,video_url text,video_published_at timestamp,plan_url text,brochure_url text,published_at timestamp,sort_order int,is_published boolean,seo_slug text,seo_title text,seo_description text,seo_keyword text,created_at timestamp,video_reward_status text,video_reward_fingerprint char(64),video_reward_approved_url text,video_reward_reviewed_by int,video_reward_reviewed_at timestamp,video_reward_review_note text,video_privacy_cleared_url text,video_redaction_status text,video_redaction_source_url text,video_redacted_url text,video_redaction_error text,video_redaction_started_at timestamptz,video_redaction_finished_at timestamptz,video_redaction_token uuid
         )
       `,[profileId,JSON.stringify(projectsForSave.map(item=>({
         id:item.id,title:item.title,seo_slug:item.seoSlug,seo_title:item.seoTitle,seo_description:item.seoDescription,seo_keyword:item.seoKeyword,created_at:new Date(item.createdAt).toISOString(),project_type:item.projectType,description:item.description,location_text:item.locationText,
@@ -432,6 +442,10 @@ async function updateProfile(userId, payload) {
         video_reward_approved_url:item.videoRewardApprovedUrl,video_reward_reviewed_by:item.videoRewardReviewedBy,
         video_reward_reviewed_at:item.videoRewardReviewedAt,video_reward_review_note:item.videoRewardReviewNote,
         video_privacy_cleared_url:item.videoPrivacyClearedUrl,
+        video_redaction_status:item.videoRedactionStatus,video_redaction_source_url:item.videoRedactionSourceUrl,
+        video_redacted_url:item.videoRedactedUrl,video_redaction_error:item.videoRedactionError,
+        video_redaction_started_at:item.videoRedactionStartedAt,video_redaction_finished_at:item.videoRedactionFinishedAt,
+        video_redaction_token:item.videoRedactionToken,
         video_url:item.videoUrl,video_published_at:item.videoPublishedAt?new Date(item.videoPublishedAt).toISOString():null,plan_url:item.planUrl,brochure_url:item.brochureUrl,published_at:new Date(item.publishedAt).toISOString(),sort_order:item.sortOrder,is_published:item.isPublished,
       })))]);
     }
@@ -461,6 +475,8 @@ async function updateProfile(userId, payload) {
     }catch(error){
       console.error('Automatic completed-project reward grant failed after profile save:',error?.message||error);
     }
+    projectVideoService.removeManagedRedactedVideos(userId,removedRedactedUrls)
+      .catch(error=>console.error('Remove unused redacted project video failed:',error?.message||error));
     projectVideoService.removeManagedProjectVideos(userId,removedManagedUrls)
       .catch(error=>console.error('Remove unused project video failed:',error?.message||error));
     projectImageService.removeManagedProjectImages(userId,removedManagedImageUrls)

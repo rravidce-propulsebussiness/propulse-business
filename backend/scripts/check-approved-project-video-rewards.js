@@ -1,4 +1,5 @@
 const assert=require('node:assert/strict');
+const {spawnSync}=require('node:child_process');
 const fs=require('node:fs');
 const path=require('node:path');
 const root=path.resolve(__dirname,'../..');
@@ -13,6 +14,8 @@ const reviewController=read('backend/src/controllers/adminCompletedProjectContro
 const profileUi=read('frontend/src/pages/Profile.jsx');
 const privacyMigration=read('backend/src/database/migrations/20261030_project_video_contact_privacy.sql');
 const serverSource=read('backend/src/server.js');
+const videoRedactionWorker=read('video-redactor/worker.py');
+const videoRedactionMigration=read('backend/src/database/migrations/20261030_zz_project_video_automatic_redaction.sql');
 const rewardEditor=read('frontend/src/admin/pages/AdminLeadEntitlements.jsx');
 const routes=read('backend/src/routes/adminRoutes.js');
 const auth=read('backend/src/controllers/authController.js');
@@ -37,16 +40,37 @@ assert.match(reviewService,/video_privacy_cleared_url=\$7/,
   'Review must bind privacy clearance to the exact uploaded video URL');
 assert.match(reviewController,/PROJECT_VIDEO_CONTACT_PRIVACY_REQUIRED/,
   'Missing privacy approval must be a user-correctable 400, not 503');
-assert.match(adminPage,/I watched this complete video/);
+assert.match(adminPage,/I watched the complete processed video/);
 assert.match(adminPage,/privacyChecked\[item.id\]===true/);
-assert.match(profileUi,/Before uploading, remove all visible or spoken phone numbers/);
-assert.match(serverSource,/app.use\('\/uploads\/business-projects',async\(req,res,next\)=>/);
-assert.match(serverSource,/p.video_privacy_cleared_url=p.video_url/,
-  'Raw legacy local videos must be protected by the same privacy access gate');
+assert.match(profileUi,/ProPulse automatically detects and masks visible contact details/);
+assert.match(serverSource,/app.use\('\/uploads\/business-projects',\(req,res,next\)=>/);
+assert.doesNotMatch(serverSource,/if\(access.rows\[0\]\?\.public_access\)return next\(\)/,
+  'Raw original videos must never receive unauthenticated public access');
 assert.match(serverSource,/requireAuth\(req,res/,
   'Only authenticated owner or admin can preview an uncleared local video');
 assert.match(privacyMigration,/ADD COLUMN IF NOT EXISTS video_privacy_cleared_url TEXT/,
   'No older video should be assumed privacy-safe after migration');
+assert.match(videoRedactionMigration,/ADD COLUMN IF NOT EXISTS video_redacted_url TEXT/);
+assert.match(videoRedactionMigration,/video_reward_status='pending'/,
+  'Existing approvals must require re-processing and manual re-review');
+assert.match(publicVideoService,/THEN \${alias}\.video_redacted_url ELSE NULL::text END AS video_url/,
+  'Public URLs must always refer to the redacted derivative, never original');
+assert.match(publicVideoService,/video_redaction_status='ready'/);
+assert.match(publicVideoService,/video_redaction_source_url=\${alias}\.video_url/);
+assert.match(reviewService,/PROJECT_VIDEO_REDACTION_NOT_READY/);
+assert.match(reviewService,/project.video_redaction_source_url!==project.video_url/);
+assert.match(adminService,/video_redaction_status/);
+assert.match(profile,/videoRedactionStatus:sameVideo/);
+assert.match(profile,/video_redacted_url:item.videoRedactedUrl/);
+assert.match(service,/p.video_redaction_status='ready'/);
+assert.match(videoRedactionWorker,/detect_contact_boxes/);
+assert.match(videoRedactionWorker,/pytesseract.image_to_data/);
+assert.match(videoRedactionWorker,/QRCodeDetector/);
+assert.match(videoRedactionWorker,/"-an"/, 'All audio must be stripped in v1');
+assert.match(videoRedactionWorker,/FOR UPDATE OF p SKIP LOCKED/,
+  'The redactor needs a safe single-job claim');
+assert.match(videoRedactionWorker,/video_redaction_token=%s/,
+  'The redactor must protect against stale job result races');
 assert.equal((service.match(/p\.video_reward_reviewed_by IS NOT NULL/g)||[]).length,2,
   'Both lazy and bulk project-reward paths require a recorded admin reviewer');
 assert.equal((service.match(/p\.video_reward_reviewed_at IS NOT NULL/g)||[]).length,2,
@@ -84,6 +108,32 @@ assert.match(signup,/recordSignupIdentity\(client,user.id/);
 assert.match(service,/allowAutomaticSignupReward\(client,userId/);
 assert.match(antiAbuse,/createHmac\('sha256'/);
 assert.doesNotMatch(antiAbuse,/userAgent|localStorage|X-Forwarded-For/);
+
+// Parse the Python processor and exercise its contact-pattern helper without
+// needing OpenCV/R2 installed in the Node test environment.
+const pythonCheck=spawnSync('python3',['-c',String.raw`
+import ast, re, pathlib
+source=pathlib.Path('video-redactor/worker.py').read_text()
+tree=ast.parse(source)
+ns={'re':re}
+for node in tree.body:
+    if isinstance(node, ast.Assign) and any(isinstance(t,ast.Name) and t.id=='CONTACT' for t in node.targets):
+        exec(compile(ast.Module(body=[node],type_ignores=[]),'worker.py','exec'),ns)
+    if isinstance(node, ast.FunctionDef) and node.name=='contains_contact':
+        exec(compile(ast.Module(body=[node],type_ignores=[]),'worker.py','exec'),ns)
+check=ns['contains_contact']
+assert check('+91 98765 43210')
+assert check('WhatsApp number available')
+assert check('Visit www.example.com')
+assert check('mail info@example.com')
+assert check('@contractor.handle')
+assert not check('Completed 3BHK interior in Uppal, 1250 sq ft')
+`],{cwd:root,encoding:'utf8',timeout:5000});
+if(!pythonCheck.error){
+  assert.equal(pythonCheck.status,0,'Python worker syntax/contact detection regression: '+pythonCheck.stderr);
+}else if(pythonCheck.error.code!=='ENOENT'){
+  throw pythonCheck.error;
+}
 
 async function checkContentHash(){
   const s3=require('../src/services/s3PrivateObjectStorageService');
