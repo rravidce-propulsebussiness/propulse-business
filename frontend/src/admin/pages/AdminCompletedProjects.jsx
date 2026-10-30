@@ -12,6 +12,7 @@ export default function AdminCompletedProjects({businessUserId,filter='all'}){
   const [error,setError]=useState('')
   const [notice,setNotice]=useState('')
   const [notes,setNotes]=useState({})
+  const [privacyChecked,setPrivacyChecked]=useState({})
   const [localFilter,setLocalFilter]=useState(filter)
   const [playing,setPlaying]=useState(null)
 
@@ -29,7 +30,7 @@ export default function AdminCompletedProjects({businessUserId,filter='all'}){
 
   useEffect(()=>{
     let live=true
-    queueMicrotask(()=>{if(live){setError('');setNotice('');setLocalFilter(filter);setPlaying(null);load(1)}})
+    queueMicrotask(()=>{if(live){setError('');setNotice('');setLocalFilter(filter);setPlaying(null);setPrivacyChecked({});load(1)}})
     return()=>{live=false}
   },[businessUserId,filter,load])
 
@@ -37,15 +38,20 @@ export default function AdminCompletedProjects({businessUserId,filter='all'}){
     const note=String(notes[item.id]||'').trim()
     if(decision==='reject'&&!note){setError('Provide a reason before rejecting this video.');return}
     if(!item.video_url){setError('This project has no video to review.');return}
+    if(decision==='approve'&&privacyChecked[item.id]!==true){
+      setError('Watch the full video and confirm no direct contact details appear visually or in audio before approving.');
+      return;
+    }
     try{
       setBusy(item.id);setError('');setNotice('')
       await authRequest('/admin/expert-directory/projects/'+item.id+'/review-video',{
-        method:'POST',body:JSON.stringify({decision,note})
+        method:'POST',body:JSON.stringify({decision,note,contactDetailsChecked:decision==='approve'&&privacyChecked[item.id]===true})
       })
       setNotice(decision==='approve'
         ?'Video approved. Eligible credits are issued through the existing reward rules.'
         :'Video rejected. The professional can replace it and submit again.')
       setNotes(current=>({...current,[item.id]:''}))
+      setPrivacyChecked(current=>({...current,[item.id]:false}))
       await load(pagination.page||1)
       window.dispatchEvent(new Event('propulse:expert-directory-refresh'))
     }catch(err){setError(err.message||'Video review failed.')}
@@ -104,13 +110,21 @@ export default function AdminCompletedProjects({businessUserId,filter='all'}){
             <small>{item.is_published?'Published project':'Private project'} · {item.project_type||'Project'}</small>
             {item.video_reward_review_note&&<p className="expert-review-previous-note">Review note: {item.video_reward_review_note}</p>}
             {item.video_url&&<div className="expert-review-actions">
+              <p className="expert-review-privacy-status" role="status">{item.video_privacy_cleared
+                ?'Contact privacy cleared for this video'
+                :'Not public: contact privacy review required'}</p>
+              <label className="expert-review-privacy-confirm">
+                <input type="checkbox" checked={privacyChecked[item.id]===true}
+                  onChange={event=>setPrivacyChecked(current=>({...current,[item.id]:event.target.checked}))}/>
+                <span>I watched this complete video, including its audio, and confirm it contains no phone numbers, WhatsApp details, email addresses, websites, social handles, QR codes or other direct contact information. If found, reject and request a redacted upload.</span>
+              </label>
               <label>Review note
                 <input type="text" maxLength="1000" placeholder="Reason required to reject"
                   value={notes[item.id]||''} onChange={event=>setNotes(current=>({...current,[item.id]:event.target.value}))}/>
               </label>
               <div>
-                <button type="button" className="approve" disabled={busy!==null||item.video_reward_status==='approved'}
-                  onClick={()=>review(item,'approve')}>{busy===item.id?'Reviewing…':'✓ Approve video'}</button>
+                <button type="button" className="approve" disabled={busy!==null||privacyChecked[item.id]!==true||Boolean(item.video_privacy_cleared)}
+                  onClick={()=>review(item,'approve')}>{busy===item.id?'Reviewing…':item.video_reward_status==='approved'&&!item.video_privacy_cleared?'✓ Recheck privacy & release':'✓ Approve & release video'}</button>
                 <button type="button" className="reject" disabled={busy!==null}
                   onClick={()=>review(item,'reject')}>Reject video</button>
               </div>
