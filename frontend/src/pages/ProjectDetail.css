@@ -179,3 +179,32 @@
 @media(max-width:620px){.pjd-page .pjd-quote-form .pjd-field-pair{grid-template-columns:1fr}.pjd-page .pjd-quote-dialog{max-height:92dvh}}
 
 .pjd-official-badge{display:inline-flex;margin:5px 0 0;padding:4px 8px;border-radius:99px;background:#fff0bd;color:#9d4f09;font-size:10px;font-weight:850;white-space:nowrap}
+
+/* Compact first screen: show media before lengthy portfolio copy. */
+.pjd-page .pjd-hero-intro{min-height:0;padding:25px 30px;gap:16px}
+.pjd-page .pjd-hero-intro h1{font-size:clamp(25px,2.8vw,38px);line-height:1.16;letter-spacing:-.035em;max-width:900px}
+.pjd-page .pjd-highlight{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;max-width:900px}
+.pjd-page .pjd-heading-tags .pjd-collection-index{display:none}
+.pjd-page .pjd-main-image video.pjd-feature-media{object-fit:contain;background:#111b25}
+.pjd-page .pjd-project-story{margin:20px 0 0;padding:0;border:1px solid #e2e8ed;border-radius:14px;background:white;overflow:hidden}
+.pjd-page .pjd-project-story summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:16px;cursor:pointer;padding:18px 22px;color:#163e57;font-size:14px;font-weight:850}
+.pjd-page .pjd-project-story summary::-webkit-details-marker{display:none}
+.pjd-page .pjd-project-story details[open] summary{border-bottom:1px solid #edf0f3}
+.pjd-page .pjd-project-story details[open] summary span{transform:rotate(180deg)}
+.pjd-page .pjd-project-story-copy{padding:18px 22px 24px}
+.pjd-page .pjd-project-story-copy h2{margin:0 0 10px;color:#153c56;font-size:19px}
+.pjd-page .pjd-project-story-copy p{margin:0;color:#506c80;white-space:pre-line;line-height:1.75;overflow-wrap:anywhere}
+@media(max-width:600px){
+  .pjd-page .pjd-hero-intro{padding:17px 18px;gap:6px;margin-bottom:12px}
+  .pjd-page .pjd-hero-intro h1{font-size:clamp(22px,6.6vw,29px);line-height:1.19;margin:9px 0 6px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden}
+  .pjd-page .pjd-hero-intro .pjd-highlight{font-size:12px;line-height:1.45}
+  .pjd-page .pjd-hero-micro{margin-top:10px}
+  .pjd-page .pjd-heading-tags{display:none}
+  .pjd-page .pjd-overline{font-size:9px;letter-spacing:.09em}
+  .pjd-page .pjd-main-image{aspect-ratio:1.27}
+  .pjd-page .pjd-breadcrumb{margin-bottom:12px}
+  .pjd-page .pjd-breadcrumb span:last-child{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;line-clamp:1;overflow:hidden}
+  .pjd-page .pjd-project-story{margin:13px 0}
+  .pjd-page .pjd-project-story summary{padding:15px}
+  .pjd-page .pjd-project-story-copy{padding:15px}
+}
