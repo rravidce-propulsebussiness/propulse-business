@@ -1,0 +1,67 @@
+name: Process ProPulse Project Videos
+
+# Small-project alternative to a dedicated Docker VPS. This workflow is inert
+# until all five repository secrets listed below are configured.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: propulse-private-video-redactor
+  cancel-in-progress: false
+
+jobs:
+  redact-one:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      DATABASE_URL: ${{ secrets.PROPULSE_VIDEO_DATABASE_URL }}
+      PRIVATE_OBJECT_STORAGE_ENDPOINT: ${{ secrets.PROPULSE_VIDEO_R2_ENDPOINT }}
+      PRIVATE_OBJECT_STORAGE_BUCKET: ${{ secrets.PROPULSE_VIDEO_R2_BUCKET }}
+      PRIVATE_OBJECT_STORAGE_ACCESS_KEY_ID: ${{ secrets.PROPULSE_VIDEO_R2_ACCESS_KEY_ID }}
+      PRIVATE_OBJECT_STORAGE_SECRET_ACCESS_KEY: ${{ secrets.PROPULSE_VIDEO_R2_SECRET_ACCESS_KEY }}
+      PRIVATE_OBJECT_STORAGE_REGION: auto
+      VIDEO_REDACTOR_ONCE: '1'
+      VIDEO_REDACTOR_OCR_LANGS: eng+tel
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check secure worker configuration
+        id: configured
+        shell: bash
+        run: |
+          missing=0
+          for var in DATABASE_URL PRIVATE_OBJECT_STORAGE_ENDPOINT PRIVATE_OBJECT_STORAGE_BUCKET PRIVATE_OBJECT_STORAGE_ACCESS_KEY_ID PRIVATE_OBJECT_STORAGE_SECRET_ACCESS_KEY; do
+            if [[ -z "${!var}" ]]; then
+              missing=1
+              echo "::notice::Video redaction is not yet configured (missing ${var} secret)."
+            fi
+          done
+          if [[ "$missing" == "1" ]]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.configured.outputs.ready == 'true'
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: video-redactor/requirements.txt
+
+      - name: Install local video privacy processor
+        if: steps.configured.outputs.ready == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg tesseract-ocr tesseract-ocr-eng tesseract-ocr-tel libglib2.0-0 libgl1
+          python -m pip install -r video-redactor/requirements.txt
+
+      - name: Process one queued video (source-matched redacted copy only)
+        if: steps.configured.outputs.ready == 'true'
+        run: python -u video-redactor/worker.py
