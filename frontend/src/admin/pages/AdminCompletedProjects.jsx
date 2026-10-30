@@ -117,7 +117,7 @@ export default function AdminCompletedProjects({businessUserId,filter='all'}){
                 {item.video_redaction_status==='ready'?'Processed copy ready — review this redacted video'
                   :item.video_redaction_status==='failed'?'Automatic redaction failed — original remains private'
                   :item.video_redaction_status==='processing'?'Automatically scanning and concealing contacts…'
-                  :'Waiting for automatic video redaction worker'}
+                  :'Video uploaded and queued. A separate Docker video-redaction worker must be running; Hostinger shared web hosting does not process videos.'}
               </p>
               {item.video_redaction_status==='failed'&&item.video_redaction_error&&
                 <small className="expert-review-processing-error">{item.video_redaction_error}</small>}
