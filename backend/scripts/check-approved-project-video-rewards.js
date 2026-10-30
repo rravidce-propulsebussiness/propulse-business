@@ -9,6 +9,8 @@ const profile=read('backend/src/services/profileService.js');
 const adminService=read('backend/src/services/adminCompletedProjectService.js');
 const adminPage=read('frontend/src/admin/pages/AdminCompletedProjects.jsx');
 const publicVideoService=read('backend/src/services/publicExpertService.js');
+const publicProjectDetail=read('frontend/src/pages/ProjectDetail.jsx');
+const publicProjectsPage=read('frontend/src/pages/Projects.jsx');
 const reviewService=read('backend/src/services/projectVideoRewardReviewService.js');
 const reviewController=read('backend/src/controllers/adminCompletedProjectController.js');
 const profileUi=read('frontend/src/pages/Profile.jsx');
@@ -56,6 +58,17 @@ assert.match(videoRedactionMigration,/video_reward_status='pending'/,
 assert.match(publicVideoService,/THEN \${alias}\.video_redacted_url ELSE NULL::text END AS video_url/,
   'Public URLs must always refer to the redacted derivative, never original');
 assert.match(publicVideoService,/video_redaction_status='ready'/);
+assert.match(publicVideoService,/publicProjectVideoStatusColumn\(alias\)/,
+  'Public project responses should explain video privacy status without exposing original URLs');
+assert.match(publicVideoService,/NULLIF\(\$\{alias\}\.video_url,''\) IS NULL/);
+assert.match(publicVideoService,/video_publication_status/,
+  'The gallery must be told that an uploaded video is awaiting safe processing');
+assert.match(publicProjectDetail,/project\.videoPublicationStatus==='processing_failed'/,
+  'The public project gallery should not say photos are missing when a video is waiting');
+assert.match(publicProjectsPage,/videoPublicationStatus:clean\(project\.video_publication_status\)/);
+assert.match(publicVideoService,/THEN \$\{alias\}\.video_redacted_url ELSE NULL::text END AS video_url/,
+  'The public video URL must remain strictly the approved redacted derivative');
+
 assert.match(publicVideoService,/video_redaction_source_url=\${alias}\.video_url/);
 assert.match(reviewService,/PROJECT_VIDEO_REDACTION_NOT_READY/);
 assert.match(reviewService,/project.video_redaction_source_url!==project.video_url/);
