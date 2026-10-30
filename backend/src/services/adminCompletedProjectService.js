@@ -151,6 +151,9 @@ async function save(payload,{id=null}={}){
     WHERE id=$1 RETURNING id,is_published
   `,[projectId,item.title,item.projectType,item.description,item.locationText,item.completionYear,item.areaText,
     item.budgetText,item.coverImageUrl,JSON.stringify(item.imageUrls),item.packageName,item.videoUrl,item.planUrl,item.isPublished]);
+  if(current.video_redacted_url&&current.video_url!==item.videoUrl)
+    videoService.removeManagedRedactedVideos(owner.user_id,[current.video_redacted_url])
+      .catch(error=>console.error('Redacted video cleanup failed:',error?.message||error));
   return result.rows[0];
 }
 module.exports={list,save,uploadPhoto};
