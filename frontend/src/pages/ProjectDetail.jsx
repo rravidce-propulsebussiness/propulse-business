@@ -219,7 +219,18 @@ export default function ProjectDetail(){
                 {videoSelected
                   ?<ProjectMediaContent key={project.video} preview={videoPreview} title={project.title+' project video'} className="pjd-feature-media"/>
                   :activePhoto?<img className="pjd-feature-media" src={activePhoto} alt={project.title+' completed work photo '+(photoIndex+1)}/>
-                  :<div className="pjd-no-photo"><Icon name="layers" size={34}/><strong>Photos not published yet</strong><span>This professional has not added project images.</span></div>}
+                  :['processing','awaiting_review','processing_failed'].includes(project.videoPublicationStatus)
+                    ?<div className="pjd-no-photo pjd-video-pending" role="status">
+                      <Icon name="layers" size={34}/>
+                      <strong>{project.videoPublicationStatus==='awaiting_review'?'Video awaiting final review':project.videoPublicationStatus==='processing_failed'?'Video processing needs attention':'Project video uploaded'}</strong>
+                      <span>{project.videoPublicationStatus==='awaiting_review'
+                        ?'The processed video is awaiting a contact-privacy check before it can be played publicly.'
+                        :project.videoPublicationStatus==='processing_failed'
+                          ?'The uploaded video is private while the professional resolves a processing issue.'
+                          :'The video is safely stored but is not yet available to watch. Contact details must be concealed and checked before publication.'}</span>
+                      <small>Public playback starts only after privacy approval.</small>
+                    </div>
+                    :<div className="pjd-no-photo"><Icon name="layers" size={34}/><strong>Photos not published yet</strong><span>This professional has not added project images.</span></div>}
                 {activePhoto&&!videoSelected&&<div className="pjd-image-caption">
                   <span className="pjd-caption-line"/>
                   <span>PROJECT GALLERY<small>{String(photoIndex+1).padStart(2,'0')} / {String(photos.length).padStart(2,'0')}</small></span>
