@@ -228,6 +228,8 @@ async function ensureProjectQualifiedCampaignGrants(userId,client=pool){
          AND NULLIF(BTRIM(p.video_url),'') IS NOT NULL
          AND p.video_reward_status='approved'
          AND p.video_reward_fingerprint IS NOT NULL
+         AND p.video_reward_reviewed_by IS NOT NULL
+         AND p.video_reward_reviewed_at IS NOT NULL
          AND p.video_reward_approved_url=p.video_url
     `,[userId])).rows
     :[];
@@ -701,6 +703,8 @@ async function campaignAudienceUserIds(client,campaign){
         AND NULLIF(BTRIM(p.video_url),'') IS NOT NULL
         AND p.video_reward_status='approved'
         AND p.video_reward_fingerprint IS NOT NULL
+        AND p.video_reward_reviewed_by IS NOT NULL
+        AND p.video_reward_reviewed_at IS NOT NULL
         AND p.video_reward_approved_url=p.video_url
         AND p.video_published_at IS NOT NULL
         AND (${windowDays}::int=0 OR (p.created_at>=u.created_at
