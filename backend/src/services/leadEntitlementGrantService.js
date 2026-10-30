@@ -231,6 +231,7 @@ async function ensureProjectQualifiedCampaignGrants(userId,client=pool){
          AND p.video_reward_reviewed_by IS NOT NULL
          AND p.video_reward_reviewed_at IS NOT NULL
          AND p.video_reward_approved_url=p.video_url
+         AND p.video_privacy_cleared_url=p.video_url
     `,[userId])).rows
     :[];
   for(const campaign of campaigns){
@@ -706,6 +707,7 @@ async function campaignAudienceUserIds(client,campaign){
         AND p.video_reward_reviewed_by IS NOT NULL
         AND p.video_reward_reviewed_at IS NOT NULL
         AND p.video_reward_approved_url=p.video_url
+         AND p.video_privacy_cleared_url=p.video_url
         AND p.video_published_at IS NOT NULL
         AND (${windowDays}::int=0 OR (p.created_at>=u.created_at
           AND p.created_at<=u.created_at+(${windowDays}::int * INTERVAL '1 day')

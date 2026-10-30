@@ -82,7 +82,9 @@ async function list({page=1,pageSize=20,businessUserId=null}={}){
   const result=await pool.query(`
     SELECT p.id,p.title,p.project_type,p.description,p.location_text,p.completion_year,p.area_text,
       p.budget_text,p.cover_image_url,p.image_urls,p.package_name,p.video_url,p.plan_url,
-      p.is_published,p.published_at,p.created_at,p.video_reward_status,p.video_reward_review_note,p.video_reward_reviewed_at,u.id AS business_user_id,bp.business_name
+      p.is_published,p.published_at,p.created_at,p.video_reward_status,p.video_reward_review_note,p.video_reward_reviewed_at,
+      COALESCE(p.video_privacy_cleared_url=p.video_url,FALSE) AS video_privacy_cleared,
+      u.id AS business_user_id,bp.business_name
     FROM business_profile_projects p
     JOIN business_profiles bp ON bp.id=p.business_profile_id
     JOIN users u ON u.id=bp.user_id

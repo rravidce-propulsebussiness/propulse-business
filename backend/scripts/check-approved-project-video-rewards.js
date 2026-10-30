@@ -7,6 +7,12 @@ const service=read('backend/src/services/leadEntitlementGrantService.js');
 const profile=read('backend/src/services/profileService.js');
 const adminService=read('backend/src/services/adminCompletedProjectService.js');
 const adminPage=read('frontend/src/admin/pages/AdminCompletedProjects.jsx');
+const publicVideoService=read('backend/src/services/publicExpertService.js');
+const reviewService=read('backend/src/services/projectVideoRewardReviewService.js');
+const reviewController=read('backend/src/controllers/adminCompletedProjectController.js');
+const profileUi=read('frontend/src/pages/Profile.jsx');
+const privacyMigration=read('backend/src/database/migrations/20261030_project_video_contact_privacy.sql');
+const serverSource=read('backend/src/server.js');
 const rewardEditor=read('frontend/src/admin/pages/AdminLeadEntitlements.jsx');
 const routes=read('backend/src/routes/adminRoutes.js');
 const auth=read('backend/src/controllers/authController.js');
@@ -17,6 +23,30 @@ const migrations=read('backend/src/database/migrations/20261028_zz_project_video
 
 assert.match(service,/p.video_reward_status='approved'/);
 assert.match(service,/p.video_reward_approved_url=p.video_url/);
+assert.equal((service.match(/p\.video_privacy_cleared_url=p\.video_url/g)||[]).length,2,
+  'Both lazy and bulk lead-reward paths must require contact privacy clearance');
+assert.match(publicVideoService,/function contactSafeVideoSql\(alias\)/);
+assert.match(publicVideoService,/video_privacy_cleared_url=\$\{alias\}\.video_url/);
+assert.match(publicVideoService,/contactSafeVideoSql\('bpp'\)/,
+  'Video-only public listings must filter out uncleared uploads');
+assert.equal((publicVideoService.match(/publicProjectVideoColumn\(/g)||[]).length,5,
+  'All four public project/video endpoints must gate video URL disclosure');
+assert.match(reviewService,/contactDetailsChecked!==true/,
+  'Admin video approval requires explicit contact privacy confirmation');
+assert.match(reviewService,/video_privacy_cleared_url=\$7/,
+  'Review must bind privacy clearance to the exact uploaded video URL');
+assert.match(reviewController,/PROJECT_VIDEO_CONTACT_PRIVACY_REQUIRED/,
+  'Missing privacy approval must be a user-correctable 400, not 503');
+assert.match(adminPage,/I watched this complete video/);
+assert.match(adminPage,/privacyChecked\[item.id\]===true/);
+assert.match(profileUi,/Before uploading, remove all visible or spoken phone numbers/);
+assert.match(serverSource,/app.use\('\/uploads\/business-projects',async\(req,res,next\)=>/);
+assert.match(serverSource,/p.video_privacy_cleared_url=p.video_url/,
+  'Raw legacy local videos must be protected by the same privacy access gate');
+assert.match(serverSource,/requireAuth\(req,res/,
+  'Only authenticated owner or admin can preview an uncleared local video');
+assert.match(privacyMigration,/ADD COLUMN IF NOT EXISTS video_privacy_cleared_url TEXT/,
+  'No older video should be assumed privacy-safe after migration');
 assert.equal((service.match(/p\.video_reward_reviewed_by IS NOT NULL/g)||[]).length,2,
   'Both lazy and bulk project-reward paths require a recorded admin reviewer');
 assert.equal((service.match(/p\.video_reward_reviewed_at IS NOT NULL/g)||[]).length,2,
@@ -34,9 +64,14 @@ assert.match(service,/if\(maxRegistrationAge>0&&Number\(campaign.min_completed_p
   'Admin approval can occur after the timely video upload deadline');
 assert.match(service,/Existing project-award grants must retain their validity/);
 assert.match(profile,/sameVideo\?previous.video_reward_status:'pending'/);
+assert.match(profile,/videoPrivacyClearedUrl:sameVideo\?previous.video_privacy_cleared_url:null/,
+  'Project edits must preserve privacy clearance only for the unchanged video');
+assert.match(profile,/video_privacy_cleared_url:item.videoPrivacyClearedUrl/,
+  'Profile full-row reinsertion must persist privacy clearance');
+
 assert.match(profile,/video_reward_fingerprint:item.videoRewardFingerprint/);
 assert.match(adminService,/video_reward_status=CASE WHEN COALESCE\(video_url/);
-assert.match(adminPage,/Approve video/);
+assert.match(adminPage,/Approve & release video/);
 assert.match(adminPage,/Reject video/);
 assert.match(routes,/projects\/:projectId\/review-video/);
 assert.match(migrations,/uq_approved_project_video_fingerprint/);
@@ -73,5 +108,14 @@ async function checkContentHash(){
     global.fetch=originals.fetch;
   }
 }
-checkContentHash().then(()=>console.log('Approved-video reward and repeat-signup defenses passed'))
+async function checkPrivacyConfirmation(){
+  const reviewer=require('../src/services/projectVideoRewardReviewService');
+  await assert.rejects(
+    ()=>reviewer.review(1,1,{decision:'approve',contactDetailsChecked:false}),
+    error=>error.code==='PROJECT_VIDEO_CONTACT_PRIVACY_REQUIRED',
+    'An unconfirmed review must be blocked before any database or R2 access'
+  );
+}
+Promise.all([checkContentHash(),checkPrivacyConfirmation()])
+  .then(()=>console.log('Approved-video reward, contact privacy and repeat-signup defenses passed'))
  .catch(error=>{console.error(error);process.exitCode=1});
