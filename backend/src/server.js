@@ -50,6 +50,7 @@ const { startDatabaseBackupScheduler }=require('./services/databaseBackupSchedul
 const rateLimit=require('./middleware/rateLimitMiddleware');
 const {getApiGlobalRateLimitConfig}=require('./config/apiRateLimitConfig');
 const csrfProtection=require('./middleware/csrfMiddleware');
+const requireAuth=require('./middleware/authMiddleware');
 const {getConfiguredOrigins}=require('./config/httpOrigins');
 const {shouldBypassCorsForPublicAssets}=require('./config/httpCorsPolicy');
 const {envFlag}=require('./config/runtimeFlags');
@@ -217,6 +218,40 @@ app.use('/api',(req,res,next)=>{
 app.use('/api/sound-settings',soundSettingsRoutes);
 app.use('/api/support-chat',supportChatRoutes);
 app.use('/uploads',(req,res,next)=>{if(req.path==='/company-proofs'||req.path.startsWith('/company-proofs/'))return res.status(404).json({error:'Not found'});if(req.path==='/private-proofs'||req.path.startsWith('/private-proofs/'))return res.status(404).json({error:'Not found'});if(req.path==='/lead-references'||req.path.startsWith('/lead-references/'))return res.status(404).json({error:'Not found'});return next();});
+// Legacy local project videos must not bypass the privacy gate by using a raw
+// /uploads URL. Privileged admin/owner previews remain available for review.
+app.use('/uploads/business-projects',async(req,res,next)=>{
+  if(!/\.(mp4|mov|webm)$/i.test(req.path))return next();
+  res.setHeader('Cache-Control','private, no-store');
+  if(req.method!=='GET'&&req.method!=='HEAD')return res.status(405).end();
+  const match=req.path.match(/^\/([1-9]\d*)-\d{13}-[a-f0-9]{24}\.(?:mp4|mov|webm)$/);
+  if(!match)return res.status(404).end();
+  const ownerId=Number(match[1]);
+  const storedUrl='/uploads/business-projects'+req.path;
+  try{
+    const access=await pool.query(`
+      SELECT EXISTS(
+        SELECT 1 FROM business_profile_projects p
+        JOIN business_profiles bp ON bp.id=p.business_profile_id
+        WHERE bp.user_id=$1 AND p.video_url=$2 AND p.is_published=TRUE
+          AND p.video_reward_status='approved'
+          AND p.video_reward_fingerprint IS NOT NULL
+          AND p.video_reward_reviewed_by IS NOT NULL
+          AND p.video_reward_reviewed_at IS NOT NULL
+          AND p.video_reward_approved_url=p.video_url
+          AND p.video_privacy_cleared_url=p.video_url
+      ) AS public_access
+    `,[ownerId,storedUrl]);
+    if(access.rows[0]?.public_access)return next();
+    return requireAuth(req,res,()=>{
+      if(req.user?.role==='admin'||Number(req.user?.id)===ownerId)return next();
+      return res.status(404).end();
+    });
+  }catch(error){
+    console.error('Project video access check failed:',error.message);
+    return res.status(503).json({error:'Project video temporarily unavailable'});
+  }
+});
 app.use('/uploads',express.static(uploadRoot,{fallthrough:true,maxAge:'7d',immutable:true}));
 function setHealthHeaders(res){res.setHeader('Cache-Control','no-store');}
 function withTimeout(promise,label){
