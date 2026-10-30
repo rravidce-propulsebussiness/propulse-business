@@ -13,10 +13,13 @@ function contactSafeVideoSql(alias){
     AND ${alias}.video_reward_reviewed_by IS NOT NULL
     AND ${alias}.video_reward_reviewed_at IS NOT NULL
     AND ${alias}.video_reward_approved_url=${alias}.video_url
-    AND ${alias}.video_privacy_cleared_url=${alias}.video_url`;
+    AND ${alias}.video_privacy_cleared_url=${alias}.video_url
+    AND ${alias}.video_redaction_status='ready'
+    AND ${alias}.video_redaction_source_url=${alias}.video_url
+    AND ${alias}.video_redacted_url IS NOT NULL`;
 }
 function publicProjectVideoColumn(alias){
-  return `CASE WHEN ${contactSafeVideoSql(alias)} THEN ${alias}.video_url ELSE NULL::text END AS video_url`;
+  return `CASE WHEN ${contactSafeVideoSql(alias)} THEN ${alias}.video_redacted_url ELSE NULL::text END AS video_url`;
 }
 
 async function materializeProjectMedia(rows){
