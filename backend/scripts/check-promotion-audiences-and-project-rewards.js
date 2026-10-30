@@ -26,7 +26,7 @@ assert.match(migrations,/ADD COLUMN IF NOT EXISTS min_completed_projects/);
 assert.match(couponUi,/Non-members/);
 assert.match(couponUi,/Basic \+ Premium/);
 assert.match(couponUi,/wallet_topup/);
-assert.match(entitlementUi,/Completed projects required/);
+assert.match(entitlementUi,/Completed projects with approved videos/);
 assert.match(entitlementUi,/minCompletedProjects/);
 assert.match(grants,/min_completed_projects>0/);
 assert.match(grants,/p.is_published=TRUE/);
