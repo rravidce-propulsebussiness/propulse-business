@@ -65,7 +65,7 @@ assert.match(service,/p.video_redaction_status='ready'/);
 assert.match(videoRedactionWorker,/detect_contact_boxes/);
 assert.match(videoRedactionWorker,/pytesseract.image_to_data/);
 assert.match(videoRedactionWorker,/QRCodeDetector/);
-assert.match(videoRedactionWorker,/\\"-an\\"/, 'All audio must be stripped in v1');
+assert.match(videoRedactionWorker,/"-an"/, 'All audio must be stripped in v1');
 assert.match(videoRedactionWorker,/FOR UPDATE OF p SKIP LOCKED/,
   'The redactor needs a safe single-job claim');
 assert.match(videoRedactionWorker,/video_redaction_token=%s/,
