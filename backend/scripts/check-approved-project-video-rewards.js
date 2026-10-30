@@ -7,6 +7,7 @@ const service=read('backend/src/services/leadEntitlementGrantService.js');
 const profile=read('backend/src/services/profileService.js');
 const adminService=read('backend/src/services/adminCompletedProjectService.js');
 const adminPage=read('frontend/src/admin/pages/AdminCompletedProjects.jsx');
+const rewardEditor=read('frontend/src/admin/pages/AdminLeadEntitlements.jsx');
 const routes=read('backend/src/routes/adminRoutes.js');
 const auth=read('backend/src/controllers/authController.js');
 const signup=read('backend/src/services/authService.js');
@@ -16,6 +17,16 @@ const migrations=read('backend/src/database/migrations/20261028_zz_project_video
 
 assert.match(service,/p.video_reward_status='approved'/);
 assert.match(service,/p.video_reward_approved_url=p.video_url/);
+assert.equal((service.match(/p\.video_reward_reviewed_by IS NOT NULL/g)||[]).length,2,
+  'Both lazy and bulk project-reward paths require a recorded admin reviewer');
+assert.equal((service.match(/p\.video_reward_reviewed_at IS NOT NULL/g)||[]).length,2,
+  'Both project-reward paths require a recorded video approval timestamp');
+assert.match(rewardEditor,/minCompletedProjects:1,/,
+  'New conditional rewards default to one completed project with an approved video');
+assert.match(rewardEditor,/Completed projects with approved videos/);
+assert.match(rewardEditor,/Pending, rejected, missing or photo-only videos never count/);
+assert.match(rewardEditor,/Company verification is separate/,
+  'Company verification must not be confused with admin video approval');
 assert.match(service,/p.video_reward_fingerprint IS NOT NULL/);
 assert.match(service,/project.video_published_at/);
 assert.match(service,/p.video_published_at<=u.created_at/);

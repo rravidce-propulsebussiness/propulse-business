@@ -32,7 +32,7 @@ const defaultCampaign=()=>({
   registrationScope:'any',
   registrationEligibilityDays:0,
   verificationScope:'any',
-  minCompletedProjects:0,
+  minCompletedProjects:1,
   userIds:[],
   industryId:'',
   stateId:'',
@@ -534,7 +534,7 @@ export default function AdminLeadEntitlements(){
               ?`${Number(item.selected_user_count||0)} selected businesses`
               :'All businesses'
             const targets=[audience,item.registration_scope==='new_registration'?'New registrations only':'Any registration date',verificationLabel(item.verification_scope),
-              Number(item.min_completed_projects)>0?`${item.min_completed_projects}+ published completed projects`:'No project condition',
+              Number(item.min_completed_projects)>0?`${item.min_completed_projects}+ completed projects with approved videos`:'No project condition',
               Number(item.registration_eligibility_days||item.project_registration_window_days)>0?`Registration window: ${item.registration_eligibility_days||item.project_registration_window_days} days`:'No registration deadline',
               item.industry_name||'All industries',locationLabel(item)]
             const access=accessLabels(item)
@@ -612,7 +612,7 @@ export default function AdminLeadEntitlements(){
                 aria-pressed={!registrationReward} disabled={Boolean(editingReward)}
                 onClick={()=>changeRewardType('campaign')}>
                 <strong>Meet eligibility conditions</strong>
-                <small>Require verification, completed projects or selected businesses, with a separate registration window</small>
+                <small>Require approved project videos, company verification or selected businesses, with a configurable registration window</small>
               </button>
             </div>
             {editingReward&&<small>Existing reward types are locked to protect previously issued credits. You can edit all eligibility settings for this type.</small>}
@@ -688,12 +688,12 @@ export default function AdminLeadEntitlements(){
                       onChange={e=>setCampaign(v=>({...v,registrationEligibilityDays:clamp(e.target.value,0,365)}))}/>
                     <span>{Number(campaign.registrationEligibilityDays)===0?'No limit':'days'}</span>
                   </div>
-                  <small>Meet all eligibility conditions within this many days after signup. Required completed projects must be uploaded within the same period. 0 = no deadline. Credit validity is separate.</small>
+                  <small>For a video-based reward, both the completed project and its video must be uploaded within this many days after signup. Admin video approval can happen later. 0 = no deadline; credit validity is separate.</small>
                 </label>
-                <label>Completed projects required
+                <label>Completed projects with approved videos
                   <input type="number" min="0" max="20" step="1" value={campaign.minCompletedProjects}
                     onChange={e=>setCampaign(v=>({...v,minCompletedProjects:clamp(e.target.value,0,20)}))}/>
-                  <small>0 = no project requirement; 1+ = published completed projects.</small>
+                  <small>Each project must be completed and published, with a directly uploaded video approved by a ProPulse admin. Pending, rejected, missing or photo-only videos never count. Set 0 only to remove the project/video requirement.</small>
                 </label>
                 <label>Free credit validity
                   <div className="entitlement-input-suffix">
@@ -748,7 +748,7 @@ export default function AdminLeadEntitlements(){
           </div>}
 
           {!registrationReward&&Number(campaign.minCompletedProjects)>0&&<p className="rule-priority-note">
-            Project uploads do not verify a company. Select "Verified only" above if admin approval must also be required.
+            Project video approval is mandatory for this reward. Company verification is separate: select "Verified only" if the business must also have verified company documents.
           </p>}
           <div className="entitlement-dynamic-preview" role="status" aria-live="polite">
             <strong>Reward preview</strong>
@@ -760,16 +760,16 @@ export default function AdminLeadEntitlements(){
               : <small>{campaign.registrationScope==='new_registration'?'New registrations only. ':'Existing and new registrations. '}
                 {Number(campaign.registrationEligibilityDays)>0?'Must qualify within '+campaign.registrationEligibilityDays+' days of signup. ':'No signup-age cutoff. '}
                 {Number(campaign.minCompletedProjects)>0
-                  ?'At least '+campaign.minCompletedProjects+' completed project(s)'+
-                    (Number(campaign.registrationEligibilityDays)>0?' uploaded within the same registration window':'')
-                  :'No project prerequisite'}. Credit validity: {Number(campaign.validDays)>0?campaign.validDays+' days':'no expiry'}.
+                  ?'At least '+campaign.minCompletedProjects+' completed published project(s) with uploaded, admin-approved video(s)'+
+                    (Number(campaign.registrationEligibilityDays)>0?' uploaded within the registration window (approval may follow)':'')
+                  :'No project/video prerequisite'}. Credit validity: {Number(campaign.validDays)>0?campaign.validDays+' days':'no expiry'}.
                 </small>}
           </div>
           <AccessRules value={currentReward} onChange={setCurrentReward}/>
           <div className="rule-priority-note">
             {registrationReward
               ?'If multiple registration rewards qualify, the most specific one wins. Saving a registration rule does not give the same business two new-business grants.'
-              :'Save to award current eligible recipients. Future signups are checked automatically. For a completed-project reward, businesses can qualify after uploading and approval; each qualifying business is awarded only once.'}
+              :'Save to award current eligible recipients. Future signups are checked automatically. For a completed-project reward, only admin-approved, uploaded project videos count. Each qualifying business is awarded once, after video approval.'}
           </div>
         </div>
         {error&&<div className="entitlement-modal-error" role="alert" aria-live="assertive">
