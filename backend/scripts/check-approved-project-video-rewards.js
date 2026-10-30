@@ -1,4 +1,5 @@
 const assert=require('node:assert/strict');
+const {spawnSync}=require('node:child_process');
 const fs=require('node:fs');
 const path=require('node:path');
 const root=path.resolve(__dirname,'../..');
@@ -107,6 +108,32 @@ assert.match(signup,/recordSignupIdentity\(client,user.id/);
 assert.match(service,/allowAutomaticSignupReward\(client,userId/);
 assert.match(antiAbuse,/createHmac\('sha256'/);
 assert.doesNotMatch(antiAbuse,/userAgent|localStorage|X-Forwarded-For/);
+
+// Parse the Python processor and exercise its contact-pattern helper without
+// needing OpenCV/R2 installed in the Node test environment.
+const pythonCheck=spawnSync('python3',['-c',String.raw`
+import ast, re, pathlib
+source=pathlib.Path('video-redactor/worker.py').read_text()
+tree=ast.parse(source)
+ns={'re':re}
+for node in tree.body:
+    if isinstance(node, ast.Assign) and any(isinstance(t,ast.Name) and t.id=='CONTACT' for t in node.targets):
+        exec(compile(ast.Module(body=[node],type_ignores=[]),'worker.py','exec'),ns)
+    if isinstance(node, ast.FunctionDef) and node.name=='contains_contact':
+        exec(compile(ast.Module(body=[node],type_ignores=[]),'worker.py','exec'),ns)
+check=ns['contains_contact']
+assert check('+91 98765 43210')
+assert check('WhatsApp number available')
+assert check('Visit www.example.com')
+assert check('mail info@example.com')
+assert check('@contractor.handle')
+assert not check('Completed 3BHK interior in Uppal, 1250 sq ft')
+`],{cwd:root,encoding:'utf8',timeout:5000});
+if(!pythonCheck.error){
+  assert.equal(pythonCheck.status,0,'Python worker syntax/contact detection regression: '+pythonCheck.stderr);
+}else if(pythonCheck.error.code!=='ENOENT'){
+  throw pythonCheck.error;
+}
 
 async function checkContentHash(){
   const s3=require('../src/services/s3PrivateObjectStorageService');
