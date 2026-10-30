@@ -536,3 +536,6 @@
 .profile-project-seo-grid :is(input,textarea){width:100%;box-sizing:border-box;border:1px solid #e5d2c4;border-radius:9px;padding:10px 12px;color:#1b374c;font:inherit;outline-offset:2px;background:white}
 .profile-project-seo-grid label small{font-size:12px;line-height:1.5;color:#627889;font-weight:500;overflow-wrap:anywhere}
 @media(max-width:640px){.profile-project-seo-grid{grid-template-columns:1fr}.profile-project-seo-grid label.wide{grid-column:auto}}
+
+/* Publication is controlled server-side; this warning explains how to prepare safe footage. */
+.profile-video-privacy-warning{display:block!important;max-width:100%;white-space:normal!important;line-height:1.55!important;color:#ab421d!important;font-weight:700!important;margin-top:8px!important}
