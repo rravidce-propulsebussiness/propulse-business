@@ -1,0 +1,53 @@
+/* Dedicated public package quote – one calculator per selected professional package. */
+.ppq-page{min-height:100vh;background:#f6f8fa;color:#173851}
+.ppq-page *{box-sizing:border-box}
+.ppq-wrap{width:min(1180px,calc(100% - 48px));margin:0 auto;padding:24px 0 76px}
+.ppq-breadcrumb{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:0 0 18px;color:#718698;font-size:12px}
+.ppq-breadcrumb a{color:#c05225;text-decoration:none;font-weight:800}
+.ppq-hero{padding:32px 36px;background:radial-gradient(circle at 94% 0%,#315b73,#0b2d47 57%,#081d30);border-radius:20px;color:white;margin-bottom:20px}
+.ppq-hero>span,.ppq-kicker{display:block;font-size:11px;font-weight:900;letter-spacing:.12em;color:#e66a30}
+.ppq-hero>span{color:#ffa176}
+.ppq-hero h1{color:#fff;font-size:clamp(29px,4vw,42px);letter-spacing:-.04em;line-height:1.15;margin:11px 0}
+.ppq-hero p{color:#d3e2eb;margin:0 0 14px}
+.ppq-hero>strong{font-size:clamp(21px,3vw,31px);color:#fff}
+.ppq-layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:18px;align-items:start}
+.ppq-primary{display:grid;gap:18px;min-width:0}
+.ppq-panel{padding:27px;background:white;border:1px solid #e1e8ec;border-radius:17px;box-shadow:0 10px 30px #1239570c}
+.ppq-panel h2{margin:8px 0 12px;font-size:clamp(21px,2.5vw,28px);letter-spacing:-.025em;color:#113953}
+.ppq-panel p{color:#647e8c;line-height:1.6}
+.ppq-calculator{display:grid;gap:16px;padding:20px;background:#fff5ec;border:1px solid #f4d6c0;border-radius:13px}
+.ppq-calculator label{display:grid;gap:9px;font-size:14px;font-weight:800;color:#3f5464}
+.ppq-calculator input{height:50px;width:100%;min-width:0;padding:12px;border:1px solid #d0d9df;border-radius:10px;background:white;color:#123752;font:inherit}
+.ppq-calculator button,.ppq-result button{min-height:49px;border:0;border-radius:11px;background:#f46a1e;color:white;padding:12px 16px;font:inherit;font-weight:850;cursor:pointer}
+.ppq-calculator button:hover,.ppq-result button:hover{background:#d65513}
+.ppq-calculator button:focus-visible,.ppq-result button:focus-visible,.ppq-options a:focus-visible{outline:3px solid #ffa16b;outline-offset:2px}
+.ppq-result{display:grid;gap:11px;margin-top:17px;padding:21px;border:1px solid #f1b68d;border-radius:13px;background:#fffaf5}
+.ppq-result small{font-size:11px;color:#c05225;letter-spacing:.12em;font-weight:900}
+.ppq-result strong{font-size:clamp(27px,4vw,40px);color:#153f59}
+.ppq-result p{margin:0}
+.ppq-result a,.ppq-profile-link,.ppq-brochure{color:#c45321;font-weight:850;text-decoration:none}
+.ppq-disclaimer{font-size:12px}
+.ppq-error{font-size:13px;color:#b42318!important;font-weight:800}
+.ppq-inclusions{display:grid;gap:9px;padding-left:22px;color:#43677e;line-height:1.5}
+.ppq-inclusions li::marker{color:#e9652a}
+.ppq-specs{display:grid;gap:10px;margin-top:18px}
+.ppq-specs>div{display:grid;gap:5px;padding:13px 16px;border:1px solid #e3e9ed;border-radius:10px;background:#fbfcfd}
+.ppq-specs strong{color:#123955}
+.ppq-specs p{margin:0;font-size:13px}
+.ppq-specs small{color:#68818e;line-height:1.5}
+.ppq-brochure{display:inline-block;margin-top:18px}
+.ppq-sidebar{position:sticky;top:20px}
+.ppq-sidebar h2{font-size:21px}
+.ppq-options{display:grid;gap:8px;margin:16px 0}
+.ppq-options a{display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;color:#16405b;padding:13px;border:1px solid #dfebf0;border-radius:10px}
+.ppq-options a.selected{background:#fff3e9;border-color:#efb28c}
+.ppq-options a span:first-child{display:grid;gap:4px}
+.ppq-options small{font-size:12px;color:#6f8796}
+.ppq-profile-link{display:block;margin-top:17px;font-size:13px}
+.ppq-success{padding:15px;border:1px solid #a4d6b5;border-radius:10px;background:#edfbf3;color:#23684b}
+.ppq-success p{margin:8px 0 0;color:#23684b}
+.ppq-empty{padding:40px;background:white;border-radius:15px}
+.ppq-empty h1{margin-top:0}
+.ppq-empty a{color:#c55623}
+@media(max-width:850px){.ppq-layout{grid-template-columns:1fr}.ppq-sidebar{position:static}.ppq-sidebar .ppq-options{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}}
+@media(max-width:600px){.ppq-wrap{width:calc(100% - 24px);padding:16px 0 55px}.ppq-hero{padding:22px 19px;border-radius:14px}.ppq-hero h1{font-size:27px}.ppq-panel{padding:20px 16px;border-radius:13px}.ppq-calculator{padding:14px}.ppq-result{padding:16px}.ppq-options{grid-template-columns:1fr!important}}
