@@ -5,31 +5,27 @@ const projectPlanService=require('./projectPlanService');
 const projectImageService=require('./projectImageService');
 const brochureService=require('./brochureService');
 
-// Only media explicitly cleared for contact privacy may receive public signed URLs.
-// Admin and project-owner previews use their authenticated endpoints instead.
-function contactSafeVideoSql(alias){
-  return `${alias}.video_reward_status='approved'
-    AND ${alias}.video_reward_fingerprint IS NOT NULL
-    AND ${alias}.video_reward_reviewed_by IS NOT NULL
-    AND ${alias}.video_reward_reviewed_at IS NOT NULL
-    AND ${alias}.video_reward_approved_url=${alias}.video_url
-    AND ${alias}.video_privacy_cleared_url=${alias}.video_url
-    AND ${alias}.video_redaction_status='ready'
+// Public video playback depends on a completed, source-matched redacted copy,
+// NOT the independent admin decision about project-based lead-credit rewards.
+// Never return original uploads or failed/unprocessed derivatives.
+function publicRedactedVideoReadySql(alias){
+  return `${alias}.video_redaction_status='ready'
+    AND NULLIF(${alias}.video_url,'') IS NOT NULL
     AND ${alias}.video_redaction_source_url=${alias}.video_url
-    AND ${alias}.video_redacted_url IS NOT NULL`;
+    AND ${alias}.video_redacted_url LIKE 'private-object-s3:business-project-redacted/%'`;
 }
 function publicProjectVideoColumn(alias){
-  return `CASE WHEN ${contactSafeVideoSql(alias)} THEN ${alias}.video_redacted_url ELSE NULL::text END AS video_url`;
+  return `CASE WHEN ${publicRedactedVideoReadySql(alias)} THEN ${alias}.video_redacted_url ELSE NULL::text END AS video_url`;
 }
 
 // Public status only; never return the original R2 reference, raw video,
  // processing error detail, or private admin review metadata.
 function publicProjectVideoStatusColumn(alias){
   return `CASE
-    WHEN ${contactSafeVideoSql(alias)} THEN 'published'
+    WHEN ${publicRedactedVideoReadySql(alias)} THEN 'published'
     WHEN NULLIF(${alias}.video_url,'') IS NULL THEN 'none'
     WHEN ${alias}.video_redaction_status='failed' THEN 'processing_failed'
-    WHEN ${alias}.video_redaction_status='ready' THEN 'awaiting_review'
+    WHEN ${alias}.video_redaction_status='ready' THEN 'processing_failed'
     ELSE 'processing'
   END::text AS video_publication_status`;
 }
@@ -251,7 +247,7 @@ async function listRecentProjectVideos({page=1,pageSize=12}={}){
   }
   const offset=(currentPage-1)*currentPageSize;
   const params=[];
-  const conditions=["bpp.is_published=TRUE","bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)","COALESCE(bpp.video_url,'')<>''",contactSafeVideoSql('bpp')];
+  const conditions=["bpp.is_published=TRUE","bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)","COALESCE(bpp.video_url,'')<>''",publicRedactedVideoReadySql('bpp')];
   addEligibilityConditions(settings,params,conditions);
   const where='WHERE '+conditions.join(' AND ');
   const total=Number((await pool.query(
