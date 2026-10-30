@@ -252,7 +252,17 @@ app.use('/uploads/business-projects',async(req,res,next)=>{
     return res.status(503).json({error:'Project video temporarily unavailable'});
   }
 });
-app.use('/uploads',express.static(uploadRoot,{fallthrough:true,maxAge:'7d',immutable:true}));
+app.use('/uploads',express.static(uploadRoot,{
+  fallthrough:true,maxAge:'7d',immutable:true,
+  setHeaders(res,filePath){
+    // A public project-video clearance can be revoked. Never cache a local
+    // video with the 7-day immutable policy used for other uploaded assets.
+    if(/[/\\]business-projects[/\\].+\.(?:mp4|mov|webm)$/i.test(filePath)){
+      res.setHeader('Cache-Control','private, no-store');
+      res.setHeader('Pragma','no-cache');
+    }
+  }
+}));
 function setHealthHeaders(res){res.setHeader('Cache-Control','no-store');}
 function withTimeout(promise,label){
   let timer;
