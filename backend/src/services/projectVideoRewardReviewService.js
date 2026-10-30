@@ -52,7 +52,7 @@ async function review(projectId,adminId,{decision,note,contactDetailsChecked=fal
   const safeNote=String(note||'').trim().slice(0,1000);
   if(decision==='reject'&&!safeNote)throw invalid('Give the business a reason for rejection.');
   if(decision==='approve'&&contactDetailsChecked!==true)
-    throw invalid('Watch the full video and confirm that it shows and says no phone numbers, email, website, social handles, QR codes or other direct contact details. Reject and request a redacted re-upload if any appear.','PROJECT_VIDEO_CONTACT_PRIVACY_REQUIRED');
+    throw invalid('Before approving lead-credit rewards, watch the processed video, confirm genuine completed work and no unmasked direct contact details. Reject the lead-credit claim if verification fails.','PROJECT_VIDEO_CONTACT_PRIVACY_REQUIRED');
   const client=await pool.connect();
   try{
     await client.query('BEGIN');
@@ -70,11 +70,11 @@ async function review(projectId,adminId,{decision,note,contactDetailsChecked=fal
       ||project.video_redaction_source_url!==project.video_url
       ||!project.video_redacted_url
       ||!String(project.video_redacted_url).startsWith('private-object-s3:business-project-redacted/')
-    ))throw invalid('The private video must be automatically redacted before contact-privacy approval. Check redaction status or upload a new video.','PROJECT_VIDEO_REDACTION_NOT_READY');
+    ))throw invalid('Automatic video redaction must complete before lead-credit review. Check processing status or upload a corrected video.','PROJECT_VIDEO_REDACTION_NOT_READY');
     if(decision==='approve'){
       const redactedKey=s3.parseReference(project.video_redacted_url);
       if(!await s3.headObject(redactedKey))
-        throw invalid('The processed video is missing from private storage. Reprocess before approval.','PROJECT_VIDEO_REDACTION_NOT_READY');
+        throw invalid('The processed video is missing from private storage. Reprocess before lead-credit approval.','PROJECT_VIDEO_REDACTION_NOT_READY');
     }
     const digest=decision==='approve'?await videoContentFingerprint(project.user_id,project.video_url):null;
     const saved=await client.query(`
