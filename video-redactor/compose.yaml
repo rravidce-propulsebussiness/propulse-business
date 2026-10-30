@@ -1,0 +1,22 @@
+services:
+  project-video-redactor:
+    build: .
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=2g,mode=1777
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL must be configured}
+      PRIVATE_OBJECT_STORAGE_ENDPOINT: ${PRIVATE_OBJECT_STORAGE_ENDPOINT:?R2 endpoint required}
+      PRIVATE_OBJECT_STORAGE_BUCKET: ${PRIVATE_OBJECT_STORAGE_BUCKET:?R2 bucket required}
+      PRIVATE_OBJECT_STORAGE_ACCESS_KEY_ID: ${PRIVATE_OBJECT_STORAGE_ACCESS_KEY_ID:?R2 access key required}
+      PRIVATE_OBJECT_STORAGE_SECRET_ACCESS_KEY: ${PRIVATE_OBJECT_STORAGE_SECRET_ACCESS_KEY:?R2 secret required}
+      PRIVATE_OBJECT_STORAGE_REGION: ${PRIVATE_OBJECT_STORAGE_REGION:-auto}
+      VIDEO_REDACTOR_POLL_SECONDS: ${VIDEO_REDACTOR_POLL_SECONDS:-20}
+      VIDEO_REDACTOR_OCR_LANGS: eng+tel
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 200
+    mem_limit: 3g
+    cpus: 2.0
