@@ -129,7 +129,9 @@ export default function ProfessionalDetails(){
                   </details>}
                   {Array.isArray(plan.inclusions)&&plan.inclusions.length>0&&<details className="pr-spec-detail"><summary>Included works ({plan.inclusions.length})</summary><ul>{plan.inclusions.map((item,i)=><li key={i}>{item}</li>)}</ul></details>}
                   {plan.brochure_url&&<a className="pr-plan-brochure" href={safeUrl(plan.brochure_url)||'#pricing'} target="_blank" rel="noopener noreferrer">View Package Brochure (PDF) ↗</a>}
-                  <Link className="pr-plan-quote-link" to={'/experts/'+expertId+'/quote?package='+encodeURIComponent(String(plan.id||plan.title))}>Get Quote →</Link>
+                  {['sqft','sqyd','project'].includes(plan.price_unit)&&Number(plan.price_from)>0
+                    ?<Link className="pr-plan-quote-link" to={'/experts/'+expertId+'/quote?package='+encodeURIComponent(String(plan.id||plan.title))}>Get Quote →</Link>
+                    :<a className="pr-plan-quote-link" href="#callback">Request Custom Quote →</a>}
                 </article>
               })}</div>:<div className="pr-empty">No public packages yet. Request a callback for a personalized quotation.</div>}
             </section>
