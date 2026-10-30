@@ -58,6 +58,11 @@ assert.match(service,/if\(maxRegistrationAge>0&&Number\(campaign.min_completed_p
   'Admin approval can occur after the timely video upload deadline');
 assert.match(service,/Existing project-award grants must retain their validity/);
 assert.match(profile,/sameVideo\?previous.video_reward_status:'pending'/);
+assert.match(profile,/videoPrivacyClearedUrl:sameVideo\?previous.video_privacy_cleared_url:null/,
+  'Project edits must preserve privacy clearance only for the unchanged video');
+assert.match(profile,/video_privacy_cleared_url:item.videoPrivacyClearedUrl/,
+  'Profile full-row reinsertion must persist privacy clearance');
+
 assert.match(profile,/video_reward_fingerprint:item.videoRewardFingerprint/);
 assert.match(adminService,/video_reward_status=CASE WHEN COALESCE\(video_url/);
 assert.match(adminPage,/Approve & release video/);
