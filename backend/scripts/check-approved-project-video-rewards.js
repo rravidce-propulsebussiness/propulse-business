@@ -9,6 +9,8 @@ const profile=read('backend/src/services/profileService.js');
 const adminService=read('backend/src/services/adminCompletedProjectService.js');
 const adminPage=read('frontend/src/admin/pages/AdminCompletedProjects.jsx');
 const publicVideoService=read('backend/src/services/publicExpertService.js');
+const publicProjectDetail=read('frontend/src/pages/ProjectDetail.jsx');
+const publicProjectsPage=read('frontend/src/pages/Projects.jsx');
 const reviewService=read('backend/src/services/projectVideoRewardReviewService.js');
 const reviewController=read('backend/src/controllers/adminCompletedProjectController.js');
 const profileUi=read('frontend/src/pages/Profile.jsx');
@@ -28,12 +30,18 @@ assert.match(service,/p.video_reward_status='approved'/);
 assert.match(service,/p.video_reward_approved_url=p.video_url/);
 assert.equal((service.match(/p\.video_privacy_cleared_url=p\.video_url/g)||[]).length,2,
   'Both lazy and bulk lead-reward paths must require contact privacy clearance');
-assert.match(publicVideoService,/function contactSafeVideoSql\(alias\)/);
-assert.match(publicVideoService,/video_privacy_cleared_url=\$\{alias\}\.video_url/);
-assert.match(publicVideoService,/contactSafeVideoSql\('bpp'\)/,
-  'Video-only public listings must filter out uncleared uploads');
+assert.match(publicVideoService,/function publicRedactedVideoReadySql\(alias\)/);
+const publicGate=publicVideoService.split('function publicRedactedVideoReadySql(alias){')[1].split('function publicProjectVideoColumn')[0];
+assert.doesNotMatch(publicGate,/video_reward_status|video_reward_fingerprint|video_privacy_cleared_url|video_reward_reviewed_/,
+  'Public playback must never depend on independent lead-credit admin approval');
+assert.match(publicGate,/video_redaction_status='ready'/);
+assert.match(publicGate,/video_redaction_source_url=\$\{alias\}\.video_url/);
+assert.match(publicGate,/video_redacted_url LIKE 'private-object-s3:business-project-redacted\/\%'/,
+  'Only successfully processed, private R2 redacted copies may be exposed');
+assert.match(publicVideoService,/publicRedactedVideoReadySql\('bpp'\)/,
+  'Video-only public listings require a matching successfully processed R2 derivative');
 assert.equal((publicVideoService.match(/publicProjectVideoColumn\(/g)||[]).length,5,
-  'All four public project/video endpoints must gate video URL disclosure');
+  'All four public project/video endpoints must gate video URLs on successfully redacted output');
 assert.match(reviewService,/contactDetailsChecked!==true/,
   'Admin video approval requires explicit contact privacy confirmation');
 assert.match(reviewService,/video_privacy_cleared_url=\$7/,
@@ -56,6 +64,19 @@ assert.match(videoRedactionMigration,/video_reward_status='pending'/,
 assert.match(publicVideoService,/THEN \${alias}\.video_redacted_url ELSE NULL::text END AS video_url/,
   'Public URLs must always refer to the redacted derivative, never original');
 assert.match(publicVideoService,/video_redaction_status='ready'/);
+assert.doesNotMatch(publicVideoService,/WHEN \$\{contactSafeVideoSql/,
+  'Public project status must not rely on admin-reviewed reward eligibility');
+assert.match(publicVideoService,/publicProjectVideoStatusColumn\(alias\)/,
+  'Public project responses should explain video privacy status without exposing original URLs');
+assert.match(publicVideoService,/NULLIF\(\$\{alias\}\.video_url,''\) IS NULL/);
+assert.match(publicVideoService,/video_publication_status/,
+  'The gallery must be told that an uploaded video is awaiting safe processing');
+assert.match(publicProjectDetail,/project\.videoPublicationStatus==='processing_failed'/,
+  'The public project gallery should not say photos are missing when a video is waiting');
+assert.match(publicProjectsPage,/videoPublicationStatus:clean\(project\.video_publication_status\)/);
+assert.match(publicVideoService,/THEN \$\{alias\}\.video_redacted_url ELSE NULL::text END AS video_url/,
+  'The public video URL must remain strictly the approved redacted derivative');
+
 assert.match(publicVideoService,/video_redaction_source_url=\${alias}\.video_url/);
 assert.match(reviewService,/PROJECT_VIDEO_REDACTION_NOT_READY/);
 assert.match(reviewService,/project.video_redaction_source_url!==project.video_url/);
@@ -95,8 +116,8 @@ assert.match(profile,/video_privacy_cleared_url:item.videoPrivacyClearedUrl/,
 
 assert.match(profile,/video_reward_fingerprint:item.videoRewardFingerprint/);
 assert.match(adminService,/video_reward_status=CASE WHEN COALESCE\(video_url/);
-assert.match(adminPage,/Approve & release video/);
-assert.match(adminPage,/Reject video/);
+assert.match(adminPage,/Approve lead credit/);
+assert.match(adminPage,/Reject lead credit/);
 assert.match(routes,/projects\/:projectId\/review-video/);
 assert.match(migrations,/uq_approved_project_video_fingerprint/);
 assert.match(migrations,/signup_reward_device_claims/);

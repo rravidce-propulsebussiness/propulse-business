@@ -64,6 +64,7 @@ export function normalizeProject(project, index) {
     document: publicMediaUrl(project.plan_url),
     brochure: publicMediaUrl(project.brochure_url),
     video: publicMediaUrl(project.video_url),
+    videoPublicationStatus:clean(project.video_publication_status),
     publishedAt: clean(project.published_at),
     sample:false,
     packageName: clean(project.package_name || project.package_title),
@@ -244,6 +245,8 @@ export default function Projects() {
                   :<div className="pj-image-placeholder"><Icon name="layers" size={30}/>Project photo not provided</div>}
                 {projectPhotos(project).length>1&&<span className="pj-card-photo-count">{projectPhotos(project).length} Photos</span>}
                 {project.video&&<span className="pj-card-video-badge">Video Available</span>}
+                {!project.video&&['processing','awaiting_review','processing_failed'].includes(project.videoPublicationStatus)&&
+                  <span className="pj-card-video-badge">Video awaiting privacy clearance</span>}
                 {project.official?<span className="pj-card-verified pj-card-official">♛ Official ProPulse</span>:project.verified&&<span className="pj-card-verified">Verified professional</span>}
                 <span className="pj-category-badge">{'COMPLETED · '+categoryLabel(project.category).toUpperCase()}</span>
               </div>

@@ -5,21 +5,29 @@ const projectPlanService=require('./projectPlanService');
 const projectImageService=require('./projectImageService');
 const brochureService=require('./brochureService');
 
-// Only media explicitly cleared for contact privacy may receive public signed URLs.
-// Admin and project-owner previews use their authenticated endpoints instead.
-function contactSafeVideoSql(alias){
-  return `${alias}.video_reward_status='approved'
-    AND ${alias}.video_reward_fingerprint IS NOT NULL
-    AND ${alias}.video_reward_reviewed_by IS NOT NULL
-    AND ${alias}.video_reward_reviewed_at IS NOT NULL
-    AND ${alias}.video_reward_approved_url=${alias}.video_url
-    AND ${alias}.video_privacy_cleared_url=${alias}.video_url
-    AND ${alias}.video_redaction_status='ready'
+// Public video playback depends on a completed, source-matched redacted copy,
+// NOT the independent admin decision about project-based lead-credit rewards.
+// Never return original uploads or failed/unprocessed derivatives.
+function publicRedactedVideoReadySql(alias){
+  return `${alias}.video_redaction_status='ready'
+    AND NULLIF(${alias}.video_url,'') IS NOT NULL
     AND ${alias}.video_redaction_source_url=${alias}.video_url
-    AND ${alias}.video_redacted_url IS NOT NULL`;
+    AND ${alias}.video_redacted_url LIKE 'private-object-s3:business-project-redacted/%'`;
 }
 function publicProjectVideoColumn(alias){
-  return `CASE WHEN ${contactSafeVideoSql(alias)} THEN ${alias}.video_redacted_url ELSE NULL::text END AS video_url`;
+  return `CASE WHEN ${publicRedactedVideoReadySql(alias)} THEN ${alias}.video_redacted_url ELSE NULL::text END AS video_url`;
+}
+
+// Public status only; never return the original R2 reference, raw video,
+ // processing error detail, or private admin review metadata.
+function publicProjectVideoStatusColumn(alias){
+  return `CASE
+    WHEN ${publicRedactedVideoReadySql(alias)} THEN 'published'
+    WHEN NULLIF(${alias}.video_url,'') IS NULL THEN 'none'
+    WHEN ${alias}.video_redaction_status='failed' THEN 'processing_failed'
+    WHEN ${alias}.video_redaction_status='ready' THEN 'processing_failed'
+    ELSE 'processing'
+  END::text AS video_publication_status`;
 }
 
 async function materializeProjectMedia(rows){
@@ -239,7 +247,7 @@ async function listRecentProjectVideos({page=1,pageSize=12}={}){
   }
   const offset=(currentPage-1)*currentPageSize;
   const params=[];
-  const conditions=["bpp.is_published=TRUE","bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)","COALESCE(bpp.video_url,'')<>''",contactSafeVideoSql('bpp')];
+  const conditions=["bpp.is_published=TRUE","bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)","COALESCE(bpp.video_url,'')<>''",publicRedactedVideoReadySql('bpp')];
   addEligibilityConditions(settings,params,conditions);
   const where='WHERE '+conditions.join(' AND ');
   const total=Number((await pool.query(
@@ -332,6 +340,7 @@ async function listRecentProjects({page=1,pageSize=18}={}){
        bpp.package_name,
        bpp.brochure_url,
        ${settings.showVideos?publicProjectVideoColumn('bpp'):'NULL::text AS video_url'},
+       ${settings.showVideos?publicProjectVideoStatusColumn('bpp'):"'disabled'::text AS video_publication_status"},
        ${settings.showPlans?'bpp.plan_url':'NULL::text AS plan_url'},
        COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) AS published_at,
        bp.id AS business_profile_id,
@@ -376,6 +385,7 @@ async function getPublicProject(projectId){
       bpp.location_text,bpp.completion_year,bpp.area_text,bpp.budget_text,
       bpp.cover_image_url,bpp.image_urls,bpp.package_name,bpp.brochure_url,
       ${settings.showVideos?publicProjectVideoColumn('bpp'):'NULL::text AS video_url'},
+       ${settings.showVideos?publicProjectVideoStatusColumn('bpp'):"'disabled'::text AS video_publication_status"},
       ${settings.showPlans?'bpp.plan_url':'NULL::text AS plan_url'},
       COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) AS published_at,
       bp.id AS business_profile_id,bp.business_name,
@@ -422,7 +432,7 @@ async function getPublicExpert(expertId){
   const [services,locations,projects,plans]=await Promise.all([
     pool.query(`SELECT bps.industry_id AS "industryId",i.name AS "industryName",bps.service_id AS "serviceId",s.name AS "serviceName",bps.subservice_id AS "subserviceId",ss.name AS "subserviceName" FROM business_profile_services bps JOIN industries i ON i.id=bps.industry_id JOIN services s ON s.id=bps.service_id LEFT JOIN subservices ss ON ss.id=bps.subservice_id WHERE bps.business_profile_id=$1 AND bps.is_active=TRUE ORDER BY i.name,s.name,ss.name`,[id]),
     pool.query(`SELECT bpl.state_id AS "stateId",st.name AS "stateName",bpl.city_id AS "cityId",c.name AS "cityName",bpl.subcity_id AS "subcityId",sc.name AS "subcityName" FROM business_profile_locations bpl JOIN states st ON st.id=bpl.state_id JOIN cities c ON c.id=bpl.city_id LEFT JOIN subcities sc ON sc.id=bpl.subcity_id WHERE bpl.business_profile_id=$1 AND bpl.is_active=TRUE ORDER BY st.name,c.name`,[id]),
-    settings.showProjects?pool.query(`SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,${settings.showVideos?publicProjectVideoColumn('business_profile_projects'):'NULL::text AS video_url'},video_published_at,${settings.showPlans?'plan_url':'NULL::text AS plan_url'},brochure_url,sort_order FROM business_profile_projects WHERE business_profile_id=$1 AND is_published=TRUE AND completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE) ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
+    settings.showProjects?pool.query(`SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,${settings.showVideos?publicProjectVideoColumn('business_profile_projects'):'NULL::text AS video_url'},${settings.showVideos?publicProjectVideoStatusColumn('business_profile_projects'):"'disabled'::text AS video_publication_status"},video_published_at,${settings.showPlans?'plan_url':'NULL::text AS plan_url'},brochure_url,sort_order FROM business_profile_projects WHERE business_profile_id=$1 AND is_published=TRUE AND completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE) ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
     settings.showPlans?pool.query(`SELECT id,title,industry,description,price_from,price_unit,duration_label,inclusions,spec_sections,brochure_url,sort_order FROM business_profile_service_plans WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
   ]);
   const [renderedProjects,brochures,renderedPlans]=await Promise.all([

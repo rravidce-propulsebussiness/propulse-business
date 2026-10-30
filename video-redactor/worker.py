@@ -1,8 +1,9 @@
 """Private R2 -> privacy-redacted R2. No original media is published.
 
 This worker is fail-closed: processing does NOT grant public access. A
-ProPulse admin must review the derivative (including visual checks) before
-release. Audio is deliberately stripped pending a speech-redaction service.
+A completed, source-matched derivative becomes eligible for automatic public
+playback. Lead-credit rewards still require separate admin review. Audio is
+stripped to prevent spoken contact disclosure.
 """
 import contextlib
 import logging
@@ -278,7 +279,7 @@ def process_one(connection, client, job):
         client.delete_object(Bucket=bucket,Key=derivative_key)
         LOG.warning("Project %s changed before derivative commit; discarded",job["id"])
     else:
-        LOG.info("Project %s processed; %s frames, %s masked, audio removed; awaiting admin review",
+        LOG.info("Project %s processed for public playback; %s frames, %s masked, audio removed; reward review separate",
                  job["id"],stats["frames"],stats["masked_frames"])
 
 
@@ -288,11 +289,17 @@ def main():
         raise RuntimeError("DATABASE_URL required to poll project videos")
     client=r2_client()
     poll=max(5,int(os.environ.get("VIDEO_REDACTOR_POLL_SECONDS","20")))
+    # A scheduled GitHub Actions runner can process one queued video then exit.
+    # The normal Docker deployment continues polling as before.
+    run_once=os.environ.get("VIDEO_REDACTOR_ONCE","").lower() in ("1","true","yes")
     while True:
         try:
             with psycopg.connect(dsn,autocommit=True,connect_timeout=20) as connection:
                 job=claim_job(connection)
                 if not job:
+                    if run_once:
+                        LOG.info("No pending project videos to process")
+                        return
                     time.sleep(poll)
                     continue
                 try:
@@ -309,8 +316,14 @@ def main():
                              WHERE id=%s AND video_url=%s AND video_redaction_token=%s
                                AND video_redaction_status='processing'
                         """,(str(exc)[:400],job["id"],job["source"],job["token"]))
+                    if run_once:
+                        raise
+                if run_once:
+                    return
         except Exception:
             LOG.exception("Redaction poll unavailable; retrying without releasing any private videos")
+            if run_once:
+                raise
             time.sleep(poll)
 
 

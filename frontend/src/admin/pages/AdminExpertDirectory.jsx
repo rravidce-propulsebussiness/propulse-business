@@ -9,7 +9,7 @@ function dataList(value){return Array.isArray(value?.data)?value.data:Array.isAr
 function formatDate(value){if(!value)return '—';const d=new Date(value);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('en-IN',{month:'short',year:'numeric'})}
 function initials(value){return String(value||'P').split(/\s+/).filter(Boolean).slice(0,2).map(v=>v[0]).join('').toUpperCase()}
 function Badge({type,children}){return <span className={'expert-v2-badge '+type}>{children}</span>}
-const SECTIONS=[['all','All Professionals'],['featured','Featured Professionals'],['pending','Video Approvals'],['verified','Verification'],['badges','Manage Badges'],['settings','Directory Settings']]
+const SECTIONS=[['all','All Professionals'],['featured','Featured Professionals'],['pending','Lead Credit Reviews'],['verified','Verification'],['badges','Manage Badges'],['settings','Directory Settings']]
 
 export default function AdminExpertDirectory(){
   const pageLocation=useLocation()
@@ -157,7 +157,7 @@ export default function AdminExpertDirectory(){
     <div className="expert-v2-heading">
       <div><span className="expert-v2-eyebrow">PROFESSIONAL DIRECTORY / MANAGEMENT</span>
         <h1>Expert Directory</h1>
-        <p>Manage professionals, verify profiles, review project videos and control public visibility.</p>
+        <p>Manage professionals, project-video lead-credit reviews and public directory settings.</p>
       </div>
       <a href="/experts" target="_blank" rel="noopener noreferrer" className="expert-v2-main-action">View Public Directory <span aria-hidden="true">↗</span></a>
     </div>
