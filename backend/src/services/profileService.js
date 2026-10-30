@@ -170,7 +170,7 @@ async function getProfile(userId, client = pool) {
     ),
     client.query(
       `SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,
-              cover_image_url,image_urls,package_name,video_url,video_published_at,plan_url,brochure_url,published_at,sort_order,is_published,seo_slug,seo_title,seo_description,seo_keyword
+              cover_image_url,image_urls,package_name,video_url,video_published_at,video_redaction_status,video_redaction_error,plan_url,brochure_url,published_at,sort_order,is_published,seo_slug,seo_title,seo_description,seo_keyword
        FROM business_profile_projects
        WHERE business_profile_id=$1
        ORDER BY sort_order,id`, [profile.id]
