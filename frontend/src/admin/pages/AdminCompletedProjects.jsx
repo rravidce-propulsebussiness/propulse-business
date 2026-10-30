@@ -78,17 +78,24 @@ export default function AdminCompletedProjects({businessUserId,filter='all'}){
       :<div className="expert-review-grid">
         {visible.map(item=><article key={item.id} className="expert-review-card">
           <div className="expert-review-media">
+            <span className="expert-review-placeholder">{item.video_url?'Project video':'Completed project'}</span>
             {playing===item.id&&item.video_display_url
-              ?<video src={item.video_display_url} controls autoPlay playsInline preload="metadata" aria-label={item.title+' video'}/>
-              :item.cover_image_display_url?<img loading="lazy" src={item.cover_image_display_url} alt={item.title+' project'}/>
-              :<span className="expert-review-placeholder">Completed project</span>}
+              ?<video src={item.video_display_url} controls autoPlay playsInline preload="metadata" aria-label={item.title+' video'} />
+              :item.cover_image_display_url
+                ?<img loading="lazy" src={item.cover_image_display_url} alt={item.title+' project'} onError={event=>{event.currentTarget.hidden=true}} />
+                :item.video_display_url
+                  ?<video className="expert-review-video-preview" src={item.video_display_url} muted playsInline preload="metadata"
+                      aria-hidden="true" onLoadedMetadata={event=>{const video=event.currentTarget;if(Number.isFinite(video.duration)&&video.duration>0.3)video.currentTime=0.2}}
+                      onError={event=>{event.currentTarget.hidden=true}} />
+                  :null}
             {item.video_display_url&&playing!==item.id&&<button type="button" aria-label={'Play '+item.title+' video'}
               className="expert-review-play" onClick={()=>setPlaying(item.id)}>▶</button>}
             {item.video_url&&<span className="expert-review-video-label">Video submitted</span>}
+            {item.video_url&&!item.video_display_url&&<span className="expert-review-unavailable">Video preview unavailable</span>}
           </div>
           <div className="expert-review-card-body">
             <div className="expert-review-card-title">
-              <strong>{item.title}</strong>
+              <strong title={item.title}>{item.title}</strong>
               <span className={item.video_reward_status==='approved'?'approved':item.video_reward_status==='rejected'?'rejected':'pending'}>
                 {item.video_url?(item.video_reward_status||'pending'):'No video'}
               </span>
