@@ -12,6 +12,7 @@ const reviewService=read('backend/src/services/projectVideoRewardReviewService.j
 const reviewController=read('backend/src/controllers/adminCompletedProjectController.js');
 const profileUi=read('frontend/src/pages/Profile.jsx');
 const privacyMigration=read('backend/src/database/migrations/20261030_project_video_contact_privacy.sql');
+const serverSource=read('backend/src/server.js');
 const rewardEditor=read('frontend/src/admin/pages/AdminLeadEntitlements.jsx');
 const routes=read('backend/src/routes/adminRoutes.js');
 const auth=read('backend/src/controllers/authController.js');
@@ -39,6 +40,11 @@ assert.match(reviewController,/PROJECT_VIDEO_CONTACT_PRIVACY_REQUIRED/,
 assert.match(adminPage,/I watched this complete video/);
 assert.match(adminPage,/privacyChecked\[item.id\]===true/);
 assert.match(profileUi,/Before uploading, remove all visible or spoken phone numbers/);
+assert.match(serverSource,/app.use\('\/uploads\/business-projects',async\(req,res,next\)=>/);
+assert.match(serverSource,/p.video_privacy_cleared_url=p.video_url/,
+  'Raw legacy local videos must be protected by the same privacy access gate');
+assert.match(serverSource,/requireAuth\(req,res/,
+  'Only authenticated owner or admin can preview an uncleared local video');
 assert.match(privacyMigration,/ADD COLUMN IF NOT EXISTS video_privacy_cleared_url TEXT/,
   'No older video should be assumed privacy-safe after migration');
 assert.equal((service.match(/p\.video_reward_reviewed_by IS NOT NULL/g)||[]).length,2,
