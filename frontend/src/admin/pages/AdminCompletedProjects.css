@@ -45,3 +45,8 @@
 .expert-review-pages button:disabled{opacity:.4;cursor:default}
 @container (max-width:570px){.expert-review-card{grid-template-columns:minmax(0,1fr)}.expert-review-media{min-height:0;aspect-ratio:16/9}.expert-review-card-body{padding:15px}.expert-review-heading{align-items:flex-start;flex-wrap:wrap}}
 @media(max-width:590px){.expert-review-heading{align-items:flex-start;flex-wrap:wrap}}
+
+.expert-review-privacy-status{margin:0;padding:9px 11px;border:1px solid #f2c99f;border-radius:9px;background:#fff7eb;color:#96521c;font-size:12px;font-weight:750;line-height:1.5}
+.expert-review-privacy-confirm{display:flex!important;flex-direction:row;gap:10px!important;align-items:flex-start;background:#fff9ee;border:1px solid #f7d6b0;border-radius:10px;padding:11px;cursor:pointer}
+.expert-review-privacy-confirm input{flex:0 0 17px;width:17px!important;height:17px;margin-top:2px;accent-color:#ef6a2e;cursor:pointer}
+.expert-review-privacy-confirm span{flex:1;font-size:12px;font-weight:650;line-height:1.55;color:#705231}
