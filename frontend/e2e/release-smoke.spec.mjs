@@ -405,6 +405,32 @@ test('direct ProPulse enquiry never uses the marketplace lead consultation',asyn
   expect(marketplaceSubmissions).toBe(0)
 })
 
+test('official ProPulse projects request direct services without marketplace callbacks',async({page})=>{
+  await page.route('**/api/experts/projects/3',route=>route.fulfill({
+    status:200,contentType:'application/json',
+    body:JSON.stringify({
+      project_id:3,title:'Modern 3BHK Interior Project in Uppal',
+      seo_slug:'modern-3bhk-interior-project-uppal',
+      project_type:'Interior Design',description:'Published interior execution in Hyderabad',
+      location_text:'Uppal, Hyderabad',completion_year:2026,
+      business_name:'Propulse Constructions and Interiors',business_profile_id:7,
+      is_official:true,image_urls:[],
+    }),
+  }))
+  await page.route('**/api/contact?audience=website',route=>route.fulfill({
+    status:200,contentType:'application/json',
+    body:JSON.stringify({company_name:'ProPulse',phone:'+91 9000360812',email:'info@propulsetechnologies.online',social_handles:[]}),
+  }))
+  await page.goto('/projects/project-3')
+  await expect(page.getByRole('heading',{name:/Modern 3BHK Interior Project in Uppal/})).toBeVisible()
+  const quote=page.locator('.pjd-summary').getByRole('link',{name:/Request ProPulse Quote/})
+  await expect(quote).toBeVisible()
+  await expect(page.locator('.pjd-summary').getByRole('button',{name:/Request a Callback/})).toHaveCount(0)
+  await quote.click()
+  await expect(page).toHaveURL(/\/contact#direct-project/)
+  await expect(page.getByRole('heading',{name:/Request construction or interior services/})).toBeVisible()
+})
+
 test('project cards open dedicated detail pages using the keyboard',async({page})=>{
   const project={
     project_id:123,project_type:'construction',title:'Modern Villa',
