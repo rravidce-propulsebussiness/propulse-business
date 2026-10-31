@@ -430,6 +430,37 @@ async function getPublicProject(projectId){
   return projects[0]||null;
 }
 
+// Sitemap should list only projects that meet the same public visibility rules
+// as their detail pages. No media references or customer information are returned.
+async function listIndexableProjectPaths(){
+  const settings=await expertDirectoryService.getSettings();
+  const params=[];
+  const conditions=[
+    "bpp.is_published=TRUE",
+    "bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)"
+  ];
+  addProjectEligibilityConditions(settings,params,conditions);
+  const result=await pool.query(
+    `SELECT bpp.id,bpp.seo_slug,bpp.updated_at
+       FROM business_profile_projects bpp
+       JOIN business_profiles bp ON bp.id=bpp.business_profile_id
+       JOIN users u ON u.id=bp.user_id
+       LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id
+       WHERE ${conditions.join(' AND ')}
+       ORDER BY COALESCE(beds.is_official,FALSE) DESC,bpp.updated_at DESC,bpp.id DESC
+       LIMIT 5000`,
+    params
+  );
+  return result.rows.map(row=>{
+    const slug=String(row.seo_slug||'').trim();
+    const path=/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)&&slug.length<=100
+      ?'/projects/'+slug
+      :'/projects/project-'+row.id;
+    const date=row.updated_at?new Date(row.updated_at):null;
+    return {path,lastmod:date&&!Number.isNaN(date.getTime())?date.toISOString().slice(0,10):null};
+  });
+}
+
 async function getPublicExpert(expertId){
   const id=Number(expertId);
   if(!Number.isInteger(id)||id<=0)return null;
@@ -468,4 +499,4 @@ async function getPublicExpert(expertId){
   return {...base,services:services.rows,locations:locations.rows,projects:renderedProjects,brochures,service_plans:renderedPlans,directory_settings:{showProjects:settings.showProjects,showVideos:settings.showVideos,showPlans:settings.showPlans}};
 }
 
-module.exports={listPublicExperts,listRecentProjects,listRecentProjectVideos,getPublicExpert,getPublicProject};
+module.exports={listPublicExperts,listRecentProjects,listRecentProjectVideos,getPublicExpert,getPublicProject,listIndexableProjectPaths};
