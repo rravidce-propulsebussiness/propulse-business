@@ -3,6 +3,11 @@ name: Process ProPulse Project Videos
 # Small-project alternative to a dedicated Docker VPS. This workflow reports
 # a configuration failure until all five repository secrets are configured.
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'video-redactor/**'
+      - '.github/workflows/project-video-redaction.yml'
   schedule:
     - cron: '*/15 * * * *'
   workflow_dispatch:
@@ -61,6 +66,12 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq ffmpeg tesseract-ocr tesseract-ocr-eng tesseract-ocr-tel libglib2.0-0 libgl1
           python -m pip install -r video-redactor/requirements.txt
+
+      - name: Verify video redaction, targeted masking, and audio preservation
+        if: steps.configured.outputs.ready == 'true'
+        run: |
+          python -m compileall -q video-redactor
+          python -m unittest discover -s video-redactor -p 'test_*.py' -v
 
       - name: Process one queued video (source-matched redacted copy only)
         if: steps.configured.outputs.ready == 'true'
