@@ -53,6 +53,42 @@ class PrivacyTests(unittest.TestCase):
         self.assertFalse(np.array_equal(frame[55:100, 75:200], original[55:100, 75:200]))
         self.assertGreater(int(np.max(frame[65:90, 90:180])), 0)
 
+    def test_full_speech_mute_keeps_background_music(self):
+        # Regression for real project 3: original was audible but fully muted.
+        with tempfile.TemporaryDirectory() as directory:
+            source = os.path.join(directory, "input.mp4")
+            output = os.path.join(directory, "output.mp4")
+            subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+                "-f", "lavfi", "-i", "color=c=black:s=320x240:r=5:d=1",
+                "-f", "lavfi", "-i", "sine=frequency=440:duration=1",
+                "-shortest", "-pix_fmt", "yuv420p", "-c:v", "libx264", source],
+                check=True, timeout=30)
+            with mock.patch.object(worker, "sanitized_audio_filter",
+                                   return_value=(True, "volume=0")):
+                stats = worker.transcode(source, output)
+            self.assertIn("instrumental", stats["audio"])
+            sound = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error",
+                "-i", output, "-vn", "-ar", "16000", "-ac", "1",
+                "-f", "s16le", "pipe:1"], capture_output=True, check=True)
+            samples = np.frombuffer(sound.stdout, dtype="<i2").astype(np.float32)
+            self.assertGreater(float(np.sqrt(np.mean(samples*samples))), 300.0)
+
+    def test_source_without_audio_gets_music(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = os.path.join(directory, "input.mp4")
+            output = os.path.join(directory, "output.mp4")
+            subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+                "-f", "lavfi", "-i", "color=c=black:s=320x240:r=5:d=1",
+                "-pix_fmt", "yuv420p", "-c:v", "libx264", source],
+                check=True, timeout=30)
+            stats = worker.transcode(source, output)
+            self.assertIn("instrumental", stats["audio"])
+            sound = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error",
+                "-i", output, "-vn", "-ar", "16000", "-ac", "1",
+                "-f", "s16le", "pipe:1"], capture_output=True, check=True)
+            samples = np.frombuffer(sound.stdout, dtype="<i2").astype(np.float32)
+            self.assertGreater(float(np.sqrt(np.mean(samples*samples))), 300.0)
+
     def test_environmental_audio_is_retained(self):
         with tempfile.TemporaryDirectory() as directory:
             source = os.path.join(directory, "input.mp4")
