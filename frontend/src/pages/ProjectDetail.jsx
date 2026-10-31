@@ -219,16 +219,17 @@ export default function ProjectDetail(){
                 {videoSelected
                   ?<ProjectMediaContent key={project.video} preview={videoPreview} title={project.title+' project video'} className="pjd-feature-media"/>
                   :activePhoto?<img className="pjd-feature-media" src={activePhoto} alt={project.title+' completed work photo '+(photoIndex+1)}/>
-                  :['processing','awaiting_review','processing_failed'].includes(project.videoPublicationStatus)
+                  :['queued','processing','awaiting_review','processing_failed'].includes(project.videoPublicationStatus)
                     ?<div className="pjd-no-photo pjd-video-pending" role="status">
                       <Icon name="layers" size={34}/>
-                      <strong>{project.videoPublicationStatus==='awaiting_review'?'Video awaiting processing':project.videoPublicationStatus==='processing_failed'?'Video processing needs attention':'Project video uploaded'}</strong>
-                      <span>{project.videoPublicationStatus==='awaiting_review'
-                        ?'The automatically processed video is not yet available for public playback.'
-                        :project.videoPublicationStatus==='processing_failed'
-                          ?'The uploaded video is private while the professional resolves a processing issue.'
-                          :'The upload is securely stored. Automated masking must finish before public viewing.'}</span>
-                      <small>No admin approval is required for playback after successful processing.</small>
+                      <strong>{project.videoPublicationStatus==='processing_failed'?'Video processing needs attention'
+                        :project.videoPublicationStatus==='processing'?'Privacy masking in progress':'Video awaiting privacy processing'}</strong>
+                      <span>{project.videoPublicationStatus==='processing_failed'
+                        ?'This video remains private because automatic masking did not complete.'
+                        :project.videoPublicationStatus==='processing'
+                          ?'The video is being processed to hide contact information before public playback.'
+                          :'The video is safely uploaded, but automatic masking has not started yet.'}</span>
+                      <small>Playback becomes available after masking succeeds. Admin review is only for lead rewards.</small>
                     </div>
                     :<div className="pjd-no-photo"><Icon name="layers" size={34}/><strong>Photos not published yet</strong><span>This professional has not added project images.</span></div>}
                 {activePhoto&&!videoSelected&&<div className="pjd-image-caption">
