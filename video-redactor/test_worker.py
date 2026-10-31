@@ -1,114 +1,71 @@
-"""Regression tests for privacy-safe video handling (no R2 or DB credentials)."""
+"""Verify project videos retain their original frames and music."""
 import importlib.util
-import os
 from pathlib import Path
 import subprocess
 import tempfile
 import unittest
-from unittest import mock
 
-import cv2
-import numpy as np
-
-spec = importlib.util.spec_from_file_location("video_redactor_worker",
+spec = importlib.util.spec_from_file_location("video_processor",
     Path(__file__).parent / "worker.py")
 worker = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(worker)
 
 
-class FakeQr:
-    def detectAndDecodeMulti(self, frame):
-        return False, [], None, None
-    def detect(self, frame):
-        return False, None
+def stream_hash(path, media_type):
+    result = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error",
+        "-i", str(path), "-map", f"0:{media_type}:0",
+        "-c", "copy", "-f", "hash", "-hash", "SHA256", "pipe:1"],
+        check=True, capture_output=True, text=True, timeout=40)
+    return result.stdout.strip()
 
 
-class PrivacyTests(unittest.TestCase):
-    def test_contacts_only(self):
-        for phrase in ("Contact us +91 98765 43210", "call 9876543210",
-                       "www.company.in", "hello@example.com", "@company_handle",
-                       "WhatsApp: +91-9876543210"):
-            self.assertTrue(worker.contains_contact(phrase), phrase)
-        for phrase in ("Contact Us", "Annual sales 2024", "Our Project",
-                       "Standard 3200 sqft", "INR 9999", "3 BHK"):
-            self.assertFalse(worker.contains_contact(phrase), phrase)
-
-    def test_only_matching_ocr_words_are_masked(self):
-        words = ["Luxury", "interior", "Call", "+91", "98765", "43210", "project"]
-        data = {k: [1]*len(words) for k in ("block_num", "par_num", "line_num")}
-        data["text"] = words
-        data["left"] = [10, 90, 180, 240, 290, 350, 420]
-        data["top"] = [10]*len(words)
-        data["width"] = [70, 80, 50, 40, 60, 60, 60]
-        data["height"] = [20]*len(words)
-        with mock.patch.object(worker.pytesseract, "image_to_data", return_value=data):
-            boxes = worker.detect_contact_boxes(np.zeros((80, 500, 3), dtype=np.uint8), FakeQr())
-        self.assertEqual(boxes, [(240, 10, 410, 30)])
-
-    def test_mosaic_conceals_without_black_rectangle(self):
-        frame = np.random.default_rng(42).integers(0, 256, (180, 300, 3), dtype=np.uint8)
-        original = frame.copy()
-        worker.conceal(frame, [(90, 60, 180, 90)])
-        self.assertTrue(np.array_equal(frame[:20], original[:20]))
-        self.assertFalse(np.array_equal(frame[55:100, 75:200], original[55:100, 75:200]))
-        self.assertGreater(int(np.max(frame[65:90, 90:180])), 0)
-
-    def test_full_speech_mute_keeps_background_music(self):
-        # Regression for real project 3: original was audible but fully muted.
+class VideoPreservationTests(unittest.TestCase):
+    def test_preserves_original_music_and_picture_bit_exact(self):
         with tempfile.TemporaryDirectory() as directory:
-            source = os.path.join(directory, "input.mp4")
-            output = os.path.join(directory, "output.mp4")
-            subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
-                "-f", "lavfi", "-i", "color=c=black:s=320x240:r=5:d=1",
-                "-f", "lavfi", "-i", "sine=frequency=440:duration=1",
-                "-shortest", "-pix_fmt", "yuv420p", "-c:v", "libx264", source],
-                check=True, timeout=30)
-            with mock.patch.object(worker, "sanitized_audio_filter",
-                                   return_value=(True, "volume=0")):
-                stats = worker.transcode(source, output)
-            self.assertIn("instrumental", stats["audio"])
-            sound = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error",
-                "-i", output, "-vn", "-ar", "16000", "-ac", "1",
-                "-f", "s16le", "pipe:1"], capture_output=True, check=True)
-            samples = np.frombuffer(sound.stdout, dtype="<i2").astype(np.float32)
-            self.assertGreater(float(np.sqrt(np.mean(samples*samples))), 300.0)
+            src = Path(directory) / "source.mp4"
+            out = Path(directory) / "output.mp4"
+            subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error",
+                "-y", "-f", "lavfi", "-i", "testsrc2=size=320x240:rate=12:duration=2",
+                "-f", "lavfi", "-i", "sine=frequency=660:duration=2",
+                "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac",
+                "-shortest", str(src)], check=True, timeout=40)
+            result = worker.transcode(src, out)
+            self.assertEqual(result["video"], "unchanged")
+            self.assertEqual(result["audio"], "original retained")
+            self.assertEqual(stream_hash(src, "v"), stream_hash(out, "v"))
+            self.assertEqual(stream_hash(src, "a"), stream_hash(out, "a"))
 
-    def test_source_without_audio_gets_music(self):
+    def test_without_audio_no_music_added(self):
         with tempfile.TemporaryDirectory() as directory:
-            source = os.path.join(directory, "input.mp4")
-            output = os.path.join(directory, "output.mp4")
-            subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
-                "-f", "lavfi", "-i", "color=c=black:s=320x240:r=5:d=1",
-                "-pix_fmt", "yuv420p", "-c:v", "libx264", source],
-                check=True, timeout=30)
-            stats = worker.transcode(source, output)
-            self.assertIn("instrumental", stats["audio"])
-            sound = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error",
-                "-i", output, "-vn", "-ar", "16000", "-ac", "1",
-                "-f", "s16le", "pipe:1"], capture_output=True, check=True)
-            samples = np.frombuffer(sound.stdout, dtype="<i2").astype(np.float32)
-            self.assertGreater(float(np.sqrt(np.mean(samples*samples))), 300.0)
+            src = Path(directory) / "silent.mp4"
+            out = Path(directory) / "output.mp4"
+            subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error",
+                "-y", "-f", "lavfi", "-i", "testsrc2=size=320x240:rate=12:duration=1",
+                "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                str(src)], check=True, timeout=40)
+            result = worker.transcode(src, out)
+            self.assertEqual(result["audio"], "no source track")
+            self.assertFalse(any(s["codec_type"] == "audio"
+                for s in worker.probe_streams(out)["streams"]))
 
-    def test_environmental_audio_is_retained(self):
+    def test_unsupported_codecs_are_converted_without_masking(self):
         with tempfile.TemporaryDirectory() as directory:
-            source = os.path.join(directory, "input.mp4")
-            output = os.path.join(directory, "output.mp4")
-            subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
-                "-f", "lavfi", "-i", "color=c=black:s=320x240:r=5:d=1",
-                "-f", "lavfi", "-i", "sine=frequency=440:duration=1",
-                "-shortest", "-pix_fmt", "yuv420p", "-c:v", "libx264", source],
-                check=True, timeout=30)
-            stats = worker.transcode(source, output)
-            probe = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a",
-                "-show_entries", "stream=codec_name", "-of", "csv=p=0", output],
-                capture_output=True, text=True, check=True)
-            self.assertIn("aac", probe.stdout)
-            sound = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel",
-                "error", "-i", output, "-vn", "-ar", "16000", "-ac", "1",
-                "-f", "s16le", "pipe:1"], capture_output=True, check=True)
-            samples = np.frombuffer(sound.stdout, dtype="<i2").astype(np.float32)
-            self.assertGreater(float(np.sqrt(np.mean(samples*samples))), 200.)
-            self.assertEqual(stats["frames"], 5)
+            src = Path(directory) / "source.webm"
+            out = Path(directory) / "output.mp4"
+            subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error",
+                "-y", "-f", "lavfi", "-i", "testsrc2=size=320x240:rate=12:duration=1",
+                "-f", "lavfi", "-i", "sine=frequency=400:duration=1",
+                "-c:v", "libvpx", "-b:v", "400k", "-c:a", "libopus",
+                "-shortest", str(src)], check=True, timeout=40)
+            stats = worker.transcode(src, out)
+            self.assertEqual(stats["video"], "browser encoded")
+            self.assertEqual(stats["audio"], "original re-encoded")
+            info = worker.probe_streams(out)
+            self.assertEqual(next(s["codec_name"] for s in info["streams"]
+                if s["codec_type"]=="video"), "h264")
+            self.assertEqual(next(s["codec_name"] for s in info["streams"]
+                if s["codec_type"]=="audio"), "aac")
+
 
 if __name__ == "__main__":
     unittest.main()
