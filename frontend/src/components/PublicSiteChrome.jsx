@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { to: '/packages', label: 'Packages', match: path => path.startsWith('/packages') },
   { to: '/projects', label: 'Projects', match: path => path.startsWith('/projects') },
   { to: '/how-it-works', label: 'How It Works', match: path => path.startsWith('/how-it-works') },
+  { to: '/technology', label: 'Technology', match: path => path.startsWith('/technology') },
   { to: '/about', label: 'About', match: path => path.startsWith('/about') },
   { to: '/faq', label: 'FAQ', match: path => path.startsWith('/faq') },
   { to: '/contact', label: 'Contact', match: path => path.startsWith('/contact') },
@@ -98,7 +99,7 @@ export function PublicFooter({
   phone = '',
   email = '',
   address = 'Hyderabad, India',
-  description = 'A homeowner-first starting point for construction, interiors and real-estate requirements.',
+  description = 'ProPulse directly delivers construction and interiors, operates a professional lead marketplace and builds business technology.',
 }) {
   const displayPhone = phone || '+91 9000360812'
   const displayEmail = email || 'info@propulsetechnologies.online'
@@ -119,6 +120,8 @@ export function PublicFooter({
       </div>
       <div>
         <b>Services</b>
+        <Link to="/contact">Direct ProPulse Projects</Link>
+        <Link to="/technology">Technology &amp; Business OS</Link>
         <Link to="/quote#construction">Home Construction</Link>
         <Link to="/quote#interiors">Interior Design</Link>
         <Link to="/quote#property">Real Estate</Link>
