@@ -23,3 +23,7 @@ Requirements: Python 3.12, FFmpeg/FFprobe, `pip install -r video-redactor/requir
 ## Reprocessing
 
 A prior blurred/re-soundtracked derivative must be regenerated from its original private R2 upload to remove processing artifacts. Set the existing video's `video_redaction_status` to `pending` and clear the old source-match/derivative references (with the original video unchanged), then run the worker. During processing or on failure the video remains unavailable to public playback. Once prepared, a new UUID-named derivative replaces the public playback reference. Lead-credit review remains separate. Preserve historical records and do not alter reward approval merely to reprocess a video.
+
+### Production reprocessing verification
+
+The pipeline must report a newly prepared derivative for the queued project, followed by an audio audit where the output's audio matches the original. If the worker reports `No pending project videos to process` because the project was queued after its pickup time, trigger the workflow again after queuing; do not republish an old blurred or music-replaced derivative.
