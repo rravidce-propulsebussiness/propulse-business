@@ -56,6 +56,7 @@ const PUBLIC_PATHS=[
   '/experts',
   '/packages',
   '/projects',
+  '/technology',
   '/how-it-works',
   '/about',
   '/contact',
