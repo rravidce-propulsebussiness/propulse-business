@@ -68,7 +68,7 @@ assert.match(publicVideoService,/THEN \${alias}\.video_redacted_url ELSE NULL::t
 assert.match(publicVideoService,/video_redaction_status='ready'/);
 assert.doesNotMatch(publicVideoService,/WHEN \$\{contactSafeVideoSql/,
   'Public project status must not rely on admin-reviewed reward eligibility');
-assert.match(publicVideoService,/publicProjectVideoStatusColumn\(alias\)/,
+assert.match(publicVideoService,/publicProjectVideoStatusColumn\(alias,officialOnly=false\)/,
   'Public project responses should explain video privacy status without exposing original URLs');
 assert.match(publicVideoService,/NULLIF\(\$\{alias\}\.video_url,''\) IS NULL/);
 assert.match(publicVideoService,/video_publication_status/,
