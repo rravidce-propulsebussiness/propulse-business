@@ -26,7 +26,9 @@ function publicProjectVideoStatusColumn(alias){
     WHEN NULLIF(${alias}.video_url,'') IS NULL THEN 'none'
     WHEN ${alias}.video_redaction_status='failed' THEN 'processing_failed'
     WHEN ${alias}.video_redaction_status='ready' THEN 'processing_failed'
-    ELSE 'processing'
+    WHEN ${alias}.video_redaction_status='pending' THEN 'queued'
+    WHEN ${alias}.video_redaction_status='processing' THEN 'processing'
+    ELSE 'queued'
   END::text AS video_publication_status`;
 }
 
