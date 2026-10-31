@@ -39,7 +39,7 @@ export default function AdminCompletedProjects({businessUserId,filter='all'}){
     if(decision==='reject'&&!note){setError('Provide a reason before rejecting this video.');return}
     if(!item.video_url){setError('This project has no video to review.');return}
     if(decision==='approve'&&item.video_redaction_status!=='ready'){
-      setError('Automatic redaction must complete before the video can be reviewed for lead credits.');return
+      setError('Video playback preparation must finish before the video can be reviewed for lead credits.');return
     }
     if(decision==='approve'&&privacyChecked[item.id]!==true){
       setError('Watch the full processed video and confirm the completed project is genuine, unique and contact-safe before issuing lead credits.');
@@ -115,16 +115,16 @@ export default function AdminCompletedProjects({businessUserId,filter='all'}){
             {item.video_url&&<div className="expert-review-actions">
               <p className="expert-review-processing" role="status">
                 {item.video_redaction_status==='ready'?'Processed video available for public viewing; review separately for lead credits'
-                  :item.video_redaction_status==='failed'?'Automatic redaction failed — original remains private'
-                  :item.video_redaction_status==='processing'?'Automatically scanning and concealing contacts…'
-                  :'Video uploaded and queued. A separate Docker video-redaction worker must be running; Hostinger shared web hosting does not process videos.'}
+                  :item.video_redaction_status==='failed'?'Video playback preparation failed — original remains private'
+                  :item.video_redaction_status==='processing'?'Preparing the video for playback with its original soundtrack…'
+                  :'Video uploaded and queued. The scheduled processing workflow or dedicated video worker must run; Hostinger shared web hosting does not process videos.'}
               </p>
               {item.video_redaction_status==='failed'&&item.video_redaction_error&&
                 <small className="expert-review-processing-error">{item.video_redaction_error}</small>}
               <p className="expert-review-privacy-status" role="status">
                 {item.video_redaction_status==='ready'
-                  ?'Public video: auto-published after redaction (if project and directory are public)'
-                  :'Public video: unavailable until automatic redaction succeeds'}
+                  ?'Public video: available after playback preparation (if project and directory are public)'
+                  :'Public video: unavailable until playback preparation succeeds'}
               </p>
               <label className="expert-review-privacy-confirm">
                 <input type="checkbox" checked={privacyChecked[item.id]===true}
