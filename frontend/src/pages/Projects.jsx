@@ -242,19 +242,21 @@ export default function Projects() {
               <div className="pj-project-photo">
                 {projectPhotos(project).length?<img src={projectPhotos(project)[0]} loading={index<3?'eager':'lazy'} alt={project.title}/>
                   :project.video?<ProjectVideoCover src={project.video}/>
-                  :['processing','awaiting_review','processing_failed'].includes(project.videoPublicationStatus)
+                  :['queued','processing','awaiting_review','processing_failed'].includes(project.videoPublicationStatus)
                     ?<div className="pj-video-processing-placeholder" role="status">
                        <span className="pj-video-processing-icon" aria-hidden="true">▶</span>
-                       <strong>{project.videoPublicationStatus==='processing_failed'?'Video processing needs attention':'Project video uploaded'}</strong>
+                       <strong>{project.videoPublicationStatus==='processing_failed'?'Video processing needs attention'
+                         :project.videoPublicationStatus==='processing'?'Video masking in progress':'Video awaiting privacy processing'}</strong>
                        <small>{project.videoPublicationStatus==='processing_failed'
-                         ?'This video is private because processing did not complete.'
-                         :'Automatic contact masking must finish before public viewing.'}</small>
+                         ?'This video is private because masking did not complete.'
+                         :project.videoPublicationStatus==='processing'?'Contact details are being masked before public playback.'
+                         :'The video is uploaded, but privacy masking has not started yet.'}</small>
                      </div>
                     :<div className="pj-image-placeholder"><Icon name="layers" size={30}/>Project photo not provided</div>}
                 {projectPhotos(project).length>1&&<span className="pj-card-photo-count">{projectPhotos(project).length} Photos</span>}
                 {project.video&&<span className="pj-card-video-badge">Video Available</span>}
-                {!project.video&&['processing','awaiting_review','processing_failed'].includes(project.videoPublicationStatus)&&
-                  <span className="pj-card-video-badge pj-card-video-status">{project.videoPublicationStatus==='processing_failed'?'Video processing failed':'Video processing'}</span>}
+                {!project.video&&['queued','processing','awaiting_review','processing_failed'].includes(project.videoPublicationStatus)&&
+                  <span className="pj-card-video-badge pj-card-video-status">{project.videoPublicationStatus==='processing_failed'?'Video processing failed':project.videoPublicationStatus==='processing'?'Video processing':'Video queued'}</span>}
                 {project.official?<span className="pj-card-verified pj-card-official">♛ Official ProPulse</span>:project.verified&&<span className="pj-card-verified">Verified professional</span>}
                 <span className="pj-category-badge">{'COMPLETED · '+categoryLabel(project.category).toUpperCase()}</span>
               </div>
