@@ -143,7 +143,7 @@ const rejectedDynamicRoutes=['/projects/invalid_slug','/experts/not-a-number','/
 for(const [label,source] of [['Hostinger single-process',backendServer],['Hostinger legacy wrapper',wrapper]]){
   assert(source.includes("/^\\/experts\\/[0-9]+(?:\\/quote)?\\/?$/.test(requestPath)")&&source.includes("/^\\/projects\\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\\/quote)?\\/?$/.test(requestPath)"),label+' declares expert and project deep links');
 }
-const expertPublicRoute=/^\\/experts\\/[0-9]+(?:\\/quote)?\\/?$/;
-const projectPublicRoute=/^\\/projects\\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\\/quote)?\\/?$/;
+const expertPublicRoute=/^\/experts\/[0-9]+(?:\/quote)?\/?$/;
+const projectPublicRoute=/^\/projects\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/quote)?\/?$/;
 for(const url of dynamicRouteExamples)assert(expertPublicRoute.test(url)||projectPublicRoute.test(url),'Public SPA deep link recognized: '+url);
 for(const url of rejectedDynamicRoutes)assert(!expertPublicRoute.test(url)&&!projectPublicRoute.test(url),'Unknown or private paths excluded from public SPA route: '+url);
