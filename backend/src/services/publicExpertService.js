@@ -71,6 +71,33 @@ function addEligibilityConditions(settings,params,conditions){
   }
 }
 
+// Official ProPulse work is independent of marketplace membership and directory toggles.
+function addProjectEligibilityConditions(settings,params,conditions,{videosOnly=false}={}){
+  conditions.push("u.role='business'","u.is_active=TRUE","COALESCE(TRIM(bp.business_name),'')<>''","COALESCE(beds.is_hidden,FALSE)=FALSE");
+  const marketplace=[];
+  if(!settings.directoryEnabled||!settings.showProjects||(videosOnly&&!settings.showVideos)){
+    marketplace.push('FALSE');
+  }else{
+    marketplace.push("COALESCE(bp.public_profile_enabled,TRUE)=TRUE");
+    if(settings.requireVerified){
+      marketplace.push("EXISTS(SELECT 1 FROM company_proof_documents cpdv WHERE cpdv.user_id=u.id AND cpdv.status='verified')");
+    }
+    if(settings.requireActiveMembership){
+      params.push(settings.allowedPlanGroups);
+      const n=params.length;
+      marketplace.push(`EXISTS(
+        SELECT 1 FROM memberships em JOIN membership_plans emp ON emp.id=em.membership_plan_id
+        WHERE em.user_id=u.id AND em.status='active'
+          AND em.starts_at<=CURRENT_TIMESTAMP AND em.expires_at>CURRENT_TIMESTAMP
+          AND emp.is_active=TRUE
+          AND LOWER(REPLACE(COALESCE(emp.plan_type,''),'-','_'))='pro'
+          AND CASE WHEN LOWER(COALESCE(emp.plan_group,''))='scale' THEN 'scale' ELSE 'grow' END = ANY(${n}::text[])
+      )`);
+    }
+  }
+  conditions.push(`(COALESCE(beds.is_official,FALSE)=TRUE OR (${marketplace.join(' AND ')}))`);
+}
+
 function membershipLateral(){
   return `LEFT JOIN LATERAL (
     SELECT CASE WHEN LOWER(COALESCE(mp.plan_group,''))='scale' THEN 'scale' ELSE 'grow' END AS plan_group,
@@ -244,13 +271,10 @@ async function listRecentProjectVideos({page=1,pageSize=12}={}){
   const settings=await expertDirectoryService.getSettings();
   const currentPage=toPositiveInt(page,1,100000);
   const currentPageSize=toPositiveInt(pageSize,12,36);
-  if(!settings.directoryEnabled||!settings.showProjects||!settings.showVideos){
-    return {data:[],pagination:{page:currentPage,pageSize:currentPageSize,total:0,totalPages:0,hasNextPage:false,hasPreviousPage:false}};
-  }
   const offset=(currentPage-1)*currentPageSize;
   const params=[];
   const conditions=["bpp.is_published=TRUE","bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)","COALESCE(bpp.video_url,'')<>''",publicRedactedVideoReadySql('bpp')];
-  addEligibilityConditions(settings,params,conditions);
+  addProjectEligibilityConditions(settings,params,conditions,{videosOnly:true});
   const where='WHERE '+conditions.join(' AND ');
   const total=Number((await pool.query(
     `SELECT COUNT(*)::int AS total
@@ -287,7 +311,7 @@ async function listRecentProjectVideos({page=1,pageSize=12}={}){
      LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id
      ${membershipLateral()}
      ${where}
-     ORDER BY COALESCE(bpp.video_published_at,bpp.created_at) DESC,bpp.id DESC
+     ORDER BY COALESCE(beds.is_official,FALSE) DESC,COALESCE(bpp.video_published_at,bpp.created_at) DESC,bpp.id DESC
      LIMIT ${currentPageSize} OFFSET ${offset}`,
     queryParams
   );
@@ -309,13 +333,10 @@ async function listRecentProjects({page=1,pageSize=18}={}){
   const settings=await expertDirectoryService.getSettings();
   const currentPage=toPositiveInt(page,1,100000);
   const currentPageSize=toPositiveInt(pageSize,18,48);
-  if(!settings.directoryEnabled||!settings.showProjects){
-    return {data:[],pagination:{page:currentPage,pageSize:currentPageSize,total:0,totalPages:0,hasNextPage:false,hasPreviousPage:false}};
-  }
   const offset=(currentPage-1)*currentPageSize;
   const params=[];
   const conditions=["bpp.is_published=TRUE","bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)"];
-  addEligibilityConditions(settings,params,conditions);
+  addProjectEligibilityConditions(settings,params,conditions);
   const where='WHERE '+conditions.join(' AND ');
   const total=Number((await pool.query(
     `SELECT COUNT(*)::int AS total
@@ -356,7 +377,7 @@ async function listRecentProjects({page=1,pageSize=18}={}){
      LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id
      ${membershipLateral()}
      ${where}
-     ORDER BY COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) DESC,bpp.id DESC
+     ORDER BY COALESCE(beds.is_official,FALSE) DESC,COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) DESC,bpp.id DESC
      LIMIT ${currentPageSize} OFFSET ${offset}`,
     params
   );
@@ -378,10 +399,9 @@ async function getPublicProject(projectId){
   const slug=!id&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)&&value.length<=100?value:null;
   if(!slug&&(!Number.isSafeInteger(id)||id<=0))return null;
   const settings=await expertDirectoryService.getSettings();
-  if(!settings.directoryEnabled||!settings.showProjects)return null;
   const params=[slug||id];
   const conditions=[slug?'bpp.seo_slug=$1':'bpp.id=$1','bpp.is_published=TRUE','bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)'];
-  addEligibilityConditions(settings,params,conditions);
+  addProjectEligibilityConditions(settings,params,conditions);
   const result=await pool.query(
     `SELECT bpp.id AS project_id,bpp.title,bpp.seo_slug,bpp.seo_title,bpp.seo_description,bpp.seo_keyword,bpp.project_type,bpp.description,
       bpp.location_text,bpp.completion_year,bpp.area_text,bpp.budget_text,
