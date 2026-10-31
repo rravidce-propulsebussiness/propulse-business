@@ -32,8 +32,7 @@ jobs:
       PRIVATE_OBJECT_STORAGE_SECRET_ACCESS_KEY: ${{ secrets.PROPULSE_VIDEO_R2_SECRET_ACCESS_KEY }}
       PRIVATE_OBJECT_STORAGE_REGION: auto
       VIDEO_REDACTOR_ONCE: '1'
-      VIDEO_REDACTOR_OCR_LANGS: eng+tel
-    steps:
+          steps:
       - uses: actions/checkout@v4
 
       - name: Check secure worker configuration
@@ -60,20 +59,20 @@ jobs:
           cache: pip
           cache-dependency-path: video-redactor/requirements.txt
 
-      - name: Install local video privacy processor
+      - name: Install project video processor
         if: steps.configured.outputs.ready == 'true'
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg tesseract-ocr tesseract-ocr-eng tesseract-ocr-tel libglib2.0-0 libgl1
+          sudo apt-get install -y -qq ffmpeg
           python -m pip install -r video-redactor/requirements.txt
 
-      - name: Verify video redaction, targeted masking, and audio preservation
+      - name: Verify unchanged video and original soundtrack
         if: steps.configured.outputs.ready == 'true'
         run: |
           python -m compileall -q video-redactor
           python -m unittest discover -s video-redactor -p 'test_*.py' -v
 
-      - name: Process one queued video (source-matched redacted copy only)
+      - name: Process one video (original picture and soundtrack)
         if: steps.configured.outputs.ready == 'true'
         run: python -u video-redactor/worker.py
 
