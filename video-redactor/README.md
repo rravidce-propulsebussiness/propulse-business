@@ -4,7 +4,7 @@ This is a **separate CPU-heavy service**, not a Hostinger shared-web background 
 
 ### Protection
 
-- OCR scans frames at up to five samples per second for phone numbers, emails, websites and social handles. QR codes are detected separately. Matches are blacked out after blurring; audio is **removed entirely** to prevent spoken contact details.
+- OCR scans frames at up to five samples per second for phone numbers, emails, websites and social handles. QR codes are detected separately. Only sensitive OCR token regions receive heavy irreversible mosaic blur, with optical-flow tracking between scans; non-speech sound is preserved while voice activity is muted to reduce spoken contact disclosure.
 - Detection is fallible (moving/small/stylized text and frames between samples can be missed). Public playback no longer waits for a manual approval. Strongly discourage contact details in original uploads, monitor publication, and remove reported leaks promptly. Admin review of the processed video is required **only for lead-credit reward eligibility**.
 - Original uploads remain private in `business-projects/`; public clients get signed links only to `business-project-redacted/` when processing completes, the source reference matches and the directory/project is public. Neither processing failures nor missing worker configurations fall back to the original.
 - Already-uploaded videos enter processing without requiring re-upload. Lead-credit rewards still require an explicit admin decision; registration-only rewards are unaffected.
@@ -21,7 +21,7 @@ A failed job stays private with an error; investigate and re-upload if needed. T
 
 ### Limitations
 
-- The worker intentionally discards all audio, including music/narration. Speech-preserving transcription and selective muting can be added later.
+- The worker preserves non-speech environmental audio and music when no voice activity is detected. It mutes suspected voice activity (including narration) rather than publishing potentially spoken phone numbers. VAD can miss speech and may also misclassify music. An admin-reviewed or consent-based path is needed to safely retain narration. Never claim perfect automatic privacy protection.
 - OCR sampling is **not a guarantee** of removing all contact details. There is residual privacy risk in automatic publication; regularly audit processed videos, remove leaks quickly, and instruct professionals not to include direct contact information.
 - MP4/MOV/WebM uploads from R2 are supported; external links and legacy local videos remain private and are marked failed until re-uploaded.
 - This is not enabled on the live website until the separate Docker worker has been deployed and the backend migration has run.
