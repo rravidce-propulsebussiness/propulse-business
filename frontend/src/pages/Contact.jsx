@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import PortalContact from './PortalContact'
+import DirectProjectEnquiryForm from '../components/DirectProjectEnquiryForm'
 import { publicRequest } from '../utils/auth'
 import { openLeadPopup } from '../utils/leadPopup'
 import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
@@ -168,12 +169,14 @@ function PublicContact() {
         </section>}
       </>}
 
+      <DirectProjectEnquiryForm/>
+
       <section className="contact-quote">
         <div>
-          <h2>Planning a project?</h2>
-          <p>Share your requirements and get started.</p>
+          <h2>Want to compare independent contractors instead?</h2>
+          <p>Use the separate ProPulse professional marketplace to share your requirement with independent businesses.</p>
         </div>
-        <button type="button" onClick={() => openLeadPopup('')}>Get Free Quote <span aria-hidden="true">→</span></button>
+        <button type="button" onClick={() => openLeadPopup('')}>Compare Professionals <span aria-hidden="true">→</span></button>
       </section>
     </div>
 
