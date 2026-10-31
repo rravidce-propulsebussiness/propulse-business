@@ -207,7 +207,7 @@ export default function ProjectDetail(){
               </div>
             </div>
             <div className="pjd-heading-tags">
-              <span className="pjd-published-label">PROFESSIONAL PORTFOLIO</span>
+              <span className="pjd-published-label">{project.official?'OFFICIAL PROPULSE PROJECT':'PROFESSIONAL PORTFOLIO'}</span>
               {project.verified&&<span className="pjd-verified">Verified professional</span>}
               <span className="pjd-collection-index">PUBLISHED COMPLETED WORK</span>
             </div>
@@ -247,7 +247,7 @@ export default function ProjectDetail(){
                 {project.video&&<button type="button" className={'pjd-video-thumb'+(videoSelected?' active':'')} aria-pressed={videoSelected} onClick={()=>setShowVideo(true)}>▶ Video</button>}
               </div>}
               <div className="pjd-gallery-caption">
-                <span aria-hidden="true">▣</span> Photos, videos, and project details are supplied by the publishing professional.
+                <span aria-hidden="true">▣</span> {project.official?'Project information and media published by ProPulse.':'Photos, videos, and project details are supplied by the publishing professional.'}
               </div>
             </section>
 
@@ -262,7 +262,7 @@ export default function ProjectDetail(){
                 {project.businessName&&<div><dt>Published by</dt><dd>{project.businessName}{project.official&&<span className="pjd-official-badge">♛ Official ProPulse</span>}</dd></div>}
               </dl>
               {project.cost&&<div className="pjd-price"><small>REPORTED PROJECT COST / BUDGET</small><strong>{project.cost}</strong></div>}
-              <div className="pjd-action-intro"><span>INTERESTED IN A PROJECT LIKE THIS?</span><strong>Take the next step.</strong><small>Choose one of the three options below.</small></div>
+              <div className="pjd-action-intro"><span>INTERESTED IN A PROJECT LIKE THIS?</span><strong>Take the next step.</strong><small>{project.official?'Contact ProPulse directly for a similar project.':'Explore the project documents and professional enquiry options.'}</small></div>
               <div className="pjd-action-stack" aria-label="Project next steps">
                 {project.document&&<button type="button" className="pjd-action-button pjd-download" onClick={()=>setMediaPreview({url:project.document,type:'plan',title:project.title+' plan / drawing'})}>
                   <span className="pjd-cta-symbol"><Icon name="file" size={20}/></span>
@@ -274,16 +274,24 @@ export default function ProjectDetail(){
                   <span className="pjd-cta-copy"><strong>{packageDownloading?'Preparing PDF…':'Download Package'}</strong><small>{project.brochure||linkedPlan?.brochure_url?'Professional specifications · PDF':'Published project guide · PDF'}</small></span>
                   <span className="pjd-cta-arrow" aria-hidden="true">↧</span>
                 </button>
-                <button ref={callbackTriggerRef} type="button" className="pjd-action-button pjd-callback" onClick={()=>setCallbackOpen(true)}>
+                {project.official?<Link className="pjd-action-button pjd-callback" to="/contact#direct-project">
+                  <span className="pjd-cta-symbol" aria-hidden="true">☎</span>
+                  <span className="pjd-cta-copy"><strong>Contact ProPulse Directly</strong><small>Construction and interiors by ProPulse</small></span>
+                  <span className="pjd-cta-arrow" aria-hidden="true">↗</span>
+                </Link>:<button ref={callbackTriggerRef} type="button" className="pjd-action-button pjd-callback" onClick={()=>setCallbackOpen(true)}>
                   <span className="pjd-cta-symbol" aria-hidden="true">☎</span>
                   <span className="pjd-cta-copy"><strong>{callbackSuccess?'Callback Requested':'Request a Callback'}</strong><small>ProPulse coordinates your enquiry</small></span>
                   <span className="pjd-cta-arrow" aria-hidden="true">↗</span>
-                </button>
-                <Link className="pjd-action-button pjd-main-cta" to={'/projects/project-'+project.id+'/quote'}>
+                </button>}
+                {project.official?<Link className="pjd-action-button pjd-main-cta" to="/contact#direct-project">
+                  <span className="pjd-cta-symbol" aria-hidden="true">✧</span>
+                  <span className="pjd-cta-copy"><strong>Request ProPulse Quote</strong><small>Sent privately to the ProPulse team</small></span>
+                  <span className="pjd-cta-arrow" aria-hidden="true">↗</span>
+                </Link>:<Link className="pjd-action-button pjd-main-cta" to={'/projects/project-'+project.id+'/quote'}>
                   <span className="pjd-cta-symbol" aria-hidden="true">✧</span>
                   <span className="pjd-cta-copy"><strong>Get Quote</strong><small>Submit requirements to this professional</small></span>
                   <span className="pjd-cta-arrow" aria-hidden="true">↗</span>
-                </Link>
+                </Link>}
               </div>
               {packageError&&<p className="pjd-error" role="alert">{packageError}</p>}
               <div className="pjd-privacy"><span aria-hidden="true">✓</span><span>Customer contact information stays protected. Verify project claims and scope directly before hiring.</span></div>
@@ -299,15 +307,15 @@ export default function ProjectDetail(){
 
           <div className="pjd-mobile-actions" aria-label="Quick project actions">
             <button type="button" onClick={downloadPackage} disabled={packageDownloading}><Icon name="file" size={17}/><span>{packageDownloading?'Preparing…':'Package'}</span></button>
-            <button type="button" onClick={()=>setCallbackOpen(true)}><span aria-hidden="true">☎</span><span>Callback</span></button>
-            <Link to={'/projects/project-'+project.id+'/quote'}>Get Quote <Icon name="arrow" size={14}/></Link>
+            {project.official?<Link to="/contact#direct-project"><span aria-hidden="true">☎</span><span>Contact ProPulse</span></Link>:<button type="button" onClick={()=>setCallbackOpen(true)}><span aria-hidden="true">☎</span><span>Callback</span></button>}
+            {project.official?<Link to="/contact#direct-project">Request ProPulse Quote <Icon name="arrow" size={14}/></Link>:<Link to={'/projects/project-'+project.id+'/quote'}>Get Quote <Icon name="arrow" size={14}/></Link>}
           </div>
         </>}
       </div>
     </section>
     <PublicFooter phone={phone} email={email}/>
     {mediaPreview&&<ProjectMediaViewer url={mediaPreview.url} type={mediaPreview.type} title={mediaPreview.title} onClose={()=>setMediaPreview(null)}/>}
-    {project&&callbackOpen&&<div className="pjd-dialog-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeCallback()}}>
+    {project&&!project.official&&callbackOpen&&<div className="pjd-dialog-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeCallback()}}>
       <section ref={dialogRef} tabIndex={-1} className="pjd-dialog" role="dialog" aria-modal="true" aria-labelledby="pjd-dialog-heading">
         <button type="button" className="pjd-dialog-close" onClick={closeCallback} aria-label="Close callback form">×</button>
         <span className="pjd-overline">PRIVATE PROJECT ENQUIRY</span>

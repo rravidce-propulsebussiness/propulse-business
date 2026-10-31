@@ -1,5 +1,5 @@
 import {useEffect,useState} from 'react'
-import {Link,useParams} from 'react-router-dom'
+import {Link,Navigate,useParams} from 'react-router-dom'
 import {publicRequest} from '../utils/auth'
 import {PublicHeader,PublicFooter} from '../components/PublicSiteChrome'
 import {categoryLabel,normalizeProject} from './Projects'
@@ -80,6 +80,8 @@ export default function ProjectQuote(){
   const flowKey=flowForIndustry[industry]||'build'
   const quoteIndustryLabel=project?categoryLabel(industry):'Project'
   const picked=packages.find(plan=>plan.title===preferredPackage)
+
+  if(project?.official)return <Navigate to="/contact#direct-project" replace/>
 
   return <main className="quote-page professional-project-quote">
     <PublicHeader/>

@@ -4,7 +4,7 @@ import { publicRequest } from '../utils/auth'
 import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 import './Projects.css'
 
-// Completed-project cards come exclusively from eligible published business records.
+// Completed-project cards include genuine published ProPulse work and eligible independent professional portfolios.
 // Historic illustrative concepts are retired rather than presented as completed work.
 const PAGE_SIZE = 48
 const CATEGORIES = [
@@ -211,7 +211,7 @@ export default function Projects() {
     finally{setLoadingMore(false)}
   }
 
-  // Only eligible completed projects returned from the professional portfolio API.
+  // Published company projects appear alongside eligible independent professional work.
   const filtered=useMemo(()=>{
     const term=query.trim().toLowerCase()
     return professionalProjects.filter(project=>{
@@ -268,15 +268,15 @@ export default function Projects() {
                   {project.location&&<div><small>Location</small><b>{project.location}</b></div>}
                   {project.area&&<div><small>Area</small><b>{project.area}</b></div>}
                   {project.packageName&&<div><small>Package</small><b>{project.packageName}</b></div>}
-                  {project.businessName&&<div><small>Professional</small><b>{project.businessName}</b></div>}
+                  {project.businessName&&<div><small>{project.official?'Executed by':'Professional'}</small><b>{project.businessName}</b></div>}
                 </div>
-                {project.cost&&<div className="pj-cost"><div><small>PROFESSIONAL-REPORTED PROJECT BUDGET</small><strong>{project.cost}</strong></div></div>}
+                {project.cost&&<div className="pj-cost"><div><small>{project.official?'PROPULSE-REPORTED PROJECT BUDGET':'PROFESSIONAL-REPORTED PROJECT BUDGET'}</small><strong>{project.cost}</strong></div></div>}
                 <span className="pj-single-action">View Completed Project <Icon name="arrow" size={16}/></span>
               </div>
             </Link>
           </article>)}
         </div>
-        {!filtered.length&&!loading&&<div className="pj-empty"><h3>{query||category!=='all'?'No completed projects match your search':'Completed projects are coming soon'}</h3><p>{query||category!=='all'?'Try another category or search term.':'No eligible completed projects have been published yet. Professionals can add their actual finished work through their business profiles.'}</p>{query||category!=='all'?<button type="button" onClick={()=>{setCategory('all');setQuery('')}}>Clear filters</button>:<div className="pj-empty-actions"><Link className="pj-empty-link" to="/experts">Explore professionals →</Link><Link className="pj-empty-link pj-empty-professional" to="/profile?tab=projects">Publish your completed work ↗</Link></div>}</div>}
+        {!filtered.length&&!loading&&<div className="pj-empty"><h3>{query||category!=='all'?'No completed projects match your search':'Completed projects are coming soon'}</h3><p>{query||category!=='all'?'Try another category or search term.':'No completed ProPulse or eligible professional projects are published yet. Check back for verified project details and videos.'}</p>{query||category!=='all'?<button type="button" onClick={()=>{setCategory('all');setQuery('')}}>Clear filters</button>:<div className="pj-empty-actions"><Link className="pj-empty-link" to="/experts">Explore professionals →</Link><Link className="pj-empty-link pj-empty-professional" to="/profile?tab=projects">Publish your completed work ↗</Link></div>}</div>}
         {loadError&&<p className="pj-load-error" role="status">{loadError}</p>}
         {hasNext&&<button type="button" className="pj-load-more" disabled={loadingMore} onClick={loadMore}>{loadingMore?'Loading…':'Load More Completed Projects'} <Icon name="arrow" size={15}/></button>}
       </div>

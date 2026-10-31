@@ -66,6 +66,10 @@ async function submit(projectId,input={}){
        AND u.role='business' AND u.is_active=TRUE
        AND COALESCE(bp.public_profile_enabled,TRUE)=TRUE
        AND COALESCE(TRIM(bp.business_name),'')<>''
+       AND NOT EXISTS (
+         SELECT 1 FROM business_expert_directory_settings official
+         WHERE official.user_id=u.id AND official.is_official=TRUE
+       )
      LIMIT 1`,[id]
   );
   const project=rows[0];

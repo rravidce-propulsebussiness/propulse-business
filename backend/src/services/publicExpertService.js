@@ -14,14 +14,14 @@ function publicRedactedVideoReadySql(alias){
     AND ${alias}.video_redaction_source_url=${alias}.video_url
     AND ${alias}.video_redacted_url LIKE 'private-object-s3:business-project-redacted/%'`;
 }
-function publicProjectVideoColumn(alias){
-  return `CASE WHEN ${publicRedactedVideoReadySql(alias)} THEN ${alias}.video_redacted_url ELSE NULL::text END AS video_url`;
+function publicProjectVideoColumn(alias,officialOnly=false){
+  return `CASE WHEN ${officialOnly?"COALESCE(beds.is_official,FALSE) AND ":''}${publicRedactedVideoReadySql(alias)} THEN ${alias}.video_redacted_url ELSE NULL::text END AS video_url`;
 }
 
 // Public status only; never return the original R2 reference, raw video,
  // processing error detail, or private admin review metadata.
-function publicProjectVideoStatusColumn(alias){
-  return `CASE
+function publicProjectVideoStatusColumn(alias,officialOnly=false){
+  const expression=`CASE
     WHEN ${publicRedactedVideoReadySql(alias)} THEN 'published'
     WHEN NULLIF(${alias}.video_url,'') IS NULL THEN 'none'
     WHEN ${alias}.video_redaction_status='failed' THEN 'processing_failed'
@@ -29,7 +29,10 @@ function publicProjectVideoStatusColumn(alias){
     WHEN ${alias}.video_redaction_status='pending' THEN 'queued'
     WHEN ${alias}.video_redaction_status='processing' THEN 'processing'
     ELSE 'queued'
-  END::text AS video_publication_status`;
+  END`;
+  return officialOnly
+    ? `CASE WHEN COALESCE(beds.is_official,FALSE) THEN (${expression}) ELSE 'disabled' END::text AS video_publication_status`
+    : `${expression}::text AS video_publication_status`;
 }
 
 async function materializeProjectMedia(rows){
@@ -69,6 +72,33 @@ function addEligibilityConditions(settings,params,conditions){
         AND CASE WHEN LOWER(COALESCE(emp.plan_group,''))='scale' THEN 'scale' ELSE 'grow' END = ANY($${n}::text[])
     )`);
   }
+}
+
+// Official ProPulse work is independent of marketplace membership and directory toggles.
+function addProjectEligibilityConditions(settings,params,conditions,{videosOnly=false}={}){
+  conditions.push("u.role='business'","u.is_active=TRUE","COALESCE(TRIM(bp.business_name),'')<>''","COALESCE(beds.is_hidden,FALSE)=FALSE");
+  const marketplace=[];
+  if(!settings.directoryEnabled||!settings.showProjects||(videosOnly&&!settings.showVideos)){
+    marketplace.push('FALSE');
+  }else{
+    marketplace.push("COALESCE(bp.public_profile_enabled,TRUE)=TRUE");
+    if(settings.requireVerified){
+      marketplace.push("EXISTS(SELECT 1 FROM company_proof_documents cpdv WHERE cpdv.user_id=u.id AND cpdv.status='verified')");
+    }
+    if(settings.requireActiveMembership){
+      params.push(settings.allowedPlanGroups);
+      const n=params.length;
+      marketplace.push(`EXISTS(
+        SELECT 1 FROM memberships em JOIN membership_plans emp ON emp.id=em.membership_plan_id
+        WHERE em.user_id=u.id AND em.status='active'
+          AND em.starts_at<=CURRENT_TIMESTAMP AND em.expires_at>CURRENT_TIMESTAMP
+          AND emp.is_active=TRUE
+          AND LOWER(REPLACE(COALESCE(emp.plan_type,''),'-','_'))='pro'
+          AND CASE WHEN LOWER(COALESCE(emp.plan_group,''))='scale' THEN 'scale' ELSE 'grow' END = ANY($${n}::text[])
+      )`);
+    }
+  }
+  conditions.push(`(COALESCE(beds.is_official,FALSE)=TRUE OR (${marketplace.join(' AND ')}))`);
 }
 
 function membershipLateral(){
@@ -244,13 +274,10 @@ async function listRecentProjectVideos({page=1,pageSize=12}={}){
   const settings=await expertDirectoryService.getSettings();
   const currentPage=toPositiveInt(page,1,100000);
   const currentPageSize=toPositiveInt(pageSize,12,36);
-  if(!settings.directoryEnabled||!settings.showProjects||!settings.showVideos){
-    return {data:[],pagination:{page:currentPage,pageSize:currentPageSize,total:0,totalPages:0,hasNextPage:false,hasPreviousPage:false}};
-  }
   const offset=(currentPage-1)*currentPageSize;
   const params=[];
   const conditions=["bpp.is_published=TRUE","bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)","COALESCE(bpp.video_url,'')<>''",publicRedactedVideoReadySql('bpp')];
-  addEligibilityConditions(settings,params,conditions);
+  addProjectEligibilityConditions(settings,params,conditions,{videosOnly:true});
   const where='WHERE '+conditions.join(' AND ');
   const total=Number((await pool.query(
     `SELECT COUNT(*)::int AS total
@@ -287,7 +314,7 @@ async function listRecentProjectVideos({page=1,pageSize=12}={}){
      LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id
      ${membershipLateral()}
      ${where}
-     ORDER BY COALESCE(bpp.video_published_at,bpp.created_at) DESC,bpp.id DESC
+     ORDER BY COALESCE(beds.is_official,FALSE) DESC,COALESCE(bpp.video_published_at,bpp.created_at) DESC,bpp.id DESC
      LIMIT ${currentPageSize} OFFSET ${offset}`,
     queryParams
   );
@@ -309,13 +336,10 @@ async function listRecentProjects({page=1,pageSize=18}={}){
   const settings=await expertDirectoryService.getSettings();
   const currentPage=toPositiveInt(page,1,100000);
   const currentPageSize=toPositiveInt(pageSize,18,48);
-  if(!settings.directoryEnabled||!settings.showProjects){
-    return {data:[],pagination:{page:currentPage,pageSize:currentPageSize,total:0,totalPages:0,hasNextPage:false,hasPreviousPage:false}};
-  }
   const offset=(currentPage-1)*currentPageSize;
   const params=[];
   const conditions=["bpp.is_published=TRUE","bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)"];
-  addEligibilityConditions(settings,params,conditions);
+  addProjectEligibilityConditions(settings,params,conditions);
   const where='WHERE '+conditions.join(' AND ');
   const total=Number((await pool.query(
     `SELECT COUNT(*)::int AS total
@@ -341,8 +365,8 @@ async function listRecentProjects({page=1,pageSize=18}={}){
        bpp.image_urls,
        bpp.package_name,
        bpp.brochure_url,
-       ${settings.showVideos?publicProjectVideoColumn('bpp'):'NULL::text AS video_url'},
-       ${settings.showVideos?publicProjectVideoStatusColumn('bpp'):"'disabled'::text AS video_publication_status"},
+       ${publicProjectVideoColumn('bpp',!settings.showVideos)},
+       ${publicProjectVideoStatusColumn('bpp',!settings.showVideos)},
        ${settings.showPlans?'bpp.plan_url':'NULL::text AS plan_url'},
        COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) AS published_at,
        bp.id AS business_profile_id,
@@ -356,7 +380,7 @@ async function listRecentProjects({page=1,pageSize=18}={}){
      LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id
      ${membershipLateral()}
      ${where}
-     ORDER BY COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) DESC,bpp.id DESC
+     ORDER BY COALESCE(beds.is_official,FALSE) DESC,COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) DESC,bpp.id DESC
      LIMIT ${currentPageSize} OFFSET ${offset}`,
     params
   );
@@ -378,16 +402,15 @@ async function getPublicProject(projectId){
   const slug=!id&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)&&value.length<=100?value:null;
   if(!slug&&(!Number.isSafeInteger(id)||id<=0))return null;
   const settings=await expertDirectoryService.getSettings();
-  if(!settings.directoryEnabled||!settings.showProjects)return null;
   const params=[slug||id];
   const conditions=[slug?'bpp.seo_slug=$1':'bpp.id=$1','bpp.is_published=TRUE','bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)'];
-  addEligibilityConditions(settings,params,conditions);
+  addProjectEligibilityConditions(settings,params,conditions);
   const result=await pool.query(
     `SELECT bpp.id AS project_id,bpp.title,bpp.seo_slug,bpp.seo_title,bpp.seo_description,bpp.seo_keyword,bpp.project_type,bpp.description,
       bpp.location_text,bpp.completion_year,bpp.area_text,bpp.budget_text,
       bpp.cover_image_url,bpp.image_urls,bpp.package_name,bpp.brochure_url,
-      ${settings.showVideos?publicProjectVideoColumn('bpp'):'NULL::text AS video_url'},
-       ${settings.showVideos?publicProjectVideoStatusColumn('bpp'):"'disabled'::text AS video_publication_status"},
+      ${publicProjectVideoColumn('bpp',!settings.showVideos)},
+       ${publicProjectVideoStatusColumn('bpp',!settings.showVideos)},
       ${settings.showPlans?'bpp.plan_url':'NULL::text AS plan_url'},
       COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) AS published_at,
       bp.id AS business_profile_id,bp.business_name,
@@ -405,6 +428,37 @@ async function getPublicProject(projectId){
   );
   const projects=await materializeProjectMedia(result.rows);
   return projects[0]||null;
+}
+
+// Sitemap should list only projects that meet the same public visibility rules
+// as their detail pages. No media references or customer information are returned.
+async function listIndexableProjectPaths(){
+  const settings=await expertDirectoryService.getSettings();
+  const params=[];
+  const conditions=[
+    "bpp.is_published=TRUE",
+    "bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)"
+  ];
+  addProjectEligibilityConditions(settings,params,conditions);
+  const result=await pool.query(
+    `SELECT bpp.id,bpp.seo_slug,bpp.updated_at
+       FROM business_profile_projects bpp
+       JOIN business_profiles bp ON bp.id=bpp.business_profile_id
+       JOIN users u ON u.id=bp.user_id
+       LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id
+       WHERE ${conditions.join(' AND ')}
+       ORDER BY COALESCE(beds.is_official,FALSE) DESC,bpp.updated_at DESC,bpp.id DESC
+       LIMIT 5000`,
+    params
+  );
+  return result.rows.map(row=>{
+    const slug=String(row.seo_slug||'').trim();
+    const path=/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)&&slug.length<=100
+      ?'/projects/'+slug
+      :'/projects/project-'+row.id;
+    const date=row.updated_at?new Date(row.updated_at):null;
+    return {path,lastmod:date&&!Number.isNaN(date.getTime())?date.toISOString().slice(0,10):null};
+  });
 }
 
 async function getPublicExpert(expertId){
@@ -445,4 +499,4 @@ async function getPublicExpert(expertId){
   return {...base,services:services.rows,locations:locations.rows,projects:renderedProjects,brochures,service_plans:renderedPlans,directory_settings:{showProjects:settings.showProjects,showVideos:settings.showVideos,showPlans:settings.showPlans}};
 }
 
-module.exports={listPublicExperts,listRecentProjects,listRecentProjectVideos,getPublicExpert,getPublicProject};
+module.exports={listPublicExperts,listRecentProjects,listRecentProjectVideos,getPublicExpert,getPublicProject,listIndexableProjectPaths};
