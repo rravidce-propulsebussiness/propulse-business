@@ -50,7 +50,9 @@ assert.match(reviewController,/PROJECT_VIDEO_CONTACT_PRIVACY_REQUIRED/,
   'Missing privacy approval must be a user-correctable 400, not 503');
 assert.match(adminPage,/I watched the complete processed video/);
 assert.match(adminPage,/privacyChecked\[item.id\]===true/);
-assert.match(profileUi,/ProPulse automatically detects and masks visible contact details/);
+assert.match(profileUi,/No automatic masking or muting is applied to uploaded videos/);
+assert.doesNotMatch(profileUi,/ProPulse automatically detects and masks/,
+  'Upload guidance must not promise automatic concealment');
 assert.match(serverSource,/app.use\('\/uploads\/business-projects',\(req,res,next\)=>/);
 assert.doesNotMatch(serverSource,/if\(access.rows\[0\]\?\.public_access\)return next\(\)/,
   'Raw original videos must never receive unauthenticated public access');
@@ -75,10 +77,10 @@ assert.match(publicVideoService,/video_redaction_status='pending' THEN 'queued'/
   'Pending videos must not be reported as actively processing');
 assert.match(publicVideoService,/video_redaction_status='processing' THEN 'processing'/,
   'A worker-claimed video has a distinct processing state');
-assert.match(publicProjectDetail,/Video awaiting privacy processing/,
-  'Do not claim an idle queue is masking the video yet');
-assert.match(publicProjectsPage,/Video awaiting privacy processing/,
-  'Public project cards should distinguish queued and actively masked videos');
+assert.match(publicProjectDetail,/Video awaiting playback processing/,
+  'Queued videos must be described as playback preparation, not masking');
+assert.match(publicProjectsPage,/Video awaiting playback processing/,
+  'Public project cards should distinguish queued and processing playback states');
 assert.match(publicProjectDetail,/project\.videoPublicationStatus==='processing_failed'/,
   'The public project gallery should not say photos are missing when a video is waiting');
 assert.match(publicProjectsPage,/videoPublicationStatus:clean\(project\.video_publication_status\)/);
@@ -92,10 +94,18 @@ assert.match(adminService,/video_redaction_status/);
 assert.match(profile,/videoRedactionStatus:sameVideo/);
 assert.match(profile,/video_redacted_url:item.videoRedactedUrl/);
 assert.match(service,/p.video_redaction_status='ready'/);
-assert.match(videoRedactionWorker,/detect_contact_boxes/);
-assert.match(videoRedactionWorker,/pytesseract.image_to_data/);
-assert.match(videoRedactionWorker,/QRCodeDetector/);
-assert.match(videoRedactionWorker,/"-an"/, 'All audio must be stripped in v1');
+// The legacy "redaction" identifiers name the browser-playback derivative only.
+assert.match(videoRedactionWorker,/Automatic contact masking, speech muting and synthetic music are disabled/);
+assert.match(videoRedactionWorker,/"-map", "0:v:0", "-map", "0:a:0\?"/,
+  'Preserve the original audio stream when present');
+assert.match(videoRedactionWorker,/args \+= \["-c:v", "copy"\]/,
+  'Keep browser-compatible original video unchanged');
+assert.match(videoRedactionWorker,/args \+= \["-c:a", "copy"\]/,
+  'Keep browser-compatible original audio unchanged');
+assert.match(videoRedactionWorker,/args \+= \["-c:a", "aac", "-b:a", "192k"\]/,
+  'Transcode incompatible audio rather than muting or replacing it');
+assert.doesNotMatch(videoRedactionWorker,/detect_contact_boxes|pytesseract|QRCodeDetector|["']-an["']|["']-af["']|["']-filter_complex["']|drawbox|boxblur|delogo/,
+  'The playback processor must not detect, mask or mute contacts and audio');
 assert.match(videoRedactionWorker,/FOR UPDATE OF p SKIP LOCKED/,
   'The redactor needs a safe single-job claim');
 assert.match(videoRedactionWorker,/video_redaction_token=%s/,
@@ -138,28 +148,17 @@ assert.match(service,/allowAutomaticSignupReward\(client,userId/);
 assert.match(antiAbuse,/createHmac\('sha256'/);
 assert.doesNotMatch(antiAbuse,/userAgent|localStorage|X-Forwarded-For/);
 
-// Parse the Python processor and exercise its contact-pattern helper without
-// needing OpenCV/R2 installed in the Node test environment.
+// Parse the Python worker without importing optional R2 libraries.
 const pythonCheck=spawnSync('python3',['-c',String.raw`
-import ast, re, pathlib
-source=pathlib.Path('video-redactor/worker.py').read_text()
-tree=ast.parse(source)
-ns={'re':re}
-for node in tree.body:
-    if isinstance(node, ast.Assign) and any(isinstance(t,ast.Name) and t.id=='CONTACT' for t in node.targets):
-        exec(compile(ast.Module(body=[node],type_ignores=[]),'worker.py','exec'),ns)
-    if isinstance(node, ast.FunctionDef) and node.name=='contains_contact':
-        exec(compile(ast.Module(body=[node],type_ignores=[]),'worker.py','exec'),ns)
-check=ns['contains_contact']
-assert check('+91 98765 43210')
-assert check('WhatsApp number available')
-assert check('Visit www.example.com')
-assert check('mail info@example.com')
-assert check('@contractor.handle')
-assert not check('Completed 3BHK interior in Uppal, 1250 sq ft')
+import ast, pathlib
+source = pathlib.Path('video-redactor/worker.py').read_text()
+tree = ast.parse(source)
+functions = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
+assert {'transcode', 'claim_job', 'process_one'}.issubset(functions)
+assert not {'contains_contact', 'detect_contact_boxes'}.intersection(functions)
 `],{cwd:root,encoding:'utf8',timeout:5000});
 if(!pythonCheck.error){
-  assert.equal(pythonCheck.status,0,'Python worker syntax/contact detection regression: '+pythonCheck.stderr);
+  assert.equal(pythonCheck.status,0,'Python worker syntax and preservation policy regression: '+pythonCheck.stderr);
 }else if(pythonCheck.error.code!=='ENOENT'){
   throw pythonCheck.error;
 }
@@ -196,5 +195,5 @@ async function checkPrivacyConfirmation(){
   );
 }
 Promise.all([checkContentHash(),checkPrivacyConfirmation()])
-  .then(()=>console.log('Approved-video reward, contact privacy and repeat-signup defenses passed'))
+  .then(()=>console.log('Approved-video rewards, playback preservation and repeat-signup defenses passed'))
  .catch(error=>{console.error(error);process.exitCode=1});
