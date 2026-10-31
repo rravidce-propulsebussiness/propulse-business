@@ -246,11 +246,11 @@ export default function Projects() {
                     ?<div className="pj-video-processing-placeholder" role="status">
                        <span className="pj-video-processing-icon" aria-hidden="true">▶</span>
                        <strong>{project.videoPublicationStatus==='processing_failed'?'Video processing needs attention'
-                         :project.videoPublicationStatus==='processing'?'Video masking in progress':'Video awaiting privacy processing'}</strong>
+                         :project.videoPublicationStatus==='processing'?'Video playback preparation in progress':'Video awaiting playback processing'}</strong>
                        <small>{project.videoPublicationStatus==='processing_failed'
-                         ?'This video is private because masking did not complete.'
-                         :project.videoPublicationStatus==='processing'?'Contact details are being masked before public playback.'
-                         :'The video is uploaded, but privacy masking has not started yet.'}</small>
+                         ?'This video is not public because playback preparation failed.'
+                         :project.videoPublicationStatus==='processing'?'The video is being prepared for browser playback with its original sound.'
+                         :'The video is uploaded, but playback preparation has not started yet.'}</small>
                      </div>
                     :<div className="pj-image-placeholder"><Icon name="layers" size={30}/>Project photo not provided</div>}
                 {projectPhotos(project).length>1&&<span className="pj-card-photo-count">{projectPhotos(project).length} Photos</span>}
