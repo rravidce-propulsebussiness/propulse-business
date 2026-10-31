@@ -49,3 +49,7 @@ After secrets have been configured, run the workflow manually once and check tha
 ## Reprocessing an existing video
 
 After improving the privacy algorithm, an existing project must be queued again from its original private R2 upload. While a video is pending, its old derivative is withheld from public playback; successful processing writes a fresh UUID-named derivative and makes that new version eligible for playback. A failed reprocess remains private. Reprocessing does not grant lead-credit rewards; those require a separate admin approval.
+
+## Soundtrack silence fix (Oct 31, 2026)
+
+If voice-activity screening mutes the original source audio, the worker now mixes in an original, procedurally composed instrumental backdrop so the public video is not silent. This backdrop includes no externally licensed music and does not restore potentially sensitive spoken contact details. The regression suite checks actual decoded RMS audio levels even with a full original-track mute. Reprocessing is required for previously published silent derivatives; the private source is retained and reward approval remains separate.
