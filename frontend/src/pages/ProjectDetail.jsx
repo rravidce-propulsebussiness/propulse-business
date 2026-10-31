@@ -223,13 +223,13 @@ export default function ProjectDetail(){
                     ?<div className="pjd-no-photo pjd-video-pending" role="status">
                       <Icon name="layers" size={34}/>
                       <strong>{project.videoPublicationStatus==='processing_failed'?'Video processing needs attention'
-                        :project.videoPublicationStatus==='processing'?'Privacy masking in progress':'Video awaiting privacy processing'}</strong>
+                        :project.videoPublicationStatus==='processing'?'Video playback preparation in progress':'Video awaiting playback processing'}</strong>
                       <span>{project.videoPublicationStatus==='processing_failed'
-                        ?'This video remains private because automatic masking did not complete.'
+                        ?'This video remains unavailable because playback preparation did not complete.'
                         :project.videoPublicationStatus==='processing'
-                          ?'The video is being processed to hide contact information before public playback.'
-                          :'The video is safely uploaded, but automatic masking has not started yet.'}</span>
-                      <small>Playback becomes available after masking succeeds. Admin review is only for lead rewards.</small>
+                          ?'The video is being prepared for browser playback without masking or muting.'
+                          :'The video is uploaded, but playback preparation has not started yet.'}</span>
+                      <small>Playback becomes available after processing succeeds. Admin review is only for lead rewards.</small>
                     </div>
                     :<div className="pjd-no-photo"><Icon name="layers" size={34}/><strong>Photos not published yet</strong><span>This professional has not added project images.</span></div>}
                 {activePhoto&&!videoSelected&&<div className="pjd-image-caption">
