@@ -13,6 +13,7 @@ import subprocess
 import tempfile
 import time
 import uuid
+import wave
 from pathlib import Path
 
 import boto3
@@ -211,8 +212,8 @@ def sanitized_audio_filter(source_path):
     """Keep environmental sound/music, but silence detected speech.
 
     VAD cannot certify all spoken contacts are caught. Source audio never
-    becomes public without speech suppression. A video with no audio keeps
-    no track. Fail closed if audio cannot be decoded or analyzed.
+    becomes public without speech suppression. A source with no audio gets an original instrumental background track.
+    Fail closed if source audio cannot be decoded or analyzed.
     """
     probe = subprocess.run(["ffprobe", "-v", "error",
         "-select_streams", "a", "-show_entries", "stream=index",
@@ -264,6 +265,95 @@ def sanitized_audio_filter(source_path):
     return True, ",".join(filters)
 
 
+def generate_original_instrumental(path, duration):
+    """Compose a rights-independent warm ambient soundtrack; no samples/lyrics.
+
+    Background music is only introduced when speech protection would otherwise
+    remove some or all of the source track, or when no source audio exists.
+    """
+    rate = 24000
+    count = max(1, int(round(duration * rate)))
+    samples = np.zeros(count, dtype=np.float32)
+    beat = 60.0 / 105.0
+    bar = 4 * beat
+    chords = [
+        [130.81, 164.81, 196.00, 246.94],  # Cmaj7
+        [110.00, 130.81, 164.81, 196.00],  # Am7
+        [87.31, 110.00, 130.81, 164.81],  # Fmaj7
+        [98.00, 123.47, 146.83, 164.81],  # G6
+    ]
+    melody = [
+        [392.00, 523.25, 659.25, 523.25],
+        [440.00, 523.25, 659.25, 784.00],
+        [349.23, 440.00, 523.25, 659.25],
+        [392.00, 493.88, 587.33, 659.25],
+    ]
+    rng = np.random.default_rng(1917)
+
+    def note(start, length, freq, strength, kind):
+        start_idx = int(start * rate)
+        if start_idx >= count:
+            return
+        n = min(int(length*rate), count-start_idx)
+        if n <= 0:
+            return
+        t = np.arange(n, dtype=np.float32)/rate
+        if kind == "pad":
+            envelope = np.minimum(1.0, t/0.22)*np.minimum(1.0, np.maximum(0.0, length-t)/0.45)
+            waveform = (np.sin(2*np.pi*freq*t) +
+                        0.18*np.sin(2*np.pi*2*freq*t))
+        else:
+            envelope = np.minimum(1.0, t/0.014)*np.exp(-3.1*t)
+            waveform = (np.sin(2*np.pi*freq*t) +
+                        0.24*np.sin(2*np.pi*2*freq*t) +
+                        0.08*np.sin(2*np.pi*3*freq*t))
+        samples[start_idx:start_idx+n] += (strength*envelope*waveform).astype(np.float32)
+
+    for bar_index in range(int(np.ceil(duration/bar))):
+        start = bar_index*bar
+        ci = bar_index % 4
+        for freq in chords[ci]:
+            note(start, bar+0.35, freq, 0.030, "pad")
+        for k, freq in enumerate(melody[ci]):
+            note(start + k*beat, beat*0.84, freq, 0.086, "pluck")
+
+    for i in range(int(np.ceil(duration/beat))):
+        start = int(i*beat*rate)
+        if start >= count:
+            break
+        n = min(int(0.20*rate), count-start)
+        t = np.arange(n,dtype=np.float32)/rate
+        if i % 4 in (0,2):
+            kick = 0.085*np.sin(2*np.pi*(78-28*t)*t)*np.exp(-31*t)
+            samples[start:start+n] += kick.astype(np.float32)
+        if i % 4 in (1,3):
+            snare = rng.standard_normal(n).astype(np.float32)*np.exp(-37*t)*0.018
+            samples[start:start+n] += snare
+
+    # Faint hi-hat transients, seeded for fully reproducible original output.
+    for i in range(int(np.ceil(duration/(beat/2)))):
+        start = int(i*(beat/2)*rate)
+        if start >= count:
+            break
+        n = min(int(0.035*rate), count-start)
+        t = np.arange(n,dtype=np.float32)/rate
+        noise = rng.standard_normal(n).astype(np.float32)
+        samples[start:start+n] += (noise*np.exp(-120*t)*0.011).astype(np.float32)
+
+    fades = min(count//2, int(rate*.24))
+    if fades:
+        samples[:fades] *= np.linspace(0,1,fades,dtype=np.float32)
+        samples[-fades:] *= np.linspace(1,0,fades,dtype=np.float32)
+    peak = max(1e-8,float(np.max(np.abs(samples))))
+    samples *= min(2.2,0.83/peak)
+    samples = np.clip(samples,-0.9,0.9)
+    with wave.open(str(path),"wb") as wav:
+        wav.setnchannels(1)
+        wav.setsampwidth(2)
+        wav.setframerate(rate)
+        wav.writeframes((samples*32767).astype("<i2").tobytes())
+
+
 def transcode(source_path, output_path):
     video = cv2.VideoCapture(str(source_path))
     if not video.isOpened():
@@ -279,18 +369,31 @@ def transcode(source_path, output_path):
     scale = min(1., 1280/width, 720/height)
     w, h = max(2, int(width*scale)//2*2), max(2, int(height*scale)//2*2)
     has_audio, audio_filter = sanitized_audio_filter(source_path)
+    # A completely silenced source track can still have an AAC stream. Supply
+    # safe, original instrumental music whenever voice protection was applied.
+    music_path = Path(output_path).with_suffix(".original-instrumental.wav")
+    add_music = bool(audio_filter) or not has_audio
+    if add_music:
+        generate_original_instrumental(music_path, duration)
     args = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
         "-f", "rawvideo", "-pixel_format", "bgr24", "-video_size", f"{w}x{h}",
-        "-framerate", str(fps), "-i", "pipe:0", "-i", str(source_path),
-        "-map", "0:v:0"]
-    if has_audio:
-        args += ["-map", "1:a:0", "-c:a", "aac", "-b:a", "160k"]
-        if audio_filter:
-            args += ["-af", audio_filter]
+        "-framerate", str(fps), "-i", "pipe:0", "-i", str(source_path)]
+    if add_music:
+        args += ["-i", str(music_path)]
+    args += ["-map", "0:v:0"]
+    if has_audio and audio_filter:
+        args += ["-filter_complex", "[1:a:0]"+audio_filter+
+            "[muted];[muted][2:a:0]amix=inputs=2:duration=first:"
+            "normalize=0:dropout_transition=0,alimiter=limit=0.95[aout]",
+            "-map", "[aout]"]
+    elif has_audio:
+        args += ["-map", "1:a:0"]
     else:
-        args += ["-an"]
-    args += ["-c:v", "libx264", "-preset", "veryfast", "-crf", "21",
-        "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(output_path)]
+        args += ["-map", "2:a:0"]
+    args += ["-c:a", "aac", "-b:a", "160k",
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "21",
+        "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-shortest",
+        str(output_path)]
     proc = subprocess.Popen(args, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
     detector = cv2.QRCodeDetector()
     scan_step = max(1, round(fps/SCAN_FPS))
@@ -332,7 +435,8 @@ def transcode(source_path, output_path):
         if code or total < 1:
             raise RuntimeError("FFmpeg failed to generate redacted output: " + error)
         return dict(frames=total, masked_frames=detections,
-            audio="non-speech preserved" if has_audio else "no source audio")
+            audio=("protected original + original instrumental" if has_audio and add_music
+                else "original instrumental" if add_music else "source audio"))
     finally:
         video.release()
         if proc.poll() is None:
@@ -341,6 +445,8 @@ def transcode(source_path, output_path):
             proc.wait(timeout=3)
         with contextlib.suppress(Exception):
             proc.stderr.close()
+        if add_music:
+            music_path.unlink(missing_ok=True)
 
 
 def process_one(connection, client, job):
