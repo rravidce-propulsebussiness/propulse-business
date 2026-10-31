@@ -71,6 +71,14 @@ assert.match(publicVideoService,/publicProjectVideoStatusColumn\(alias\)/,
 assert.match(publicVideoService,/NULLIF\(\$\{alias\}\.video_url,''\) IS NULL/);
 assert.match(publicVideoService,/video_publication_status/,
   'The gallery must be told that an uploaded video is awaiting safe processing');
+assert.match(publicVideoService,/video_redaction_status='pending' THEN 'queued'/,
+  'Pending videos must not be reported as actively processing');
+assert.match(publicVideoService,/video_redaction_status='processing' THEN 'processing'/,
+  'A worker-claimed video has a distinct processing state');
+assert.match(publicProjectDetail,/Video awaiting privacy processing/,
+  'Do not claim an idle queue is masking the video yet');
+assert.match(publicProjectsPage,/Video awaiting privacy processing/,
+  'Public project cards should distinguish queued and actively masked videos');
 assert.match(publicProjectDetail,/project\.videoPublicationStatus==='processing_failed'/,
   'The public project gallery should not say photos are missing when a video is waiting');
 assert.match(publicProjectsPage,/videoPublicationStatus:clean\(project\.video_publication_status\)/);
