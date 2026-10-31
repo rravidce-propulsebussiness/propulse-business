@@ -70,6 +70,10 @@ async function requestCallback(projectId,input={}){
        WHERE p.id=$1 AND p.is_published=TRUE AND p.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)
        AND u.role='business' AND u.is_active=TRUE AND bp.public_profile_enabled=TRUE
        AND COALESCE(TRIM(bp.business_name),'')<>''
+       AND NOT EXISTS (
+         SELECT 1 FROM business_expert_directory_settings official
+         WHERE official.user_id=u.id AND official.is_official=TRUE
+       )
        LIMIT 1`,[id]
   )).rows[0];
   if(!project)throw bad('Project not found','PROJECT_NOT_FOUND');
