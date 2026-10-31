@@ -1,6 +1,7 @@
 const express=require('express');
 
 const router=express.Router();
+const publicExpertService=require('../services/publicExpertService');
 
 const HYDERABAD_CONSTRUCTION_LOCALITIES=[
   'uppal','habsiguda','tarnaka','nagole','kothapet','lb-nagar','saroornagar','vanasthalipuram','hayathnagar','dilsukhnagar',
@@ -152,17 +153,27 @@ router.get('/robots.txt',(req,res)=>{
   ].join('\n'));
 });
 
-router.get('/sitemap.xml',(req,res)=>{
+router.get('/sitemap.xml',async(req,res)=>{
   const origin=safeOrigin(req);
+  let projects=[];
+  try{
+    projects=await publicExpertService.listIndexableProjectPaths();
+  }catch(error){
+    // A temporary database outage must not make the static site sitemap fail.
+    console.error('Public project sitemap lookup failed:',error?.message||error);
+    res.setHeader('Cache-Control','no-store');
+  }
   const body=[
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     ...PUBLIC_PATHS.map(path=>'  <url><loc>'+xmlEscape(origin+(path==='/'?'/':path))+'</loc></url>'),
+    ...projects.map(project=>'  <url><loc>'+xmlEscape(origin+project.path)+'</loc>'+
+      (project.lastmod?'<lastmod>'+xmlEscape(project.lastmod)+'</lastmod>':'')+'</url>'),
     '</urlset>',
     ''
   ].join('\n');
   res.type('application/xml');
-  res.setHeader('Cache-Control','public, max-age=3600');
+  if(!res.getHeader('Cache-Control'))res.setHeader('Cache-Control','public, max-age=3600');
   res.send(body);
 });
 
