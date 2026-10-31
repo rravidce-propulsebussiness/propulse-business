@@ -1,59 +1,30 @@
-"""Private R2 -> privacy-redacted R2. No original media is published.
+"""Publish project video derivatives without changing their soundtrack or picture.
 
-This worker is fail-closed: processing does NOT grant public access. A
-A completed, source-matched derivative becomes eligible for automatic public
-playback. Lead-credit rewards still require separate admin review. Speech is automatically muted to protect spoken contact details, while non-speech
-sound is preserved. Automatic detection is imperfect; professional review is needed.
+The original R2 file stays private. A source-matched browser-compatible MP4
+derivative is served only for a published project through signed URLs.
+Automatic contact masking, speech muting and synthetic music are disabled.
+Project owners are responsible for removing contacts they do not wish to share.
+Admin lead-credit review remains a separate requirement.
 """
 import contextlib
+import json
 import logging
 import os
-import re
 import subprocess
 import tempfile
 import time
 import uuid
-import wave
 from pathlib import Path
 
 import boto3
-import cv2
-import numpy as np
 import psycopg
-import pytesseract
-import webrtcvad
 from botocore.config import Config
 
-LOG = logging.getLogger("propulse.video_redactor")
+LOG = logging.getLogger("propulse.video_processor")
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
 PREFIX = "private-object-s3:"
 MAX_BYTES = int(os.environ.get("VIDEO_REDACTOR_MAX_BYTES", str(750 * 1024 * 1024)))
 MAX_SECONDS = int(os.environ.get("VIDEO_REDACTOR_MAX_SECONDS", "600"))
-SCAN_FPS = 5
-CONTACT = re.compile(
-    r"(?<!\w)(?:https?://|www\.)[^\s]+"
-    r"|(?<!\w)(?:wa\.me|t\.me)\s*/\s*[a-z0-9_+.-]+"
-    r"|[\w.+-]+@[\w.-]+\.[a-z]{2,}"
-    r"|(?<!\w)@[a-z0-9_.]{3,}\b"
-    r"|(?<!\w)[a-z0-9_-]+(?:\s*[-.]\s*[a-z0-9_-]+)*\s*\.\s*(?:com|in|net|org|online|io|me)\b"
-    r"|(?<!\w)\+?\d[\d\s().-]{7,}\d",
-    re.I,
-)
-
-
-def sensitive_spans(text):
-    """Find actual contacts, not generic headings such as 'Contact Us'."""
-    for match in CONTACT.finditer(text):
-        value = match.group(0)
-        if re.match(r"^\+?\d", value):
-            digits = re.sub(r"\D", "", value)
-            if len(digits) < 10 or len(digits) > 15:
-                continue
-        yield match.span()
-
-
-def contains_contact(text):
-    return bool(list(sensitive_spans(" ".join(str(text).split()))))
 
 
 def r2_client():
@@ -109,350 +80,70 @@ def active_job(connection, job):
     return bool(row)
 
 
-def detect_contact_boxes(frame, qr_detector):
-    # Mask only OCR tokens that overlap the sensitive substring. Masking the
-    # entire line concealed project titles, dimensions and ordinary captions.
-    languages = os.getenv("VIDEO_REDACTOR_OCR_LANGS", "eng+tel")
-    data = pytesseract.image_to_data(frame, lang=languages,
-        config="--psm 11", output_type=pytesseract.Output.DICT)
-    groups = {}
-    for i, value in enumerate(data["text"]):
-        if not str(value).strip():
-            continue
-        key = (data["block_num"][i], data["par_num"][i], data["line_num"][i])
-        groups.setdefault(key, []).append(i)
-    boxes = []
-    for group in groups.values():
-        words = [str(data["text"][i]) for i in group]
-        spans = []
-        pos = 0
-        for word in words:
-            spans.append((pos, pos + len(word)))
-            pos += len(word) + 1
-        line = " ".join(words)
-        for start, end in sensitive_spans(line):
-            matching = [index for index, (a, b) in enumerate(spans)
-                        if a < end and b > start]
-            if not matching:
-                continue
-            ids = [group[index] for index in matching]
-            x = min(int(data["left"][i]) for i in ids)
-            y = min(int(data["top"][i]) for i in ids)
-            right = max(int(data["left"][i]) + int(data["width"][i]) for i in ids)
-            bottom = max(int(data["top"][i]) + int(data["height"][i]) for i in ids)
-            boxes.append((x, y, right, bottom))
-    # QR payloads can embed contact details without any readable OCR.
-    ok, decoded, points, _ = qr_detector.detectAndDecodeMulti(frame)
-    if ok and points is not None:
-        for candidate in points:
-            coords = np.asarray(candidate)
-            boxes.append((int(coords[:, 0].min()), int(coords[:, 1].min()),
-                int(coords[:, 0].max()), int(coords[:, 1].max())))
-    else:
-        found, coords = qr_detector.detect(frame)
-        if found and coords is not None:
-            pts = np.asarray(coords).reshape(-1, 2)
-            boxes.append((int(pts[:, 0].min()), int(pts[:, 1].min()),
-                int(pts[:, 0].max()), int(pts[:, 1].max())))
-    return boxes
-
-
-def track_boxes(previous_gray, current_gray, boxes):
-    """Follow masked text through unsampled frames rather than freezing masks."""
-    if previous_gray is None or not boxes:
-        return boxes
-    height, width = current_gray.shape
-    tracked = []
-    for x1, y1, x2, y2 in boxes:
-        mask = np.zeros(previous_gray.shape, dtype=np.uint8)
-        a, b = max(0, x1), max(0, y1)
-        c, d = min(width, x2), min(height, y2)
-        if c <= a or d <= b:
-            continue
-        mask[b:d, a:c] = 255
-        points = cv2.goodFeaturesToTrack(previous_gray, maxCorners=20,
-            qualityLevel=0.02, minDistance=3, mask=mask)
-        dx = dy = 0
-        if points is not None and len(points) >= 3:
-            next_points, status, _ = cv2.calcOpticalFlowPyrLK(
-                previous_gray, current_gray, points, None,
-                winSize=(21, 21), maxLevel=2)
-            if next_points is not None and status is not None:
-                valid = status.ravel().astype(bool)
-                if valid.sum() >= 3:
-                    delta = next_points[valid].reshape(-1, 2) - points[valid].reshape(-1, 2)
-                    proposed = np.median(delta, axis=0)
-                    if np.all(np.isfinite(proposed)) and np.max(np.abs(proposed)) < 45:
-                        dx, dy = [int(round(n)) for n in proposed]
-        tracked.append((x1 + dx, y1 + dy, x2 + dx, y2 + dy))
-    return tracked
-
-
-def conceal(frame, boxes):
-    height, width = frame.shape[:2]
-    for x1, y1, x2, y2 in boxes:
-        # Expand around the glyphs, but do not cover unrelated nearby text.
-        padx = max(14, min(35, (x2-x1)//9))
-        pady = max(10, min(24, (y2-y1)//2))
-        a, b = max(0, x1-padx), max(0, y1-pady)
-        c, d = min(width, x2+padx), min(height, y2+pady)
-        if c <= a or d <= b:
-            continue
-        roi = frame[b:d, a:c]
-        # Irreversible downsampling + soft blur: unlike a simple Gaussian,
-        # this destroys character detail instead of merely hiding edges.
-        tiny = cv2.resize(roi, (max(1, (c-a)//40),
-                                max(1, (d-b)//40)), interpolation=cv2.INTER_AREA)
-        mosaic = cv2.resize(tiny, (c-a, d-b), interpolation=cv2.INTER_LINEAR)
-        frame[b:d, a:c] = cv2.GaussianBlur(mosaic, (31, 31), 0)
-    return frame
-
-
-def sanitized_audio_filter(source_path):
-    """Keep environmental sound/music, but silence detected speech.
-
-    VAD cannot certify all spoken contacts are caught. Source audio never
-    becomes public without speech suppression. A source with no audio gets an original instrumental background track.
-    Fail closed if source audio cannot be decoded or analyzed.
-    """
-    probe = subprocess.run(["ffprobe", "-v", "error",
-        "-select_streams", "a", "-show_entries", "stream=index",
-        "-of", "csv=p=0", str(source_path)],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30, check=True)
-    if not probe.stdout.strip():
-        return False, None
-    audio = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error",
-        "-i", str(source_path), "-vn", "-ac", "1", "-ar", "16000",
-        "-f", "s16le", "pipe:1"], stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE, timeout=120)
-    if audio.returncode != 0 or not audio.stdout:
-        raise RuntimeError("Unable to analyze audio safely; public output withheld")
-    vad = webrtcvad.Vad(0)  # aggressive about identifying speech, not preserving speech
-    frame_bytes = 16000 * 30 // 1000 * 2
-    flags = []
-    levels = []
-    for offset in range(0, len(audio.stdout)-frame_bytes+1, frame_bytes):
-        chunk = audio.stdout[offset:offset+frame_bytes]
-        try:
-            flags.append(vad.is_speech(chunk, 16000))
-        except Exception as exc:
-            raise RuntimeError("Speech screening failed; public output withheld") from exc
-        samples = np.frombuffer(chunk, dtype="<i2").astype(np.float32)
-        levels.append(float(np.sqrt(np.mean(samples*samples))))
-    # WebRTC VAD frequently flags pure continuous tones/music as speech.
-    # A nearly stationary audio bed with no speech-like energy modulation
-    # should remain audible. Exclude onset/offset frames from the estimate.
-    for block in range(0, len(flags), 33):
-        end = min(len(flags), block+33)
-        stable = levels[block+4:max(block+4,end-4)]
-        if len(stable) >= 20:
-            mean = float(np.mean(stable))
-            if mean > 200 and float(np.std(stable))/mean < 0.025:
-                flags[block:end] = [False] * (end-block)
-    starts = [i*0.03 for i, speech in enumerate(flags) if speech]
-    if not starts:
-        return True, None
-    # Allow breathing room before/after words and merge adjacent speech regions.
-    intervals = []
-    for position in starts:
-        a, b = max(0., position - 0.50), position + 0.53
-        if intervals and a <= intervals[-1][1] + 0.30:
-            intervals[-1] = (intervals[-1][0], max(intervals[-1][1], b))
-        else:
-            intervals.append((a, b))
-    filters = [f"volume=0:enable='between(t,{a:.3f},{b:.3f})'"
-               for a, b in intervals]
-    return True, ",".join(filters)
-
-
-def generate_original_instrumental(path, duration):
-    """Compose a rights-independent warm ambient soundtrack; no samples/lyrics.
-
-    Background music is only introduced when speech protection would otherwise
-    remove some or all of the source track, or when no source audio exists.
-    """
-    rate = 24000
-    count = max(1, int(round(duration * rate)))
-    samples = np.zeros(count, dtype=np.float32)
-    beat = 60.0 / 105.0
-    bar = 4 * beat
-    chords = [
-        [130.81, 164.81, 196.00, 246.94],  # Cmaj7
-        [110.00, 130.81, 164.81, 196.00],  # Am7
-        [87.31, 110.00, 130.81, 164.81],  # Fmaj7
-        [98.00, 123.47, 146.83, 164.81],  # G6
-    ]
-    melody = [
-        [392.00, 523.25, 659.25, 523.25],
-        [440.00, 523.25, 659.25, 784.00],
-        [349.23, 440.00, 523.25, 659.25],
-        [392.00, 493.88, 587.33, 659.25],
-    ]
-    rng = np.random.default_rng(1917)
-
-    def note(start, length, freq, strength, kind):
-        start_idx = int(start * rate)
-        if start_idx >= count:
-            return
-        n = min(int(length*rate), count-start_idx)
-        if n <= 0:
-            return
-        t = np.arange(n, dtype=np.float32)/rate
-        if kind == "pad":
-            envelope = np.minimum(1.0, t/0.22)*np.minimum(1.0, np.maximum(0.0, length-t)/0.45)
-            waveform = (np.sin(2*np.pi*freq*t) +
-                        0.18*np.sin(2*np.pi*2*freq*t))
-        else:
-            envelope = np.minimum(1.0, t/0.014)*np.exp(-3.1*t)
-            waveform = (np.sin(2*np.pi*freq*t) +
-                        0.24*np.sin(2*np.pi*2*freq*t) +
-                        0.08*np.sin(2*np.pi*3*freq*t))
-        samples[start_idx:start_idx+n] += (strength*envelope*waveform).astype(np.float32)
-
-    for bar_index in range(int(np.ceil(duration/bar))):
-        start = bar_index*bar
-        ci = bar_index % 4
-        for freq in chords[ci]:
-            note(start, bar+0.35, freq, 0.030, "pad")
-        for k, freq in enumerate(melody[ci]):
-            note(start + k*beat, beat*0.84, freq, 0.086, "pluck")
-
-    for i in range(int(np.ceil(duration/beat))):
-        start = int(i*beat*rate)
-        if start >= count:
-            break
-        n = min(int(0.20*rate), count-start)
-        t = np.arange(n,dtype=np.float32)/rate
-        if i % 4 in (0,2):
-            kick = 0.085*np.sin(2*np.pi*(78-28*t)*t)*np.exp(-31*t)
-            samples[start:start+n] += kick.astype(np.float32)
-        if i % 4 in (1,3):
-            snare = rng.standard_normal(n).astype(np.float32)*np.exp(-37*t)*0.018
-            samples[start:start+n] += snare
-
-    # Faint hi-hat transients, seeded for fully reproducible original output.
-    for i in range(int(np.ceil(duration/(beat/2)))):
-        start = int(i*(beat/2)*rate)
-        if start >= count:
-            break
-        n = min(int(0.035*rate), count-start)
-        t = np.arange(n,dtype=np.float32)/rate
-        noise = rng.standard_normal(n).astype(np.float32)
-        samples[start:start+n] += (noise*np.exp(-120*t)*0.011).astype(np.float32)
-
-    fades = min(count//2, int(rate*.24))
-    if fades:
-        samples[:fades] *= np.linspace(0,1,fades,dtype=np.float32)
-        samples[-fades:] *= np.linspace(1,0,fades,dtype=np.float32)
-    peak = max(1e-8,float(np.max(np.abs(samples))))
-    samples *= min(2.2,0.83/peak)
-    samples = np.clip(samples,-0.9,0.9)
-    with wave.open(str(path),"wb") as wav:
-        wav.setnchannels(1)
-        wav.setsampwidth(2)
-        wav.setframerate(rate)
-        wav.writeframes((samples*32767).astype("<i2").tobytes())
+def probe_streams(source_path):
+    result = subprocess.run(["ffprobe", "-v", "error",
+        "-show_entries", "format=duration:stream=index,codec_type,codec_name",
+        "-of", "json", str(source_path)],
+        check=True, capture_output=True, text=True, timeout=30)
+    return json.loads(result.stdout)
 
 
 def transcode(source_path, output_path):
-    video = cv2.VideoCapture(str(source_path))
-    if not video.isOpened():
-        raise RuntimeError("Unable to decode uploaded video")
-    fps = video.get(cv2.CAP_PROP_FPS)
-    width, height = int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    frames = video.get(cv2.CAP_PROP_FRAME_COUNT)
-    if not np.isfinite(fps) or fps < 1 or fps > 120 or width < 32 or height < 32:
-        raise RuntimeError("Invalid video dimensions or frame rate")
-    duration = frames/fps if frames > 0 else 0
-    if not duration or duration > MAX_SECONDS:
-        raise RuntimeError("Video duration unsupported or too long for automatic redaction")
-    scale = min(1., 1280/width, 720/height)
-    w, h = max(2, int(width*scale)//2*2), max(2, int(height*scale)//2*2)
-    has_audio, audio_filter = sanitized_audio_filter(source_path)
-    # A completely silenced source track can still have an AAC stream. Supply
-    # safe, original instrumental music whenever voice protection was applied.
-    music_path = Path(output_path).with_suffix(".original-instrumental.wav")
-    add_music = bool(audio_filter) or not has_audio
-    if add_music:
-        generate_original_instrumental(music_path, duration)
-    args = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
-        "-f", "rawvideo", "-pixel_format", "bgr24", "-video_size", f"{w}x{h}",
-        "-framerate", str(fps), "-i", "pipe:0", "-i", str(source_path)]
-    if add_music:
-        args += ["-i", str(music_path)]
-    args += ["-map", "0:v:0"]
-    if has_audio and audio_filter:
-        args += ["-filter_complex", "[1:a:0]"+audio_filter+
-            "[muted];[muted][2:a:0]amix=inputs=2:duration=first:"
-            "normalize=0:dropout_transition=0,alimiter=limit=0.95[aout]",
-            "-map", "[aout]"]
-    elif has_audio:
-        args += ["-map", "1:a:0"]
+    """Keep original picture and audio; encode only for browser compatibility."""
+    info = probe_streams(source_path)
+    video = next((s for s in info.get("streams", [])
+                  if s.get("codec_type") == "video"), None)
+    audio = next((s for s in info.get("streams", [])
+                  if s.get("codec_type") == "audio"), None)
+    if video is None:
+        raise RuntimeError("Video is missing its video stream")
+    duration = float(info.get("format", {}).get("duration") or 0)
+    if not 0 < duration <= MAX_SECONDS:
+        raise RuntimeError("Invalid or overlong project video")
+
+    # Stream copy offers bit-exact source audio and video when already
+    # supported by major browsers; transcoding never replaces the music.
+    video_copy = video.get("codec_name") == "h264"
+    audio_copy = audio is None or audio.get("codec_name") == "aac"
+    args = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin",
+        "-y", "-i", str(source_path), "-map", "0:v:0", "-map", "0:a:0?",
+        "-sn", "-dn", "-map_metadata", "-1"]
+    if video_copy:
+        args += ["-c:v", "copy"]
     else:
-        args += ["-map", "2:a:0"]
-    args += ["-c:a", "aac", "-b:a", "160k",
-        "-c:v", "libx264", "-preset", "veryfast", "-crf", "21",
-        "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-shortest",
-        str(output_path)]
-    proc = subprocess.Popen(args, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-    detector = cv2.QRCodeDetector()
-    scan_step = max(1, round(fps/SCAN_FPS))
-    last_boxes = []
-    previous_gray = None
-    scans_without_detection = 0
-    total = detections = 0
+        args += ["-c:v", "libx264", "-preset", "veryfast", "-crf", "19",
+                 "-vf", "scale=1920:1920:force_original_aspect_ratio=decrease:"
+                        "force_divisible_by=2", "-pix_fmt", "yuv420p"]
+    if audio_copy:
+        args += ["-c:a", "copy"]
+    else:
+        args += ["-c:a", "aac", "-b:a", "192k"]
+    args += ["-movflags", "+faststart", str(output_path)]
     try:
-        while True:
-            ok, frame = video.read()
-            if not ok:
-                break
-            if w != width or h != height:
-                frame = cv2.resize(frame, (w, h), interpolation=cv2.INTER_AREA)
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            if total % scan_step == 0:
-                observed = detect_contact_boxes(frame, detector)
-                if observed:
-                    last_boxes = observed
-                    scans_without_detection = 0
-                elif scans_without_detection < 1:
-                    last_boxes = track_boxes(previous_gray, gray, last_boxes)
-                    scans_without_detection += 1
-                else:
-                    last_boxes = []
-            else:
-                last_boxes = track_boxes(previous_gray, gray, last_boxes)
-            if last_boxes:
-                detections += 1
-                conceal(frame, last_boxes)
-            proc.stdin.write(frame.tobytes())
-            previous_gray = gray
-            total += 1
-            if total > fps * MAX_SECONDS:
-                raise RuntimeError("Video exceeded maximum processing duration")
-        proc.stdin.close()
-        error = proc.stderr.read().decode("utf-8", errors="replace")[-1200:]
-        code = proc.wait(timeout=90)
-        if code or total < 1:
-            raise RuntimeError("FFmpeg failed to generate redacted output: " + error)
-        return dict(frames=total, masked_frames=detections,
-            audio=("protected original + original instrumental" if has_audio and add_music
-                else "original instrumental" if add_music else "source audio"))
-    finally:
-        video.release()
-        if proc.poll() is None:
-            proc.kill()
-        with contextlib.suppress(Exception):
-            proc.wait(timeout=3)
-        with contextlib.suppress(Exception):
-            proc.stderr.close()
-        if add_music:
-            music_path.unlink(missing_ok=True)
+        subprocess.run(args, check=True, capture_output=True, timeout=max(180, 5*duration))
+    except subprocess.CalledProcessError as exc:
+        raise RuntimeError("MP4 preparation failed: " +
+                           exc.stderr.decode("utf-8", "replace")[-600:]) from exc
+
+    result = probe_streams(output_path)
+    rendered_video = next((s for s in result.get("streams", [])
+                           if s.get("codec_type") == "video"), None)
+    rendered_audio = next((s for s in result.get("streams", [])
+                           if s.get("codec_type") == "audio"), None)
+    if rendered_video is None or bool(audio) != bool(rendered_audio):
+        raise RuntimeError("Output media streams differ from source")
+    output_duration = float(result.get("format", {}).get("duration") or 0)
+    if abs(output_duration - duration) > 1.5:
+        raise RuntimeError("Output video duration does not match source")
+    return {"video": "unchanged" if video_copy else "browser encoded",
+            "audio": "original retained" if audio_copy and audio else
+                     "original re-encoded" if audio else "no source track"}
 
 
 def process_one(connection, client, job):
     reference=job["source"]
     if not reference.startswith(PREFIX+"business-projects/"):
-        raise RuntimeError("Automatic video redaction requires a directly uploaded R2 project video")
+        raise RuntimeError("Video processing requires a directly uploaded R2 project video")
     source_key=reference[len(PREFIX):]
     if "/" in source_key[len("business-projects/"):]:
         raise RuntimeError("Invalid source video key")
@@ -461,11 +152,12 @@ def process_one(connection, client, job):
     size=int(head.get("ContentLength",0))
     if not 12<=size<=MAX_BYTES:
         raise RuntimeError("Video size exceeds auto-redaction worker limit")
+    # Legacy R2 prefix and database fields retained for compatibility.
     derivative_key=("business-project-redacted/"
         +str(job["owner"])+"-"+str(job["id"])+"-"+uuid.uuid4().hex+".mp4")
-    with tempfile.TemporaryDirectory(prefix="propulse-redact-") as folder:
+    with tempfile.TemporaryDirectory(prefix="propulse-video-") as folder:
         original=Path(folder)/"input"
-        processed=Path(folder)/"redacted.mp4"
+        processed=Path(folder)/"playback.mp4"
         client.download_file(bucket,source_key,str(original))
         if original.stat().st_size != size:
             raise RuntimeError("Downloaded video changed during processing")
@@ -501,8 +193,8 @@ def process_one(connection, client, job):
         client.delete_object(Bucket=bucket,Key=derivative_key)
         LOG.warning("Project %s changed before derivative commit; discarded",job["id"])
     else:
-        LOG.info("Project %s processed for public playback; %s frames, %s masked, audio %s; reward review separate",
-                 job["id"],stats["frames"],stats["masked_frames"],stats["audio"])
+        LOG.info("Project %s prepared for public playback; original video %s, audio %s; reward review separate",
+                 job["id"],stats["video"],stats["audio"])
 
 
 def main():
@@ -527,7 +219,7 @@ def main():
                 try:
                     process_one(connection,client,job)
                 except Exception as exc:
-                    LOG.exception("Project %s auto-redaction failed",job["id"])
+                    LOG.exception("Project %s video preparation failed",job["id"])
                     with connection.transaction():
                         connection.execute("""
                             UPDATE business_profile_projects
