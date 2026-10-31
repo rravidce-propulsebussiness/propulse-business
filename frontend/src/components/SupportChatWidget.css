@@ -11,3 +11,14 @@
 .support-chat-start{display:grid;gap:12px;overflow:auto;padding:15px}.support-chat-welcome{padding:12px;border-radius:12px;background:#f5f9fb}.support-chat-welcome b,.support-chat-welcome span{display:block}.support-chat-welcome b{color:#173f5e;font-size:13px}.support-chat-welcome span{margin-top:4px;color:#758a99;font-size:11px;line-height:1.5}.support-chat-start label{display:grid;gap:5px;color:#35566d;font-size:11px;font-weight:800}.support-chat-start label small{font-weight:600;color:#8797a3}.support-chat-start input,.support-chat-start textarea{width:100%;padding:9px 10px;border:1px solid #d8e2e8;border-radius:9px;outline:0;font:inherit;font-size:12px}.support-chat-start textarea{min-height:90px;resize:vertical}.support-chat-start input:focus,.support-chat-start textarea:focus{border-color:#f0a17f}.support-chat-guest-fields{display:grid;grid-template-columns:1fr 1fr;gap:9px}.support-chat-guest-fields label:last-child{grid-column:1/-1}
 .support-chat-error{margin:0 11px 8px;padding:8px 10px;border:1px solid #efc8c1;border-radius:9px;background:#fff4f1;color:#a94637;font-size:11px}.support-chat-login-note{padding:11px;border:1px solid #e1e7eb;border-radius:10px;background:#f8fafb;color:#687e8e;font-size:12px}.support-chat-new{padding:12px;border-top:1px solid #e6edf1;text-align:center}
 @media(max-width:700px){.support-chat{right:12px;bottom:12px}.support-chat-panel{right:0;bottom:54px;width:calc(100vw - 24px);height:min(620px,calc(100vh - 88px))}.support-chat-launcher{height:42px}.support-chat-guest-fields{grid-template-columns:1fr}}
+
+/* Project-detail pages have a fixed bottom action bar on mobile.
+   Keep support above its controls instead of covering Get Quote. */
+@media(max-width:600px){
+  body:has(.pjd-page .pjd-mobile-actions) .support-chat{
+    bottom:calc(88px + env(safe-area-inset-bottom,0px));
+  }
+  body:has(.pjd-page .pjd-mobile-actions) .support-chat-panel{
+    height:min(560px,calc(100dvh - 210px));
+  }
+}
