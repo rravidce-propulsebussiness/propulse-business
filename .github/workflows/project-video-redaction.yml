@@ -32,7 +32,7 @@ jobs:
       PRIVATE_OBJECT_STORAGE_SECRET_ACCESS_KEY: ${{ secrets.PROPULSE_VIDEO_R2_SECRET_ACCESS_KEY }}
       PRIVATE_OBJECT_STORAGE_REGION: auto
       VIDEO_REDACTOR_ONCE: '1'
-          steps:
+    steps:
       - uses: actions/checkout@v4
 
       - name: Check secure worker configuration
