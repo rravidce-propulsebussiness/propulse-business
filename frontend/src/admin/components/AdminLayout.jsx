@@ -16,6 +16,7 @@ const navigation=[
   ]},
   {type:'group',key:'leads',label:'Leads',icon:'◈',children:[
     {to:'/admin/leads',label:'Manage Leads',end:true},
+    {to:'/admin/leads?view=direct',label:'Direct ProPulse Enquiries'},
     {to:'/admin/professional-enquiries',label:'Professional Enquiries'},
     {to:'/admin/customer-flows',label:'Customer Flows'},
     {to:'/admin/leads/upload',label:'Upload Leads'},
