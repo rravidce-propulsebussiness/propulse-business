@@ -174,7 +174,7 @@ function aboutExperienceContent(route){
   return '<section style="padding:10px 0 42px">'+
     '<h2>Prior construction and interiors operating experience</h2>'+
     '<p style="max-width:850px;line-height:1.55">Before ProPulse, our operating background included hands-on residential construction and interior execution work in Hyderabad. That practical experience helped shape ProPulse around clearer scopes, comparable quotations, locality-aware requirements and better project conversations.</p>'+
-    '<p style="max-width:850px;line-height:1.55">Today ProPulse also directly undertakes construction and interior design and execution, runs an independent-professional lead marketplace, and develops technology solutions.</p>'+ 
+    '<p style="max-width:850px;line-height:1.55">Today ProPulse also directly undertakes construction and interior design and execution, runs an independent-professional lead marketplace, and develops technology solutions.</p>'+
     '<p style="max-width:850px;line-height:1.55">We use that experience to design customer flows that reflect how real construction and interior projects are planned, quoted and discussed.</p>'+
   '</section>'
 }
