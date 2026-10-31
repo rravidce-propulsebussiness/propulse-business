@@ -67,6 +67,11 @@ class PrivacyTests(unittest.TestCase):
                 "-show_entries", "stream=codec_name", "-of", "csv=p=0", output],
                 capture_output=True, text=True, check=True)
             self.assertIn("aac", probe.stdout)
+            sound = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel",
+                "error", "-i", output, "-vn", "-ar", "16000", "-ac", "1",
+                "-f", "s16le", "pipe:1"], capture_output=True, check=True)
+            samples = np.frombuffer(sound.stdout, dtype="<i2").astype(np.float32)
+            self.assertGreater(float(np.sqrt(np.mean(samples*samples))), 200.)
             self.assertEqual(stats["frames"], 5)
 
 if __name__ == "__main__":
