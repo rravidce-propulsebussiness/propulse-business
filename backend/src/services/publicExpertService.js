@@ -14,14 +14,14 @@ function publicRedactedVideoReadySql(alias){
     AND ${alias}.video_redaction_source_url=${alias}.video_url
     AND ${alias}.video_redacted_url LIKE 'private-object-s3:business-project-redacted/%'`;
 }
-function publicProjectVideoColumn(alias){
-  return `CASE WHEN ${publicRedactedVideoReadySql(alias)} THEN ${alias}.video_redacted_url ELSE NULL::text END AS video_url`;
+function publicProjectVideoColumn(alias,officialOnly=false){
+  return `CASE WHEN ${officialOnly?"COALESCE(beds.is_official,FALSE) AND ":''}${publicRedactedVideoReadySql(alias)} THEN ${alias}.video_redacted_url ELSE NULL::text END AS video_url`;
 }
 
 // Public status only; never return the original R2 reference, raw video,
  // processing error detail, or private admin review metadata.
-function publicProjectVideoStatusColumn(alias){
-  return `CASE
+function publicProjectVideoStatusColumn(alias,officialOnly=false){
+  const expression=`CASE
     WHEN ${publicRedactedVideoReadySql(alias)} THEN 'published'
     WHEN NULLIF(${alias}.video_url,'') IS NULL THEN 'none'
     WHEN ${alias}.video_redaction_status='failed' THEN 'processing_failed'
@@ -29,7 +29,10 @@ function publicProjectVideoStatusColumn(alias){
     WHEN ${alias}.video_redaction_status='pending' THEN 'queued'
     WHEN ${alias}.video_redaction_status='processing' THEN 'processing'
     ELSE 'queued'
-  END::text AS video_publication_status`;
+  END`;
+  return officialOnly
+    ? `CASE WHEN COALESCE(beds.is_official,FALSE) THEN (${expression}) ELSE 'disabled' END::text AS video_publication_status`
+    : `${expression}::text AS video_publication_status`;
 }
 
 async function materializeProjectMedia(rows){
@@ -362,8 +365,8 @@ async function listRecentProjects({page=1,pageSize=18}={}){
        bpp.image_urls,
        bpp.package_name,
        bpp.brochure_url,
-       ${settings.showVideos?publicProjectVideoColumn('bpp'):'NULL::text AS video_url'},
-       ${settings.showVideos?publicProjectVideoStatusColumn('bpp'):"'disabled'::text AS video_publication_status"},
+       ${publicProjectVideoColumn('bpp',!settings.showVideos)},
+       ${publicProjectVideoStatusColumn('bpp',!settings.showVideos)},
        ${settings.showPlans?'bpp.plan_url':'NULL::text AS plan_url'},
        COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) AS published_at,
        bp.id AS business_profile_id,
@@ -406,8 +409,8 @@ async function getPublicProject(projectId){
     `SELECT bpp.id AS project_id,bpp.title,bpp.seo_slug,bpp.seo_title,bpp.seo_description,bpp.seo_keyword,bpp.project_type,bpp.description,
       bpp.location_text,bpp.completion_year,bpp.area_text,bpp.budget_text,
       bpp.cover_image_url,bpp.image_urls,bpp.package_name,bpp.brochure_url,
-      ${settings.showVideos?publicProjectVideoColumn('bpp'):'NULL::text AS video_url'},
-       ${settings.showVideos?publicProjectVideoStatusColumn('bpp'):"'disabled'::text AS video_publication_status"},
+      ${publicProjectVideoColumn('bpp',!settings.showVideos)},
+       ${publicProjectVideoStatusColumn('bpp',!settings.showVideos)},
       ${settings.showPlans?'bpp.plan_url':'NULL::text AS plan_url'},
       COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) AS published_at,
       bp.id AS business_profile_id,bp.business_name,
