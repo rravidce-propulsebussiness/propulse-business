@@ -94,7 +94,7 @@ function addProjectEligibilityConditions(settings,params,conditions,{videosOnly=
           AND em.starts_at<=CURRENT_TIMESTAMP AND em.expires_at>CURRENT_TIMESTAMP
           AND emp.is_active=TRUE
           AND LOWER(REPLACE(COALESCE(emp.plan_type,''),'-','_'))='pro'
-          AND CASE WHEN LOWER(COALESCE(emp.plan_group,''))='scale' THEN 'scale' ELSE 'grow' END = ANY(${n}::text[])
+          AND CASE WHEN LOWER(COALESCE(emp.plan_group,''))='scale' THEN 'scale' ELSE 'grow' END = ANY($${n}::text[])
       )`);
     }
   }
