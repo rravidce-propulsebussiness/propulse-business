@@ -1,0 +1,20 @@
+.direct-project-card{margin-top:28px;padding:clamp(22px,4vw,38px);background:#fff;border:1px solid #e7e9e7;border-radius:19px;box-shadow:0 12px 36px rgba(24,45,54,.05);scroll-margin-top:100px}
+.direct-project-heading{max-width:820px;margin-bottom:24px}
+.direct-project-heading>span{display:block;color:#dc5b2b;font-size:12px;font-weight:800;letter-spacing:.13em}
+.direct-project-heading h2{margin:10px 0;font-size:clamp(24px,3vw,32px);font-weight:800;letter-spacing:-.035em;color:#153348}
+.direct-project-heading p{color:#5d7180;line-height:1.65;font-size:15px;margin:0}
+.direct-project-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}
+.direct-project-form>label{display:flex;flex-direction:column;gap:8px;color:#284657;font-size:13px;font-weight:750;min-width:0}
+.direct-project-form input:not([type="checkbox"]),.direct-project-form select,.direct-project-form textarea{width:100%;box-sizing:border-box;border:1px solid #cad7db;background:#fbfcfc;border-radius:11px;padding:13px 14px;color:#193c50;font:inherit;font-weight:500;outline-offset:2px;min-height:47px}
+.direct-project-form textarea{resize:vertical}
+.direct-project-form :is(input,select,textarea):focus-visible{outline:2px solid #dc5b2b;border-color:#dc5b2b}
+.direct-project-form .direct-project-full{grid-column:1/-1}
+.direct-project-form .direct-project-consent{display:flex;flex-direction:row;gap:12px;align-items:flex-start;font-size:13px;font-weight:500;line-height:1.6}
+.direct-project-consent input{width:19px;height:19px;accent-color:#d85a27;flex:0 0 auto}
+.direct-project-submit,.direct-project-confirmation button{border:0;border-radius:11px;padding:15px 22px;background:#d85a27;color:#fff;font-weight:800;font-size:15px;cursor:pointer}
+.direct-project-submit:disabled{opacity:.65;cursor:wait}
+.direct-project-error{color:#a33d27;font-size:14px;margin:0}
+.direct-project-confirmation{border:1px solid #a4d2bb;border-radius:12px;padding:20px;background:#f5fcf8;color:#234e37}
+.direct-project-confirmation p{line-height:1.5}
+.direct-project-honeypot{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+@media(max-width:650px){.direct-project-form{grid-template-columns:1fr}.direct-project-card{padding:20px}.direct-project-heading p{font-size:14px}}

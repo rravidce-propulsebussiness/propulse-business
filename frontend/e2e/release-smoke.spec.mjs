@@ -376,7 +376,33 @@ test('contact page shows direct channels without duplicated marketing panels',as
   await expect(page.locator('.contact-methods a[href="mailto:hello@example.com"]')).toBeVisible()
   await expect(page.locator('.contact-methods a[href="https://wa.me/919876543210"]')).toBeVisible()
   await expect(page.locator('.contact-service-strip,.contact-map,.contact-direct-links')).toHaveCount(0)
-  await expect(page.getByRole('button',{name:/Get Free Quote/})).toBeVisible()
+  await expect(page.getByRole('heading',{name:/Request construction or interior services/})).toBeVisible()
+  await expect(page.getByRole('button',{name:/Send Direct Enquiry/})).toBeVisible()
+  await expect(page.getByRole('button',{name:/Compare Professionals/})).toBeVisible()
+})
+
+test('direct ProPulse enquiry never uses the marketplace lead consultation',async({page})=>{
+  let marketplaceSubmissions=0
+  let directBody=null
+  await page.route('**/api/customer-flows/**/consultation',route=>{
+    marketplaceSubmissions+=1
+    return route.fulfill({status:500,contentType:'application/json',body:'{"error":"Not allowed"}'})
+  })
+  await page.route('**/api/direct-project-enquiries',route=>{
+    directBody=route.request().postDataJSON()
+    return route.fulfill({status:201,contentType:'application/json',body:JSON.stringify({accepted:true,enquiryId:42})})
+  })
+  await page.goto('/contact')
+  await page.getByLabel('Full name').fill('Sample Homeowner')
+  await page.getByLabel('Mobile number').fill('9876543210')
+  await page.getByLabel('Project locality').fill('Uppal, Hyderabad')
+  await page.getByLabel('Project requirements').fill('Independent G+1 home, 200 square-yard site.')
+  await page.getByRole('checkbox',{name:/I agree that ProPulse may contact me/}).check()
+  await page.getByRole('button',{name:/Send Direct Enquiry/}).click()
+  await expect(page.getByText(/Your direct ProPulse enquiry was received/)).toBeVisible()
+  expect(directBody.serviceType).toBe('construction')
+  expect(directBody.consent).toBe(true)
+  expect(marketplaceSubmissions).toBe(0)
 })
 
 test('project cards open dedicated detail pages using the keyboard',async({page})=>{
