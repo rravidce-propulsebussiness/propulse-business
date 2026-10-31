@@ -1,0 +1,20 @@
+.admin-direct-enquiries{padding:24px;min-width:0;color:#243c49}
+.admin-direct-header{display:flex;gap:20px;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
+.admin-direct-header span{color:#da632e;font-size:12px;font-weight:800;letter-spacing:.12em}
+.admin-direct-header h1{margin:8px 0;font-size:clamp(22px,3vw,31px)}
+.admin-direct-header p{max-width:750px;color:#617583;line-height:1.6;margin:0}
+.admin-direct-header button,.admin-direct-pagination button{background:#fff;border:1px solid #d6dfe3;border-radius:9px;padding:10px 16px;cursor:pointer}
+.admin-direct-toolbar{display:flex;align-items:center;justify-content:space-between;margin:12px 0 20px;gap:12px}
+.admin-direct-toolbar label{display:flex;align-items:center;gap:12px;font-weight:700;font-size:14px}
+.admin-direct-toolbar select,.admin-direct-enquiries td select{background:#fff;border:1px solid #cedbdc;border-radius:9px;padding:9px;max-width:180px}
+.admin-direct-table-wrap{width:100%;overflow:auto;background:#fff;border:1px solid #e3e9e9;border-radius:14px}
+.admin-direct-table-wrap table{width:100%;border-collapse:collapse;min-width:830px}
+.admin-direct-table-wrap th{text-align:left;background:#f6f8f8;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:#566d77;padding:16px}
+.admin-direct-table-wrap td{border-top:1px solid #eef0f1;padding:16px;vertical-align:top;font-size:14px;line-height:1.55}
+.admin-direct-table-wrap a{color:#c24f22}
+.admin-direct-requirement{min-width:210px;max-width:390px;overflow-wrap:anywhere;white-space:pre-wrap}
+.admin-direct-empty{padding:32px;border:1px solid #e4e9e9;background:#fff;border-radius:12px;color:#687d88}
+.admin-direct-error{color:#ae3c24;padding:16px;background:#fff4f1;border-radius:10px}
+.admin-direct-pagination{display:flex;align-items:center;justify-content:center;gap:14px;margin:24px 0;font-size:13px}
+.admin-direct-pagination button:disabled,.admin-direct-header button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:680px){.admin-direct-enquiries{padding:15px}.admin-direct-header{flex-direction:column}.admin-direct-toolbar{align-items:flex-start;flex-wrap:wrap}}
