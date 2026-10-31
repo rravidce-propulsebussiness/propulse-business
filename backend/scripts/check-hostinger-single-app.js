@@ -127,3 +127,23 @@ for(const key of ['PUBLIC_APP_URL','FRONTEND_URL','CORS_ORIGIN','DB_HOST','DB_NA
 }
 if(process.exitCode)process.exit(process.exitCode);
 console.log('Hostinger single-app deployment regression test passed.');
+
+
+
+// Deep links must reach React, including SEO project slugs and quote actions.
+// This protects both single-process Hostinger and the legacy proxy entry.
+const dynamicRouteExamples=[
+  '/projects/modern-3bhk-interior-design-in-uppal-hyderabad-luxury-home-interiors',
+  '/projects/modern-3bhk-interior-design-in-uppal-hyderabad-luxury-home-interiors/quote',
+  '/projects/project-3',
+  '/experts/31',
+  '/experts/31/quote',
+];
+const rejectedDynamicRoutes=['/projects/invalid_slug','/experts/not-a-number','/api/experts','/uploads/private-proofs/video.mp4'];
+for(const [label,source] of [['Hostinger single-process',backendServer],['Hostinger legacy wrapper',wrapper]]){
+  assert(source.includes("/^\\/experts\\/[0-9]+(?:\\/quote)?\\/?$/.test(requestPath)")&&source.includes("/^\\/projects\\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\\/quote)?\\/?$/.test(requestPath)"),label+' declares expert and project deep links');
+}
+const expertPublicRoute=/^\\/experts\\/[0-9]+(?:\\/quote)?\\/?$/;
+const projectPublicRoute=/^\\/projects\\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\\/quote)?\\/?$/;
+for(const url of dynamicRouteExamples)assert(expertPublicRoute.test(url)||projectPublicRoute.test(url),'Public SPA deep link recognized: '+url);
+for(const url of rejectedDynamicRoutes)assert(!expertPublicRoute.test(url)&&!projectPublicRoute.test(url),'Unknown or private paths excluded from public SPA route: '+url);
