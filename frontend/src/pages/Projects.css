@@ -791,7 +791,7 @@
 }
 .pj-page .pj-card-video-badge.pj-card-video-status{
   max-width:calc(100% - 28px);top:62px;right:14px;
-  font-size:11px;line-height:1.25;white-space:normal;text-align:center;
+  font-size:12px;line-height:1.25;white-space:normal;text-align:center;
   background:#bd5b31;
 }
 @media(max-width:680px){
