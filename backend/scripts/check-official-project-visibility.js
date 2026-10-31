@@ -12,6 +12,7 @@ const callbackService=read('backend/src/services/projectCallbackService.js');
 const seoRoutes=read('backend/src/routes/seoRoutes.js');
 assert.match(serviceSource,/function addProjectEligibilityConditions/);
 assert.match(serviceSource,/COALESCE\(beds\.is_official,FALSE\)=TRUE OR/);
+assert.match(serviceSource,/END = ANY\(\$\$\{n\}::text\[\]\)/,'Membership eligibility must bind a PostgreSQL array parameter');
 assert.match(serviceSource,/COALESCE\(beds\.is_hidden,FALSE\)=FALSE/);
 assert.match(serviceSource,/bpp\.is_published=TRUE/);
 assert.match(serviceSource,/bpp\.completion_year BETWEEN 1950 AND EXTRACT\(YEAR FROM CURRENT_DATE\)/);
