@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 import './About.css'
@@ -25,7 +26,7 @@ export default function About() {
         <div className="ab-story-intro">
           <span className="ab-eyebrow"><span aria-hidden="true" className="ab-eyebrow-line" /> OUR STORY</span>
           <h1>Why we started <em>ProPulse.</em></h1>
-          <p>We started with one belief: building a home should be easier for customers, and running a business should be easier for the professionals who build it.</p>
+          <p>ProPulse directly provides construction and interior design and execution, connects customers with independent professionals, and develops technology for construction and interior businesses.</p>
           <div className="ab-story-caption"><span aria-hidden="true" /> Built from real industry experience</div>
         </div>
         <aside className="ab-story-quote" aria-label="The idea behind ProPulse">
@@ -73,10 +74,25 @@ export default function About() {
       </div>
     </section>
 
+    <section className="ab-origin" aria-labelledby="ab-services-title">
+      <div className="ab-wrap ab-origin-layout">
+        <div className="ab-origin-label">
+          <span className="ab-section-number">03 / WHAT WE DO</span>
+          <h2 id="ab-services-title">One company. <em>Three divisions.</em></h2>
+        </div>
+        <div className="ab-story-prose">
+          <p><strong>Construction &amp; Interiors:</strong> ProPulse directly undertakes construction, renovation and interior execution under its own agreed project scope and contract.</p>
+          <p><strong>Professional Marketplace:</strong> Customers can compare and engage independent contractors. The selected third-party provider is responsible under its own agreement.</p>
+          <p><strong>Technology:</strong> ProPulse develops software including Business OS. <Link to="/technology">Explore technology products</Link>.</p>
+          <p><Link to="/contact">Contact ProPulse for direct construction or interior projects</Link>.</p>
+        </div>
+      </div>
+    </section>
+
     <section className="ab-vision" aria-labelledby="ab-vision-title">
       <div className="ab-wrap ab-vision-layout">
         <div>
-          <span className="ab-section-number">03 / OUR VISION</span>
+          <span className="ab-section-number">04 / OUR VISION</span>
           <h2 id="ab-vision-title">Make business easy. <em>Make quality the standard.</em></h2>
         </div>
         <div className="ab-vision-copy">

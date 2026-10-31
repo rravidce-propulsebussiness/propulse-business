@@ -34,7 +34,7 @@ function CityHubPage(){
       <h1>{HYDERABAD_CITY_SEO_ROUTE.heading}</h1>
       <p>{HYDERABAD_CITY_SEO_ROUTE.summary}</p>
       <div className="local-seo-actions"><Link className="primary" to="/quote">Start a Requirement</Link><Link className="secondary" to="/experts">Find Professionals</Link></div>
-      <div className="local-seo-trust"><span>Locality-aware requirements</span><span>Construction, interiors & property</span><span>You choose the business</span></div>
+      <div className="local-seo-trust"><span>Direct construction &amp; interiors</span><span>Independent professionals</span><span>Hyderabad service areas</span></div>
     </section>
 
     <section className="local-seo-service-cards">
@@ -56,7 +56,7 @@ function CityHubPage(){
 
     <section className="local-seo-grid">
       <article><span>PLAN BEFORE CONTACTING</span><h2>Keep one comparable project brief</h2><p>For construction, record plot location, built-up area, floors and approximate budget. For interiors, use the same rooms and finish expectations. For property, keep locality, property type and budget consistent.</p><ul><li>Same scope for every provider</li><li>Same budget assumptions</li><li>Same timeline expectations</li><li>Compare exclusions as well as price</li></ul></article>
-      <article><span>DISCOVER OPTIONS</span><h2>Use ProPulse as a starting point</h2><p>ProPulse helps customers structure requirements and discover relevant registered businesses. It does not claim to execute every service itself.</p><ul><li>Browse public business profiles</li><li>Review completed projects where available</li><li>Create a structured requirement</li><li>Verify credentials and terms directly</li></ul></article>
+      <article><span>DISCOVER OPTIONS</span><h2>Use ProPulse as a starting point</h2><p>ProPulse directly undertakes construction and interiors in Hyderabad, and also helps customers discover independent registered businesses. Real-estate enquiries use marketplace professionals.</p><ul><li>Browse public business profiles</li><li>Review completed projects where available</li><li>Create a structured requirement</li><li>Verify credentials and terms directly</li></ul></article>
     </section>
 
     <section className="local-seo-city-links"><h2>Plan and compare Hyderabad options</h2><div><Link to="/hyderabad/construction-cost">House construction cost in Hyderabad</Link><Link to="/telangana/construction">Construction across Telangana districts</Link><Link to="/andhra-pradesh/construction">Construction across Andhra Pradesh districts</Link>{services.map(service=><Link key={service.slug} to={'/hyderabad/'+service.slug+'/compare-options'}>Compare {service.label} options in Hyderabad</Link>)}</div></section>
@@ -70,7 +70,9 @@ function ServicePage({entry,service}){
   const faqs=[
     {q:'How do I start a '+service.label.toLowerCase()+' requirement in Hyderabad?',a:'Start with the location, project or property details, approximate budget and timeline. ProPulse turns those inputs into one structured requirement that relevant businesses can understand.'},
     {q:'Can I specify a Hyderabad locality such as Uppal or Kothapet?',a:'Yes. Add the exact locality and any site or property details you already know. That makes the requirement more useful than a generic city-level enquiry.'},
-    {q:'Does ProPulse itself execute '+service.label.toLowerCase()+' work?',a:'No. ProPulse is a requirement and discovery platform. The actual service, quotation, credentials, scope and commercial terms come from the businesses you choose to engage with.'},
+    {q:'Does ProPulse itself execute '+service.label.toLowerCase()+' work?',a:service.slug==='real-estate'
+      ?'Property requirements connect customers to independent real-estate professionals. Review their credentials and agreement.'
+      :'Yes. ProPulse directly provides construction and interior execution in Hyderabad. Customers may also choose independent professionals through the marketplace. The signed agreement identifies the responsible company.'},
   ]
 
   return <main className="local-seo-page">
@@ -79,11 +81,11 @@ function ServicePage({entry,service}){
       <div className="local-seo-breadcrumb"><Link to="/">Home</Link><span>›</span><Link to="/hyderabad">Hyderabad</Link><span>›</span><b>{service.label}</b></div>
       <span className="local-seo-eyebrow">HYDERABAD · TELANGANA</span><h1>{entry.heading}</h1><p>{entry.summary}</p>
       <div className="local-seo-actions"><Link className="primary" to={quoteRoute(service)}>Start {service.label} Requirement</Link><Link className="secondary" to="/experts">Find Professionals</Link></div>
-      <div className="local-seo-trust"><span>One structured requirement</span><span>Locality-aware details</span><span>You choose the business</span></div>
+      <div className="local-seo-trust"><span>Direct ProPulse services</span><span>Independent marketplace options</span><span>Agreed scope and contract</span></div>
     </section>
 
     {service.slug==='construction'&&<section className="local-seo-experience-note">
-      <div><span>HYDERABAD OPERATING BACKGROUND</span><h2>Built with hands-on construction and interiors experience</h2><p>ProPulse is a technology and requirement platform informed by prior hands-on residential construction and interior execution experience in Hyderabad.</p></div>
+      <div><span>DIRECT CONSTRUCTION IN HYDERABAD</span><h2>Build with ProPulse or compare independent contractors</h2><p>ProPulse directly undertakes construction and interiors, informed by prior hands-on residential construction and interior execution experience in Hyderabad. Marketplace providers remain independent.</p><p><Link to="/contact">Contact ProPulse for direct execution</Link></p></div>
       <Link to="/about#ab-industry-experience">Read the operating experience background</Link>
     </section>}
 

@@ -115,9 +115,9 @@ export const HYDERABAD_CITY_SEO_ROUTE={
   path:'/hyderabad',
   type:'city-hub',
   title:'Construction, Interiors & Real Estate in Hyderabad | ProPulse',
-  description:'Start a construction, interior-design or real-estate requirement in Hyderabad with ProPulse. Explore locality-aware pages, project planning tools and relevant registered businesses.',
+  description:'ProPulse directly provides house construction and interior execution in Hyderabad. Contact our team or compare independent contractors in the ProPulse marketplace.',
   heading:'Construction, interiors and real estate in Hyderabad',
-  summary:'Choose the Hyderabad service you need, then narrow the requirement by locality, scope, budget and timeline before you compare relevant responses.',
+  summary:'Hire ProPulse directly for construction or interiors, or compare independent professionals through the marketplace in Hyderabad.',
 }
 
 export const HYDERABAD_CONSTRUCTION_COST_ROUTE={
@@ -144,8 +144,8 @@ export const HYDERABAD_SERVICES={
     label:'Construction',
     heading:'Home Construction in Hyderabad',
     title:'Home Construction in Hyderabad | Contractors & Quotes | ProPulse',
-    description:'Planning home construction in Hyderabad? Share your plot, built-up area, budget and timeline on ProPulse and discover relevant construction businesses serving your project area.',
-    summary:'Create one structured construction requirement for Hyderabad and make your plot location, scope, budget and timeline clear before you compare project-specific responses.',
+    description:'ProPulse directly builds independent houses and villas in Hyderabad. Contact our team for execution or compare independent builders and construction package options.',
+    summary:'Build with ProPulse or compare independent contractors. Explore packages and share plot location, built-up area, floors and budget for a project-specific discussion.',
     citySearchIntent:'Whether you searched for home construction in Hyderabad, a construction company in Hyderabad, house construction contractors, builders in Hyderabad or turnkey home construction, compare providers against one consistent project scope.',
     quoteHash:'construction',
     intro:'Planning an independent house, villa, renovation or other construction project',
@@ -185,8 +185,8 @@ export const HYDERABAD_SERVICES={
     label:'Interior Design',
     heading:'Interior Designers in Hyderabad',
     title:'Interior Designers in Hyderabad | Home Interiors | ProPulse',
-    description:'Looking for interior designers in Hyderabad? Share your BHK, rooms, style, budget and possession timeline on ProPulse and explore relevant interior businesses serving your area.',
-    summary:'Create one clear Hyderabad interior requirement for your apartment, villa or house and compare responses against the same rooms, finishes, budget and timeline.',
+    description:'ProPulse directly designs and executes residential and commercial interiors in Hyderabad. Contact our team or compare independent interior businesses.',
+    summary:'Hire ProPulse directly for interiors or compare independent businesses. Confirm rooms, finishes, budget and execution schedule before deciding.',
     citySearchIntent:'If you are searching for interior designers in Hyderabad, home interiors, modular kitchen designers or complete home interior companies, keep the same rooms, materials, budget and delivery expectations when comparing options.',
     quoteHash:'interiors',
     intro:'Planning interiors for an apartment, villa, independent house or office',

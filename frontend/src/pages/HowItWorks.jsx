@@ -41,7 +41,7 @@ const FLOWS = [
         ]
       }
     ],
-    note: "Your selected builder and qualified professionals are responsible for site work, approvals, inspections and any agreed warranty."
+    note: "If you hire ProPulse directly, ProPulse is responsible for its agreed construction scope. If you choose an independent contractor from the marketplace, that contractor is responsible under their own agreement."
   },
   {
     key: "interiors",
@@ -79,7 +79,7 @@ const FLOWS = [
         ]
       }
     ],
-    note: "Final designs, material selections, production, installation and warranties depend on your agreement with the chosen interior professional."
+    note: "Direct ProPulse interiors follow your agreement with ProPulse. Independent marketplace providers carry out their own agreed design and execution responsibilities."
   },
   {
     key: "realestate",
@@ -271,7 +271,7 @@ export default function HowItWorks() {
           <p className="hiw-service-note"><strong>Before you proceed:</strong> {current.note}</p>
         </div>
       </section>
-      <p className="hiw-about-platform">ProPulse helps you share requirements, compare options and connect with relevant businesses. Actual designs, execution, inspections, legal services and handover depend on the professionals you choose and their agreed scope.</p>
+      <p className="hiw-about-platform">ProPulse directly provides construction and interior services and also operates a marketplace for independent professionals. The company named in your signed agreement is responsible for its agreed work. <Link to="/contact">Contact ProPulse for direct projects</Link> or <Link to="/experts">compare independent professionals</Link>.</p>
     </div>
     <PublicFooter phone={phone} email={email} />
   </main>

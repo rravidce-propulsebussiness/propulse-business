@@ -42,10 +42,10 @@ const SERVICES = [
 ]
 
 const BENEFITS = [
-  { icon: 'clipboard', title: 'One Requirement, Multiple Options', text: 'Compare different solutions in one place.' },
-  { icon: 'people', title: 'Relevant Professionals', text: 'Discover registered businesses for your requirement.' },
-  { icon: 'layers', title: 'Package & Material Comparison', text: 'Compare packages, materials and estimates.' },
-  { icon: 'consult', title: 'Free Consultation', text: 'Get initial guidance without any obligation.' },
+  { icon: 'home', title: 'Direct Home Construction', text: 'ProPulse directly undertakes independent-house and villa construction.', link: '/contact' },
+  { icon: 'sofa', title: 'Direct Interior Execution', text: 'ProPulse designs and executes residential and commercial interiors.', link: '/contact' },
+  { icon: 'people', title: 'Professional Marketplace', text: 'Compare independent businesses. Professionals can buy project leads.', link: '/experts' },
+  { icon: 'layers', title: 'Technology & Business OS', text: 'Software to manage construction and interior businesses.', link: '/technology' },
 ]
 
 const STEPS = [
@@ -177,7 +177,7 @@ export default function Home() {
       <section className="hc-hero hc-premium-hero" id="home">
         <div className="hc-container hc-premium-hero-inner">
           <div className="hc-premium-hero-copy">
-            <span className="hc-premium-kicker">BUILDING SPACES, ELEVATING LIVES</span>
+            <span className="hc-premium-kicker">CONSTRUCTION · INTERIORS · MARKETPLACE · TECHNOLOGY</span>
             <h1>Don’t Leave Your <em>Dream Home</em> to <strong>Chance.</strong></h1>
             <p className="hc-premium-typewriter" style={{
                position: 'relative', minHeight: '1.4em', margin: '22px 0 26px',
@@ -200,13 +200,14 @@ export default function Home() {
                  }} />
                </span>
              </p>
+            <p className="hc-business-intro">Hire ProPulse directly for construction or interiors, or explore independent professionals through our marketplace. We also build technology for these businesses.</p>
             <div className="hc-premium-actions">
               <button className="hc-hero-cta hc-hero-cta-primary" type="button" onClick={() => openRequirement()}>
-                <span className="hc-hero-cta-label">Start Your Project</span>
+                <span className="hc-hero-cta-label">Compare Professionals</span>
                 <span className="hc-hero-cta-arrow" aria-hidden="true">→</span>
               </button>
-              <Link className="hc-hero-cta hc-hero-cta-secondary" to="/packages">
-                <span className="hc-hero-cta-label">View Packages</span>
+              <Link className="hc-hero-cta hc-hero-cta-secondary" to="/contact">
+                <span className="hc-hero-cta-label">Contact ProPulse Directly</span>
                 <span className="hc-hero-cta-arrow" aria-hidden="true">→</span>
               </Link>
             </div>
@@ -248,12 +249,12 @@ export default function Home() {
       <section className="hc-section hc-benefits">
         <div className="hc-container">
           <div className="hc-section-head compact hc-section-head-centered">
-            <h2>Why Homeowners Choose ProPulse</h2>
+            <h2>Our Construction, Interiors, Marketplace &amp; Technology Divisions</h2>
           </div>
           <div className="hc-benefit-grid">
             {BENEFITS.map((item,index) => <article key={item.title}>
               <span className={'tone-'+(index+1)}><Icon name={item.icon} size={19}/></span>
-              <div><h3>{item.title}</h3><p>{item.text}</p></div>
+              <div><h3>{item.title}</h3><p>{item.text}</p><Link to={item.link}>Explore service →</Link></div>
             </article>)}
           </div>
         </div>
@@ -294,7 +295,7 @@ export default function Home() {
       <section className="hc-slim-cta">
         <div className="hc-container hc-slim-cta-inner">
           <img src={heroImage} alt="" loading="lazy"/>
-          <div><h2>Ready to Start Your Project?</h2><p>Get expert guidance and compare the best options.</p></div>
+          <div><h2>Ready to Start Your Project?</h2><p>Contact ProPulse for direct construction or interiors, or compare independent contractors.</p></div>
           <div className="hc-slim-actions">
             <button type="button" onClick={() => openRequirement('')}>Start Your Requirement <Icon name="arrow" size={14}/></button>
             <Link to="/packages">View Packages</Link>

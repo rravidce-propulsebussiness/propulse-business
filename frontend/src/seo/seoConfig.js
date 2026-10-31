@@ -6,18 +6,25 @@ export const SITE_NAME='ProPulse Business'
 
 export const HOME_SEO={
   path:'/',
-  title:'Construction, Interiors & Real Estate Services | ProPulse',
-  description:'Plan construction, interiors and real-estate requirements with ProPulse. Get structured quotes, explore completed projects and connect with relevant businesses.',
-  heading:'Construction, interiors and real estate—start with one clear requirement',
-  summary:'Use ProPulse to plan your requirement, compare relevant options, explore completed work and connect with registered businesses.',
+  title:'Construction Company, Interiors & Technology in Hyderabad | ProPulse',
+  description:'ProPulse directly builds homes and designs interiors in Hyderabad, connects homeowners with independent professionals, and develops Business OS technology.',
+  heading:'Direct construction, interior execution, marketplace and technology',
+  summary:'Hire ProPulse directly for construction and interiors, compare independent contractors, or explore technology products.',
 }
 
 export const CORE_PUBLIC_SEO_ROUTES=[
   HOME_SEO,
   {
+    path:'/technology',
+    title:'Construction Business Software & Technology | ProPulse',
+    description:'Explore ProPulse technology for construction and interior companies, including Business OS for CRM, quotations, projects, operations and finance.',
+    heading:'ProPulse Technology & Business OS',
+    summary:'Business software for construction and interiors, alongside ProPulse direct services and lead marketplace.',
+  },
+  {
     path:'/quote',
     title:'Construction, Interior & Property Quotes | ProPulse',
-    description:'Share your construction, interior-design or real-estate requirement with ProPulse and create a structured brief for relevant businesses to respond to.',
+    description:'Submit construction, interior or property requirements to compare independent professionals. For direct ProPulse execution, contact the company.',
     heading:'Get a structured quote for construction, interiors or property',
     summary:'Choose your requirement type, add project details and create a clear brief that relevant businesses can understand.',
   },
@@ -52,14 +59,14 @@ export const CORE_PUBLIC_SEO_ROUTES=[
   {
     path:'/about',
     title:'Our Story & Vision | Why We Started ProPulse',
-    description:'Discover why ProPulse was founded after experience leading two companies: to make business easier for professionals and raise quality standards in construction and interiors.',
+    description:'Learn about ProPulse direct construction and interiors, its professional lead marketplace and technology for construction businesses.',
     heading:'Why we started ProPulse',
     summary:'Our founding story, the challenges faced by homeowners and professionals, and our vision for easier business and quality-led execution.',
   },
   {
     path:'/contact',
     title:'Contact ProPulse | Construction, Interiors & Real Estate',
-    description:'Contact ProPulse for help with construction, interior-design and real-estate requirements, website support or questions about the customer journey.',
+    description:'Contact ProPulse for direct construction and interior execution in Hyderabad, technology products and professional marketplace assistance.',
     heading:'Contact ProPulse',
     summary:'Get in touch with ProPulse for requirement support, platform questions or help with your customer journey.',
   },

@@ -70,9 +70,9 @@ assert(index.includes('name="description"'),'Base HTML must include a meta descr
 assert(index.includes('name="robots"'),'Base HTML must include robots metadata');
 assert(!index.includes('rel="canonical" href="/"'),'Source HTML must not expose a root canonical that Vite treats as an asset');
 assert(index.includes('property="og:title"')&&index.includes('name="twitter:card"'),'Base HTML must include social metadata');
-assert(index.includes('Construction, Interiors &amp; Real Estate Services | ProPulse'),'Homepage title must be descriptive');
+assert(index.includes('Construction Company, Interiors &amp; Technology in Hyderabad | ProPulse'),'Homepage title must describe current ProPulse services');
 
-for(const route of ['/quote','/experts','/packages','/projects','/how-it-works','/about','/contact','/faq']){
+for(const route of ['/quote','/experts','/packages','/projects','/technology','/how-it-works','/about','/contact','/faq']){
   assert(config.includes("path:'"+route+"'"),'SEO config missing public route '+route);
   assert(seoRoutes.includes("'"+route+"'"),'Sitemap route missing '+route);
 }
@@ -88,6 +88,16 @@ assert(manager.includes('VITE_PUBLIC_SITE_URL'),'Runtime SEO must support a conf
 
 assert(frontendPackage.scripts.build.includes('generate-seo-static-pages.mjs'),'Production build must generate route-specific SEO HTML');
 assert(buildScript.includes('data-seo-static-fallback'),'Static SEO pages must contain crawlable fallback content');
+assert(buildScript.includes('businessIdentityContent(route)'),'Static SEO HTML must explain direct ProPulse services and technology');
+assert(buildScript.includes("route.path==='/technology'"),'Technology page must include crawlable Business OS content');
+assert(app.includes('path="/technology" element={<Technology/>}'),'Technology page must be accessible in the SPA');
+assert(publicChrome.includes("{ to: '/technology', label: 'Technology'"),'Technology must be present in public navigation');
+assert(home.includes('Direct Home Construction')&&home.includes('Direct Interior Execution'),'Homepage must disclose direct execution');
+assert(home.includes('Professional Marketplace')&&home.includes('Technology & Business OS'),'Homepage must disclose marketplace and technology');
+assert(!landing.includes("a:'No. ProPulse is a requirement and discovery platform"),'Hyderabad FAQ must not deny ProPulse direct construction services');
+const technologyPage=read('../frontend/src/pages/Technology.jsx');
+assert(technologyPage.includes('Business OS')&&technologyPage.includes('direct project-execution'),'Technology page must explain company product and divisions');
+assert(read('../hostinger-server.js').includes("'/technology'"),'Hostinger wrapper must serve the Technology page');
 assert(buildScript.includes("fs.mkdirSync(path.dirname(target),{recursive:true})"),'Nested SEO routes must create their output directories');
 assert(buildScript.includes('og:description')&&buildScript.includes('twitter:description'),'Static pages must receive route-specific social metadata');
 

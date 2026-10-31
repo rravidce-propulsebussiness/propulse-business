@@ -47,7 +47,7 @@ function absolute(urlPath){
 }
 
 function baseLinks(route){
-  const links=[['Home','/'],['Hyderabad','/hyderabad'],['Guides','/guides'],['Get Quote','/quote'],['Find Professionals','/experts'],['Packages','/packages'],['Projects','/projects'],['How It Works','/how-it-works'],['About','/about'],['Contact','/contact']]
+  const links=[['Home','/'],['Hyderabad','/hyderabad'],['Guides','/guides'],['Get Quote','/quote'],['Find Professionals','/experts'],['Technology','/technology'],['Packages','/packages'],['Projects','/projects'],['How It Works','/how-it-works'],['About','/about'],['Contact','/contact']]
   if(route.type==='city-service'||route.type==='local-service')links.push(['Compare Hyderabad options','/hyderabad/'+route.serviceSlug+'/compare-options'])
   return links
 }
@@ -154,11 +154,27 @@ function homeownerFaqContent(route){
   }).join('')+'<p><a href="/guides">Browse construction guides</a> · <a href="/quote">Start a project requirement</a> · <a href="/experts">Find professionals</a></p></section>'
 }
 
+function businessIdentityContent(route){
+  if(route.path==='/'){
+    return '<section style="padding:10px 0 42px"><h2>ProPulse construction, interiors, professional marketplace and technology</h2>'+
+      '<p>ProPulse directly undertakes construction and interior execution in Hyderabad. Customers can also compare independent professionals through the ProPulse marketplace. ProPulse develops Business OS software for project businesses.</p>'+
+      '<p><a href="/contact">Contact ProPulse directly</a> · <a href="/experts">Compare independent professionals</a> · <a href="/technology">Explore technology</a></p></section>'
+  }
+  if(route.path==='/technology'){
+    return '<section style="padding:10px 0 42px"><h2>Business OS for construction and interior companies</h2>'+
+      '<p>ProPulse technology helps companies manage CRM, quotations, projects, procurement, daily reporting, quality checks, client communication and finance.</p>'+
+      '<p>The ProPulse professional marketplace also offers project leads and service profiles for independent construction and interior professionals.</p>'+
+      '<p><a href="/professionals">Professional portal</a> · <a href="/contact">Contact ProPulse</a></p></section>'
+  }
+  return ''
+}
+
 function aboutExperienceContent(route){
   if(route.path!=='/about')return ''
   return '<section style="padding:10px 0 42px">'+
     '<h2>Prior construction and interiors operating experience</h2>'+
     '<p style="max-width:850px;line-height:1.55">Before ProPulse, our operating background included hands-on residential construction and interior execution work in Hyderabad. That practical experience helped shape ProPulse around clearer scopes, comparable quotations, locality-aware requirements and better project conversations.</p>'+
+    '<p style="max-width:850px;line-height:1.55">Today ProPulse also directly undertakes construction and interior design and execution, runs an independent-professional lead marketplace, and develops technology solutions.</p>'+
     '<p style="max-width:850px;line-height:1.55">We use that experience to design customer flows that reflect how real construction and interior projects are planned, quoted and discussed.</p>'+
   '</section>'
 }
@@ -167,7 +183,7 @@ function constructionExperienceContent(route){
   if(route.type!=='city-service'||route.serviceSlug!=='construction')return ''
   return '<section style="padding:10px 0 42px">'+
     '<h2>Hyderabad operating background</h2>'+
-    '<p style="max-width:850px;line-height:1.55">ProPulse is a technology and requirement platform informed by prior hands-on residential construction and interior execution experience in Hyderabad.</p>'+
+    '<p style="max-width:850px;line-height:1.55">ProPulse directly undertakes home construction and interior execution in Hyderabad. Its professional marketplace separately connects customers with independent builders.</p>'+
     '<p><a href="/about#ab-industry-experience">Read the operating experience background</a></p>'+
     '<h2>Construction guides</h2><ul><li><a href="/guides">Browse all construction guides</a></li><li><a href="/guides/best-steel-for-house-construction">Best steel for house construction</a></li><li><a href="/guides/best-cement-for-house-construction">Best cement for house construction</a></li><li><a href="/guides/m-sand-vs-river-sand-house-construction">M-sand vs river sand</a></li><li><a href="/guides/prevent-cracks-in-house">How to reduce cracks in a new house</a></li><li><a href="/guides/choose-construction-contractor-hyderabad">How to choose a contractor in Hyderabad</a></li><li><a href="/guides/2bhk-interiors-hyderabad">2BHK interiors in Hyderabad</a></li></ul>'+
   '</section>'
@@ -211,7 +227,7 @@ function fallback(route){
   return '<main data-seo-static-fallback="true" style="font-family:Arial,sans-serif;max-width:1100px;margin:0 auto;padding:32px;color:#173f5e">'+
     '<header style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap"><a href="/" aria-label="'+escapeHtml(SITE_NAME)+' home"><img src="/brand/propulse-logo.svg" alt="'+escapeHtml(SITE_NAME)+'" width="180" height="48"></a><nav aria-label="Primary">'+nav+'</nav></header>'+
     '<section style="padding:72px 0 34px"><p style="font-weight:700;color:#f05b24">PROPULSE BUSINESS</p><h1 style="max-width:850px;font-size:44px;line-height:1.08;margin:12px 0">'+escapeHtml(route.heading)+'</h1><p style="max-width:780px;font-size:18px;line-height:1.6">'+escapeHtml(route.summary)+'</p><p style="max-width:780px;line-height:1.6">'+escapeHtml(route.description)+'</p><p><a href="/quote" style="font-weight:700;color:#d94f22">Start your requirement</a> · <a href="/experts" style="font-weight:700;color:#173f5e">Find professionals</a></p></section>'+
-    cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+guideContent(route)+regionalConstructionContent(route)+homeownerFaqContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
+    businessIdentityContent(route)+cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+guideContent(route)+regionalConstructionContent(route)+homeownerFaqContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
 }
 
 function breadcrumbItems(route){
