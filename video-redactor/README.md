@@ -45,3 +45,7 @@ Never put these values in source files, PR descriptions, screenshots, or chat. R
 After secrets have been configured, run the workflow manually once and check that the expected project changes from `video_redaction_status=pending` to `ready`. Failed jobs stay private. This is a best-effort queue worker (GitHub cron can run late), suitable for initial low traffic; move to a Docker worker for heavier uploads. The frontend/backend must already be running the matching automatic-publication code.
 
 **Privacy:** The processor can miss some small or moving contact details; automatic publication carries residual risk. Instruct professionals to avoid direct contact details in uploaded videos, monitor released content, and support takedowns. Admin verification is required only to award lead credits.
+
+## Reprocessing an existing video
+
+After improving the privacy algorithm, an existing project must be queued again from its original private R2 upload. While a video is pending, its old derivative is withheld from public playback; successful processing writes a fresh UUID-named derivative and makes that new version eligible for playback. A failed reprocess remains private. Reprocessing does not grant lead-credit rewards; those require a separate admin approval.
