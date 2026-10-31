@@ -228,14 +228,27 @@ def sanitized_audio_filter(source_path):
         raise RuntimeError("Unable to analyze audio safely; public output withheld")
     vad = webrtcvad.Vad(0)  # aggressive about identifying speech, not preserving speech
     frame_bytes = 16000 * 30 // 1000 * 2
-    starts = []
+    flags = []
+    levels = []
     for offset in range(0, len(audio.stdout)-frame_bytes+1, frame_bytes):
+        chunk = audio.stdout[offset:offset+frame_bytes]
         try:
-            speech = vad.is_speech(audio.stdout[offset:offset+frame_bytes], 16000)
+            flags.append(vad.is_speech(chunk, 16000))
         except Exception as exc:
             raise RuntimeError("Speech screening failed; public output withheld") from exc
-        if speech:
-            starts.append(offset / (16000 * 2))
+        samples = np.frombuffer(chunk, dtype="<i2").astype(np.float32)
+        levels.append(float(np.sqrt(np.mean(samples*samples))))
+    # WebRTC VAD frequently flags pure continuous tones/music as speech.
+    # A nearly stationary audio bed with no speech-like energy modulation
+    # should remain audible. Exclude onset/offset frames from the estimate.
+    for block in range(0, len(flags), 33):
+        end = min(len(flags), block+33)
+        stable = levels[block+4:max(block+4,end-4)]
+        if len(stable) >= 20:
+            mean = float(np.mean(stable))
+            if mean > 200 and float(np.std(stable))/mean < 0.025:
+                flags[block:end] = [False] * (end-block)
+    starts = [i*0.03 for i, speech in enumerate(flags) if speech]
     if not starts:
         return True, None
     # Allow breathing room before/after words and merge adjacent speech regions.
