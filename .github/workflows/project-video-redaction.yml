@@ -1,7 +1,7 @@
 name: Process ProPulse Project Videos
 
-# Small-project alternative to a dedicated Docker VPS. This workflow is inert
-# until all five repository secrets listed below are configured.
+# Small-project alternative to a dedicated Docker VPS. This workflow reports
+# a configuration failure until all five repository secrets are configured.
 on:
   schedule:
     - cron: '*/15 * * * *'
@@ -39,14 +39,14 @@ jobs:
           for var in DATABASE_URL PRIVATE_OBJECT_STORAGE_ENDPOINT PRIVATE_OBJECT_STORAGE_BUCKET PRIVATE_OBJECT_STORAGE_ACCESS_KEY_ID PRIVATE_OBJECT_STORAGE_SECRET_ACCESS_KEY; do
             if [[ -z "${!var}" ]]; then
               missing=1
-              echo "::notice::Video redaction is not yet configured (missing ${var} secret)."
+              echo "::error::Video redaction cannot start because ${var} is missing. Configure the corresponding PROPULSE_VIDEO_* repository secret in Settings > Secrets and variables > Actions."
             fi
           done
           if [[ "$missing" == "1" ]]; then
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "::error::Video processing did not run. All five PROPULSE_VIDEO_* secrets must be configured in GitHub Actions. The original video remains private."
+            exit 1
           fi
+          echo "ready=true" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-python@v5
         if: steps.configured.outputs.ready == 'true'
