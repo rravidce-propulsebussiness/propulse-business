@@ -218,5 +218,55 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   "What should I inspect before taking handover of a new house?": {
     answer: "Carry out a room-by-room snag inspection before final payment and possession. Check visible cracks and dampness; terrace and bathroom water tests; roof and balcony drainage; doors, windows, locks and glass; tile levels and hollow-sounding areas; paint finish; electrical switches, sockets, earthing and distribution-board labels; water pressure, hot-water points, traps and leaks; sanitary fixtures; stair and railing safety; parking and external drainage. Collect sanctioned plans, completion/occupancy documents where applicable, warranties, test reports, equipment manuals, keys, meter details and a signed list of defects with closure dates. Use an independent professional for structural or technical concerns.",
     sources: [{"label":"BuildNow – official Telangana approval and OC process","url":"https://buildnow.telangana.gov.in/"},{"label":"BuildNow – OC timelines","url":"https://buildnow.telangana.gov.in/timelines/"}]
+  },
+
+  "How can I verify a building permission in Telangana?": {
+    answer: "Use the official BuildNow portal to search or retrieve the permission using the application number and download the digitally issued proceedings and sanctioned plan. Check that the applicant, plot number, survey details, extent, address, floors, height, use and drawing revision match the property and the construction on site. Compare the approved plan with actual setbacks, parking and floor layout; a permission document alone does not prove that the building was executed in accordance with it. If the portal record is unclear, ask the competent local body or a licensed technical professional to verify it before purchase or construction.",
+    sources: [{"label":"BuildNow – official approval portal","url":"https://buildnow.telangana.gov.in/"},{"label":"BuildNow – FAQs on downloading and verifying permissions","url":"https://buildnow.telangana.gov.in/faqs/"}]
+  },
+
+  "What is the difference between layout approval and building permission?": {
+    answer: "Layout approval concerns how a larger parcel is divided and developed into plots, roads, open spaces and utilities. Building permission or the applicable registration route concerns the specific house or building proposed on an individual plot. An approved layout does not automatically approve every house design, floor count or setback on each plot. Before buying, check the layout approval and its conditions; before construction, separately verify the building approval route for the exact plot, proposed use, height and jurisdiction through BuildNow.",
+    sources: [{"label":"BuildNow – layout and building approval system","url":"https://buildnow.telangana.gov.in/"},{"label":"BuildNow – FAQs","url":"https://buildnow.telangana.gov.in/faqs/"}]
+  },
+
+  "Is an Encumbrance Certificate enough to verify a property title?": {
+    answer: "No. An Encumbrance Certificate is an important search of registered transactions recorded for the specified property and period, but it is not a complete title guarantee. It may not reveal every unregistered claim, pending litigation, boundary dispute, inheritance issue, fraud, acquisition restriction or mismatch in survey details. Have an independent property lawyer examine the original sale deed and link documents, seller authority, revenue records, survey boundaries, land use, layout approval and relevant court or government restrictions. Match the records to the physical plot before paying an advance.",
+    sources: [{"label":"Telangana Registration and Stamps – official services","url":"https://registration.telangana.gov.in/"},{"label":"Bhu Bharati – land status","url":"https://bhubharati.telangana.gov.in/knowLandStatus"}]
+  },
+
+  "What happens if my house is built differently from the sanctioned plan?": {
+    answer: "A deviation can lead to notices, penalties, refusal of completion or occupancy documentation, revocation of permission or enforcement action, depending on the nature and extent of the deviation and the applicable law. Do not assume that a small change is automatically permitted. Compare the work with the latest sanctioned drawing and ask the licensed architect or competent authority whether revised approval is required. Stop the affected work until the lawful route is clear; never conceal deviations or rely on an informal assurance that they will be regularised later.",
+    sources: [{"label":"BuildNow – FAQs on deviations and enforcement","url":"https://buildnow.telangana.gov.in/faqs/"},{"label":"BuildNow – government orders and rules","url":"https://buildnow.telangana.gov.in/go-and-act/"}]
+  },
+
+  "Can I change my house plan after building permission is approved?": {
+    answer: "A design change after sanction may require a revised application or approval, especially if it affects setbacks, built-up area, height, floors, use, parking, structural members or other scrutinised parameters. Before executing the change, ask the licensed technical professional to compare it with the sanctioned plan and confirm the current BuildNow procedure with the competent authority. Keep the revised digitally approved drawing on site and give the structural engineer updated information where the structure is affected. Do not build the change first and assume that approval can be obtained afterwards.",
+    sources: [{"label":"BuildNow – official approval portal","url":"https://buildnow.telangana.gov.in/"},{"label":"BuildNow – government orders and rules","url":"https://buildnow.telangana.gov.in/go-and-act/"}]
+  },
+
+  "What is a road-widening line and how can it affect my plot?": {
+    answer: "A road-widening line or proposed road alignment can reserve part of a property for future public road improvement. It may affect the usable plot area, building line, access, setbacks, compound wall and the feasibility of a proposed plan. Do not rely only on the existing road edge or a neighbour’s construction. Ask the architect or planning professional to check the current master plan, road alignment and any notified reservation for the exact survey number, and obtain written clarification from the competent authority before finalising the purchase or building footprint.",
+    sources: [{"label":"HMDA – planning information","url":"https://www.hmda.gov.in/planning/"},{"label":"BuildNow – land-use and approval portal","url":"https://buildnow.telangana.gov.in/"}]
+  },
+
+  "When should I hire a structural engineer for house construction?": {
+    answer: "Engage the structural engineer before finalising the architectural plan and foundation, not only after excavation. The engineer should review the site and soil information, design the foundation and structural system, issue coordinated drawings and reinforcement details, and clarify changes during construction. Arrange inspections at key hold points such as foundation reinforcement, column and beam steel, slab pre-pour and any repair or alteration. Seek the engineer’s advice before removing walls, adding floors, cutting beams or slabs, changing material grades, or addressing significant cracks and honeycombing.",
+    sources: [{"label":"BIS – National Building Code of India","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"},{"label":"BIS – reinforced concrete standards","url":"https://standards.bis.gov.in/"}]
+  },
+
+  "What documents should I collect when my house construction is complete?": {
+    answer: "Collect the final sanctioned drawings and any approved revisions, building-permission proceedings, completion or occupancy certificate where required (or applicable exemption records), structural drawings and inspection records, concrete and material test reports, waterproofing test records, electrical and plumbing layouts, equipment manuals, product warranties, invoices, utility connection details, keys and meter readings. Obtain a signed handover and snag-closure list, plus the contractor’s written defect-reporting process. Keep digital and paper copies together; requirements vary by project category and local authority, so confirm the exact statutory documents for your building.",
+    sources: [{"label":"BuildNow – official approval portal","url":"https://buildnow.telangana.gov.in/"},{"label":"BuildNow – occupancy certificate timelines","url":"https://buildnow.telangana.gov.in/timelines/"}]
+  },
+
+  "What is a defect-liability period in house construction?": {
+    answer: "A defect-liability period is the contractually defined time after a milestone or handover during which the contractor must respond to specified workmanship or construction defects, subject to the agreement. It is not a vague promise that “everything is covered.” The contract should state the start date, duration, covered defects, exclusions, response and repair timelines, access arrangements, emergency procedure and any separate manufacturer warranties. Record defects in writing with photos and dates, and retain the signed closure record. Have a lawyer review the clause before signing because obligations depend on the contract and applicable law.",
+    sources: [{"label":"BIS – National Building Code of India","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How should I approve extra work and cost variations during construction?": {
+    answer: "Use a written variation order before the extra work begins. It should describe the changed scope, drawing or location, quantities and measurement method, material and labour rates, taxes, total price impact, schedule impact and any effect on warranty or other work. Ask the contractor to attach supporting quotations or rate analysis and obtain approval from the person authorised under the contract. Update the BOQ, payment schedule and site records, and keep dated photos. Avoid verbal instructions and retrospective bills; unresolved variations are a common source of budget and completion disputes.",
+    sources: [{"label":"BuildNow – official approval and document checklist","url":"https://buildnow.telangana.gov.in/checklist/"}]
   }
 };
