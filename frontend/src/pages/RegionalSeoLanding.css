@@ -100,3 +100,20 @@
   .district-page .regional-cta{padding:42px 18px}
   .district-page .regional-cta h2{font-size:clamp(27px,8vw,36px);line-height:1.12}
 }
+
+/* State-wide regional landing hero uses a dark navy background. Keep all hero headings readable. */
+.regional-page>.regional-hero h1,
+.regional-page>.regional-hero h2,
+.regional-page>.regional-hero h3{color:#fff!important}
+.regional-page>.regional-hero>p{color:#e0eaf1!important}
+.regional-page>.regional-hero .regional-breadcrumb,
+.regional-page>.regional-hero .regional-breadcrumb a{color:#d7e5ee}
+.regional-page>.regional-hero .regional-eyebrow{color:#ffad87}
+.regional-page>.regional-hero .regional-trust{color:#d1e0e9}
+.regional-page>.regional-hero .regional-actions .secondary{color:#fff!important}
+
+/* CTA panels on all SEO landing routes retain readable contrast. */
+.local-seo-page .local-seo-cta h2,
+.regional-page .regional-cta h2{color:#fff!important}
+.local-seo-page .local-seo-cta p,
+.regional-page .regional-cta p{color:#e0eaf1!important}

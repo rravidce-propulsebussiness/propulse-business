@@ -111,3 +111,17 @@
   .locality-homepage .local-seo-breadcrumb{position:relative;z-index:2;line-height:1.5}
   .locality-homepage .locality-home-hero-grid{row-gap:18px}
 }
+
+/* Dark SEO hero panels need explicit heading colors; global heading tokens otherwise override inherited white text. */
+.local-seo-page:not(.locality-homepage) .local-seo-hero h1,
+.local-seo-page:not(.locality-homepage) .local-seo-hero h2,
+.local-seo-page:not(.locality-homepage) .local-seo-hero h3{color:#fff!important}
+.local-seo-page .local-seo-hero .local-seo-breadcrumb,
+.local-seo-page .local-seo-hero .local-seo-breadcrumb a{color:#d7e5ee}
+.local-seo-page .local-seo-hero .local-seo-eyebrow{color:#ffad87}
+.local-seo-page .local-seo-hero>p{color:#e0eaf1!important}
+.local-seo-page .local-seo-hero .local-seo-trust{color:#d1e0e9}
+.local-seo-page .local-seo-hero .local-seo-actions .secondary{color:#fff!important}
+
+/* Locality detail pages use a light beige hero and intentionally keep dark ink headings. */
+.locality-homepage .locality-home-hero h1{color:#102b43!important}
