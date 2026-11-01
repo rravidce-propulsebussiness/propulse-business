@@ -222,5 +222,41 @@ groups["Interior design scope, false ceiling & lighting costs"] = [
 ["How much does a pooja unit with backlit panels cost?","Compare wall-mounted and floor-standing formats, material, lighting, storage, carving and electrical access."]
 ];
 
+
+groups["Bathroom renovation budgets & design decisions"] = [
+["How much does a complete bathroom renovation cost in Hyderabad?","Break down demolition, waterproofing, tiles, plumbing, sanitaryware, vanity, electrical work and installation."],
+["How much does a small bathroom renovation cost?","Compare essential repairs and a cosmetic refresh with a full strip-out, using measured dimensions and defined fixtures."],
+["What is the cost of bathroom tile replacement?","Separate tile area, tile selection, removal, debris disposal, substrate repair, adhesive, grout, trims and labour."],
+["How much does bathroom waterproofing cost?","Explain area, substrate preparation, system specification, junction treatment, curing, testing and warranty scope."],
+["How much does a shower partition cost in Hyderabad?","Compare fixed and hinged glass panels, dimensions, hardware, supports, sealing and installation."],
+["How much does a wall-hung WC installation cost?","List concealed cistern or frame, WC model, plumbing changes, wall access, flush plate and installation."],
+["What is the cost of a bathroom false ceiling?","Explain moisture-suitable ceiling system, access panels, exhaust, lighting and maintenance access."],
+["How much does a bathroom mirror cabinet cost?","Compare mirror size, cabinet depth, shutter, lighting, moisture protection and electrical work."],
+["What is the cost of changing bathroom plumbing?","Break down pipe rerouting, fixture relocation, wall and floor opening, replacement, testing, waterproofing and reinstatement."],
+["Can I renovate a bathroom without changing the plumbing layout?","Explain when a surface upgrade may retain existing points and why concealed leaks, drainage and fixture compatibility still need inspection."],
+["Which bathroom tiles are best for a wet floor?","Compare slip resistance, surface texture, size, cleaning, grout and suitability for wet use; check product ratings."],
+["What is the difference between anti-skid and glossy bathroom tiles?","Discuss surface grip, cleaning, water exposure and why actual slip performance should be checked from product data."],
+["How much does a bathroom vanity with countertop cost?","Separate cabinet size, board and finish, countertop, basin, tap, plumbing cut-outs and installation."],
+["What should be included in a bathroom renovation quotation?","List quantities, product models, demolition, waterproofing, tiles, plumbing, sanitaryware, electrical, debris, taxes and exclusions."],
+["How long does a bathroom renovation take?","Explain dependencies such as demolition, concealed repairs, waterproofing curing and testing, tile work, fixture installation and inspection."]
+];
+groups["False ceiling, lighting & electrical planning costs"] = [
+["How much does false ceiling cost for a 2BHK in Hyderabad?","Estimate only after room-wise ceiling measurement and definition of board, framing, design, cut-outs, paint and lighting scope."],
+["What is the difference between gypsum and POP false ceiling?","Compare system construction, joints, finish, design flexibility, maintenance, repair and suitability by room."],
+["How much does a simple flat gypsum ceiling cost?","Cover measured area, board and framing specification, jointing, finishing, height and access."],
+["How much does a layered false ceiling cost?","Explain extra framing, drops, shapes, board area, finishing and coordination with services."],
+["How much does cove lighting cost per room?","Separate cove construction, LED strip, profile, diffuser, driver, wiring, dimming and access."],
+["How much does LED profile lighting cost for a wardrobe?","List profile length, diffuser, LED specification, driver, wiring, switch and replacement access."],
+["How many electrical points are required in a 2BHK?","Explain room-wise planning based on furniture and appliance schedules instead of a universal point count."],
+["How many plug points are needed in a modular kitchen?","Plan appliances and countertop use, then have a qualified electrician assess circuiting, loads and safe locations."],
+["Where should TV and internet points be placed?","Coordinate TV size, console, router, soundbar, power, data, conduit and service access with the furniture elevation."],
+["Where should AC electrical and drain points be planned?","Coordinate indoor and outdoor unit positions, dedicated electrical requirements, drain routing, access and manufacturer instructions."],
+["How should geyser points be planned in bathrooms?","Coordinate equipment location, water connections, electrical protection and safe access with qualified trades."],
+["What is a reflected ceiling plan?","Explain how lighting, fans, AC diffusers, access panels and ceiling levels are coordinated on a drawing."],
+["How much does a bedroom lighting design cost?","Separate fixture supply, wiring, switching, profiles, drivers, dimmers, ceiling work and installation."],
+["What is the difference between warm white and cool white lights?","Compare colour temperature and use cases, recommending samples with actual finishes and daylight conditions."],
+["What should be checked before closing a false ceiling?","Check framing, supports, wiring, ducts, access, fixture positions, concealed service photographs and inspection sign-off."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
