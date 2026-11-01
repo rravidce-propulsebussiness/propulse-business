@@ -13,7 +13,7 @@ const dist=path.resolve(here,'../dist')
 const indexPath=path.join(dist,'index.html')
 const template=fs.readFileSync(indexPath,'utf8')
 const configuredOrigin=String(process.env.VITE_PUBLIC_SITE_URL||'').trim().replace(/\/+$/,'')
-const origin=/^https?:\/\//i.test(configuredOrigin)?configuredOrigin:''
+const origin=/^https?:\/\//i.test(configuredOrigin)?configuredOrigin:'https://propulsetechnologies.online'
 const googleSiteVerification=String(process.env.VITE_GOOGLE_SITE_VERIFICATION||'').trim()
 
 function escapeHtml(value=''){
