@@ -60,7 +60,7 @@ export default function Experts(){
     <PublicHeader />
     <section className="experts-directory" id="expert-directory">
       <div className="experts-directory-intro">
-        <div className="experts-intro-pill"><Icon name="users" size={17}/><span>CONSTRUCTION &amp; INTERIOR PROFESSIONALS</span></div>
+        <div className="experts-intro-pill"><Icon name="users" size={17}/><span>TRUSTED PROFESSIONALS · CONSTRUCTION &amp; INTERIOR</span></div>
         <h1><span>Find Construction &amp; Interior</span> <em>Professionals</em></h1>
         <i aria-hidden="true"/>
         <p>Explore public business profiles, services, locations and published project work. Official ProPulse construction and interior execution is identified separately from independent marketplace professionals.</p>
