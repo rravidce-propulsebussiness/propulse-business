@@ -681,5 +681,43 @@ groups["Bathroom renovation budgets & scope"] = [
 ["How do I compare bathroom renovation contractors?","Use the same measured BOQ, fixture schedule, waterproofing system, tile specification, exclusions and payment milestones."]
 ];
 
+
+groups["Interior design styles & concept selection"] = [
+["What is the difference between modern and contemporary interior design?","Compare design principles, current trends, furniture forms, materials and how each style adapts to a home."],
+["What is warm minimal interior design?","Explore restrained layouts, natural textures, warm neutrals, concealed storage and layered lighting."],
+["How do I design a minimalist living room?","Prioritize circulation, practical storage, proportionate furniture and a limited finish palette."],
+["Which interior style is suitable for a small apartment?","Choose a coherent palette and space-efficient furniture based on daylight, storage needs and room dimensions."],
+["What is the difference between Scandinavian and minimalist interiors?","Compare material warmth, colour, furniture, texture and decorative detail rather than treating the styles as identical."],
+["How do I create a modern luxury bedroom?","Coordinate headboard, wardrobe, lighting, textiles, finishes and storage without overcrowding the room."],
+["What colours are used in warm minimal interiors?","Test warm neutrals and muted accents with flooring, daylight and actual room lighting."],
+["How do I choose one interior theme for the entire house?","Create a consistent base palette and repeat selected materials while allowing room-specific functions."],
+["Can I mix modern and traditional interior designs?","Use a consistent proportion, material palette and focal details to make mixed styles feel intentional."],
+["How do I prepare an interior design brief from reference images?","Identify the features you like, then translate them into layout, material, storage, lighting and budget requirements."]
+];
+groups["Interior designer and contractor selection"] = [
+["What questions should I ask an interior designer before hiring?","Ask about relevant projects, drawings, scope, BOQ, site visits, team, timeline, procurement and handover."],
+["How do I verify an interior designer's previous work?","Review completed projects, references, actual site photos and the firm's precise role in delivery."],
+["What drawings should an interior designer provide?","Clarify plans, elevations, sections, electrical, ceiling, furniture details, material schedules and BOQ."],
+["What is the difference between an interior designer and an interior contractor?","Understand design responsibility, procurement, execution, coordination and who is accountable for each deliverable."],
+["How do I compare two interior designers' quotations?","Normalize design fees, material specifications, quantities, revisions, site supervision, taxes and exclusions."],
+["Should I sign an agreement before starting interior work?","Document scope, deliverables, payment milestones, schedule, variations, warranty and dispute handling."],
+["How do I check an interior contractor's material quality?","Request product codes, datasheets, samples, invoices and inspection access before installation."],
+["How often should an interior designer visit the site?","Agree a visit and reporting cadence linked to milestones, concealed work, sample approvals and installation checks."],
+["What should I check before paying an interior contractor advance?","Verify identity and payment beneficiary, agreement, advance purpose, procurement plan and adjustment terms."],
+["What documents should I receive after interior work is completed?","Collect as-built drawings, BOQ, product codes, warranties, manuals, spare samples and snag closure."]
+];
+groups["Interior cost and electrical-plumbing coordination"] = [
+["How do I estimate electrical cost for home interiors?","Count points and fixtures, identify wiring changes, profiles, drivers, switches and qualified installation scope."],
+["Does interior design cost include new electrical wiring?","Check whether point shifting, circuits, concealed conduits, protective devices and testing are included."],
+["How much does false ceiling lighting add to interior cost?","Specify fixture quantity, profile lengths, drivers, controls, wiring, cut-outs and installation."],
+["How do I budget plumbing changes during kitchen renovation?","List sink relocation, water and waste routes, valves, purifier, dishwasher and reinstatement work."],
+["Can I move a kitchen sink to another wall?","Check drainage route, gradients, water supply, slab or wall constraints and professional feasibility before finalizing."],
+["What is included in a turnkey interior project?","Confirm design, materials, manufacturing, civil work, electrical, plumbing, installation, appliances and handover."],
+["How do I estimate living room lighting cost?","Prepare a fixture schedule for ambient, task and accent lighting with drivers, wiring and controls."],
+["Should I include curtains and blinds in the interior budget?","Measure openings and specify fabric or system, tracks, lining, installation and motorization separately."],
+["How do I avoid extra charges during interior execution?","Approve drawings, BOQ, samples and exclusions, then require written variation approval before changes."],
+["How do I compare interior project timelines?","Review design approvals, procurement lead times, site readiness, trade sequence, installation and snagging."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
