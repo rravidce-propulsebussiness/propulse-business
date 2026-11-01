@@ -547,5 +547,39 @@ groups["Interior material comparison & room-wise budgets"] = [
 ["How do I control interior project variations?","Approve drawings, samples, BOQ and written change orders before production or site execution."]
 ];
 
+
+groups["Kitchen appliances & cabinet clearances"] = [
+["What size space is needed for a built-in oven?","Use the exact appliance installation drawing for niche size, ventilation, electrical connection and service access."],
+["How much clearance does a refrigerator need inside a kitchen?","Check the model manual for side, rear and top ventilation gaps and confirm door swing."],
+["Can a chimney be installed above any kitchen hob?","Coordinate hob type, chimney width, duct route, outlet and the manufacturer's mounting instructions."],
+["What is the difference between a built-in and countertop microwave?","Compare installation niche, ventilation, electrical access, service removal and counter space."],
+["How do I plan a dishwasher in a modular kitchen?","Reserve the correct niche and coordinate inlet, drain, power, door swing and service access."],
+["Where should the refrigerator be placed in an L-shaped kitchen?","Balance workflow, door opening, ventilation, counter landing space and movement through the kitchen."],
+["What is the best height for a kitchen chimney?","Follow the exact chimney and hob manufacturers' installation instructions and local safety requirements."],
+["How do I plan electrical sockets for kitchen appliances?","Prepare an appliance schedule and let a qualified electrician design appropriate circuits, protection and socket positions."],
+["Can a washing machine be placed beside a modular kitchen?","Check water, drainage, electrical safety, vibration, ventilation and access for servicing."],
+["What should an appliance schedule include for kitchen design?","Record brand, model, dimensions, door swing, utility requirements, clearances and installation manual."],
+["How much does an L-shaped modular kitchen cost?","Compare measured base, wall and tall units, finishes, hardware, countertop, sink, accessories and installation."],
+["How is modular kitchen price calculated per running foot?","Ask whether the rate includes base and wall cabinets, lofts, corner units, hardware and installation."],
+["Why do two modular kitchen quotations have different prices?","Compare carcass grade, shutter finish, hardware model, accessories, countertop, sink, taxes and exclusions."],
+["Does modular kitchen price include granite countertop?","Check the BOQ for stone type, thickness, edge profile, cut-outs, sink, transport and installation."],
+["How much does a tall pantry unit add to kitchen cost?","Specify dimensions, internal pull-outs, hardware model, load rating and number of shelves."],
+["What is included in a modular kitchen installation charge?","Clarify delivery, assembly, levelling, fixing, cut-outs, plumbing and electrical coordination, cleanup and adjustments."],
+["How can I reduce modular kitchen cost without compromising quality?","Prioritize functional layouts and reliable high-use hardware, then simplify finishes and optional accessories."],
+["Are corner carousel units worth the extra kitchen cost?","Compare usable storage, mechanism, access, cabinet geometry, load rating and maintenance."],
+["What is the difference between base unit and wall unit pricing?","Compare construction, depth, shutter area, hardware, supports, finish and measurement basis."],
+["How do I prepare a kitchen BOQ before requesting quotations?","List each cabinet module, dimensions, substrate, finish, hardware, accessories, countertop, sink and installation scope."],
+["Which is better for a bathroom, wall-hung or floor-mounted WC?","Compare plumbing outlet, concealed cistern access, wall support, cleaning and service requirements."],
+["What is the difference between a countertop and wall-hung wash basin?","Compare counter space, storage, tap arrangement, wall support and cleaning access."],
+["Are concealed shower mixers difficult to maintain?","Check service access, compatible concealed body, spare parts, water quality and installation instructions."],
+["What glass is used for a bathroom shower partition?","Specify safety-rated glass and compatible hardware through a qualified supplier; confirm thickness and system approval."],
+["What bathroom fittings should be selected before plumbing work?","Freeze WC, basin, mixer, shower, drain, geyser and accessory models with their rough-in drawings."],
+["What is the difference between matte and satin wall paint?","Compare light reflection, cleaning, touch-up visibility and the paint manufacturer's recommended use."],
+["Is PU polish better than laminate for a TV unit?","Compare appearance, substrate, application quality, repairability, cost and maintenance."],
+["What is the difference between veneer polish and laminate?","Understand natural veneer grain and finishing needs versus manufactured decorative laminate surfaces."],
+["How do I choose paint colours for a small bedroom?","Test large samples under daylight and artificial lighting with flooring, furniture and room orientation."],
+["What should be included in an interior paint and polish quotation?","List surface preparation, primer, product range, coats, sheen, colour codes, polishing system and protection."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
