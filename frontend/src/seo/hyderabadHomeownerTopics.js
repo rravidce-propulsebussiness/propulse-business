@@ -409,6 +409,29 @@ groups["Planning, room sizes & building services"] = [
     ["How do I prevent tile hollow sounds and debonding?","Use suitable substrate preparation, adhesive, coverage, movement joints and professional installation checks."],
     ["What should be included in a waterproofing warranty?","Clarify system scope, surface preparation, testing, exclusions, maintenance, applicator responsibility and claim procedure."]
   ]
+,
+  "Hyderabad building permissions and home renovation": [
+    ["How do I get house construction permission in Hyderabad?","Confirm plot jurisdiction, land status, sanctioned layout, current local rules and the competent authority before applying."],
+    ["What documents are needed for residential building permission in Hyderabad?","Prepare title and plot records, survey details, drawings and professional certificates required by the current authority process."],
+    ["What is the difference between GHMC and HMDA building permission?","Jurisdiction and approval responsibilities depend on the property's location and current statutory arrangements; verify with the authority."],
+    ["How do I check whether my plot is in GHMC limits?","Use official jurisdiction maps or confirm with the competent local authority using the plot's survey and location details."],
+    ["Do I need permission to renovate an old house in Hyderabad?","Requirements depend on whether work is cosmetic, changes structure, use, footprint or external appearance. Confirm with the local authority and engineer."],
+    ["Can I change my house floor plan after building approval?","Submit proposed revisions through the applicable approval process and obtain professional review before carrying out changes."],
+    ["What should I check before buying a plot for house construction?","Review title, land use, layout approval, survey boundaries, access, encumbrances and restrictions with qualified professionals."],
+    ["What is an occupancy certificate and when is it needed?","Check the applicable completion and occupancy requirements with the competent authority before occupation."],
+    ["How do I plan renovation of an occupied house?","Phase work by room, isolate services safely, create dust barriers, protect access and plan temporary facilities."],
+    ["What is the correct order for full home renovation?","Inspect and design first, then demolition and repairs, concealed services, waterproofing, finishes, joinery and handover."],
+    ["How much does a complete home renovation cost in Hyderabad?","Use a measured scope including civil repairs, services, flooring, paint, kitchen, wardrobes, bathrooms and exclusions."],
+    ["How do I budget for renovating an old independent house?","Inspect structure, roof, dampness, wiring and plumbing before pricing cosmetic finishes or layout changes."],
+    ["Should I renovate the kitchen or bathroom first?","Prioritize safety, leakage and service defects, then sequence work based on dependencies and household use."],
+    ["How do I compare renovation contractors in Hyderabad?","Issue one scope and BOQ, compare material specifications, exclusions, programme, protection, testing and payment stages."],
+    ["What should be included in a renovation handover?","Collect test records, warranties, product manuals, as-built service routes, keys and completed snag list."],
+    ["How do I calculate interior cost room by room?","Measure each room's furniture, storage, finishes, ceiling, lighting and services rather than applying one flat rate."],
+    ["What is the cost of a custom wardrobe in Hyderabad?","Compare dimensions, substrate, finish, internal layout, hardware, lofts, installation and quotation measurement method."],
+    ["How do I calculate modular kitchen cabinet measurements?","Survey wall runs, openings and services, then coordinate appliances, corner units, counter and cabinet elevations."],
+    ["How do I estimate bathroom renovation material quantities?","Measure floor and wall surfaces, tile coverage, fixture count, waterproofing area, adhesive and grout requirements."],
+    ["What approvals should I collect before starting a major renovation?","Check the nature of work, local jurisdiction, structural impact and any required permissions or NOCs with qualified professionals."]
+  ]
 };
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
