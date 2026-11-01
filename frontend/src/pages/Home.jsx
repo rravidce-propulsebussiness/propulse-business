@@ -45,9 +45,7 @@ const INSPIRATION = [
 
 function clean(value) { return typeof value === 'string' ? value.trim() : value == null ? '' : String(value).trim() }
 function projectPath(project) { return '/projects/' + (clean(project.seo_slug) || 'project-' + (project.project_id || project.id)) }
-function projectImage(project) {
-  return clean(project.video_thumbnail_url) || clean(project.cover_image_url) || (Array.isArray(project.image_urls) ? clean(project.image_urls[0]) : '')
-}
+function projectImage(project) { return clean(project.video_thumbnail_url) || clean(project.cover_image_url) || (Array.isArray(project.image_urls) ? clean(project.image_urls[0]) : '') }
 
 function Icon({ name, size = 20 }) {
   const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '1.8', strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }
@@ -66,9 +64,7 @@ function Icon({ name, size = 20 }) {
   return null
 }
 
-function openRequirement(flowKey = '') {
-  window.dispatchEvent(new CustomEvent('propulse:open-lead-popup', { detail: { flowKey } }))
-}
+function openRequirement(flowKey = '') { window.dispatchEvent(new CustomEvent('propulse:open-lead-popup', { detail: { flowKey } })) }
 
 export default function Home() {
   const [contactData, setContactData] = useState({})
@@ -115,7 +111,7 @@ export default function Home() {
   }, [])
 
   const phone = contactData.phone || contactData.phone_number || contactData.mobile || ''
-  const email = contactData.email || contactData.support_email || contactData.mobile || ''
+  const email = contactData.email || contactData.support_email || ''
   const heroImage = homepageMedia.hero_image_url || DEFAULT_HERO
   const hasPublishedProjects = publishedProjects.length > 0
 
@@ -136,22 +132,15 @@ export default function Home() {
               </span>
             </p>
             <p className="hc-business-intro">Hire ProPulse directly for construction or interiors, or explore independent professionals through our marketplace. We also build technology for these businesses.</p>
-            <div className="hc-premium-actions">
-              <button className="hc-hero-cta hc-hero-cta-primary" type="button" onClick={() => openRequirement()}><span className="hc-hero-cta-label">Compare Professionals</span><span className="hc-hero-cta-arrow" aria-hidden="true">→</span></button>
-              <Link className="hc-hero-cta hc-hero-cta-secondary" to="/contact"><span className="hc-hero-cta-label">Contact ProPulse Directly</span><span className="hc-hero-cta-arrow" aria-hidden="true">→</span></Link>
-            </div>
+            <div className="hc-premium-actions"><button className="hc-hero-cta hc-hero-cta-primary" type="button" onClick={() => openRequirement()}><span className="hc-hero-cta-label">Compare Professionals</span><span className="hc-hero-cta-arrow" aria-hidden="true">→</span></button><Link className="hc-hero-cta hc-hero-cta-secondary" to="/contact"><span className="hc-hero-cta-label">Contact ProPulse Directly</span><span className="hc-hero-cta-arrow" aria-hidden="true">→</span></Link></div>
             <div className="hc-premium-trust" aria-label="ProPulse benefits"><span><Icon name="clipboard" size={22}/>Free Consultation</span><span><Icon name="layers" size={22}/>Relevant Professionals</span><span><Icon name="check" size={22}/>Warranty Options</span></div>
           </div>
           <div className="hc-premium-scene"><HeroBlueprintAnimation /></div>
         </div>
       </section>
-
       <section className="hc-section hc-services"><div className="hc-container"><div className="hc-section-head hc-section-head-centered"><h2>What do you need?</h2></div><div className="hc-service-grid">{SERVICES.map(item => <article className="hc-service-card" key={item.key}><img src={item.image} alt={item.title} loading="lazy"/><div className="hc-service-copy"><span className="hc-service-icon"><Icon name={item.icon} size={19}/></span><div><h3>{item.title}</h3><b>{item.eyebrow}</b><p>{item.text}</p></div><button type="button" onClick={() => openRequirement(item.key)} aria-label={'Start '+item.title}><Icon name="arrow" size={15}/></button></div></article>)}</div></div></section>
-
       <section className="hc-section hc-benefits"><div className="hc-container"><div className="hc-section-head compact hc-section-head-centered"><h2>Our Construction, Interiors, Marketplace &amp; Technology Divisions</h2></div><div className="hc-benefit-grid">{BENEFITS.map((item,index) => <article key={item.title}><span className={'tone-'+(index+1)}><Icon name={item.icon} size={19}/></span><div><h3>{item.title}</h3><p>{item.text}</p><Link to={item.link}>Explore service →</Link></div></article>)}</div></div></section>
-
       <section className="hc-section hc-how"><div className="hc-container"><div className="hc-section-head hc-section-head-centered"><h2>How It Works</h2></div><div className="hc-step-grid">{STEPS.map((step,index) => <article key={step.number}><span className={'hc-step-number tone-'+(index+1)}>{step.number}</span><span className={'hc-step-icon tone-'+(index+1)}><Icon name={step.icon} size={18}/></span><h3>{step.title}</h3><p>{step.text}</p>{index < STEPS.length-1 && <i className="hc-step-arrow"><Icon name="arrow" size={15}/></i>}</article>)}</div></div></section>
-
       <section className="hc-section hc-projects">
         <div className="hc-container">
           <div className="hc-section-head hc-section-head-centered">
@@ -162,12 +151,11 @@ export default function Home() {
             {hasPublishedProjects ? publishedProjects.map(project => {
               const image = projectImage(project)
               return <article key={project.project_id || project.id}><Link to={projectPath(project)} aria-label={'View '+clean(project.title)}>{image ? <img src={image} alt={clean(project.title)} loading="lazy"/> : <div className="hc-project-placeholder" aria-hidden="true">Project video</div>}<div><h3>{clean(project.title) || 'Published project'}</h3><p>{clean(project.location_text) || 'Published project'}</p></div></Link></article>
-            }) : INSPIRATION.map(project => <article key={project.title}><img src={project.image} alt={project.title} loading="lazy"/><div><h3>{project.title}</h3><p>Illustrative reference</p></div></article>)}
+            }) : INSPIRATION.map(project => <article key={project.title}><img src={project.image} alt={project.title} loading="lazy"/><div><h3>{project.title}</h3><p>Illustrative reference</p></div> </article>)}
           </div>
           {hasPublishedProjects && <p className="hc-projects-more"><Link to="/projects">View all published projects →</Link></p>}
         </div>
       </section>
-
       <section className="hc-slim-cta"><div className="hc-container hc-slim-cta-inner"><img src={heroImage} alt="" loading="lazy"/><div><h2>Ready to Start Your Project?</h2><p>Contact ProPulse for direct construction or interiors, or compare independent contractors.</p></div><div className="hc-slim-actions"><button type="button" onClick={() => openRequirement('')}>Start Your Requirement <Icon name="arrow" size={14}/></button><Link to="/packages">View Packages</Link></div></div></section>
     </main>
     <PublicFooter phone={phone} email={email} />
