@@ -1,3 +1,4 @@
+import {INTERIOR_SEO_ROUTES} from './interiorSeo.js'
 import {HYDERABAD_SEO_ROUTES} from './hyderabadSeo.js'
 import {REGIONAL_SEO_ROUTES} from './regionalSeo.js'
 import {CONSTRUCTION_GUIDE_HUB_ROUTE,CONSTRUCTION_GUIDE_ROUTES} from './constructionGuides.js'
@@ -82,6 +83,7 @@ export const CORE_PUBLIC_SEO_ROUTES=[
 export const PUBLIC_SEO_ROUTES=[
   ...CORE_PUBLIC_SEO_ROUTES,
   ...HYDERABAD_SEO_ROUTES,
+  ...INTERIOR_SEO_ROUTES,
   ...REGIONAL_SEO_ROUTES,
   CONSTRUCTION_GUIDE_HUB_ROUTE,
   ...CONSTRUCTION_GUIDE_ROUTES,
