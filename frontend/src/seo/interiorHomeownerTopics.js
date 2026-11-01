@@ -105,5 +105,70 @@ groups["More interior cost, layout & material questions"] = [
 ["What should I finalise before starting interior work?","A checklist for approved drawings, material codes, electrical points, appliance sizes, finishes, BOQ and payment milestones."]
 ];
 
+
+groups["Plywood quality, grades & testing"] = [
+["How can I check plywood quality before buying?","A practical visual and document checklist covering BIS licence/marking, grade, thickness, core gaps, face defects, batch traceability and supplier invoice; visual checks cannot replace laboratory tests."],
+["What tests are used to check plywood quality?","Explain water-resistance, glue-shear, adhesion of plies, moisture content, bending strength, dimensional accuracy, workmanship and formaldehyde tests under the applicable standard."],
+["How do I verify an ISI mark on plywood?","Show how to check the current BIS licence and product scope for the manufacturer, standard, grade and factory; do not rely on a printed logo alone."],
+["What is the difference between IS 303 and IS 710 plywood?","Explain general-purpose plywood versus marine plywood standards and why the specified application and current standard edition matter."],
+["How do I identify BWR plywood and BWP plywood?","Explain grade declarations, standard references, licence scope and test evidence; colour, smell or a shopkeeper's claim is not proof."],
+["Can I test plywood at home by putting it in water?","Explain why soaking or boiling a small offcut is not a valid certification test and can be misleading; use documented lab testing for compliance."],
+["What is the boiling water test for plywood?","Describe the purpose of water-resistance testing and why sample preparation, duration and evaluation must follow the relevant standard."],
+["How do I check for gaps inside plywood layers?","Explain edge inspection and limitations: internal core defects may not be visible on every edge and require appropriate sampling/testing."],
+["What is glue shear strength in plywood?","Explain adhesive bond performance between veneers and why it matters for delamination resistance."],
+["What is the difference between plywood grade and plywood thickness?","Separate face/back appearance classification from thickness and performance properties; neither alone guarantees suitability."],
+["What does BWR grade mean for kitchen cabinets?","Explain moisture exposure limits and why sink-zone waterproofing, edge sealing, plumbing leak control and ventilation still matter."],
+["Is marine plywood necessary for every kitchen cabinet?","Compare the actual moisture risk, board specification and cost; marine grade is not a substitute for proper detailing or leak prevention."],
+["What plywood thickness should I use for wardrobes and kitchen cabinets?","Explain that carcass, shelves, shutters and spans have different requirements; specify thickness based on design, loads and hardware."],
+["How can I check plywood thickness at the site?","Show how to measure representative sheets with a suitable gauge and compare tolerance against the declared specification."],
+["What is formaldehyde emission in plywood and why should I care?","Explain indoor air quality, emission classes and the importance of asking for current test declarations and applicable compliance."]
+];
+groups["Hinges, channels & modular furniture hardware"] = [
+["What are the different types of cabinet hinges?","Compare concealed, butt, overlay, half-overlay, inset, corner, wide-angle and glass-door hinges by application."],
+["What is the difference between full overlay, half overlay and inset hinges?","Explain door position relative to cabinet sides and how hinge crank and mounting plate geometry determine the application."],
+["Which hinge is best for kitchen cabinets?","Choose based on door dimensions and weight, cabinet construction, opening angle, corrosion exposure, adjustment and service support."],
+["What is the difference between soft-close and normal hinges?","Explain damping, closing feel, adjustment, maintenance and why the product model and rated application should be specified."],
+["Are hydraulic hinges and soft-close hinges the same?","Clarify common market terminology and check the actual hinge mechanism and manufacturer description rather than relying on seller labels."],
+["What is a clip-on hinge and a slide-on hinge?","Compare mounting and removal methods, adjustment and serviceability using the chosen hardware system."],
+["How many hinges are required for a wardrobe shutter?","Explain that count depends on shutter height, width, weight, material and manufacturer load guidance—not one fixed rule."],
+["Which hinge opening angle is best: 95, 110 or 165 degrees?","Compare standard access, adjacent obstruction and corner-unit requirements; verify clearances from the hinge maker's technical data."],
+["What is a 3D adjustable hinge?","Explain side, height and depth adjustment and why proper installation and mounting plates still matter."],
+["Which brand of hinges is best for modular kitchens?","Compare product series, warranty, local service, test/cycle claims, compatibility and genuine supply; avoid unsupported brand rankings."],
+["What is the difference between tandem channels and telescopic channels?","Compare drawer box systems, extension, load rating, adjustment, soft-close and installation precision."],
+["Which drawer channel is best for kitchen drawers?","Match channel type and rated load to drawer width, contents, frequency and cabinet construction."],
+["What is a tandem box system in modular kitchens?","Explain integrated metal drawer sides, runners, front adjustment, load ratings and accessory options."],
+["What is a push-to-open system for handleless cabinets?","Explain mechanical/electrical opening options, required clearances, door alignment and maintenance."],
+["How do I check the quality of hinges and drawer channels?","Check manufacturer/model, smooth movement, adjustment, load rating, corrosion suitability, warranty and sample operation."]
+];
+groups["Interior finish types & surface comparisons"] = [
+["What are the different types of interior finishes?","Explain laminate, acrylic, veneer, PU paint, duco, membrane, lacquer, glass, metal and natural stone by substrate, look and maintenance."],
+["What is the difference between laminate and acrylic finish?","Compare appearance, gloss, fingerprints, scratch repair, edge finishing, cleaning and price drivers."],
+["What is the difference between PU finish and duco finish?","Explain paint-system terminology, sheen, colour matching, surface preparation and the need to confirm the exact coating specification."],
+["Which is better: PU or laminate for wardrobes?","Compare seamless painted appearance with factory laminate practicality, maintenance, repair and budget."],
+["What is the difference between membrane and laminate shutters?","Compare wrapped profile detailing, edge joints, heat/moisture exposure and repairability."],
+["What is the difference between veneer and laminate?","Compare natural wood grain variation, polishing, maintenance, consistency and cost."],
+["What is the difference between matte, suede and high-gloss laminate?","Compare reflection, fingerprints, cleaning, scratch visibility and how samples look under room lighting."],
+["Which is better: acrylic, glass or laminate for kitchen shutters?","Compare visual effect, cleaning, edge treatment, breakage risk and cost."],
+["What is PET finish in modular kitchens?","Explain PET-faced panels, gloss/matte options, edge quality, scratch behaviour and manufacturer-specific performance."],
+["What is the difference between membrane and acrylic finish?","Compare routed/profile shutters with flat reflective panels, maintenance and suitability."],
+["Which interior finish is easiest to maintain?","Compare practical cleaning and repair needs by room, household use, fingerprints, moisture and sunlight."],
+["Which finish is best for a TV unit?","Match laminate, veneer, PU, fluted panels and glass to the desired look, dust exposure and budget."],
+["Which finish is best for kitchen cabinets near the sink?","Focus on water management, edge sealing, substrate, ventilation and manufacturer cleaning instructions rather than finish alone."],
+["How do I compare laminate brands and codes?","Explain physical sample approval, thickness, texture, shade variation, batch/lot, warranty and matching edge band."],
+["What should be written in an interior finish schedule?","List substrate, finish type, brand/code, thickness, sheen, edge treatment, hardware, location and approved sample."]
+];
+groups["Types of interior design & execution styles"] = [
+["What are the different types of interior design styles?","Compare modern, contemporary, minimal, warm minimal, Scandinavian, industrial, traditional, transitional and eclectic styles."],
+["What is the difference between modern and contemporary interior design?","Explain modern as a design movement/style and contemporary as evolving current design choices."],
+["What is the difference between minimalist and warm minimalist interiors?","Compare restraint and visual simplicity with warmer materials, softer textures and layered lighting."],
+["What is the difference between Scandinavian and Japandi interiors?","Compare Nordic lightness and comfort with Japanese restraint, natural materials and a more muted palette."],
+["What is the difference between traditional and transitional interiors?","Explain ornate/classic detailing versus a balanced mix of classic proportions and modern simplicity."],
+["What is the difference between turnkey interiors and modular interiors?","Clarify turnkey as a project delivery scope and modular as a furniture fabrication/installation approach; they are not opposites."],
+["What is the difference between a carpenter-made and factory-made interior?","Compare custom site fabrication with factory precision, quality control, installation time, flexibility and warranty."],
+["What is the difference between a full-home interior and essential interior package?","Compare typical room coverage and exclusions; insist on a project-specific BOQ instead of relying on package names."],
+["Which interior design style is best for a small 2BHK?","Compare styles through storage, circulation, colour, visual clutter, daylight and maintenance."],
+["How do I choose one interior theme for the whole house?","Build a palette across flooring, wall colour, wood tone, metal finish, fabrics and lighting while allowing room-specific function."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
