@@ -186,5 +186,41 @@ groups["Kitchen, wardrobe & interior hardware price questions"] = [
 ["What is the cost of a wardrobe with sliding shutters?","Break down track system, shutter count, panel size, mirror or glass options, soft-close and installation."]
 ];
 
+
+groups["Bathroom, vanity & utility interior costs"] = [
+["How much does a bathroom vanity cost in Hyderabad?","Compare wall-hung and floor-standing vanity cabinets by width, board, finish, countertop, basin, plumbing access and installation."],
+["What is the cost of a bathroom mirror cabinet?","Break down mirror size, storage depth, shutter type, moisture-suitable materials, lighting and electrical provision."],
+["Which material is suitable for a bathroom vanity cabinet?","Discuss moisture exposure, ventilation, board and finish suitability, edge sealing, plumbing leaks and maintenance; no board is waterproof simply because it is labelled moisture resistant."],
+["How much does a wash basin cabinet cost?","Explain cabinet dimensions, basin type, countertop, plumbing cut-outs, storage, finish and fitting scope."],
+["Can plywood be used below a bathroom wash basin?","Explain moisture-risk management, product specification, sealing, ventilation, leak prevention and why the exact application needs professional selection."],
+["What is the difference between a PVC and plywood vanity cabinet?","Compare water exposure, rigidity, hardware compatibility, finish options, repairability, installation and product quality."],
+["How much does a utility cabinet cost for an apartment?","Cover cabinet length, washing machine clearance, sink, tall storage, ventilation, plumbing and electrical access."],
+["How should I plan a washing machine cabinet?","Check appliance dimensions, vibration clearance, water inlet, drain, socket safety, ventilation and service access."],
+["What is the cost of a bathroom mirror with LED lighting?","Separate mirror, LED profile, driver, wiring, switch, demister if selected and installation."],
+["What should be included in a bathroom interior quotation?","List vanity, mirror, accessories, shower partition, storage, countertop, plumbing changes, electrical, waterproofing and exclusions."],
+["How much does a shower glass partition cost?","Compare fixed and hinged panels, glass specification, hardware, dimensions, supports, sealing and installation."],
+["Which finish is easiest to maintain in a bathroom cabinet?","Compare laminate and other suitable finishes by edge protection, cleaning, water splash exposure and repair."],
+["How much does a tall bathroom storage cabinet cost?","Explain height, depth, wall fixing, moisture exposure, shutter finish, shelves and safe clearances."],
+["Can I install a mirror cabinet above a wash basin?","Check user height, basin splash, electrical points, door clearance, wall fixing and safe access."],
+["How do I prevent swelling in a bathroom vanity cabinet?","Cover leak prevention, edge sealing, ventilation, suitable materials, raised plinths and prompt repair of plumbing leaks."]
+];
+groups["Interior design scope, false ceiling & lighting costs"] = [
+["How much does a false ceiling cost for a 2BHK flat?","Explain room-wise ceiling area, gypsum or other system, levels, access panels, framing, cut-outs, lighting and painting."],
+["What is the cost of a gypsum false ceiling per square foot?","Explain why rates depend on board, framing, design complexity, height, access, finish and electrical exclusions; request dated local quotations."],
+["How much does cove lighting cost in a bedroom?","Separate profile or cove construction, LED strip, driver, wiring, switch, dimmer and installation."],
+["How many lights are required for a 2BHK house?","Explain lighting layers, room dimensions, task needs, fixture lumen output, colour temperature and electrical planning."],
+["What is the difference between warm white and neutral white lighting?","Compare colour temperature and visual effect, while recommending sample testing with actual wall and finish materials."],
+["How much does a bedroom bed-back panel cost?","Break down panel width and height, substrate, finish, upholstery, grooves, lighting and electrical scope."],
+["How much does a complete bedroom interior cost?","List wardrobe, bed, side tables, bed-back, dresser, ceiling, lighting, curtains and loose furniture separately."],
+["What is included in a turnkey interior package?","Ask for room-by-room inclusions and exclusions covering cabinetry, electrical, ceiling, painting, appliances, curtains, furniture, taxes and installation."],
+["How much does a home interior designer charge in Hyderabad?","Compare design-only, consultation, project-management and execution fee models, deliverables, revision limits and site visits."],
+["What is the difference between design fees and execution costs?","Explain drawings and specification services versus material, fabrication, labour, installation, taxes and project coordination."],
+["How do I compare two interior design quotations?","Use the same drawings, dimensions, board and finish specifications, hardware models, quantities, exclusions and warranty terms."],
+["How much does a complete 2BHK interior package exclude?","Highlight common exclusions such as appliances, loose furniture, curtains, decor, civil changes, electrical relocation and taxes."],
+["What is the cost of a shoe rack with seating?","Compare width, height, ventilation, drawers, upholstery, mirror and wall fixing."],
+["How much does a crockery unit with glass shutters cost?","Break down cabinet size, glass type, profiles, lighting, shelves, hardware and finish."],
+["How much does a pooja unit with backlit panels cost?","Compare wall-mounted and floor-standing formats, material, lighting, storage, carving and electrical access."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
