@@ -317,6 +317,29 @@ groups["Planning, room sizes & building services"] = [
     ["How should construction stage payments be planned?","Tie payments to measurable completed work, documented inspection and agreed contract milestones."],
     ["What should I check before signing a turnkey construction contract?","Review deliverables, material specifications, approvals, exclusions, taxes, payment terms, defect liability and dispute process."]
   ]
+,
+  "Electrical wiring, plumbing, elevation & site inspections": [
+    ["How many electrical points are required in a 2BHK house?","Create a room-wise appliance and furniture schedule and have a qualified electrician design circuits and protection."],
+    ["What electrical points are needed in a modular kitchen?","List chimney, hob, oven, microwave, refrigerator, dishwasher, purifier and small appliances from exact manuals."],
+    ["Where should TV and internet points be placed in a living room?","Coordinate screen, router, console, furniture, conduit route and accessible power and data connections."],
+    ["How do I plan electrical points in a master bedroom?","Map bedside switches, charging, reading lights, AC, wardrobe lighting and TV or data points."],
+    ["What should be checked before electrical wiring is concealed?","Verify approved routes, conduit, boxes, earthing, circuit schedule and professional test records."],
+    ["Which pipe is best for house plumbing, CPVC or PPR?","Compare intended use, pressure and temperature rating, jointing system, standards and manufacturer instructions."],
+    ["What is the difference between CPVC, UPVC and HDPE pipes?","Explain their different applications and confirm selection with the plumbing designer and product data."],
+    ["How do I choose an overhead water tank for a house?","Estimate demand and supply reliability and verify tank material, capacity, support, access, overflow and cleaning."],
+    ["What is the purpose of a plumbing vent pipe?","Explain drainage pressure balance, trap protection and the need for a code-compliant plumbing design."],
+    ["How do I check drainage slope in a new house?","Use approved plumbing drawings and professional level checks; verify flow and access before concealment."],
+    ["What is the best exterior colour combination for a modern house?","Review large sample panels in daylight and coordinate base, accent, cladding, windows and maintenance."],
+    ["Which material is best for a modern house elevation?","Compare paint, stone, tile and cladding by exposure, fixing, movement, drainage and maintenance."],
+    ["How much does a house elevation design cost in Hyderabad?","Define design deliverables, 3D views, drawings, material schedules, revisions and site support."],
+    ["What should be checked before applying exterior cladding?","Verify substrate, fixing system, movement joints, water detailing, load and product suitability."],
+    ["How do I prevent exterior wall paint from peeling?","Diagnose moisture, substrate weakness and preparation; use compatible primer and coating as specified."],
+    ["What should be inspected before foundation concrete is poured?","Check approved drawings, founding level, reinforcement, cover, formwork and engineer sign-off."],
+    ["What should be checked in column reinforcement?","Verify bar arrangement, laps, anchorage, ties, cover and dimensions against approved structural drawings."],
+    ["What should be checked before an RCC slab pour?","Review formwork, supports, reinforcement, cover, openings, conduits, embedded items and inspection approval."],
+    ["How do I check masonry wall quality at site?","Inspect alignment, level, bond, joints, openings, lintels and approved service routes."],
+    ["What construction quality documents should be maintained?","Keep drawings, material certificates, inspection records, test reports, dated photographs, site instructions and as-built plans."]
+  ]
 };
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
