@@ -52,7 +52,7 @@ function siteOrigin(){
   if(/^https?:\/\//i.test(configured)){
     try{
       const url=new URL(configured)
-      if(/(^|\\.)propulsetechnologies\\.online$/i.test(url.hostname))return 'https://propulsetechnologies.online'
+      if(url.hostname==='propulsetechnologies.online'||url.hostname.endsWith('.propulsetechnologies.online'))return 'https://propulsetechnologies.online'
       return url.origin
     }catch{}
   }
