@@ -134,7 +134,34 @@ groups["Planning, room sizes & building services"] = [
 ["What is a bar bending schedule and why is it important?","Explains reinforcement quantities, cutting lengths, laps, bends and checking against structural drawings."],
 ["When should anti-termite treatment be done during construction?","Describes treatment stages, approved products, applicator instructions and safety precautions."],
 ["How do I prevent cracks between brick walls and RCC columns?","Covers junction detailing, mesh where specified, curing, workmanship and movement assessment."],
-["What should I inspect before taking handover of a new house?","Provides a snag checklist for structure, waterproofing, plumbing, electrical, doors, windows, finishes and documents."]
+["What should I inspect before taking handover of a new house?","Provides a snag checklist for structure, waterproofing, plumbing, electrical, doors, windows, finishes and documents."],
+  "Construction cost, BOQ & contractor quotation questions": [
+    ["What is the house construction cost per square foot in Hyderabad?","Explain built-up area basis, stage of completion, material specification, labour, taxes, site conditions and exclusions; avoid unsupported universal rates."],
+    ["How much does a 2BHK house construction cost in Hyderabad?","Break down built-up area, floor count, structural design, finish level, services, approvals and excluded external works."],
+    ["How much does a 3BHK house construction cost in Hyderabad?","Explain why room count alone is insufficient and compare area, structure, finishes, services and site conditions."],
+    ["What is included in a complete house construction package?","List excavation, structure, masonry, plaster, waterproofing, flooring, doors, windows, electrical, plumbing, paint and fixtures that must be confirmed in writing."],
+    ["What is the difference between grey structure and turnkey construction?","Clarify stage boundaries, finishing scope, services, fixtures, taxes and owner-supplied items."],
+    ["Is labour-only construction cheaper than material-included construction?","Compare procurement control, material wastage, storage, supervision, rate transparency and responsibility for quality."],
+    ["How do I calculate built-up area for a construction estimate?","Explain area statements and ask how balconies, staircases, parking, walls and covered spaces are measured in the contractor's rate."],
+    ["What is a BOQ in house construction?","Describe item descriptions, units, quantities, rates, specifications and how a BOQ supports scope and variation control."],
+    ["How do I compare two house construction quotations?","Compare the same drawings, BOQ, materials, exclusions, taxes, payment stages, timelines and variation rules."],
+    ["What questions should I ask a construction contractor before signing?","Cover references, supervision, drawings, scope, material approvals, safety, milestones, defect handling and written contract terms."],
+    ["What is normally excluded from a house construction quotation?","Check approvals, professional fees, utility charges, compound wall, gate, borewell, sump, landscaping, appliances and external works."],
+    ["How much contingency should I keep for house construction?","Explain project-specific contingency planning and the need to separate known exclusions, provisional sums and owner changes."],
+    ["How do construction costs change for G+1 and G+2 houses?","Discuss foundation and structural design, staircase, services, access, floor area and engineering rather than assuming a fixed multiplier."],
+    ["Does soil testing increase the initial construction budget?","Explain investigation scope and how geotechnical information can reduce uncertainty in foundation decisions."],
+    ["What makes construction cost higher on a narrow plot?","Cover access, material unloading, scaffolding, excavation, neighbour protection, equipment constraints and site logistics."],
+    ["How much does a compound wall cost in Hyderabad?","Break down length, height, foundation, soil, columns, finish, gate and site level; request measured quantities."],
+    ["How much does a sump and overhead water tank cost?","Explain capacity, structure, waterproofing, pumps, plumbing, access and testing requirements."],
+    ["What is the cost of house painting per square foot?","Clarify whether the rate includes putty, primer, number of coats, surface preparation, paint grade, labour and taxes."],
+    ["How do I estimate flooring cost for a new house?","Separate tile or stone supply, laying labour, adhesive or mortar, skirting, wastage, levelling, grout and taxes."],
+    ["What is the cost difference between AAC blocks and red bricks?","Compare unit and installed cost, mortar, plaster, labour, transport, structural implications and approved design."],
+    ["How do I check whether a construction estimate is too low?","Look for missing quantities, vague material allowances, exclusions, unrealistic timelines and unpriced provisional work."],
+    ["Should I pay a large advance to a house contractor?","Discuss milestone-linked payments, procurement evidence, contract terms, receipts, retention and independent legal review."],
+    ["How are extra works and variations priced during construction?","Explain written change orders, measurement, rates, approval before execution and impact on timeline."],
+    ["What documents should I collect at house handover?","List approved drawings, revisions, warranties, test records, invoices, equipment manuals, keys and snag closure."],
+    ["How do I compare construction quality when visiting a completed project?","Suggest checking workmanship, visible finishes, service operation and speaking to owners while noting that concealed work needs records and inspections."]
+  ]
 ];
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
