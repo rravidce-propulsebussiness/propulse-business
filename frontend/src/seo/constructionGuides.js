@@ -424,6 +424,28 @@ export const CONSTRUCTION_GUIDES=[
       section('Approve samples before production','View a large sample in daylight and the room’s artificial lighting. Check fingerprints, texture, cleaning response and colour coordination with flooring, countertop and wall paint. Record the approved code in the final BOQ.')
     ],
   },
+
+  {
+    slug:'vastu-precautions-before-house-planning',
+    type:'construction-guide', category:'Vastu & Home Planning',
+    title:'Vastu Precautions Before Building a House | Balanced Planning Guide | ProPulse',
+    description:'A balanced Vastu planning checklist for entrance, kitchen, bedrooms, toilets, stairs and doors, while keeping structural safety, ventilation, accessibility and approvals first.',
+    heading:'What Vastu precautions should you consider before building a house?',
+    summary:'Discuss Vastu preferences early, when layouts are flexible, but do not compromise structural design, safe circulation, ventilation, sanitation, accessibility or local approval requirements to satisfy a directional rule.',
+    searchTerms:['Vastu precautions before building a house','Vastu tips before house construction','how many doors should a house have according to Vastu','main door direction Vastu house plan','kitchen direction as per Vastu','staircase direction Vastu','Vastu 2BHK house plan checklist','Vastu and house construction planning'],
+    ctaLabel:'Plan Your House Requirement', cta:'/quote?package=standard#construction',
+    note:'Vastu is a traditional belief system with differing regional interpretations. It is not a substitute for structural engineering, building regulations, fire and life safety, sanitation, daylight, ventilation or accessibility requirements.',
+    sections:[
+      section('There is no universal required number of doors','Traditional Vastu discussions sometimes associate door counts or placements with particular beliefs, but there is no single universal count that applies to every plot and floor plan. Plan the number and width of doors around safe exits, room function, privacy, furniture movement and applicable building requirements.'),
+      section('Discuss the main entrance as an early design preference','If entrance direction matters to the household, tell the architect before the plan is frozen. Check the actual plot orientation with a site survey and north reference rather than relying on a phone compass near metal or electrical equipment. Preserve a clear, safe entrance path and weather protection.'),
+      section('Treat kitchen direction as a preference, not a safety rule','Some traditions prefer particular kitchen zones or cooking orientations. Also verify ventilation, chimney duct route, LPG or electrical safety, sink and hob separation, worktop clearances and practical connection to dining areas. Never force a kitchen into a location that creates unsafe services or poor ventilation.'),
+      section('Plan bedrooms and toilets for comfort and building performance','Traditional preferences may guide bedroom placement, but privacy, noise, daylight, cross-ventilation, plumbing stacks, waterproofing and usable furniture clearances remain essential. Toilets need reliable ventilation, drainage falls, waterproofing and accessible maintenance points.'),
+      section('Check staircase placement against structure and circulation','Before relocating a staircase for a Vastu preference, have the architect and structural engineer review headroom, landing dimensions, riser/tread geometry, handrails, escape routes, beam and slab conditions, and the impact on usable rooms. Do not cut or alter structural members without an engineered design.'),
+      section('Keep doors and windows practical','Door swings should not collide with each other, wardrobes, switches or furniture. Windows should support daylight, ventilation, privacy and weather control. The best arrangement is the one that works safely and comfortably within the approved plan.'),
+      section('Use a priority order when preferences conflict','First satisfy plot constraints, local regulations, structural safety, fire access, sanitation, daylight, ventilation and accessibility. Then accommodate Vastu preferences where they fit without undermining those requirements. Record any compromise clearly so family members understand the design decision.'),
+      section('Prepare a Vastu-aware design brief','Share the surveyed plot orientation, family preferences, room requirements, floor count, parking needs and any non-negotiable beliefs with the architect at the start. Ask for two compliant layout options if a preference creates a difficult trade-off, and review the consequences before approving drawings.')
+    ],
+  },
 ]
 
 export function guideBySlug(slug){
