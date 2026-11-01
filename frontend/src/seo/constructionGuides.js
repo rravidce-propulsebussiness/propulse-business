@@ -532,6 +532,69 @@ export const CONSTRUCTION_GUIDES=[
       section('Ask for an itemised installed quotation','Compare dimensions, internal layout, material codes, hardware, finish, taxes, transport, installation, warranty and exclusions. Approve elevations and samples before fabrication.')
     ],
   },
+
+  {
+    slug:'house-construction-cost-per-sqft-hyderabad',
+    type:'construction-guide', category:'Construction Cost Guides',
+    title:'House Construction Cost per Sq Ft in Hyderabad | Estimate Guide | ProPulse',
+    description:'Understand Hyderabad house construction cost estimates per square foot, what is included, what is excluded and how plot, built-up area, structure, finishes and site conditions affect a quote.',
+    heading:'What is the house construction cost per square foot in Hyderabad?',
+    summary:'A per-square-foot figure is only a preliminary comparison tool. Confirm the area basis, specification, structural design, material allowances, labour, taxes, site conditions and exclusions before treating it as a project budget.',
+    searchTerms:['house construction cost per sq ft Hyderabad','construction cost per square foot Hyderabad','house construction estimate Hyderabad','independent house construction cost','villa construction cost per sqft Hyderabad','construction cost including material and labour'],
+    ctaLabel:'Request a Construction Estimate', cta:'/quote?package=standard#construction',
+    note:'Construction rates change with date, location, design, specification, labour and market conditions. This guide does not publish a universal current rate. Request a dated estimate based on drawings, quantities and a written scope.',
+    sections:[
+      section('Clarify what “per square foot” means','Ask whether the rate uses built-up area, slab area, carpet area or another measurement. Confirm how balconies, parking, staircases, terraces, utility areas and common spaces are treated. Different area definitions can make two apparently similar rates incomparable.'),
+      section('Define the construction stage and package','Clarify whether the quote covers excavation, foundation, RCC frame, masonry, plastering, waterproofing, flooring, doors and windows, electrical, plumbing, painting, fixtures and external works. “Grey structure,” “semi-finished” and “complete construction” must be defined in writing.'),
+      section('Check the structural and architectural inputs','A reliable estimate needs the plot survey, floor plans, elevations, structural drawings, soil information where required, service layouts and finish schedule. A generic rate cannot safely replace engineering and quantity assessment.'),
+      section('Understand material and workmanship specifications','Record concrete grade, reinforcement specification, masonry type, cement and aggregate requirements, waterproofing system, plumbing and electrical brands or approved equivalents, tile allowance, door and window specifications and paint system.'),
+      section('Identify site conditions that change cost','Soil and groundwater, access for trucks, demolition, slope, retaining walls, dewatering, neighbouring buildings, utility connections and local approval conditions can materially affect cost.'),
+      section('Separate optional and owner-supplied items','Clarify modular interiors, wardrobes, kitchen appliances, solar, lift, compound wall, landscaping, borewell, sump, overhead tank, gates, loose furniture and premium fixtures. List owner-supplied materials and coordination responsibility.'),
+      section('Compare a BOQ rather than a headline rate','Ask for quantities, units, material specifications, labour scope, wastage assumptions, taxes, transport, testing, scaffolding, safety, debris removal, supervision and payment milestones. Record how variations are measured and approved.'),
+      section('Build a realistic budget and contingency','Keep professional fees, approvals, utility charges, temporary services, escalation exposure and a contingency visible as separate budget lines. Do not spend the entire budget on the contractor’s headline package before accounting for these costs.')
+    ],
+  },
+  {
+    slug:'2bhk-house-construction-cost-hyderabad',
+    type:'construction-guide', category:'Construction Cost Guides',
+    title:'2BHK House Construction Cost in Hyderabad | Scope & Budget Guide | ProPulse',
+    description:'Plan a 2BHK house construction budget in Hyderabad by built-up area, floors, structure, material specifications, finishes, approvals, services and excluded works.',
+    heading:'How much does it cost to construct a 2BHK house in Hyderabad?',
+    summary:'The cost of a 2BHK house depends on built-up area, plot and soil conditions, number of floors, structural design, finish level and what the contractor includes. Start with a measured scope rather than a bedroom-count estimate.',
+    searchTerms:['2BHK house construction cost Hyderabad','2 bedroom house construction cost','2bhk house building estimate Hyderabad','small house construction cost Hyderabad','2bhk construction cost with material','2bhk construction cost labour only'],
+    ctaLabel:'Request a 2BHK Construction Estimate', cta:'/quote?package=standard#construction',
+    note:'Do not use a generic online amount as a fixed quote. Ask for a dated estimate based on the approved plan, built-up area, structural drawings, BOQ, material schedule, taxes and exclusions.',
+    sections:[
+      section('Measure the built-up area and floor count','Confirm external dimensions, wall thicknesses, staircases, balconies, utility areas and any future-floor provision. A compact 2BHK on one floor and a two-storey house with the same bedroom count are different projects.'),
+      section('Freeze the plan and room requirements','List bedroom sizes, attached or common toilets, kitchen, dining, living, utility, parking and storage. Changes to spans, openings, staircase and wet areas can affect structure and services.'),
+      section('Check soil and foundation assumptions','Foundation cost depends on site investigation, soil profile, groundwater, loads and structural design. Do not copy a neighbour’s footing size or rely only on a generic per-square-foot rate.'),
+      section('Separate labour-only and material-included quotations','For material-included work, list brands or approved equivalents, grades, quantities and who controls procurement. For labour-only work, specify who arranges materials, unloading, storage, wastage and quality checks.'),
+      section('List structural, masonry and finishing scope','Clarify excavation, foundation, RCC, steel, concrete, blockwork, plaster, waterproofing, flooring, doors, windows, painting, plumbing, electrical and fixtures. Identify the stage at which the house is considered complete.'),
+      section('Budget for approvals and external works','Check applicable local permissions and charges with the relevant authority and qualified professional. Compound wall, gate, sump, borewell, septic or sewer connection, paving and landscaping may be separate.'),
+      section('Compare estimates with the same specification','Ask for a BOQ, drawing references, material schedule, taxes, transport, testing, timeline, supervision, payment milestones and variation rules. Compare exclusions line by line.'),
+      section('Plan contingency and future changes','Set aside a contingency for site conditions and approved changes. Decide future-floor provisions, solar, AC routes and service shafts before structural and service drawings are finalised.')
+    ],
+  },
+  {
+    slug:'how-to-compare-house-construction-quotations',
+    type:'construction-guide', category:'Contractor Selection',
+    title:'How to Compare House Construction Quotations | BOQ Checklist | ProPulse',
+    description:'Compare house construction quotations fairly using drawings, BOQ quantities, material specifications, labour scope, exclusions, taxes, milestones, warranties and variation terms.',
+    heading:'How do you compare two house construction quotations?',
+    summary:'The lowest headline price is not necessarily the lowest project cost. Compare both quotations against the same drawings, quantities, specifications, exclusions and payment terms.',
+    searchTerms:['how to compare construction quotations','house construction quotation checklist','construction BOQ comparison','builder quotation comparison India','what to check in house construction estimate','construction contractor quote inclusions exclusions'],
+    ctaLabel:'Compare Your Construction Requirement', cta:'/quote?package=standard#construction',
+    sections:[
+      section('Give every contractor the same information','Share the same architectural and structural drawings, area statement, finish schedule, site details, floor count and service requirements. Different inputs produce different assumptions and cannot be compared fairly.'),
+      section('Check the measurement and BOQ basis','Review item descriptions, units, quantities, rates and totals. Confirm whether excavation, reinforcement, concrete, masonry, plaster, waterproofing and finishes are measured or included as lump sums.'),
+      section('Compare specifications rather than brand names alone','Check grade, thickness, standard, product range, approved equivalent and installation method for each major material. A brand list without product specifications is not enough.'),
+      section('Read inclusions and exclusions carefully','Identify approvals, professional fees, testing, transport, unloading, scaffolding, safety, debris removal, temporary power and water, compound wall, tanks, paving and external services.'),
+      section('Review taxes, escalation and variation rules','Confirm applicable taxes, validity period, price escalation assumptions, provisional sums and how extra work is quoted, approved and measured. Do not rely on verbal promises for scope changes.'),
+      section('Check timeline and payment milestones','Tie payments to measurable work stages and agreed deliverables. Review mobilisation advance, material procurement, inspection points, delay handling and retention or snag closure terms.'),
+      section('Verify supervision, quality records and warranty','Ask who supervises the site, how inspections are recorded, who approves concealed work, how defects are reported and what warranty applies to workmanship and products.'),
+      section('Make a side-by-side comparison sheet','Compare scope, quantities, specifications, exclusions, taxes, timeline, payment schedule and change-order rules. Ask each contractor to clarify gaps in writing before selecting one.')
+    ],
+  },
 ]
 
 export function guideBySlug(slug){
