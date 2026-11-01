@@ -263,7 +263,14 @@ function staticJsonLd(route){
   if(route.type==='cost-guide')page.about={'@type':'Service',name:'House construction cost planning',areaServed:{'@type':'City',name:'Hyderabad, Telangana, India'}}
   if(route.type==='city-service'||route.type==='local-service')page.about={'@type':'Service',name:route.serviceSlug==='construction'?'Home construction':route.serviceSlug==='interior-designers'?'Interior design':'Real estate services',areaServed:route.type==='local-service'?{'@type':'Place',name:route.localityName+', Hyderabad, Telangana, India'}:{'@type':'City',name:'Hyderabad, Telangana, India'}}
   if(route.type==='state-construction-hub'||route.type==='district-construction')page.about={'@type':'Service',name:'Home construction',areaServed:route.type==='district-construction'?{'@type':'AdministrativeArea',name:route.districtName+' district, '+route.stateName+', India'}:{'@type':'AdministrativeArea',name:route.stateName+', India'}}
-  const data=[{'@context':'https://schema.org','@type':'Organization',name:SITE_NAME,url:absolute('/'),logo:absolute('/brand/propulse-logo.png')},page,{'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:breadcrumbItems(route)}]
+  const organization={'@context':'https://schema.org','@type':'Organization',name:SITE_NAME,url:absolute('/'),logo:absolute('/brand/propulse-logo.png')}
+  const website={'@context':'https://schema.org','@type':'WebSite',name:SITE_NAME,url:absolute('/'),inLanguage:'en-IN',description:route.path==='/'?route.description:undefined}
+  const data=route.path==='/'?[
+    organization,
+    website,
+    page,
+    {'@context':'https://schema.org','@type':'Service',name:'House and villa construction',serviceType:'Residential house construction',description:'Plan residential house and villa construction in Hyderabad with a defined project scope, material preferences and estimate request.',areaServed:{'@type':'City',name:'Hyderabad',containedInPlace:{'@type':'State',name:'Telangana'}},provider:{'@type':'Organization',name:SITE_NAME,url:absolute('/')},url:absolute('/')},
+  ]:[organization,page,{'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:breadcrumbItems(route)}]
   return JSON.stringify(data).replaceAll('</script','<\\/script')
 }
 
