@@ -49,8 +49,8 @@ function normalized(input,current={}){
   const planUrl=mediaUrl(field('planUrl','plan_url'),'Plan or drawing');
   const cover=coverImageUrl||imageUrls[0]||'';
   if(!title)throw inputError('Enter the actual project name');
-  if(published&&(!projectType||!locationText||!areaText||!budgetText||!completionYear||!cover)){
-    throw inputError('To publish, enter project name, type, location, area, actual budget, completion year and at least one real project photo. Save as draft if details are incomplete.');
+  if(published&&(!projectType||!locationText||!completionYear||(!cover&&!videoUrl))){
+    throw inputError('To publish, enter a project name, type, location, completion year and at least one real project video or photo. Save incomplete work privately.');
   }
   return {title,projectType,locationText,areaText,budgetText,description,packageName,completionYear,coverImageUrl:cover,imageUrls,videoUrl,planUrl,isPublished:published};
 }
