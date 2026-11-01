@@ -40,6 +40,7 @@ const urls=[];
 global.fetch=async(uri,opts={})=>{
   const url=String(uri);urls.push(url);
   if(url.endsWith('/robots.txt'))return new Response('User-agent: *\nAllow: /\nSitemap: '+base+'/video-sitemap.xml',{status:200});
+   if(url.endsWith('/projects'))return new Response('<main data-seo-project-gallery="true"><a href="/projects/'+slug+'">Project</a></main>',{status:200,headers:{'Content-Type':'text/html'}});
   if(url.endsWith('/video-sitemap.xml'))return new Response(xml,{status:200,headers:{'Content-Type':'application/xml'}});
   if(url===watch)return new Response(html,{status:200,headers:{'Content-Type':'text/html'}});
   if(url===poster)return new Response(Buffer.concat([Buffer.from([0xff,0xd8,0xff]),Buffer.alloc(1300,1)]),{status:200,headers:{'Content-Type':'image/jpeg'}});
@@ -53,6 +54,7 @@ global.fetch=async(uri,opts={})=>{
     const passing=await audit({origin:base,limit:5});
     assert.equal(passing.status,'pass',JSON.stringify(passing.errors));
     assert.equal(passing.totalVideos,1);
+    assert.equal(passing.projectsChecked,1,'Daily monitoring checks live HTML for all linked projects');
     assert.equal(passing.checked,1);
     assert(urls.includes(signed),'Audit must check actual MP4 bytes rather than only a signed redirect');
     const originalFetch=global.fetch;
