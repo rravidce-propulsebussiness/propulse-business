@@ -13,7 +13,15 @@ const dist=path.resolve(here,'../dist')
 const indexPath=path.join(dist,'index.html')
 const template=fs.readFileSync(indexPath,'utf8')
 const configuredOrigin=String(process.env.VITE_PUBLIC_SITE_URL||'').trim().replace(/\/+$/,'')
-const origin=/^https?:\/\//i.test(configuredOrigin)?configuredOrigin:''
+const origin=(()=>{
+  if(!/^https?:\/\//i.test(configuredOrigin))return ''
+  try{
+    const parsed=new URL(configuredOrigin)
+    // The public ProPulse site is HTTPS-only. Keep local and preview origins intact.
+    if(parsed.hostname==='propulsetechnologies.online')parsed.protocol='https:'
+    return parsed.origin
+  }catch{return ''}
+})()
 const googleSiteVerification=String(process.env.VITE_GOOGLE_SITE_VERIFICATION||'').trim()
 
 function escapeHtml(value=''){
