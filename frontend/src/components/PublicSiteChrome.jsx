@@ -73,7 +73,7 @@ export function PublicHeader() {
       </nav>
 
       <div className="public-site-actions">
-        <Link className="public-site-quote" to="/quote#interiors">Get Free Quote <ArrowIcon/></Link>
+        <Link className="public-site-quote" to="/quote#construction">Get Construction Estimate <ArrowIcon/></Link>
         <Link className="public-site-pro" to="/professionals">For Professionals</Link>
       </div>
 
@@ -97,7 +97,7 @@ export function PublicHeader() {
           <Link to="/login">Professional Login</Link>
         </nav>
         <div className="public-site-mobile-actions">
-          <Link className="public-site-quote" to="/quote#interiors">Get Free Quote <ArrowIcon/></Link>
+          <Link className="public-site-quote" to="/quote#construction">Get Construction Estimate <ArrowIcon/></Link>
           <Link className="public-site-pro" to="/professionals">For Professionals</Link>
         </div>
       </div>
