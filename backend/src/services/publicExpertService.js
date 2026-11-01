@@ -518,6 +518,32 @@ async function listIndexableProjectPaths(){
   });
 }
 
+// Discoverable public marketplace profiles obey the directory's eligibility
+// rules. Hidden/inactive, verification/plan-ineligible and empty profiles are
+// excluded from sitemap discovery.
+async function listIndexableIndependentProfiles(){
+  const settings=await expertDirectoryService.getSettings();
+  if(!settings.directoryEnabled)return [];
+  const params=[];
+  const conditions=["COALESCE(beds.is_official,FALSE)=FALSE"];
+  addEligibilityConditions(settings,params,conditions);
+  conditions.push("("+[
+    "COALESCE(TRIM(bp.public_summary),'')<>''",
+    "EXISTS(SELECT 1 FROM business_profile_services bps WHERE bps.business_profile_id=bp.id AND bps.is_active=TRUE)",
+    "EXISTS(SELECT 1 FROM business_profile_projects bpp WHERE bpp.business_profile_id=bp.id AND bpp.is_published=TRUE AND bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE))",
+  ].join(' OR ')+")");
+  const result=await pool.query(
+    'SELECT bp.id,bp.updated_at FROM business_profiles bp '+
+    'JOIN users u ON u.id=bp.user_id '+
+    'LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id '+
+    'WHERE '+conditions.join(' AND ')+
+    ' ORDER BY bp.updated_at DESC,bp.id DESC LIMIT 4500',params);
+  return result.rows.map(row=>{
+    const date=row.updated_at?new Date(row.updated_at):null;
+    return {path:'/experts/'+row.id,lastmod:date&&!Number.isNaN(date.getTime())?date.toISOString().slice(0,10):null};
+  });
+}
+
 async function getPublicExpert(expertId){
   const id=Number(expertId);
   if(!Number.isInteger(id)||id<=0)return null;
@@ -585,4 +611,4 @@ async function listIndexableOfficialProfiles(){
   });
 }
 
-module.exports={listIndexableOfficialProfiles,listPublicExperts,listRecentProjects,listRecentProjectVideos,getPublicExpert,getPublicProject,listIndexableProjectPaths,listIndexableVideoEntries};
+module.exports={listIndexableIndependentProfiles,listIndexableOfficialProfiles,listPublicExperts,listRecentProjects,listRecentProjectVideos,getPublicExpert,getPublicProject,listIndexableProjectPaths,listIndexableVideoEntries};
