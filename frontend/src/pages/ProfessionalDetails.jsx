@@ -44,6 +44,48 @@ export default function ProfessionalDetails(){
   const videos=projects.filter(x=>x.video_url).slice().sort((a,b)=>new Date(b.video_published_at||0)-new Date(a.video_published_at||0))
   const drawings=projects.filter(x=>x.plan_url)
 
+  // SeoManager defaults unknown dynamic paths to noindex. The public profile
+  // endpoint has already enforced business visibility; reflect that here after
+  // client-side navigation and preserve the server JSON-LD on initial loads.
+  useEffect(()=>{
+    if(!profile)return;
+    const official=profile.is_official===true;
+    const canonical='https://propulsetechnologies.online/experts/'+profile.business_profile_id;
+    const title=official
+      ?'ProPulse Construction & Interior Design Services in Hyderabad | ProPulse'
+      :String(profile.business_name||'Professional').trim()+' | Construction & Interior Professional | ProPulse';
+    const summary=String(profile.public_summary||'').replace(/[*#_]/g,'').replace(/\s+/g,' ').trim();
+    const description=summary.slice(0,158)||'View the published construction and interior services, completed projects and service areas on ProPulse.';
+    document.title=title;
+    for(const [name,value] of [['description',description],['robots','index,follow,max-image-preview:large'],['googlebot','index,follow,max-image-preview:large'],['twitter:title',title],['twitter:description',description]]){
+      let tag=document.head.querySelector('meta[name="'+name+'"]');
+      if(!tag){tag=document.createElement('meta');tag.name=name;document.head.appendChild(tag)}
+      tag.content=value;
+    }
+    for(const [key,value] of [['og:title',title],['og:description',description],['og:url',canonical],['og:type','profile']]){
+      let tag=document.head.querySelector('meta[property="'+key+'"]');
+      if(!tag){tag=document.createElement('meta');tag.setAttribute('property',key);document.head.appendChild(tag)}
+      tag.content=value;
+    }
+    let link=document.head.querySelector('link[rel="canonical"]');
+    if(!link){link=document.createElement('link');link.rel='canonical';document.head.appendChild(link)}
+    link.href=canonical;
+    document.head.querySelector('script[data-propulse-seo="jsonld"]')?.remove();
+    let schema=document.head.querySelector('script[data-propulse-expert-seo]');
+    const serverMatch=schema?.dataset.propulseExpertSeo==='server'&&schema.textContent?.includes(canonical);
+    if(!serverMatch){
+      if(!schema){schema=document.createElement('script');schema.type='application/ld+json';document.head.appendChild(schema)}
+      schema.dataset.propulseExpertSeo='client';
+      const cities=[...new Set((profile.locations||[]).map(item=>item.cityName).filter(Boolean))];
+      schema.textContent=JSON.stringify({'@context':'https://schema.org','@graph':[
+        {'@type':'WebPage',name:title,url:canonical,description,inLanguage:'en-IN'},
+        {'@type':official?'HomeAndConstructionBusiness':'Organization',name:profile.business_name,url:canonical,
+          description,...(cities.length?{areaServed:cities.map(city=>({'@type':'City',name:city}))}:{})}
+      ]});
+    }
+    return()=>document.head.querySelector('script[data-propulse-expert-seo]')?.remove();
+  },[profile]);
+
   async function sendCallback(event){
     event.preventDefault()
     if(sending||sent)return
@@ -69,7 +111,9 @@ export default function ProfessionalDetails(){
               <div className="pr-meta">{profile.years_experience!=null&&<span>{profile.years_experience} years experience</span>}{locationNames.length>0&&<span>{locationNames.slice(0,2).join(' · ')}</span>}</div>
             </div>
           </div>
-          <div className="pr-cover-actions"><a href="#pricing" className="pr-primary">Get Instant Package Quote →</a><a href="#callback" className="pr-secondary">Request Callback</a></div>
+          <div className="pr-cover-actions">{profile.is_official
+            ?<><Link to="/contact#direct-project" className="pr-primary">Request ProPulse Consultation →</Link><a href="#pricing" className="pr-secondary">Explore Packages</a></>
+            :<><a href="#pricing" className="pr-primary">Get Instant Package Quote →</a><a href="#callback" className="pr-secondary">Request Callback</a></>}</div>
         </header>
 
         <nav className="pr-sticky-nav" aria-label="Professional profile sections">
@@ -96,7 +140,7 @@ export default function ProfessionalDetails(){
                 {safeUrl(project.cover_image_url)?<img src={safeUrl(project.cover_image_url)} alt={project.title} loading="lazy"/>:<div className="pr-project-fallback">Project showcase</div>}
                 <div className="pr-project-text"><span>{[project.project_type,project.completion_year].filter(Boolean).join(' · ')||'Project'}</span><h3>{project.title}</h3><p>{project.description||'Published professional project.'}</p>
                   <small>{[project.location_text,project.area_text].filter(Boolean).join(' · ')}</small>
-                  <div className="pr-project-links"><Link to={'/projects/project-'+project.id}>View project details →</Link>{safeUrl(project.video_url)&&<a href={safeUrl(project.video_url)} target="_blank" rel="noreferrer">Watch video ↗</a>}{safeUrl(project.plan_url)&&<a href={safeUrl(project.plan_url)} target="_blank" rel="noreferrer">View drawing ↗</a>}{safeUrl(project.brochure_url)&&<a href={safeUrl(project.brochure_url)} target="_blank" rel="noopener noreferrer">Specifications PDF ↗</a>}</div>
+                  <div className="pr-project-links"><Link to={'/projects/'+(project.seo_slug||'project-'+project.id)}>View project details →</Link>{safeUrl(project.video_url)&&<a href={safeUrl(project.video_url)} target="_blank" rel="noreferrer">Watch video ↗</a>}{safeUrl(project.plan_url)&&<a href={safeUrl(project.plan_url)} target="_blank" rel="noreferrer">View drawing ↗</a>}{safeUrl(project.brochure_url)&&<a href={safeUrl(project.brochure_url)} target="_blank" rel="noopener noreferrer">Specifications PDF ↗</a>}</div>
                 </div>
               </article>)}</div>:<div className="pr-empty">No completed projects have been published yet.</div>}
             </section>
@@ -145,13 +189,16 @@ export default function ProfessionalDetails(){
 
             <section id="callback" className="pr-panel pr-callback-panel">
               <span className="pr-label">CONTACT THROUGH PROPULSE</span><h2>Request a Callback</h2>
-              <p>Send your requirement to {profile.business_name}. This request may also be offered to other relevant ProPulse professionals. Contact access stays protected until accepted or purchased.</p>
-              {sent?<div className="pr-success" role="status"><strong>Callback request received.</strong><p>Your enquiry has been recorded. ProPulse will help coordinate the next steps.</p></div>:
+              <p>{profile.is_official?'Contact ProPulse directly about your construction, renovation or interior project. Official enquiries are separate from marketplace leads.':'Send your requirement to this professional through the ProPulse marketplace. Your request may also be offered to other relevant professionals.'}</p>
+              {profile.is_official?<Link to="/contact#direct-project" className="pr-primary">Contact ProPulse Directly →</Link>:sent?<div className="pr-success" role="status"><strong>Callback request received.</strong><p>Your enquiry has been recorded. ProPulse will help coordinate the next steps.</p></div>:
               <ProfessionalCallbackRequirementForm value={request} onChange={setRequest} onSubmit={sendCallback} busy={sending} error={requestError} submitLabel="Send Callback Request"/>}
             </section>
           </div>
           <aside className="pr-side">
-            <div className="pr-side-card"><span className="pr-label">YOUR CONNECTION IS PROTECTED</span><h3>Contact through ProPulse</h3><p>Direct phone numbers and email addresses are not shared publicly. Submit a callback request for coordinated follow-up.</p><div className="pr-masked"><span>Phone</span><strong>••••••••••</strong></div><div className="pr-masked"><span>Email</span><strong>Protected</strong></div><a className="pr-primary" href="#callback">Request Callback →</a></div>
+            <div className="pr-side-card"><span className="pr-label">{profile.is_official?'OFFICIAL PROPULSE SERVICES':'YOUR CONNECTION IS PROTECTED'}</span>
+              <h3>{profile.is_official?'Work Directly With ProPulse':'Contact through ProPulse'}</h3>
+              <p>{profile.is_official?'Request direct construction and interior execution through ProPulse. This is not a professional lead purchase.':'Direct phone numbers and email addresses are not shared publicly. Submit a callback request for coordinated follow-up.'}</p>
+              {profile.is_official?<Link className="pr-primary" to="/contact#direct-project">Contact ProPulse →</Link>:<><div className="pr-masked"><span>Phone</span><strong>••••••••••</strong></div><div className="pr-masked"><span>Email</span><strong>Protected</strong></div><a className="pr-primary" href="#callback">Request Callback →</a></>}</div>
           </aside>
         </div>
       </>}

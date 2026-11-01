@@ -3,6 +3,7 @@ const fs=require('fs');
 const path=require('path');
 const {renderProjectHtml}=require('../services/projectSeoPageService');
 const {renderProjectListingHtml}=require('../services/projectListingSeoService');
+const {renderPublicExpertHtml}=require('../services/publicExpertSeoPageService');
 const coverService=require('../services/projectCoverService');
 const videoSeo=require('../services/projectVideoSeoService');
 const s3Storage=require('../services/s3PrivateObjectStorageService');
@@ -164,8 +165,10 @@ router.get('/robots.txt',(req,res)=>{
 router.get('/sitemap.xml',async(req,res)=>{
   const origin=safeOrigin(req);
   let projects=[];
+  let officialProfiles=[];
   try{
     projects=await publicExpertService.listIndexableProjectPaths();
+    officialProfiles=await publicExpertService.listIndexableOfficialProfiles();
   }catch(error){
     // A temporary database outage must not make the static site sitemap fail.
     console.error('Public project sitemap lookup failed:',error?.message||error);
@@ -175,6 +178,7 @@ router.get('/sitemap.xml',async(req,res)=>{
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     ...PUBLIC_PATHS.map(path=>'  <url><loc>'+xmlEscape(origin+(path==='/'?'/':path))+'</loc></url>'),
+    ...officialProfiles.map(profile=>'  <url><loc>'+xmlEscape(origin+profile.path)+'</loc>'+ (profile.lastmod?'<lastmod>'+xmlEscape(profile.lastmod)+'</lastmod>':'')+'</url>'),
     ...projects.map(project=>'  <url><loc>'+xmlEscape(origin+project.path)+'</loc>'+
       (project.lastmod?'<lastmod>'+xmlEscape(project.lastmod)+'</lastmod>':'')+'</url>'),
     '</urlset>',
@@ -385,6 +389,43 @@ router.get('/projects/:projectKey',async(req,res)=>{
     res.setHeader('X-Robots-Tag','noindex');
     res.setHeader('Retry-After','30');
     return res.status(503).type('text/plain').send('Project page temporarily unavailable');
+  }
+});
+
+
+// Public professional profiles must be returned as business-specific initial
+// HTML, not the generic React shell. Exclude private/hidden or ineligible ones.
+router.get('/experts/:expertId',async(req,res)=>{
+  const key=String(req.params.expertId||'');
+  if(!/^[1-9]\d*$/.test(key)){
+    res.setHeader('X-Robots-Tag','noindex');
+    return res.status(404).type('text/plain').send('Professional not found');
+  }
+  try{
+    const profile=await publicExpertService.getPublicExpert(key);
+    if(!profile){
+      res.setHeader('X-Robots-Tag','noindex');
+      res.setHeader('Cache-Control','no-store');
+      return res.status(404).type('text/plain').send('Public professional profile not found');
+    }
+    const builtIndex=[
+      path.resolve(__dirname,'../../hostinger-frontend/index.html'),
+      path.resolve(__dirname,'../../../frontend/dist/index.html'),
+    ].find(file=>fs.existsSync(file));
+    if(!builtIndex){
+      res.setHeader('Retry-After','10');
+      res.setHeader('X-Robots-Tag','noindex');
+      return res.status(503).type('text/plain').send('Professional profile temporarily unavailable');
+    }
+    const {html}=renderPublicExpertHtml(fs.readFileSync(builtIndex,'utf8'),profile);
+    res.setHeader('Cache-Control','no-cache,must-revalidate');
+    return res.status(200).type('html').send(html);
+  }catch(error){
+    console.error('Professional SEO page unavailable:',error?.message||error);
+    res.setHeader('Retry-After','30');
+    res.setHeader('Cache-Control','no-store');
+    res.setHeader('X-Robots-Tag','noindex');
+    return res.status(503).type('text/plain').send('Professional profile temporarily unavailable');
   }
 });
 
