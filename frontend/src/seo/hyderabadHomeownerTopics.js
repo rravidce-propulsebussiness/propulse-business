@@ -202,6 +202,29 @@ groups["Planning, room sizes & building services"] = [
     ["How do I check concrete quality before pouring a slab?","Cover approved mix, formwork, reinforcement inspection, cover, embedded services, sampling and pour records."],
     ["What should I do if a material test fails?","Explain segregation, written notification, engineer review, traceability and documented corrective action before use."]
   ]
+,
+  "Electrical planning, plumbing & waterproofing questions": [
+    ["How many electrical points are needed in a new house?","Explain room-wise planning based on furniture, appliances, usage and a qualified electrical design rather than a fixed count."],
+    ["What electrical points are required in a 2BHK house?","Build a room schedule for lights, fans, general sockets, kitchen appliances, AC, geyser, TV and data."],
+    ["Where should switches be placed in a bedroom?","Coordinate door swing, bed, bedside tables, wardrobe and accessibility with the electrical layout."],
+    ["How many plug points are required in a modular kitchen?","List appliance and countertop requirements and ask a qualified electrician to assess loads, circuits and safe locations."],
+    ["What is a dedicated electrical circuit for an appliance?","Explain why higher-load equipment may need a separately designed circuit and protection selected by a qualified electrician."],
+    ["Where should the distribution board be placed in a house?","Discuss access, safety, service clearance and coordination with the electrical professional and applicable rules."],
+    ["What should be checked before electrical wiring is concealed?","Review conduit routes, box positions, cable schedule, earthing, circuit plan, photographs and inspection records."],
+    ["How do I plan TV, router and internet points?","Coordinate TV wall elevation, console, router location, power, data, conduits and future access."],
+    ["Where should AC drain and electrical points be planned?","Coordinate indoor and outdoor units, drain route, access, electrical requirements and manufacturer guidance."],
+    ["What electrical safety checks are needed in a bathroom?","Explain appropriate protection, earthing, equipment placement and inspection by a qualified electrician."],
+    ["How many water points are required in a new house?","Prepare a fixture schedule for kitchen, bathrooms, utility, washing machine, RO, garden and outdoor taps."],
+    ["What is a plumbing pressure test in a new house?","Explain the purpose of specified pressure or leak tests, documented results and rectification before pipes are concealed."],
+    ["When should plumbing pressure testing be done?","Explain that concealed supply lines should be tested at the stage and by the method specified before covering."],
+    ["How do I check bathroom drainage slope?","Explain finished levels, floor trap position, water flow and professional inspection before tiling."],
+    ["What is the difference between soil pipe and waste pipe?","Describe their general roles in a drainage system and why venting and sizing follow plumbing design."],
+    ["Why does a bathroom smell after renovation?","Discuss traps, seals, venting, drainage defects and dry floor traps; recommend plumbing inspection rather than masking odour."],
+    ["How do I prevent water leakage from a bathroom?","Cover substrate preparation, compatible waterproofing, pipe junctions, curing, testing and correct drainage detailing."],
+    ["What is a bathroom pond test?","Explain its role in checking a waterproofed area and why duration, water level, observation and approval follow the specified system."],
+    ["How do I waterproof a terrace before monsoon?","Recommend inspection of cracks, outlets, slopes, joints and existing system, followed by a compatible repair specification and testing."],
+    ["What should I check before closing a plumbing shaft?","Verify pipe joints, supports, access panels, cleanouts, vents, leak tests, photographs and as-built records."]
+  ]
 };
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
