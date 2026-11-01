@@ -2,6 +2,7 @@ const express=require('express');
 const fs=require('fs');
 const path=require('path');
 const {renderProjectHtml}=require('../services/projectSeoPageService');
+const coverService=require('../services/projectCoverService');
 
 const router=express.Router();
 const publicExpertService=require('../services/publicExpertService');
@@ -180,6 +181,40 @@ router.get('/sitemap.xml',async(req,res)=>{
   res.send(body);
 });
 
+// Stable publicly eligible cover URLs replace short-lived R2 presigned URLs
+// in social previews. A hidden/unpublished project always returns 404.
+router.get('/project-cover/:projectKey',async(req,res)=>{
+  const value=String(req.params.projectKey||'').trim();
+  if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)||value.length>100){
+    res.setHeader('X-Robots-Tag','noindex');
+    return res.status(404).type('text/plain').send('Cover unavailable');
+  }
+  const match=/^project-([1-9]\d*)$/.exec(value);
+  try{
+    const project=await publicExpertService.getPublicProject(match?match[1]:value,{materializeMedia:false});
+    const photo=coverService.selectCover(project);
+    if(!photo){
+      res.setHeader('Cache-Control','no-store');
+      res.setHeader('X-Robots-Tag','noindex');
+      return res.status(404).type('text/plain').send('Cover unavailable');
+    }
+    const {buffer,contentType}=await coverService.readCover(photo);
+    res.setHeader('Cache-Control','public, max-age=300');
+    res.setHeader('X-Content-Type-Options','nosniff');
+    return res.status(200).type(contentType).send(buffer);
+  }catch(error){
+    if(error?.code==='COVER_NOT_FOUND'||error?.providerStatus===404||error?.code==='ENOENT'){
+      res.setHeader('Cache-Control','no-store');
+      res.setHeader('X-Robots-Tag','noindex');
+      return res.status(404).type('text/plain').send('Cover unavailable');
+    }
+    console.error('Project cover unavailable:',error?.message||error);
+    res.setHeader('Cache-Control','no-store');
+    res.setHeader('X-Robots-Tag','noindex');
+    return res.status(503).type('text/plain').send('Project cover temporarily unavailable');
+  }
+});
+
 // Initial project HTML contains the actual published case study and JSON-LD.
 // User-facing React navigation still hydrates the same page with photos/videos.
 router.get('/projects/:projectKey',async(req,res)=>{
@@ -194,7 +229,7 @@ router.get('/projects/:projectKey',async(req,res)=>{
   }
   const idMatch=/^project-([1-9]\d*)$/.exec(key);
   try{
-    const project=await publicExpertService.getPublicProject(idMatch?idMatch[1]:key);
+    const project=await publicExpertService.getPublicProject(idMatch?idMatch[1]:key,{materializeMedia:false});
     if(!project){
       res.setHeader('X-Robots-Tag','noindex');
       res.setHeader('Cache-Control','no-store');
