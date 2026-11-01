@@ -1176,3 +1176,26 @@
 @media(prefers-reduced-motion:reduce){
   .hc-home .hc-project-grid article,.hc-home .hc-projects-more a{transition:none}
 }
+
+
+/* LIGHT ARCHITECTURAL HERO — remove the dark navy hero treatment */
+.hc-home .hc-premium-hero{background:#f7f5f0 !important;color:#252b32 !important;border-bottom:1px solid #e9e2d8}
+.hc-home .hc-premium-hero::before{opacity:.22;background-image:linear-gradient(rgba(37,43,50,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(37,43,50,.035) 1px,transparent 1px)}
+.hc-home .hc-premium-kicker{color:#e85d0a;background:#fff0e5;border:1px solid #f6c39f;border-radius:999px;padding:10px 14px;letter-spacing:.14em}
+.hc-home .hc-premium-hero h1,.hc-home .hc-premium-hero h1 em{color:#252b32 !important}
+.hc-home .hc-premium-hero h1 strong{color:#f36b12 !important}
+.hc-home .hc-premium-hero-copy>p,.hc-home .hc-premium-hero .hc-premium-typewriter{color:#39434b !important}
+.hc-home .hc-premium-hero .hc-premium-typewriter-lead{color:#303941 !important}
+.hc-home .hc-premium-hero .hc-premium-typewriter-accent{color:#f36b12 !important}
+.hc-home .hc-premium-hero .hc-premium-typewriter-caret{background:#f36b12 !important}
+.hc-home .hc-premium-hero .hc-business-intro{color:#68737b !important}
+.hc-home .hc-premium-hero .hc-premium-actions .hc-hero-cta-primary{background:#f36b12 !important;border:1px solid #f36b12 !important;color:#fff !important;box-shadow:0 12px 26px rgba(243,107,18,.2)}
+.hc-home .hc-premium-hero .hc-premium-actions .hc-hero-cta-primary:hover{background:#df5b08 !important;border-color:#df5b08 !important}
+.hc-home .hc-premium-hero .hc-premium-actions .hc-hero-cta-secondary{color:#303941 !important;border:1px solid #ded8cf !important;background:#fff !important}
+.hc-home .hc-premium-hero .hc-premium-actions .hc-hero-cta-secondary:hover{border-color:#f36b12 !important;background:#fff8f2 !important}
+.hc-home .hc-premium-hero .hc-premium-trust{border:1px solid #e6ded4;background:#fff;box-shadow:0 12px 32px rgba(37,43,50,.055)}
+.hc-home .hc-premium-hero .hc-premium-trust span{color:#303941}
+.hc-home .hc-premium-hero .hc-premium-trust span+span{border-left:1px solid #eee8e0}
+.hc-home .hc-premium-hero .hc-premium-trust svg{color:#f36b12}
+.hc-home .hc-premium-hero .hc-premium-scene{border-color:#e5ddd3;box-shadow:0 20px 55px rgba(37,43,50,.12)}
+@media(max-width:620px){.hc-home .hc-premium-hero{padding:36px 0 42px}.hc-home .hc-premium-kicker{font-size:10px;line-height:1.5;padding:9px 12px}.hc-home .hc-premium-hero .hc-premium-trust{background:#fff}}
