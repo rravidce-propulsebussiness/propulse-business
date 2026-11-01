@@ -10,6 +10,7 @@ import {SEO_FAQ_CATEGORIES,homeownerSeoFaqs} from '../src/seo/faqKnowledge.js'
 import {interiorNeeds,interiorChecklist} from '../src/seo/interiorSeo.js'
 import {HYDERABAD_HOMEOWNER_TOPIC_GROUPS} from '../src/seo/hyderabadHomeownerTopics.js'
 import {INTERIOR_HOMEOWNER_TOPIC_GROUPS} from '../src/seo/interiorHomeownerTopics.js'
+import {PUBLISHED_HOMEOWNER_ANSWERS} from '../src/seo/homeownerPublishedAnswers.js'
 
 const here=path.dirname(fileURLToPath(import.meta.url))
 const dist=path.resolve(here,'../dist')
@@ -259,8 +260,17 @@ function blogHubContent(route){
   if(route.type==='construction-blog'||route.type==='interior-blog'){
     const interior=route.type==='interior-blog'
     const groups=interior?INTERIOR_HOMEOWNER_TOPIC_GROUPS:HYDERABAD_HOMEOWNER_TOPIC_GROUPS.filter(group=>group.category!=='Interior design & renovation searches')
-    const topics=groups.map(group=>'<details><summary>'+escapeHtml(group.category)+' ('+group.topics.length+' questions)</summary><ol>'+group.topics.map(topic=>'<li><strong>'+escapeHtml(topic.title)+'</strong><p>'+escapeHtml(topic.description)+'</p></li>').join('')+'</ol></details>').join('')
-    return '<section style="padding:10px 0 42px"><h2>'+escapeHtml(route.heading)+'</h2><p style="max-width:850px;line-height:1.65">'+escapeHtml(route.summary)+'</p><p>These are homeowner-style questions with article briefs, not verified monthly search-volume rankings. Cost ranges must be dated and itemised; Vastu is described as a traditional belief or preference, not a building requirement.</p>'+topics+'<p><a href="/blog">All blog categories</a> · <a href="/quote">Start a project requirement</a></p></section>'
+    const topics=groups.map(group=>{
+      const items=group.topics.map(topic=>{
+        const published=!interior?PUBLISHED_HOMEOWNER_ANSWERS[topic.title]:null
+        const answer=published
+          ? '<div class="blog-topic-answer"><strong>Published answer</strong><p>'+escapeHtml(published.answer)+'</p>'+(published.sources.length?'<div class="blog-topic-sources"><strong>Official references</strong>'+published.sources.map(source=>'<a href="'+escapeHtml(source.url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(source.label)+' ↗</a>').join('')+'</div>':'')+'</div>'
+          : '<p class="blog-topic-unpublished">Full answer in preparation. This is a planned topic, not a published answer.</p>'
+        return '<li style="padding:14px 0;border-bottom:1px solid #edf0f1"><strong>'+escapeHtml(topic.title)+'</strong>'+answer+'</li>'
+      }).join('')
+      return '<details class="blog-topic-group"><summary><span>'+escapeHtml(group.category)+'</span><b>'+group.topics.length+' questions</b><i>+</i></summary><ol>'+items+'</ol></details>'
+    }).join('')
+    return '<section style="padding:10px 0 42px"><h2>'+escapeHtml(route.heading)+'</h2><p style="max-width:850px;line-height:1.65">'+escapeHtml(route.summary)+'</p><p>Questions with complete responses show the answer and official references below. Other entries are clearly marked as planned topics; an editorial brief is not presented as an answer. Cost ranges should be dated and itemised, and Vastu is described as a personal or traditional preference rather than a building requirement.</p>'+topics+'<p><a href="/blog">All blog categories</a> · <a href="/quote">Start a project requirement</a></p></section>'
   }
   const articles=CONSTRUCTION_GUIDES.map(item=>'<li><a href="/guides/'+escapeHtml(item.slug)+'">'+escapeHtml(item.heading)+'</a> — '+escapeHtml(item.summary)+'</li>').join('')
   const topicGroups=HYDERABAD_HOMEOWNER_TOPIC_GROUPS.map(group=>'<details><summary>'+escapeHtml(group.category)+' ('+group.topics.length+' topic ideas)</summary><ol>'+group.topics.map(topic=>'<li><strong>'+escapeHtml(topic.title)+'</strong><p>'+escapeHtml(topic.description||'Practical homeowner guidance and checks.')+'</p></li>').join('')+'</ol></details>').join('')
