@@ -154,7 +154,7 @@ def generate_thumbnail(playback_path, output_path):
         "-q:v","3",str(output_path)
     ],check=True,capture_output=True,timeout=60)
     data=output_path.read_bytes()
-    if len(data)<1024 or len(data)>4*1024*1024 or not data.startswith(b"\\xff\\xd8\\xff"):
+    if len(data)<1024 or len(data)>4*1024*1024 or not data.startswith(b"\xff\xd8\xff"):
         raise RuntimeError("Video thumbnail JPEG is missing or invalid")
     return round(duration,2)
 
@@ -259,8 +259,8 @@ def process_one(connection, client, job):
     reference_out=PREFIX+derivative_key
     thumbnail_reference=PREFIX+thumbnail_key_value
     try:
-      with connection.transaction():
-        updated=connection.execute("""
+        with connection.transaction():
+            updated=connection.execute("""
             UPDATE business_profile_projects
                SET video_redaction_status='ready',
                    video_redaction_source_url=%s,
@@ -284,9 +284,9 @@ def process_one(connection, client, job):
         """,(reference,reference_out,thumbnail_reference,reference,
              duration_seconds,job["id"],reference,job["token"])).fetchone()
     except Exception:
-      client.delete_object(Bucket=bucket,Key=derivative_key)
-      client.delete_object(Bucket=bucket,Key=thumbnail_key_value)
-      raise
+        client.delete_object(Bucket=bucket,Key=derivative_key)
+        client.delete_object(Bucket=bucket,Key=thumbnail_key_value)
+        raise
     if not updated:
         client.delete_object(Bucket=bucket,Key=derivative_key)
         client.delete_object(Bucket=bucket,Key=thumbnail_key_value)
