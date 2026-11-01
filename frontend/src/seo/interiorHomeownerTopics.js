@@ -143,5 +143,48 @@ groups["Vastu door, room & floor-plan questions"] = [
 ["Can I change an existing house plan to make it Vastu compliant?","Explain which non-structural layout choices may be reviewed and why structural changes need professional assessment and approval."]
 ];
 
+
+groups["TV unit, living room & media wall costs"] = [
+["How much does a TV unit cost in Hyderabad?","Explain cost drivers by measured width, console type, storage, board, finish, lighting, wiring and installation; request current itemised quotes."],
+["How much does a 6 feet TV unit cost?","Compare a simple console with storage and wall-panelling options, clarifying dimensions and material assumptions."],
+["How much does a 8 feet TV unit cost?","Explain how wider spans, drawers, shelves, panels and fixing requirements change the scope."],
+["What is the cost of a full TV wall panel design?","Separate panel area, substrate, veneer or laminate finish, fluted details, lighting, electrical work and wall preparation."],
+["How much does a floating TV cabinet cost?","Cover cabinet length, depth, drawer hardware, wall structure, concealed supports and cable access."],
+["What is the cost of a TV unit with fluted panels?","Explain panel material, profile spacing, finish, backing, dust cleaning and installation labour."],
+["How much does a TV unit with storage cost?","Compare open shelves, closed shutters, drawers, display units and equipment ventilation."],
+["What should be included in a TV unit quotation?","List measured drawings, board grade, finish codes, hardware, lighting, wiring, installation, taxes and warranty."],
+["Which material is best for a TV unit?","Compare suitable plywood and engineered-board substrates with laminate, veneer, acrylic and painted finishes based on location and maintenance."],
+["How do I hide wires behind a TV unit?","Plan conduit routes, power and data points, ventilation, removable access and service loops before the panel is closed."]
+];
+groups["BHK-wise interior budgets & room costs"] = [
+["How much does a 1BHK interior cost in Hyderabad?","Separate essential kitchen, wardrobe, TV storage and optional furniture, ceiling, lighting, appliances and decor."],
+["How much does a 2BHK interior cost in Hyderabad?","Build a room-wise scope for kitchen, two bedrooms, wardrobes, TV unit, foyer and optional civil or electrical work."],
+["How much does a 3BHK interior cost in Hyderabad?","Explain the third bedroom's use, storage scope, room count, finishes and common-area work as budget variables."],
+["How much does a 4BHK interior cost in Hyderabad?","Compare room-by-room requirements, premium zones, wardrobes, kitchen, utility, foyer and family lounge storage."],
+["Is interior cost calculated per square foot or by modules?","Explain the limits of carpet-area pricing and why cabinet dimensions, finish and accessories should be measured."],
+["How much does a master bedroom interior cost?","Separate wardrobe, bed back panel, side tables, dresser, ceiling, lighting, curtains and loose furniture."],
+["How much does a kids bedroom interior cost?","Cover safe storage, study desk, bed, wardrobe, durable finishes, rounded edges and future flexibility."],
+["How much does a guest bedroom interior cost?","Compare essential wardrobe and bed storage with optional study, dresser, wall panelling and decor."],
+["How much does a foyer shoe cabinet cost?","Compare open, closed, ventilated, seating and mirror-integrated designs by width, height and finish."],
+["How much does a crockery unit cost in Hyderabad?","Explain cabinet size, glass shutters, lighting, drawers, display shelves, finish and hardware."],
+["How much does a pooja unit cost in Hyderabad?","Compare wall-mounted and floor-standing units by size, material, lighting, carving and storage."],
+["How much does a study table with storage cost?","Break down desk dimensions, drawers, shelves, ergonomics, cable management and finish."],
+["How much does a sliding wardrobe cost compared with hinged wardrobe?","Compare track hardware, shutter construction, usable access, room clearance, dimensions and maintenance."],
+["How much does a wardrobe loft cost?","Explain top cabinet dimensions, access height, shutter type, ceiling closure and internal divisions."],
+["What is usually excluded from a turnkey interior package?","Clarify appliances, loose furniture, curtains, decor, civil work, electrical relocation, plumbing, taxes and approvals."]
+];
+groups["Kitchen, wardrobe & interior hardware price questions"] = [
+["How much does an L-shaped modular kitchen cost?","Compare base and wall cabinet lengths, corner mechanisms, countertop, accessories and service changes."],
+["How much does a parallel modular kitchen cost?","Explain two cabinet runs, aisle clearance, countertop lengths, appliance layout and storage accessories."],
+["How much does a U-shaped modular kitchen cost?","Cover three cabinet runs, corner storage, work triangle, countertop and installation complexity."],
+["How much does a kitchen tall unit cost?","Compare pantry, oven and appliance towers by height, pull-outs, hardware and load requirements."],
+["How much do tandem drawers cost for a modular kitchen?","Explain drawer dimensions, load rating, runner series, soft-close, internal organisers and quantity."],
+["What is the cost of a magic corner kitchen unit?","Compare mechanism type, cabinet dimensions, usable access, load rating, brand and installation."],
+["How much do soft-close hinges cost for a kitchen?","Ask users to compare brand, model, opening angle, damping, quantity and compatibility rather than generic rates."],
+["What is the cost difference between laminate and acrylic kitchen shutters?","Compare exact product ranges, substrate, edge finish, colour, cleaning, scratch visibility and fabrication."],
+["How much does a 7 feet wardrobe with loft cost?","Explain full measured height, loft dimensions, shutter type, internal layout, board and hardware."],
+["What is the cost of a wardrobe with sliding shutters?","Break down track system, shutter count, panel size, mirror or glass options, soft-close and installation."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
