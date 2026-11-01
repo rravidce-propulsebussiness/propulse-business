@@ -4,7 +4,7 @@ import './PublicSiteChrome.css'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Home', match: path => path === '/' },
-  { to: '/hyderabad/construction', label: 'House Construction', match: path => path.startsWith('/hyderabad/construction') || path === '/hyderabad' },
+  { to: '/hyderabad/construction', label: 'Construction', match: path => path.startsWith('/hyderabad/construction') || path === '/hyderabad' },
   { to: '/quote#interiors', label: 'Interiors', match: path => path.includes('interior') || path === '/packages' },
   { to: '/projects', label: 'Projects', match: path => path.startsWith('/projects') },
   { to: '/hyderabad/construction-cost', label: 'Cost & Guides', match: path => path.startsWith('/hyderabad/construction-cost') || path.startsWith('/guides') },
@@ -74,7 +74,6 @@ export function PublicHeader() {
 
       <div className="public-site-actions">
         <Link className="public-site-quote" to="/quote#construction">Get Construction Estimate <ArrowIcon/></Link>
-        <Link className="public-site-pro" to="/professionals">For Professionals</Link>
       </div>
 
 
