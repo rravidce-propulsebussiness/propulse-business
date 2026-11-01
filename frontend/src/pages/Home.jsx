@@ -141,28 +141,20 @@ export default function Home() {
         </div>
       </section>
       <section className="hc-section hc-services"><div className="hc-container"><div className="hc-section-head hc-section-head-centered"><h2>House Construction Services in Hyderabad</h2></div><div className="hc-service-grid">{SERVICES.map(item => <article className="hc-service-card" key={item.title}><img src={item.image} alt={item.title} loading="lazy"/><div className="hc-service-copy"><span className="hc-service-icon"><Icon name={item.icon} size={19}/></span><div><h3>{item.title}</h3><b>{item.eyebrow}</b><p>{item.text}</p></div><button type="button" onClick={() => openRequirement(item.key)} aria-label={'Start '+item.title}><Icon name="arrow" size={15}/></button></div></article>)}</div></div></section>
-      <section className="hc-section pp-home-seo" aria-labelledby="pp-home-seo-title">
-        <div className="hc-container pp-home-seo-inner">
-          <div className="pp-home-seo-copy">
-            <span className="hc-section-kicker">A CLEARER WAY TO PLAN YOUR HOME</span>
-            <h2 id="pp-home-seo-title">House Construction &amp; Home Interiors in Hyderabad, Planned Around You</h2>
-            <p>ProPulse helps homeowners take a more informed approach to residential construction and interior projects in Hyderabad. Start with your plot, location, built-up area, floor requirements, preferred materials, finish expectations and budget. These details help shape a clear project brief before an estimate or consultation.</p>
-            <p>Whether you are planning an independent house, a villa, a turnkey construction project, a modular kitchen or complete home interiors, compare the scope, specifications, timelines and commercial terms before making a decision.</p>
-            <div className="pp-home-seo-links">
-              <Link to="/packages">Explore construction &amp; interior packages <span aria-hidden="true">↗</span></Link>
-              <Link to="/hyderabad/construction-cost">Understand house construction costs <span aria-hidden="true">↗</span></Link>
-              <Link to="/experts">Find construction &amp; interior professionals <span aria-hidden="true">↗</span></Link>
-            </div>
-          </div>
-          <div className="pp-home-seo-panel">
-            <span className="pp-home-seo-panel-label">YOUR PROJECT BRIEF</span>
-            <ul>
-              <li><b>01</b><span>Plot size, location &amp; site conditions</span></li>
-              <li><b>02</b><span>Built-up area, floors &amp; room requirements</span></li>
-              <li><b>03</b><span>Material grades, brands &amp; finish preferences</span></li>
-              <li><b>04</b><span>Budget, milestones &amp; expected timeline</span></li>
-            </ul>
-            <Link to="/quote#construction">Create your project brief <span aria-hidden="true">→</span></Link>
+      <section className="hc-about-band">
+        <div className="hc-container hc-about-band-inner">
+          <div className="hc-about-image"><img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=90" alt="Contemporary home interior designed with warm finishes" loading="lazy"/><span>Building Spaces. Elevating Lives.</span></div>
+          <div className="hc-about-copy"><span className="hc-section-kicker">ABOUT PROPULSE</span><h2>Building Spaces.<br/><em>Elevating Lives.</em></h2><p>ProPulse is a Hyderabad-based construction and home interiors company, helping homeowners build and design spaces that are functional, beautiful and built to last.</p><Link to="/about">Discover ProPulse <Icon name="arrow" size={15}/></Link></div>
+          <div className="hc-about-values"><span className="hc-section-kicker">WHY CHOOSE PROPULSE?</span><div><Icon name="shield" size={24}/><section><b>Quality Construction</b><small>Trusted materials and considered execution</small></section></div><div><Icon name="layers" size={24}/><section><b>Complete Solutions</b><small>Construction and interiors, together</small></section></div><div><Icon name="people" size={24}/><section><b>Professional Team</b><small>Experienced project specialists</small></section></div><div><Icon name="check" size={24}/><section><b>Clear Communication</b><small>Scope, pricing and milestones discussed</small></section></div></div>
+        </div>
+      </section>
+      <section className="hc-package-showcase">
+        <div className="hc-container">
+          <div className="hc-section-head"><div><span className="hc-section-kicker">EXPLORE YOUR OPTIONS</span><h2>Construction &amp; Interior Packages</h2><p>Explore available packages and compare the inclusions for your home.</p></div><Link to="/packages">View all packages <Icon name="arrow" size={15}/></Link></div>
+          <div className="hc-package-cards">
+            <Link to="/packages"><img src="https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=900&q=85" alt="House construction package" loading="lazy"/><span><b>House Construction</b><small>Explore construction package options</small></span><i>↗</i></Link>
+            <Link to="/packages"><img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=900&q=85" alt="Home interior package" loading="lazy"/><span><b>Home Interiors</b><small>Explore room-wise interior options</small></span><i>↗</i></Link>
+            <Link to="/packages"><img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=900&q=85" alt="Turnkey home project" loading="lazy"/><span><b>Turnkey Solutions</b><small>Explore complete project solutions</small></span><i>↗</i></Link>
           </div>
         </div>
       </section>
