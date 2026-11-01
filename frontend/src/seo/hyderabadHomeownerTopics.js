@@ -363,6 +363,29 @@ groups["Planning, room sizes & building services"] = [
     ["How do I plan a borewell, sump and overhead tank?","Coordinate water source reliability, demand, site levels, pump duty, tank support and cleaning access with professionals."],
     ["Which water pump is suitable for a duplex house?","Select using flow, total head, source conditions and pump curves, with professional electrical and plumbing installation."]
   ]
+,
+  "Construction materials, BOQ and contractor selection": [
+    ["How do I compare two house construction quotations in Hyderabad?","Normalize drawings, quantities, material grades, inclusions, exclusions, taxes, testing and payment milestones."],
+    ["What is included in a house construction BOQ?","Review excavation, foundation, RCC, masonry, plaster, waterproofing, flooring, doors, windows, electrical, plumbing and finishes."],
+    ["How do I verify TMT steel quality at a construction site?","Check approved grade, manufacturer markings, batch documentation and any specified laboratory testing with the engineer."],
+    ["How can I check cement quality before using it?","Review manufacturer, batch and date details, bag condition, storage and required acceptance records."],
+    ["What tests are used to check brick quality?","Ask about specified dimensional, strength and absorption tests; visual inspection alone cannot certify suitability."],
+    ["How do I check sand and aggregate quality?","Confirm approved source and specified grading, cleanliness and laboratory test records."],
+    ["What is the difference between site-mix and ready-mix concrete?","Compare approved mix control, batching, delivery, placement, testing, traceability and site logistics."],
+    ["What documents should a contractor provide for construction materials?","Maintain product data, invoices, batch records, certificates, sample reports and engineer approvals."],
+    ["What payment milestones are suitable for house construction?","Tie payments to clearly measurable completed work, inspection records, agreed schedule and invoices."],
+    ["Should I pay a contractor advance before materials arrive?","Define advance purpose, security or adjustment terms, procurement evidence and written contract provisions."],
+    ["How should extra construction work be priced?","Require a written variation with scope, quantities, rates, time impact and approval before execution."],
+    ["What is a retention amount in a construction contract?","Understand the agreed retention purpose, release conditions, defect obligations and contract wording."],
+    ["How do I avoid hidden charges in a construction quotation?","Ask for explicit exclusions covering approvals, utilities, external works, debris, testing, taxes and owner-supplied items."],
+    ["How do I check construction progress against payment?","Use agreed milestones, site measurements, engineer inspection and documented work completion."],
+    ["What should be included in a house handover checklist?","Collect test records, warranties, as-built drawings, manuals, keys, meter details and snag closure."],
+    ["How do I select bathroom fittings for a new house?","Freeze fixture models and rough-in drawings before plumbing and waterproofing work."],
+    ["What is the cost of bathroom fittings for a 2BHK?","Compare the number of bathrooms, fixture models, mixers, shower systems, accessories, installation and exclusions."],
+    ["How do I select exterior paint for Hyderabad weather?","Review exposure, substrate preparation, product suitability, rain protection, maintenance and manufacturer guidance."],
+    ["What should I check before accepting a modular kitchen installation?","Inspect dimensions, cabinet alignment, edge banding, hardware movement, countertop joints, plumbing and appliance clearances."],
+    ["How do I plan a kitchen appliance layout before carpentry?","Confirm exact models, installation clearances, utility points, ventilation and service access before cabinet fabrication."]
+  ]
 };
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
