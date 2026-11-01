@@ -61,9 +61,10 @@ export default function Experts(){
     <section className="experts-directory" id="expert-directory">
       <div className="experts-directory-intro">
         <div className="experts-intro-pill"><Icon name="users" size={17}/><span>TRUSTED PROFESSIONALS · CONSTRUCTION &amp; INTERIOR</span></div>
-        <h1><span>Find Construction &amp; Interior</span> <em>Professionals</em></h1>
+        <h1><span>Expert</span> <em>Engineers</em></h1>
         <i aria-hidden="true"/>
-        <p>Explore public business profiles, services, locations and published project work. Official ProPulse construction and interior execution is identified separately from independent marketplace professionals.</p>
+        <p>Find trusted construction, interior and real-estate professionals. Explore public business profiles, services, locations and published project work. Official ProPulse construction and interior execution is identified separately from independent marketplace professionals.</p>
+        <h2>Construction &amp; Interior Professionals in Hyderabad</h2>
       </div>
       <div className="experts-filter-bar"><label className="experts-search"><Icon name="search" size={18}/><input value={filters.search} onChange={event=>updateFilter('search',event.target.value)} placeholder="Search by name, service, or location..."/></label><label><Icon name="briefcase" size={17}/><select value={filters.industryId} onChange={event=>updateFilter('industryId',event.target.value)}><option value="">All categories</option>{industries.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label><label><Icon name="pin" size={17}/><select value={filters.cityId} onChange={event=>updateFilter('cityId',event.target.value)}><option value="">All cities</option>{visibleCities.map(item=><option value={item.id} key={item.id}>{item.name}{item.state_name?' · '+item.state_name:''}</option>)}</select></label><button className={filters.verified?'active':''} type="button" onClick={()=>updateFilter('verified',!filters.verified)}><Icon name="filter" size={17}/>{filters.verified?'Verified only':'More Filters'}</button></div>
       {error&&<div className="experts-state error">{error}</div>}
