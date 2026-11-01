@@ -8,6 +8,7 @@ import {districtBySlug,districtPath,stateBySlug} from '../src/seo/regionalSeo.js
 import {CONSTRUCTION_GUIDES,guideBySlug} from '../src/seo/constructionGuides.js'
 import {SEO_FAQ_CATEGORIES,homeownerSeoFaqs} from '../src/seo/faqKnowledge.js'
 import {interiorNeeds,interiorChecklist} from '../src/seo/interiorSeo.js'
+import {HYDERABAD_HOMEOWNER_TOPIC_GROUPS} from '../src/seo/hyderabadHomeownerTopics.js'
 
 const here=path.dirname(fileURLToPath(import.meta.url))
 const dist=path.resolve(here,'../dist')
@@ -255,7 +256,8 @@ function interiorLandingContent(route){
 function blogHubContent(route){
   if(route.type!=='blog-hub')return ''
   const articles=CONSTRUCTION_GUIDES.map(item=>'<li><a href="/guides/'+escapeHtml(item.slug)+'">'+escapeHtml(item.heading)+'</a> — '+escapeHtml(item.summary)+'</li>').join('')
-  return '<section style="padding:10px 0 42px"><h2>Practical construction and interior articles</h2><p style="max-width:850px;line-height:1.65">The ProPulse Journal brings together practical reading for homeowners planning construction, interiors and property improvements. Use each article as a starting point, then confirm project-specific decisions with qualified professionals.</p><h2>Browse articles by topic</h2><ul>'+articles+'</ul><p><a href="/guides">Browse the full knowledge guide library</a> · <a href="/quote">Start a project requirement</a></p></section>'
+  const topicGroups=HYDERABAD_HOMEOWNER_TOPIC_GROUPS.map(group=>'<details><summary>'+escapeHtml(group.category)+' ('+group.topics.length+' topic ideas)</summary><ol>'+group.topics.map(topic=>'<li>'+escapeHtml(topic.title)+'</li>').join('')+'</ol></details>').join('')
+  return '<section style="padding:10px 0 42px"><h2>Practical construction and interior articles</h2><p style="max-width:850px;line-height:1.65">The ProPulse Journal brings together practical reading for homeowners planning construction, interiors and property improvements. Use each article as a starting point, then confirm project-specific decisions with qualified professionals.</p><h2>Browse published articles</h2><ul>'+articles+'</ul><h2>Hyderabad homeowner topic library: 1,000 research-led questions</h2><p>This is a curated content roadmap, not a verified monthly search-volume ranking. Topics are organised around recurring homeowner decisions, local search intent and official public information. Full articles will be published when useful, accurate answers are ready.</p>'+topicGroups+'<p><a href="/guides">Browse the full knowledge guide library</a> · <a href="/quote">Start a project requirement</a></p></section>'
 }
 
 function fallback(route){
