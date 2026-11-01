@@ -581,5 +581,55 @@ groups["Kitchen appliances & cabinet clearances"] = [
 ["What should be included in an interior paint and polish quotation?","List surface preparation, primer, product range, coats, sheen, colour codes, polishing system and protection."]
 ];
 
+
+groups["False ceiling cost, design & execution"] = [
+["How much does a gypsum false ceiling cost per square foot?","Compare board and framing specifications, design complexity, finishing, access panels, lighting cut-outs and installation."],
+["What is included in a false ceiling quotation?","Check area measurement, board, framing, joint treatment, paint, cut-outs, access panels, labour and exclusions."],
+["Which is better, POP or gypsum false ceiling?","Compare system type, finish, installation, weight, repairability, moisture exposure and manufacturer recommendations."],
+["Does a false ceiling reduce room height significantly?","Measure existing ceiling, beams, service routes and proposed drops before selecting the design."],
+["How do I calculate false ceiling area?","Measure each ceiling zone and clarify how coves, bulkheads, drops and cut-outs are treated in the quote."],
+["Can I install a ceiling fan on a gypsum false ceiling?","The fan needs suitable structural support independent of the board; coordinate fixing and clearance with qualified installers."],
+["How do I plan cove lighting in a false ceiling?","Specify LED strip, profile, diffuser, driver access, wiring route, switching and maintenance."],
+["What is the difference between a simple and multi-layer false ceiling?","Compare visual effect, ceiling height, framing complexity, labour, lighting integration and future access."],
+["How much does a bedroom false ceiling cost for a 2BHK?","Measure each room and specify ceiling system, design, lights, fans, paint and access separately."],
+["What should be checked before closing a false ceiling?","Inspect framing, supports, wiring, service routes, access panels and required tests before board installation."]
+];
+groups["Complete home interior package planning"] = [
+["What is included in a complete 2BHK interior package?","List kitchen, wardrobes, TV unit, beds, ceiling, lighting, paint, curtains and any civil or service work separately."],
+["What is included in a 3BHK full home interior package?","Define room-wise furniture, storage, kitchen, ceilings, lighting, soft furnishings, appliances and exclusions."],
+["How do I estimate complete home interior cost?","Use room measurements, cabinet quantities, material specifications, hardware models, finishes and installation scope."],
+["Does a full home interior package include modular kitchen appliances?","Confirm whether chimney, hob, oven, refrigerator and other appliances are included or owner-supplied."],
+["Does home interior cost include electrical and plumbing changes?","Check whether point shifting, new circuits, plumbing relocation, geyser and appliance connections are included."],
+["How much does a TV unit cost for a 2BHK?","Compare width, storage, substrate, finish, back panel, lighting, wiring access and hardware."],
+["How do I budget wardrobes for all bedrooms?","Measure each wardrobe and list lofts, shutters, drawers, internal accessories, substrate and finish."],
+["Should curtains and blinds be part of the interior package?","Specify fabric or system, measurements, tracks, lining, installation and motorization if needed."],
+["How do I compare a turnkey interior quote with a carpentry-only quote?","Normalize design, civil, electrical, ceiling, materials, hardware, installation, appliances and warranty scope."],
+["What documents should I receive before approving an interior package?","Request floor plans, elevations, BOQ, material schedule, samples, hardware codes, payment stages and exclusions."]
+];
+groups["Kitchen storage accessories & organizers"] = [
+["Which kitchen baskets are most useful for Indian cooking?","Choose organizers around cookware, containers, spices and cleaning habits rather than buying every accessory."],
+["What is a tandem drawer in a modular kitchen?","Understand drawer box, runner, extension, adjustment and manufacturer-specific load rating."],
+["Is a magic corner unit better than a carousel?","Compare cabinet geometry, usable access, movement, load capacity, cost and maintenance."],
+["What is the use of a bottle pull-out in a kitchen?","Check cabinet width, bottle sizes, door clearance, mounting and rated load."],
+["Which pantry unit is best for a small modular kitchen?","Compare internal width, height, shelf adjustment, full extension and accessibility."],
+["How do I choose a cutlery tray size?","Measure drawer internal width, depth and height after accounting for runner and cabinet construction."],
+["Are tall pantry pull-outs worth the cost?","Evaluate frequency of use, storage capacity, load rating, accessibility and replacement support."],
+["What is the difference between wire baskets and tandem drawers?","Compare construction, cleanability, visibility, movement, extension and the intended stored items."],
+["How do I plan corner storage in an L-shaped kitchen?","Use exact corner cabinet dimensions and compare mechanisms before finalizing adjacent drawer widths."],
+["What should I check before ordering kitchen accessories?","Confirm model, dimensions, cabinet opening, fixing, load rating, finish, warranty and spare parts."]
+];
+groups["Interior material schedules & sample approvals"] = [
+["How do I prepare an interior material selection sheet?","Record room, location, substrate, product manufacturer, range, code, finish, quantity and approval status."],
+["How do I select laminate shades for a complete house?","Review labelled samples beside flooring, wall colours and lighting in the actual room."],
+["Should I approve laminate samples before carpentry starts?","Approve exact product codes and retain a signed or photographed sample reference before production."],
+["How do I avoid colour mismatch between laminate batches?","Confirm batch consistency, order sufficient quantity together and inspect delivery before installation."],
+["What is included in an interior BOQ material schedule?","List boards, finishes, edge bands, hardware, glass, stone, tiles, lighting and installation requirements."],
+["How do I compare two interior material brands?","Check exact product ranges, technical data, warranty, finish, availability and intended application."],
+["Can a contractor substitute a material after approval?","Require written approval and compare technical suitability, appearance, cost and schedule impact."],
+["How do I approve countertop and tile samples?","Review actual batch, thickness, shade, edge, grout, joints, cleaning and installed appearance."],
+["Why should hardware model numbers be in an interior quotation?","Exact codes identify dimensions, finish, rated application, compatibility, warranty and replacement parts."],
+["What records should I keep after interior handover?","Retain approved drawings, BOQ, product codes, spare samples, invoices, warranties and care instructions."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
