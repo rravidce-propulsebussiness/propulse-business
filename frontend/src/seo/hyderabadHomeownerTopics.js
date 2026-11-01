@@ -162,7 +162,47 @@ groups["Planning, room sizes & building services"] = [
     ["What documents should I collect at house handover?","List approved drawings, revisions, warranties, test records, invoices, equipment manuals, keys and snag closure."],
     ["How do I compare construction quality when visiting a completed project?","Suggest checking workmanship, visible finishes, service operation and speaking to owners while noting that concealed work needs records and inspections."]
   ]
-];
+,
+  "Building permission, approval & documentation questions": [
+    ["How do I check whether my plot comes under GHMC or HMDA?","Confirm the exact survey number, municipal limits and planning jurisdiction with the competent authority."],
+    ["What documents are needed for house building permission in Hyderabad?","Review commonly requested ownership, survey, layout, identity, authorisation and drawing documents against the current official checklist."],
+    ["Can I start house construction before building permission?","Explain why applicable sanction and commencement requirements must be confirmed before work begins."],
+    ["How do I check whether a layout is approved?","Verify the approval reference and layout records with the issuing authority and review title and land-use status with professionals."],
+    ["What are building setbacks and why are they required?","Explain front, rear and side open spaces and note that dimensions depend on current rules and site conditions."],
+    ["How is building height measured for permission?","Explain that authority definitions and measurement rules matter; verify stilt, basement, parapet and service levels with a licensed professional."],
+    ["What is a building occupancy certificate?","Describe its general purpose and why the applicable completion and occupancy process must be confirmed."],
+    ["What is the difference between a sanctioned plan and an as-built plan?","Explain approved drawings versus actual completed work and why unauthorised deviations may create compliance issues."],
+    ["Can I change the floor plan after building permission?","Explain that material changes may need professional review and revised approval before execution."],
+    ["Can I construct an extra floor on my existing house?","Discuss structural capacity, permissions, setbacks, parking, services and professional assessment."],
+    ["How do I check road width for building permission?","Use verified site and authority records rather than relying on informal measurements."],
+    ["Does a corner plot have different building plan requirements?","Explain that road-abutting sides, setbacks, visibility and local rules may affect design."],
+    ["What is a building plan scrutiny fee?","Explain that charges depend on authority, proposal and current fee schedules; use official receipts."],
+    ["Who can prepare and submit house building drawings?","Explain the role of appropriately licensed or registered professionals under the applicable authority process."],
+    ["How do I verify a building permission application status?","Use the official portal or authority reference and retain application acknowledgements and written communications."]
+  ],
+  "Foundation, soil & construction material inspection questions": [
+    ["Which foundation is best for a single-floor house?","Explain that loads, soil profile, groundwater and structural design determine the solution; avoid selecting by floor count alone."],
+    ["What is the difference between isolated footing and raft foundation?","Compare load-transfer concepts and why an engineer selects the system for the site."],
+    ["Is pile foundation required for black cotton soil?","Explain expansive soil behaviour and the need for geotechnical investigation and project-specific design."],
+    ["How deep should a house foundation be?","Explain why depth depends on soil strata, loads, groundwater and engineering recommendations; avoid a universal depth."],
+    ["What tests are done in a soil test for house construction?","Describe investigation methods and report outputs at a high level; actual scope should match the site."],
+    ["Can I build a house without soil testing?","Explain when investigation is required or prudent and why assumptions from nearby plots may be unreliable."],
+    ["How do I check TMT steel grade at site?","Check bundle identification, invoices, certificates, approved specifications and applicable laboratory testing."],
+    ["What is the difference between Fe500 and Fe500D steel?","Explain grade designation and ductility conceptually, with selection governed by structural design and applicable standards."],
+    ["How do I check cement manufacturing date and batch?","Explain reading bag and batch information, checking packaging and keeping supplier invoices and traceability."],
+    ["Can cement with hard lumps be used for house construction?","Explain that moisture exposure and lumping require segregation and professional assessment; hand tests do not certify strength."],
+    ["How do I identify clay or silt in construction sand?","Describe preliminary visual concerns and explain that specified laboratory tests determine acceptance."],
+    ["What is the silt content test for sand?","Explain its purpose and that method and acceptance follow the applicable project specification and standard."],
+    ["What documents should come with TMT steel delivery?","List invoice, manufacturer and grade identification, batch or bundle details and required test certificates."],
+    ["How should cement bags be stored at a construction site?","Cover dry raised storage, moisture protection, stock rotation and manufacturer handling instructions."],
+    ["How do I check aggregate quality for concrete?","Explain grading, cleanliness, size and required tests; mix design and specifications govern acceptance."],
+    ["Can I use river sand or M-sand for plastering?","Compare grading, fines, cleanliness and suitability while requiring product compliance and mix approval."],
+    ["What is a concrete cube test and when is it done?","Explain sampling, specimen preparation, curing and testing at specified ages under the project quality plan."],
+    ["What is a slump test in concrete?","Explain workability checking at delivery and why water must not be added casually."],
+    ["How do I check concrete quality before pouring a slab?","Cover approved mix, formwork, reinforcement inspection, cover, embedded services, sampling and pour records."],
+    ["What should I do if a material test fails?","Explain segregation, written notification, engineer review, traceability and documented corrective action before use."]
+  ]
+};
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
