@@ -100,3 +100,13 @@
   .district-page .regional-cta{padding:42px 18px}
   .district-page .regional-cta h2{font-size:clamp(27px,8vw,36px);line-height:1.12}
 }
+
+/* State and regional hubs use a navy hero; cream district/locality heroes stay dark. */
+.regional-page .regional-hero:not(.district-hero) h1{
+  color:#fff!important;
+  -webkit-text-fill-color:#fff;
+}
+.regional-page .regional-cta h2{
+  color:#fff!important;
+  -webkit-text-fill-color:#fff;
+}
