@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { to: '/projects', label: 'Projects', match: path => path.startsWith('/projects') },
   { to: '/hyderabad/construction-cost', label: 'Cost & Guides', match: path => path.startsWith('/hyderabad/construction-cost') || path.startsWith('/guides') },
   { to: '/about', label: 'About', match: path => path.startsWith('/about') },
+  { to: '/technology', label: 'Technology', match: path => path.startsWith('/technology') },
   { to: '/contact', label: 'Contact', match: path => path.startsWith('/contact') },
 ]
 
