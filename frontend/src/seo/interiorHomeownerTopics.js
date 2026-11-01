@@ -81,5 +81,29 @@ const groups = {
 ["What warranty should I get for modular kitchen and wardrobes?","Separate board, finish, hardware, workmanship and service warranties."]
 ]
 };
+
+groups["More interior cost, layout & material questions"] = [
+["How much does a complete 1BHK interior cost in Hyderabad?","Compares essential and full-scope interiors with room-wise inclusions and clearly stated exclusions."],
+["How much does a 4BHK interior cost in Hyderabad?","Explains room count, built-up area, storage, finishes and custom furniture as cost drivers."],
+["How much does a shoe rack cost for a home?","Compares open, closed, seating and foyer-integrated designs by size, ventilation and finish."],
+["How much does a crockery unit cost?","Breaks down dimensions, glass shutters, lighting, drawers, laminate and hardware."],
+["How much does a pooja unit cost in Hyderabad?","Compares compact wall-mounted and full-height units, materials, lighting and carving details."],
+["How much does a study table with storage cost?","Explains desk size, ergonomics, drawers, cable access, shelves and material choices."],
+["How much does a bedroom false ceiling cost?","Shows how room area, design complexity, framing, lighting and access panels affect price."],
+["How much does a 7 feet sliding wardrobe cost?","Explains width, height, track system, internal layout, board, finish and loft additions."],
+["How much does a kitchen tall unit cost?","Compares pantry, appliance and pull-out units by dimensions, accessories and load rating."],
+["What is the cost of a quartz kitchen countertop in Hyderabad?","Explains slab selection, thickness, edge profile, cut-outs, supports, installation and current supplier quotes."],
+["How much does a home interior designer charge in Hyderabad?","Compares design-only, percentage, per-square-foot and turnkey fee models; clarifies deliverables."],
+["What is the difference between interior design fees and execution cost?","Separates design, drawings, project management, materials, fabrication, installation and taxes."],
+["Which board is best for wardrobe carcass?","Compares plywood, particle board and engineered boards by load, moisture exposure, hardware and product certification."],
+["Can MDF be used in a kitchen?","Explains suitable dry zones, moisture limits, edge sealing and why sink-area exposure needs special care."],
+["What is edge banding and why does it matter?","Explains thickness, adhesive, corner finishing and protection of exposed board edges."],
+["Which kitchen shutter finish is easiest to maintain?","Compares laminate, acrylic, membrane and other finishes by fingerprints, scratches, cleaning and repairability."],
+["How do I choose handles for kitchen cabinets?","Covers grip, projection, finish, cleaning, child safety and alignment with shutter style."],
+["What is the best lighting for a wardrobe?","Explains sensor lights, colour rendering, glare, wiring access and safe installation."],
+["How much space is needed between a bed and wardrobe?","Explains door swing, drawer pull-out, walking clearance and site-measured furniture layouts."],
+["What should I finalise before starting interior work?","A checklist for approved drawings, material codes, electrical points, appliance sizes, finishes, BOQ and payment milestones."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
