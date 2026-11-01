@@ -154,7 +154,7 @@ groups["Planning, room sizes & building services"] = [
 ["What is a bar bending schedule and why is it important?","Explains reinforcement quantities, cutting lengths, laps, bends and checking against structural drawings."],
 ["When should anti-termite treatment be done during construction?","Describes treatment stages, approved products, applicator instructions and safety precautions."],
 ["How do I prevent cracks between brick walls and RCC columns?","Covers junction detailing, mesh where specified, curing, workmanship and movement assessment."],
-["What should I inspect before taking handover of a new house?","Provides a snag checklist for structure, waterproofing, plumbing, electrical, doors, windows, finishes and documents."]
+["What should be included in a construction site inspection checklist?","Lists the records and inspection points to review at foundation, reinforcement, concrete, masonry, waterproofing and handover stages."]
 ];
 
 
