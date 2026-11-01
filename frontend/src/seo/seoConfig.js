@@ -102,6 +102,23 @@ export const CORE_PUBLIC_SEO_ROUTES=[
     heading:'Construction, interior and real-estate questions answered',
     summary:'Search practical homeowner questions by category and use the answers to plan better construction, interior and property decisions.',
   },
+
+  {
+    path:'/best-construction-company-hyderabad',
+    type:'construction-trust-guide',
+    title:'Best Construction Company in Hyderabad? How to Choose a Trusted Builder | ProPulse',
+    description:'Compare house construction companies in Hyderabad using project evidence, engineer-approved drawings, material specifications, BOQ transparency, site supervision, payment milestones and written warranties.',
+    heading:'How to choose a trusted construction company in Hyderabad',
+    summary:'Searching for the best construction company in Hyderabad? Use this independent homeowner checklist to compare builders on documented quality, transparent scope, real project evidence and clear accountability—not advertising claims.'
+  },
+  {
+    path:'/best-interior-designers-hyderabad',
+    type:'interior-trust-guide',
+    title:'Best Interior Designers in Hyderabad | How to Choose a Trusted Company | ProPulse',
+    description:'Compare interior designers in Hyderabad by real projects, design drawings, plywood grades, laminates, hardware, BOQ transparency, installation quality, payment stages and warranty terms.',
+    heading:'How to choose the best interior designers in Hyderabad',
+    summary:'Find a reliable interior design company in Hyderabad by comparing real work, room-wise scope, materials, hardware, execution quality, timelines and written after-sales commitments.'
+  },
 ]
 
 export const PUBLIC_SEO_ROUTES=[
