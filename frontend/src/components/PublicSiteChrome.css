@@ -210,3 +210,24 @@
 @media(max-width:640px){
   .public-site-mobile-menu{right:8px;width:min(360px,calc(100vw - 16px));max-width:calc(100vw - 16px)}
 }
+
+
+/* Construction-first primary navigation and keyboard-accessible professional menu. */
+.public-site-professionals-menu{position:relative;display:flex;align-items:center;min-height:36px}
+.public-site-professionals-menu>button{position:relative;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0;border:0;background:transparent;color:#173955;font:inherit;font-size:12px;font-weight:850;white-space:nowrap;cursor:pointer}
+.public-site-professionals-menu>button:hover,.public-site-professionals-menu>button.active{color:#f35d25}
+.public-site-professionals-menu>button[aria-expanded="true"]{color:#f35d25}
+.public-site-professionals-menu>button span{font-size:15px;transition:transform .18s ease}
+.public-site-professionals-menu>button[aria-expanded="true"] span{transform:rotate(180deg)}
+.public-site-professionals-dropdown{position:absolute;top:calc(100% + 10px);left:-14px;z-index:2600;width:310px;padding:8px;border:1px solid #e2e9ee;border-radius:14px;background:#fff;box-shadow:0 20px 46px rgba(8,43,75,.17);opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-5px);transition:opacity .16s ease,transform .16s ease,visibility .16s ease}
+.public-site-professionals-menu.is-open .public-site-professionals-dropdown,.public-site-professionals-menu:focus-within .public-site-professionals-dropdown{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0)}
+.public-site-professionals-dropdown>a{display:flex;align-items:center;gap:11px;padding:11px 10px;border-radius:9px;color:#173955;text-decoration:none;white-space:normal}
+.public-site-professionals-dropdown>a:hover,.public-site-professionals-dropdown>a:focus-visible{background:#fff3ec;color:#e95a22;outline:none}
+.public-site-professionals-dropdown>a>span:first-child{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;border-radius:50%;background:#fff0e8;color:#ef5a22;font-size:19px}
+.public-site-professionals-dropdown>a>span:last-child{display:grid;gap:3px}
+.public-site-professionals-dropdown b{font-size:12px;font-weight:900}
+.public-site-professionals-dropdown small{color:#708596;font-size:10px;line-height:1.4}
+.public-site-professionals-menu>button:focus-visible{outline:2px solid #ff8a58;outline-offset:4px;border-radius:4px}
+@media(max-width:1180px){.public-site-professionals-menu>button{font-size:10.7px}.public-site-professionals-dropdown{left:auto;right:-12px}}
+@media(max-width:1020px){.public-site-professionals-menu{display:none}}
+@media(prefers-reduced-motion:reduce){.public-site-professionals-menu *{transition:none!important}}

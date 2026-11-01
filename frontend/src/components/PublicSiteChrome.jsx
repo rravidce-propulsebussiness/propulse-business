@@ -4,14 +4,14 @@ import './PublicSiteChrome.css'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Home', match: path => path === '/' },
-  { to: '/packages', label: 'Packages', match: path => path.startsWith('/packages') },
+  { to: '/hyderabad/construction', label: 'Construction', match: path => path.startsWith('/hyderabad/construction') || path === '/hyderabad' },
+  { to: '/quote#interiors', label: 'Interiors', match: path => path.includes('interior') || path === '/packages' },
   { to: '/projects', label: 'Projects', match: path => path.startsWith('/projects') },
-  { to: '/how-it-works', label: 'How It Works', match: path => path.startsWith('/how-it-works') },
-  { to: '/technology', label: 'Technology', match: path => path.startsWith('/technology') },
+  { to: '/hyderabad/construction-cost', label: 'Cost & Guides', match: path => path.startsWith('/hyderabad/construction-cost') || path.startsWith('/guides') },
   { to: '/about', label: 'About', match: path => path.startsWith('/about') },
+  { to: '/technology', label: 'Technology', match: path => path.startsWith('/technology') },
   { to: '/faq', label: 'FAQ', match: path => path.startsWith('/faq') },
   { to: '/contact', label: 'Contact', match: path => path.startsWith('/contact') },
-  { to: '/experts', label: 'Find Professionals', match: path => path.startsWith('/experts') },
 ]
 
 function ArrowIcon({ size = 15 }) {
@@ -25,24 +25,25 @@ function PinIcon({ size = 13 }) {
 export function PublicHeader() {
   const location = useLocation()
   const [open, setOpen] = useState(false)
+  const [professionalsOpen, setProfessionalsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = location.pathname.replace(/\/+$/, '') || '/'
   const activeLabel = useMemo(() => NAV_ITEMS.find(item => item.match(pathname))?.label || '', [pathname])
 
   useEffect(() => {
     setOpen(false)
+    setProfessionalsOpen(false)
   }, [pathname, location.hash])
 
   useEffect(() => {
     const onResize = () => {
       if (window.innerWidth > 1020) setOpen(false)
     }
-    const onKeyDown = event => { if (event.key === 'Escape') setOpen(false) }
+    const onKeyDown = event => { if (event.key === 'Escape') { setOpen(false); setProfessionalsOpen(false) } }
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('resize', onResize)
-    return () => { window.removeEventListener('resize', onResize); window.removeEventListener('keydown', onKeyDown) }
+    return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('resize', onResize) }
   }, [])
-
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12)
@@ -54,21 +55,24 @@ export function PublicHeader() {
   return <>
   <header className={'public-site-header' + (scrolled ? ' is-scrolled' : '')}>
     <div className="public-site-header__inner">
-
       <Link className="public-site-logo" to="/" aria-label="ProPulse home">
         <img src="/brand/propulse-logo.svg" alt="ProPulse"/>
       </Link>
-
       <nav className="public-site-nav" aria-label="Main navigation">
-        {NAV_ITEMS.map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
+        {NAV_ITEMS.slice(0, 3).map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
+        <div className={'public-site-professionals-menu'+(professionalsOpen?' is-open':'')}>
+          <button type="button" className={activeLabel === 'Find Professionals' || pathname.startsWith('/experts') || pathname.startsWith('/professionals') ? 'active' : ''} aria-expanded={professionalsOpen} aria-haspopup="true" onClick={() => setProfessionalsOpen(value => !value)}>Professionals <span aria-hidden="true">⌄</span></button>
+          <div className="public-site-professionals-dropdown">
+            <Link to="/experts"><span aria-hidden="true">⌕</span><span><b>Find Professionals</b><small>Browse contractors, architects and engineers</small></span></Link>
+            <Link to="/signup"><span aria-hidden="true">＋</span><span><b>Join as a Professional</b><small>Create your ProPulse account</small></span></Link>
+            <Link to="/login"><span aria-hidden="true">↗</span><span><b>Professional Login</b><small>Access your account</small></span></Link>
+          </div>
+        </div>
+        {NAV_ITEMS.slice(3).map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
       </nav>
-
       <div className="public-site-actions">
-        <Link className="public-site-quote" to="/quote#interiors">Get Free Quote <ArrowIcon/></Link>
-        <Link className="public-site-pro" to="/professionals">For Professionals</Link>
+        <Link className="public-site-quote" to="/quote#construction">Get Construction Estimate <ArrowIcon/></Link>
       </div>
-
-
       <button
         className={'public-site-menu-toggle' + (open ? ' open' : '')}
         type="button"
@@ -79,13 +83,15 @@ export function PublicHeader() {
       >
         <span/><span/><span/>
       </button>
-
       <div id="public-mobile-navigation" className={'public-site-mobile-menu' + (open ? ' open' : '')}>
         <nav aria-label="Mobile navigation">
           {NAV_ITEMS.map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
+          <Link to="/experts">Find Professionals</Link>
+          <Link to="/signup">Join as a Professional</Link>
+          <Link to="/login">Professional Login</Link>
         </nav>
         <div className="public-site-mobile-actions">
-          <Link className="public-site-quote" to="/quote#interiors">Get Free Quote <ArrowIcon/></Link>
+          <Link className="public-site-quote" to="/quote#construction">Get Construction Estimate <ArrowIcon/></Link>
           <Link className="public-site-pro" to="/professionals">For Professionals</Link>
         </div>
       </div>

@@ -166,7 +166,21 @@ function jsonLdFor(route,origin){
     inLanguage:'en-IN',
     description:HOME_SEO.description,
   }
-  if(route.path==='/')return [organization,website]
+  if(route.path==='/')return [
+    organization,
+    website,
+    pageJsonLd(route,origin),
+    {
+      '@context':'https://schema.org',
+      '@type':'Service',
+      name:'House and villa construction',
+      serviceType:'Residential house construction',
+      description:'Plan residential house and villa construction in Hyderabad with a defined project scope, material preferences and estimate request.',
+      areaServed:{'@type':'City',name:'Hyderabad',containedInPlace:{'@type':'State',name:'Telangana'}},
+      provider:{'@type':'Organization',name:SITE_NAME,url:home},
+      url:home,
+    },
+  ]
 
   const data=[
     organization,
