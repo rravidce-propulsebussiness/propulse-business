@@ -396,7 +396,7 @@ async function listRecentProjects({page=1,pageSize=18}={}){
   };
 }
 
-async function getPublicProject(projectId){
+async function getPublicProject(projectId,{materializeMedia=true}={}){
   const value=String(projectId||'').trim();
   const id=/^[1-9]\d*$/.test(value)?Number(value):null;
   const slug=!id&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)&&value.length<=100?value:null;
@@ -426,7 +426,7 @@ async function getPublicProject(projectId){
      LIMIT 1`,
     params
   );
-  const projects=await materializeProjectMedia(result.rows);
+  const projects=materializeMedia?await materializeProjectMedia(result.rows):result.rows;
   return projects[0]||null;
 }
 
