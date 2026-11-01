@@ -106,7 +106,7 @@ export function PublicFooter({ phone = '', email = '', address = 'Hyderabad, Ind
       <div className="public-site-footer-brand"><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>{description}</p></div>
       <div><b>Homeowners</b><Link to="/">Home</Link><Link to="/packages">Packages</Link><Link to="/projects">Projects</Link><Link to="/experts">Find Professionals</Link></div>
       <div><b>Services</b><Link to="/contact">Direct ProPulse Projects</Link><Link to="/technology">Technology &amp; Business OS</Link><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/hyderabad/construction-cost">Construction Cost Guide</Link></div>
-      <div><b>Support</b><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/faq">FAQ</Link><Link to="/contact">Contact</Link></div>
+      <div><b>Support</b><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/faq">FAQ</Link><Link to="/blog">Blog</Link><Link to="/contact">Contact</Link></div>
       <div><b>Contact</b><a href={phoneHref}>{displayPhone}</a><a href={'mailto:' + displayEmail}>{displayEmail}</a><span><PinIcon/>{address}</span></div>
     </div>
     <div className="public-site-footer__bottom"><span>© {new Date().getFullYear()} ProPulse</span><Link to="/professionals">Professional portal</Link></div>
