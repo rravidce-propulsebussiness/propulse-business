@@ -137,6 +137,20 @@ groups["Planning, room sizes & building services"] = [
 ["What should I inspect before taking handover of a new house?","Provides a snag checklist for structure, waterproofing, plumbing, electrical, doors, windows, finishes and documents."]
 ];
 
+
+groups["Woodwork, plywood & site quality checks"] = [
+["How do I check plywood quality at a construction or interior site?","A procurement checklist covering declared standard, valid BIS licence, grade, thickness, batch, invoice, visual defects and laboratory evidence."],
+["What is the difference between MR, BWR and BWP plywood?","Explain intended moisture resistance classes and the need to match the current applicable BIS standard and actual exposure."],
+["What is the current BIS standard for general-purpose plywood?","Direct readers to verify the current edition and licence scope; IS 303:2024 is the fourth revision for general-purpose plywood."],
+["What is the current BIS standard for marine plywood?","Explain that IS 710:2024 is the third revision and why buyers should verify the manufacturer's current BIS licence and product scope."],
+["What plywood tests should I ask the supplier for?","Explain water resistance, glue shear, adhesion of plies, moisture content, bending strength, workmanship and formaldehyde test reports."],
+["Can I identify genuine plywood by its colour or smell?","Explain why visual appearance and smell cannot prove grade, adhesive performance, standard compliance or emission class."],
+["How do I check plywood thickness and sheet size?","Explain representative measurements, tolerances, edge condition and matching the delivery to the purchase order."],
+["What is the difference between commercial plywood and marine plywood?","Compare standard, intended service conditions and test requirements without assuming marine grade is automatically best for every use."],
+["What should be checked before accepting plywood delivery?","Checklist for brand/marking, licence, grade, thickness, sheet count, damage, moisture exposure, invoice and batch traceability."],
+["How do I store plywood at a construction site?","Explain flat, level, dry, ventilated storage, protection from standing water and avoiding distortion before fabrication."]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
