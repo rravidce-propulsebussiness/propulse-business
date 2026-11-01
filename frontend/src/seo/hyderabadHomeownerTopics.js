@@ -151,6 +151,32 @@ groups["Woodwork, plywood & site quality checks"] = [
 ["How do I store plywood at a construction site?","Explain flat, level, dry, ventilated storage, protection from standing water and avoiding distortion before fabrication."]
 ];
 
+
+groups["Building material checks & specifications"] = [
+["What is the difference between OPC and PPC cement for house construction?","Compare intended applications, curing and project specification; selection should follow structural design and current product standards."],
+["How do I check cement quality before buying?","Check sealed fresh bags, manufacturer, batch/date, applicable BIS marking/licence, storage and invoice; simple field checks cannot certify strength."],
+["How do I check TMT steel grade at a construction site?","Verify mill test certificate, grade, diameter, batch traceability and current BIS licence; do not identify grade by colour or feel."],
+["What is the difference between Fe500 and Fe500D steel?","Explain grade designation and ductility significance while requiring structural designer approval and product test documentation."],
+["How do I check sand quality for concrete and plaster?","Discuss cleanliness, grading, silt/organic contamination and testing; use mix/design specifications rather than appearance alone."],
+["What is the difference between M20 and M25 concrete?","Explain characteristic compressive strength notation and why the structural engineer specifies the grade for each element."],
+["How long should concrete be cured?","Explain that curing duration depends on cement type, exposure, element and applicable code/specification; follow the engineer's method statement."],
+["What is the difference between a cube test and a rebound hammer test?","Compare destructive strength testing of sampled concrete with non-destructive surface assessment and their limitations."],
+["Why are cracks appearing in newly plastered walls?","Discuss shrinkage, curing, substrate preparation, movement, thickness and when an engineer should assess structural cracks."],
+["What should be included in a house construction material BOQ?","List item descriptions, grade, dimensions, approved brands/equivalents, quantity, wastage, testing, delivery and exclusions."]
+];
+groups["Waterproofing, windows & building envelope"] = [
+["What is the difference between terrace waterproofing and bathroom waterproofing?","Compare exposure, substrate, detailing, slope, drain interfaces, upturns and system-specific application."],
+["How do I test bathroom waterproofing before tiling?","Explain a documented ponding test only under the contractor/engineer's approved method, with safe isolation and inspection below."],
+["Why does a terrace leak even after waterproofing?","Investigate cracks, parapet junctions, outlets, slope, penetrations, detailing and workmanship; identify the water path before re-treatment."],
+["What is the difference between UPVC and aluminium windows?","Compare frame construction, thermal performance, hardware, finish, spans, maintenance and tested system specifications."],
+["What should I check before installing aluminium windows?","Check opening dimensions, sill slope, frame anchoring, sealant compatibility, drainage paths, glass and hardware."],
+["What is the difference between toughened and laminated glass?","Compare breakage behaviour, post-breakage retention, safety location and relevant glass specifications."],
+["How do I stop water entering through window frames?","Inspect external sealant, frame drainage, sill slope, weep holes, perimeter joints and installation before applying surface fixes."],
+["What is the correct slope for a bathroom floor?","Explain that slope must direct water to the drain without ponding and be coordinated with tile size, drain location and project specification."],
+["Why does a bathroom floor have standing water after use?","Check floor levels, drain position, tile workmanship, trap blockage and slope using site measurements."],
+["What should I check before accepting waterproofing work?","Request product system details, surface preparation, application records, junction photos, test records and written warranty scope."]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
