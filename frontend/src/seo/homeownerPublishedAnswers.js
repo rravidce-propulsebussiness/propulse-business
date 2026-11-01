@@ -58,5 +58,50 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   "Which direction is best for a house entrance?": {
     answer: "There is no one entrance direction that is best for every plot or that guarantees a better home. First consider where the road and legal access are, the shape and slope of the site, room arrangement, privacy, daylight, heat gain, prevailing breezes and practical vehicle or pedestrian entry. A well-designed entrance should work with the overall circulation and should not force poor ventilation, awkward rooms or unsafe structural changes. Your architect can study the site orientation and sun path, then use window placement, shading, verandas and landscaping to manage daylight and heat. If Vastu is important to your family, share those preferences at the start so they can be considered alongside structural design, ventilation, safety and approval rules. Treat Vastu direction as a personal or traditional preference, not as a substitute for building regulations or technical planning.",
     sources: []
+  },
+
+  "How much does a 2BHK interior cost in Hyderabad?": {
+    answer: "A 2BHK interior does not have one reliable fixed price because two flats with the same bedroom count can need very different amounts of cabinetry and civil work. The biggest cost drivers are kitchen layout and running length, wardrobe width and height, lofts, TV/storage units, board and shutter materials, hardware, countertop, false ceiling, lighting, electrical changes, painting and loose furniture. A useful estimate should be built room by room from measured dimensions, not only from the flat’s carpet area or a headline per-square-foot rate. Ask each designer to quote the same drawings and specifications, and separate modular work from civil, electrical, appliances, curtains and loose furniture.",
+    sources: [
+      { label: "BIS – standards and product conformity information", url: "https://www.bis.gov.in/" }
+    ]
+  },
+  "How much does a TV unit cost in Hyderabad?": {
+    answer: "The price of a TV unit depends mainly on its width and height, storage volume, substrate, shutter finish, wall panelling, fluted or decorative elements, lighting, wiring work and installation. A simple floating console with a finished back panel is a different scope from a full-height feature wall with drawers, display shelves and concealed lighting. Before comparing quotes, share the TV size, wall dimensions, storage needs and reference design. Ask for separate quantities and rates for the carcass, shutters, finish, hardware, lighting, electrical work and installation so you can see what is driving the total.",
+    sources: []
+  },
+  "What is the difference between 0.8mm and 1mm laminate?": {
+    answer: "The figures refer to the nominal thickness of the decorative laminate sheet, not the thickness or strength of the plywood or MDF underneath it. A 1mm sheet is thicker than a 0.8mm sheet and may be preferred for some frequently used exterior surfaces, but thickness alone does not guarantee better scratch resistance, colour stability or overall cabinet life. The laminate grade, surface texture, backing, adhesive, substrate flatness, edge detailing and workmanship all matter. Confirm the manufacturer’s product specification and intended application rather than choosing only by the number printed in a quotation.",
+    sources: [
+      { label: "BIS – standards and product conformity information", url: "https://www.bis.gov.in/" }
+    ]
+  },
+  "What is the difference between BWR and BWP plywood?": {
+    answer: "BWR and BWP are commonly used trade descriptions for plywood intended for different levels of moisture exposure; they should not be treated as interchangeable labels or as proof that a board can remain wet indefinitely. For kitchen and utility applications, ask the supplier for the exact IS standard and grade marking, manufacturer, batch traceability and test or conformity documents. Check the board stamp and invoice, and confirm whether the product is intended for the actual exposure in that cabinet. Even a moisture-resistant board can fail if water enters through unsealed edges, plumbing leaks or poor installation.",
+    sources: [
+      { label: "BIS – standards and product conformity information", url: "https://www.bis.gov.in/" }
+    ]
+  },
+  "Which material is best for a TV unit: plywood, MDF or HDHMR?": {
+    answer: "There is no single best board for every part of a TV unit. Plywood is often chosen where screw holding, load and robust fixing are important; MDF gives a smooth, consistent surface and can suit painted or routed decorative panels in dry interiors; HDHMR is a higher-density engineered board that may suit selected shutter and furniture applications when its product specification and moisture limits are appropriate. The right choice depends on the span, shelf load, wall fixing, finish, edge treatment and exposure to moisture. Ask the designer to specify the exact board type, thickness and grade separately for carcass, shelves, shutters and decorative panels.",
+    sources: []
+  },
+  "Which hinges are best for kitchen cabinets?": {
+    answer: "For most modular kitchen shutters, use a reputable concealed cabinet hinge selected for the shutter overlay, opening angle, weight and cabinet construction. Soft-close hinges improve the closing action, but the hinge model, cup drilling, mounting plate, screw fixing and adjustment quality matter just as much. Wide or heavy shutters may need an appropriate number and capacity of hinges according to the manufacturer’s fitting guidance. In wet or corrosive environments, check the hardware’s material and corrosion-resistance specification. Ask for the brand and model in the quotation rather than accepting only the phrase ‘premium soft-close hinge’.",
+    sources: []
+  },
+  "What is the difference between soft-close and normal hinges?": {
+    answer: "A normal cabinet hinge allows the shutter to close without a built-in damping mechanism, so it can slam if pushed or released. A soft-close hinge incorporates a damper that slows the final part of the closing movement and reduces impact noise. Soft-close does not automatically mean the hinge is stronger or lasts longer: quality depends on the hinge design, materials, cycle rating where published, correct installation and adjustment. Check whether the soft-close function is integrated or uses an add-on damper, and confirm the exact model and warranty.",
+    sources: []
+  },
+  "Which channel is best for kitchen drawers?": {
+    answer: "Choose a drawer runner based on the drawer’s load, width, depth, opening frequency and the space available inside the cabinet. Common options include side-mounted telescopic channels and concealed undermount runners; some models offer soft-close or push-to-open functions. Compare the manufacturer’s rated load, extension type, adjustment range, corrosion protection and installation requirements. A heavy pot drawer needs a different specification from a shallow cutlery drawer. Ask the interior contractor to name the channel brand and model, state the load rating and include the quantity in the BOQ.",
+    sources: []
+  },
+  "How do I identify good-quality plywood before buying?": {
+    answer: "Do not judge plywood only by colour, smell or a salesperson’s claim. Check the manufacturer’s name, grade and standard marking on the board, thickness, batch details and invoice. Ask for the product datasheet and applicable conformity or test documents, and verify that the grade matches the moisture exposure and use of the cabinet. Inspect the sheet for delamination, damaged edges, uneven thickness, warping and visible core gaps. For a large project, buy from a traceable authorised dealer and keep a sample or batch record. No quick visual test can prove every performance property; laboratory testing is needed for formal verification.",
+    sources: [
+      { label: "BIS – standards and product conformity information", url: "https://www.bis.gov.in/" }
+    ]
   }
 };
