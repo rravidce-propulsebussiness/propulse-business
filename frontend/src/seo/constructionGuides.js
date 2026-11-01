@@ -707,6 +707,109 @@ export const CONSTRUCTION_GUIDES=[
     ]
   },
 
+
+  {
+    slug:'false-ceiling-gypsum-pvc-metal-materials-guide',
+    type:'construction-guide',category:'Interior Materials',
+    title:'Gypsum vs PVC vs Metal False Ceiling | Material & Cost Guide | ProPulse',
+    description:'Compare gypsum, PVC and metal false ceiling systems for homes by appearance, moisture exposure, access, maintenance, framing and installation details.',
+    heading:'Which false ceiling material is best: gypsum, PVC or metal?',
+    summary:'Choose a ceiling system based on the room environment, service access, fire and acoustic requirements, lighting plan, framing and manufacturer system details—not only the surface appearance.',
+    searchTerms:['gypsum vs PVC false ceiling','which false ceiling is best for home','metal false ceiling for house','false ceiling for bathroom','false ceiling material comparison'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Use a complete tested ceiling system with suitable framing, suspension, fasteners and board/panel. Never conceal electrical junctions, leaks or unsafe services above a ceiling without proper access and inspection.',
+    sections:[
+      section('Understand the complete ceiling system','A false ceiling is more than its visible board or panel. It includes the supporting structure, hangers, perimeter channels, fasteners, joints, access panels, insulation if specified, lighting cut-outs and service coordination.'),
+      section('Gypsum board ceilings','Gypsum boards create a smooth surface suitable for paint, coves and layered ceiling designs. Choose board type and thickness for the manufacturer’s specified application. Moisture-resistant boards are designed for damp-prone conditions but should not be treated as waterproof boards or used to hide persistent leaks.'),
+      section('PVC ceiling panels','PVC panels are lightweight and available in different finishes and profiles. Check product quality, fire performance documentation, heat exposure, joint detailing, support spacing and suitability for the exact room. Avoid assuming all PVC panels share the same fire or durability properties.'),
+      section('Metal ceiling systems','Metal ceiling systems can provide durable, demountable or modular access depending on the product. Compare panel material and coating, corrosion exposure, suspension system, acoustic backing, edge details and access requirements.'),
+      section('Select by room conditions','Bedrooms and living rooms often prioritise appearance and lighting integration. Kitchens require attention to heat, grease and cleaning. Bathrooms and damp areas require suitable moisture-resistant systems, ventilation and leak control. Outdoor or semi-exposed ceilings need products specifically rated for that exposure.'),
+      section('Plan lighting and electrical access','Coordinate downlights, profiles, fans, AC grilles, detectors, speakers and access panels before framing. Drivers, junctions and valves that require service should remain accessible. Electrical work must be performed and tested by qualified personnel.'),
+      section('Check height, framing and installation','Measure the actual slab level and available ceiling drop. Confirm hanger spacing, framing gauge/type, fixing into the structural substrate, level, board joints, screw treatment and perimeter detailing from the system manufacturer. Do not fix heavy fixtures to the board alone.'),
+      section('What to specify in the BOQ','List manufacturer/system, board or panel type, thickness, framing, suspension, fasteners, jointing, finish, access panels, cut-outs, insulation, fixture supports, room locations and warranty. Approve a sample detail before full installation.')
+    ],
+    sources:[
+      {label:'Saint-Gobain Gyproc India — Damp-resistant ceiling board',url:'https://www.gyproc.in/products-plasterboards/gyproc_dampline'},
+      {label:'BIS — IS 2095 Part 1, gypsum plaster boards (search standard)',url:'https://www.bis.gov.in/know-your-standard/?lang=en'}
+    ]
+  },
+  {
+    slug:'granite-vs-quartz-kitchen-countertop-guide',
+    type:'construction-guide',category:'Interior Materials',
+    title:'Granite vs Quartz Kitchen Countertops | Selection & Care Guide | ProPulse',
+    description:'Compare natural granite and engineered quartz countertops by appearance, porosity, heat, staining, joints, maintenance and installation.',
+    heading:'Granite vs quartz: which kitchen countertop should you choose?',
+    summary:'Both surfaces have different strengths and care requirements. Compare the specific slab or brand, fabrication quality, support, joints, sink cut-outs and maintenance guidance before deciding.',
+    searchTerms:['granite vs quartz kitchen countertop','which countertop is best for Indian kitchen','quartz vs granite price Hyderabad','granite kitchen slab maintenance','quartz countertop heat resistance'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Natural stone varies slab to slab, and engineered surfaces vary by manufacturer and product series. Follow the selected supplier’s written care, heat and installation instructions.',
+    sections:[
+      section('Understand natural granite','Granite is a natural stone with variation in pattern, colour and mineral composition. Inspect the actual slab for shade, fissures, repairs, thickness and finish; a small sample may not represent the full slab.'),
+      section('Understand engineered quartz','Engineered quartz surfaces are manufactured from mineral aggregates and binders. Colour and pattern may be more consistent within a product series, but performance and heat limitations are manufacturer-specific.'),
+      section('Compare heat, stains and chemicals','Do not place hot cookware directly on any countertop unless the manufacturer explicitly permits it. Use trivets and chopping boards. Ask for the supplier’s guidance on oils, acids, cleaners, solvents and stain removal.'),
+      section('Check porosity and sealing requirements','Natural stone may require a suitable sealer depending on the stone and finish. Engineered quartz has its own care requirements. Ask whether sealing is needed, what product is used and how often it should be renewed.'),
+      section('Plan slab thickness, support and overhang','Countertop thickness and support must suit the slab, cabinet construction, cut-outs and overhang. Unsupported projections and sink/cooktop openings need proper fabrication and reinforcement details.'),
+      section('Inspect joints, edges and cut-outs','Review joint position, colour-matched adhesive, edge profile, corner radius, sink cut-out polish, hob clearance and wall upstand. Fabrication quality often affects the final result as much as material selection.'),
+      section('Approve the actual slab and layout','Mark the selected slab and agree on vein direction, visible areas, joint placement and wastage. For natural granite, record the slab identification and photograph the approved piece before cutting.'),
+      section('Compare complete installed cost','Include slab grade/series, thickness, fabrication, edge profile, sink and hob cut-outs, transport, installation, supports, backsplash and taxes. Compare quotations on the same scope.')
+    ],
+    sources:[
+      {label:'Natural Stone Institute — Care and cleaning resources',url:'https://www.naturalstoneinstitute.org/consumers/care/'},
+      {label:'Caesarstone — Care and maintenance',url:'https://www.caesarstone.com/care-and-maintenance/'}
+    ]
+  },
+  {
+    slug:'cpvc-upvc-ppr-plumbing-pipes-home-guide',
+    type:'construction-guide',category:'Construction Materials',
+    title:'CPVC vs UPVC vs PPR Pipes for Homes | Plumbing Guide | ProPulse',
+    description:'Understand CPVC, UPVC and PPR pipe applications for home water supply, temperature, fittings, jointing, standards and installation checks.',
+    heading:'What is the difference between CPVC, UPVC and PPR pipes?',
+    summary:'Pipe material must match the service, water temperature, pressure, local regulations and manufacturer system. Do not choose a pipe from its colour or price alone.',
+    searchTerms:['CPVC vs UPVC vs PPR pipes','which pipe is best for house plumbing','CPVC pipe for hot water','UPVC pipe for cold water','PPR pipe plumbing advantages'],
+    ctaLabel:'Get Construction Quote',cta:'/quote?package=standard#construction',
+    note:'Plumbing design and installation should follow applicable standards, manufacturer instructions and local requirements. Pressure testing must be performed by a qualified plumber using the specified test procedure.',
+    sections:[
+      section('Understand the common materials','CPVC means chlorinated polyvinyl chloride and is used in hot- and cold-water distribution systems when the selected product is rated for the service. UPVC means unplasticised PVC and is used in applications such as cold-water systems and drainage depending on the product. PPR is polypropylene random copolymer used in hot- and cold-water systems with a compatible fusion-jointed fitting system.'),
+      section('Check temperature and pressure ratings','Every product series has a pressure class/rating and temperature limits. Confirm the operating conditions, expected pressure, water heater temperature and installation environment against the manufacturer’s technical data.'),
+      section('Do not mix incompatible systems casually','Pipe, fittings, valves, transition pieces and jointing methods should form a compatible system. Use the manufacturer-approved solvent cement, fusion tools or mechanical transition fittings for the selected material.'),
+      section('Check applicable Indian Standards','BIS lists IS 15778 for CPVC pipes for potable hot and cold water distribution, with amendments. Other pipe types and applications have their own standards. Verify the current edition, amendments and product certification scope through BIS rather than relying on a generic claim.'),
+      section('Plan routes and service access','Coordinate pipe routes with beams, electrical conduits, waterproofing, fixtures and access panels. Avoid inaccessible joints where possible and provide access to valves, filters and serviceable connections.'),
+      section('Support, expansion and protection','Follow manufacturer requirements for pipe supports, spacing, thermal expansion, sleeves, wall/floor crossings and protection from impact or sunlight. Hot-water lines need particular attention to expansion and insulation where specified.'),
+      section('Pressure test before concealment','Inspect alignment, supports, joints and isolation. Conduct the specified pressure/leak test before closing chases, screeding or boxing. Record the test procedure, pressure, duration and result; do not conceal leaking joints.'),
+      section('What to record in the plumbing BOQ','Specify pipe material, standard, manufacturer, series, pressure class, nominal size, fittings, valves, jointing system, insulation, supports, testing and warranty. Record product labels and invoices for future repairs.')
+    ],
+    sources:[
+      {label:'BIS — IS 15778:2007 CPVC pipes and amendments',url:'https://standards.bis.gov.in/website/standard-details?encryptedId=eyJpdiI6InlBYU1kMnV6K1k3bDBmUDlXR3JkOVE9PSIsInZhbHVlIjoibEhmV1Aydnc2bVYvTDYrWUN6b3FBUT09IiwibWFjIjoiMzBiZmI1YzZlNTVhODEyZWU1OWViOTg5M2M1YWY1YjQ5NmNiMzdkNzlhZTFiMDAzNjIyOWMxYiIsInRhZyI6IiJ9'},
+      {label:'Indian Plumbing Association — Guide to Good Plumbing Practices',url:'https://indianplumbing.org/IPA_Old_site/img/activities/IPPL/2021/AGGP_Book.pdf'}
+    ]
+  },
+  {
+    slug:'house-wiring-cables-mcb-rcbo-earthing-guide',
+    type:'construction-guide',category:'Electrical Planning',
+    title:'House Wiring, Cable Selection, MCB, RCCB & Earthing | Home Guide | ProPulse',
+    description:'Learn what homeowners should verify in electrical wiring plans, cable specifications, circuit protection, RCCB/RCBO and earthing before closing walls.',
+    heading:'What should you check in house electrical wiring?',
+    summary:'Electrical safety depends on circuit design, conductor sizing, protective devices, earthing, installation workmanship and testing. This is not a DIY wiring guide; use a licensed/qualified electrical professional.',
+    searchTerms:['house wiring cable size guide India','MCB vs RCCB vs RCBO','how to check house electrical wiring','earthing in house wiring','IS 732 electrical wiring installation'],
+    ctaLabel:'Get Construction Quote',cta:'/quote?package=standard#construction',
+    note:'Never size cables, select protective devices or modify live wiring using an online chart. The installation designer/electrician must calculate loads, fault conditions, voltage drop and protective coordination for the actual site.',
+    sections:[
+      section('Start with a load and circuit schedule','List lighting, sockets, kitchen appliances, air conditioners, water heaters, pumps and other fixed loads. The electrical designer should divide circuits appropriately and document ratings, routes and distribution-board schedules.'),
+      section('Understand cable specification','Cable selection depends on conductor material and cross-section, installation method, ambient temperature, grouping, insulation type, voltage drop and fault protection. A printed square-millimetre size alone does not prove suitability.'),
+      section('Verify standards and product traceability','BIS lists IS 732:2019 as the code of practice for electrical wiring installations and IS 694 for PVC insulated cables within its scope. Verify current editions, amendments and licence scope through BIS.'),
+      section('Understand MCB, RCCB and RCBO','An MCB provides overcurrent protection against overload and short circuit. An RCCB detects residual current and provides earth-leakage protection but does not by itself provide overcurrent protection. An RCBO combines residual-current and overcurrent protection. Device selection and coordination must be designed for the installation.'),
+      section('Earthing and bonding are essential','The earthing arrangement, protective conductor continuity, bonding and electrode system must follow the applicable design and regulations. A green wire or a visible earth pit alone does not prove an effective protective system.'),
+      section('Keep wiring away from avoidable risks','Coordinate electrical routes with plumbing, wet areas, structural members and service zones. Use suitable enclosures, junction boxes and accessories, and maintain access to connections that require inspection or maintenance.'),
+      section('Ask for electrical test records','Before energising and handover, qualified personnel should perform applicable continuity, insulation resistance, polarity, earth-fault loop/earthing and protective-device tests using suitable instruments. Keep test results and circuit labels.'),
+      section('What to include in the electrical BOQ','Record cable brand and specification, conductor size by circuit as designed, conduit, boxes, switchgear, MCB/RCCB/RCBO ratings, earthing, accessories, labour, testing, drawings and warranties.')
+    ],
+    sources:[
+      {label:'BIS — IS 732:2019 electrical wiring installations',url:'https://standards.bis.gov.in/website/standard-details?encryptedId=eyJpdiI6ImpvbGo4cVFET2VSWTgwVnlBU3JkY1E9PSIsInZhbHVlIjoiQytmWjVqR3I5VXJZaTRwY2R0d0Fhdz09IiwibWFjIjoiYzg5NzdhMWE0MWQ5NzBiZDMyYmEzYzRjNjNmMzU0NGU3MDU3YWEzOWJhMDY4N2FkZTUwOWFhNjcyZGRjNTAyZCIsInRhZyI6IiJ9'},
+      {label:'BIS — IS 694 cable testing and standard listing',url:'https://lims.bis.gov.in/home/search_is_number/?is_number__doc_no=694'},
+      {label:'BIS — Mandatory certification list',url:'https://www.bis.gov.in/product-certification/products-under-compulsory-certification/scheme-i-mark-scheme/?lang=en'}
+    ]
+  },
+
 ]
 
 export function guideBySlug(slug){
