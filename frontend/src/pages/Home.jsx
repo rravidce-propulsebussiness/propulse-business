@@ -6,18 +6,20 @@ import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 import HeroBlueprintAnimation from '../components/HeroBlueprintAnimation'
 
 const HOME_TRUST_HEADLINES = [
-  { lead: 'Branded Materials.', accent: ' Clear Specs.' },
-  { lead: 'Dedicated Engineer', accent: ' for Your Site.' },
-  { lead: 'Expert Supervision.', accent: ' Better Execution.' },
-  { lead: 'Workmanship Warranty.', accent: ' Added Confidence.' },
-  { lead: 'Transparent Quotes.', accent: ' Clear Costs.' },
+  { lead: 'Clear Scope.', accent: ' Transparent Estimates.' },
+  { lead: 'Construction Planning.', accent: ' Built Around Your Plot.' },
+  { lead: 'Material Specifications.', accent: ' Clearly Discussed.' },
+  { lead: 'Project Updates.', accent: ' At Key Milestones.' },
+  { lead: 'Compare Options.', accent: ' Make an Informed Choice.' },
 ]
 const DEFAULT_HERO = 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=2200&q=92'
 
 const SERVICES = [
-  { key: 'build', eyebrow: 'Construction', title: 'Build Your Home', text: 'Independent house, villa, apartment and commercial construction.', image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=88', icon: 'home' },
-  { key: 'design', eyebrow: 'Interiors', title: 'Design Your Space', text: 'Home interiors, office interiors and customized spaces.', image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=88', icon: 'sofa' },
-  { key: 'property', eyebrow: 'Real Estate', title: 'Find a Property', text: 'Buy or sell the right property with a clear requirement.', image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=88', icon: 'building' },
+  { key: 'build', eyebrow: 'House Construction', title: 'Independent House Construction', text: 'Plan your home around your plot, built-up area, specifications and budget.', image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=88', icon: 'home' },
+  { key: 'build', eyebrow: 'Villa Construction', title: 'Villa Construction', text: 'Explore construction planning for a new villa and multi-floor home.', image: 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1200&q=88', icon: 'building' },
+  { key: 'build', eyebrow: 'Turnkey Construction', title: 'Turnkey Construction', text: 'Discuss scope, materials, milestones and handover expectations in one brief.', image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=88', icon: 'layers' },
+  { key: 'design', eyebrow: 'Home Interiors', title: 'Home Interiors', text: 'Plan residential interiors with a clear room-wise scope and finish preferences.', image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=88', icon: 'sofa' },
+  { key: 'design', eyebrow: 'Renovation', title: 'Renovation & Remodeling', text: 'Describe the existing space, required changes and intended finish.', image: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=88', icon: 'building' },
 ]
 
 const BENEFITS = [
@@ -121,30 +123,30 @@ export default function Home() {
       <section className="hc-hero hc-premium-hero" id="home">
         <div className="hc-container hc-premium-hero-inner">
           <div className="hc-premium-hero-copy">
-            <span className="hc-premium-kicker">CONSTRUCTION · INTERIORS · MARKETPLACE · TECHNOLOGY</span>
-            <h1>Don’t Leave Your <em>Dream Home</em> to <strong>Chance.</strong></h1>
+            <span className="hc-premium-kicker">HOUSE CONSTRUCTION COMPANY IN HYDERABAD</span>
+            <h1>Build Your <em>Dream Home</em> in <strong>Hyderabad.</strong></h1>
             <p className="hc-premium-typewriter" style={{ position: 'relative', minHeight: '1.4em', margin: '22px 0 26px', fontFamily: "'Sora', Inter, ui-sans-serif, sans-serif", fontSize: 'clamp(14px,2.4vw,23px)', fontWeight: 700, letterSpacing: '-.035em', lineHeight: 1.4 }}>
-              <span className="hc-premium-typewriter-sr" style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clipPath: 'inset(50%)', whiteSpace: 'nowrap' }}>Branded materials with clear specifications, a dedicated site engineer, expert supervision, workmanship warranty and transparent quotations.</span>
+              <span className="hc-premium-typewriter-sr" style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clipPath: 'inset(50%)', whiteSpace: 'nowrap' }}>Plan house construction in Hyderabad with a clear scope, transparent estimates and construction requirements tailored to your plot and budget.</span>
               <span className="hc-premium-typewriter-line" aria-hidden="true" style={{ position: 'relative', display: 'block', minHeight: '1.4em' }}>
                 <span className="hc-premium-typewriter-lead" style={{ color: '#f7f9ff' }}>{activeTrustHeadline.lead.slice(0, trustTyping.length)}</span>
                 <span className="hc-premium-typewriter-accent" style={{ color: '#ff9d70' }}>{activeTrustHeadline.accent.slice(0, Math.max(0, trustTyping.length - activeTrustHeadline.lead.length))}</span>
                 <span className="hc-premium-typewriter-caret" style={{ display: 'inline-block', width: '2px', height: '1.07em', marginLeft: '3px', background: '#ff8c56', verticalAlign: '-.12em' }} />
               </span>
             </p>
-            <p className="hc-business-intro">Hire ProPulse directly for construction or interiors, or explore independent professionals through our marketplace. We also build technology for these businesses.</p>
-            <div className="hc-premium-actions"><button className="hc-hero-cta hc-hero-cta-primary" type="button" onClick={() => openRequirement()}><span className="hc-hero-cta-label">Compare Professionals</span><span className="hc-hero-cta-arrow" aria-hidden="true">→</span></button><Link className="hc-hero-cta hc-hero-cta-secondary" to="/contact"><span className="hc-hero-cta-label">Contact ProPulse Directly</span><span className="hc-hero-cta-arrow" aria-hidden="true">→</span></Link></div>
-            <div className="hc-premium-trust" aria-label="ProPulse benefits"><span><Icon name="clipboard" size={22}/>Free Consultation</span><span><Icon name="layers" size={22}/>Relevant Professionals</span><span><Icon name="check" size={22}/>Warranty Options</span></div>
+            <p className="hc-business-intro">Planning an independent house or villa? Share your plot size, built-up area, floors, budget and preferred specifications. ProPulse helps you take the next step with a structured construction brief. Interiors and independent professionals are available too.</p>
+            <div className="hc-premium-actions"><button className="hc-hero-cta hc-hero-cta-primary" type="button" onClick={() => openRequirement('build')}><span className="hc-hero-cta-label">Get Construction Estimate</span><span className="hc-hero-cta-arrow" aria-hidden="true">→</span></button><Link className="hc-hero-cta hc-hero-cta-secondary" to="/contact"><span className="hc-hero-cta-label">Talk to Our Team</span><span className="hc-hero-cta-arrow" aria-hidden="true">→</span></Link></div>
+            <div className="hc-premium-trust" aria-label="Construction planning priorities"><span><Icon name="clipboard" size={22}/>Clear Scope</span><span><Icon name="layers" size={22}/>Material Specifications</span><span><Icon name="check" size={22}/>Transparent Estimates</span></div>
           </div>
           <div className="hc-premium-scene"><HeroBlueprintAnimation /></div>
         </div>
       </section>
-      <section className="hc-section hc-services"><div className="hc-container"><div className="hc-section-head hc-section-head-centered"><h2>What do you need?</h2></div><div className="hc-service-grid">{SERVICES.map(item => <article className="hc-service-card" key={item.key}><img src={item.image} alt={item.title} loading="lazy"/><div className="hc-service-copy"><span className="hc-service-icon"><Icon name={item.icon} size={19}/></span><div><h3>{item.title}</h3><b>{item.eyebrow}</b><p>{item.text}</p></div><button type="button" onClick={() => openRequirement(item.key)} aria-label={'Start '+item.title}><Icon name="arrow" size={15}/></button></div></article>)}</div></div></section>
-      <section className="hc-section hc-benefits"><div className="hc-container"><div className="hc-section-head compact hc-section-head-centered"><h2>Our Construction, Interiors, Marketplace &amp; Technology Divisions</h2></div><div className="hc-benefit-grid">{BENEFITS.map((item,index) => <article key={item.title}><span className={'tone-'+(index+1)}><Icon name={item.icon} size={19}/></span><div><h3>{item.title}</h3><p>{item.text}</p><Link to={item.link}>Explore service →</Link></div></article>)}</div></div></section>
+      <section className="hc-section hc-services"><div className="hc-container"><div className="hc-section-head hc-section-head-centered"><h2>House Construction Services in Hyderabad</h2></div><div className="hc-service-grid">{SERVICES.map(item => <article className="hc-service-card" key={item.key}><img src={item.image} alt={item.title} loading="lazy"/><div className="hc-service-copy"><span className="hc-service-icon"><Icon name={item.icon} size={19}/></span><div><h3>{item.title}</h3><b>{item.eyebrow}</b><p>{item.text}</p></div><button type="button" onClick={() => openRequirement(item.key)} aria-label={'Start '+item.title}><Icon name="arrow" size={15}/></button></div></article>)}</div></div></section>
+      <section className="hc-section hc-benefits"><div className="hc-container"><div className="hc-section-head compact hc-section-head-centered"><h2>What to Clarify Before You Build</h2></div><div className="hc-benefit-grid">{[{icon:'clipboard',title:'Defined Scope',text:'Align built-up area, floor count, drawings and included work.',link:'/guides/home-construction-checklist'},{icon:'layers',title:'Material Specifications',text:'Discuss grades, brands, finishes and quality checks before work begins.',link:'/guides/best-steel-for-house-construction'},{icon:'people',title:'Compare Professionals',text:'Review published profiles and relevant work where available.',link:'/experts'},{icon:'shield',title:'Clear Commercial Terms',text:'Ask about milestones, exclusions, variations, warranty and handover.',link:'/guides/choose-construction-contractor-hyderabad'}].map((item,index) => <article key={item.title}><span className={'tone-'+(index+1)}><Icon name={item.icon} size={19}/></span><div><h3>{item.title}</h3><p>{item.text}</p><Link to={item.link}>Learn more →</Link></div></article>)}</div></div></section>
       <section className="hc-section hc-how"><div className="hc-container"><div className="hc-section-head hc-section-head-centered"><h2>How It Works</h2></div><div className="hc-step-grid">{STEPS.map((step,index) => <article key={step.number}><span className={'hc-step-number tone-'+(index+1)}>{step.number}</span><span className={'hc-step-icon tone-'+(index+1)}><Icon name={step.icon} size={18}/></span><h3>{step.title}</h3><p>{step.text}</p>{index < STEPS.length-1 && <i className="hc-step-arrow"><Icon name="arrow" size={15}/></i>}</article>)}</div></div></section>
       <section className="hc-section hc-projects">
         <div className="hc-container">
           <div className="hc-section-head hc-section-head-centered">
-            <h2>{hasPublishedProjects ? 'Published Project Work' : 'Design Inspiration'}</h2>
+            <h2>{hasPublishedProjects ? 'Published Construction & Interior Projects' : 'Home Design Inspiration'}</h2>
             <p>{hasPublishedProjects ? 'Real projects published by eligible ProPulse businesses. Open a project to see its public details and video when available.' : 'Illustrative design inspiration only. These images are not presented as completed ProPulse projects.'}</p>
           </div>
           <div className="hc-project-grid">
@@ -156,7 +158,7 @@ export default function Home() {
           {hasPublishedProjects && <p className="hc-projects-more"><Link to="/projects">View all published projects →</Link></p>}
         </div>
       </section>
-      <section className="hc-slim-cta"><div className="hc-container hc-slim-cta-inner"><img src={heroImage} alt="" loading="lazy"/><div><h2>Ready to Start Your Project?</h2><p>Contact ProPulse for direct construction or interiors, or compare independent contractors.</p></div><div className="hc-slim-actions"><button type="button" onClick={() => openRequirement('')}>Start Your Requirement <Icon name="arrow" size={14}/></button><Link to="/packages">View Packages</Link></div></div></section>
+      <section className="hc-slim-cta"><div className="hc-container hc-slim-cta-inner"><img src={heroImage} alt="" loading="lazy"/><div><h2>Ready to Start Your Project?</h2><p>Start planning your house construction in Hyderabad with a structured project requirement.</p></div><div className="hc-slim-actions"><button type="button" onClick={() => openRequirement('build')}>Get Construction Estimate <Icon name="arrow" size={14}/></button><Link to="/packages">View Packages</Link></div></div></section>
     </main>
     <PublicFooter phone={phone} email={email} />
   </div>
