@@ -6,10 +6,10 @@ export const SITE_NAME='ProPulse Business'
 
 export const HOME_SEO={
   path:'/',
-  title:'Construction Company, Interiors & Technology in Hyderabad | ProPulse',
-  description:'ProPulse directly builds homes and designs interiors in Hyderabad, connects homeowners with independent professionals, and develops Business OS technology.',
-  heading:'Direct construction, interior execution, marketplace and technology',
-  summary:'Hire ProPulse directly for construction and interiors, compare independent contractors, or explore technology products.',
+  title:'House Construction Company in Hyderabad | ProPulse',
+  description:'Plan house and villa construction in Hyderabad with ProPulse. Explore construction scope, materials, estimates and project planning, compare independent professionals, or discuss your requirements with our team.',
+  heading:'House Construction Company in Hyderabad',
+  summary:'Plan independent house and villa construction in Hyderabad. Define your plot, built-up area, floors, materials, budget and timeline before requesting an estimate. Explore interiors and independent professionals too.',
 }
 
 export const CORE_PUBLIC_SEO_ROUTES=[
