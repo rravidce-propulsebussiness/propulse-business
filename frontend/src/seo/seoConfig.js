@@ -30,8 +30,8 @@ export const CORE_PUBLIC_SEO_ROUTES=[
   },
   {
     path:'/experts',
-    title:'Find Construction & Interior Professionals | ProPulse',
-    description:'Browse registered construction, interior and real-estate businesses on ProPulse, review public project work and find professionals relevant to your requirement.',
+    title:'Construction & Interior Professionals in Hyderabad | ProPulse',
+    description:'Explore published construction and interior professionals, their real project work, services and areas served. ProPulse direct services are clearly identified.',
     heading:'Find professionals for your project',
     summary:'Explore public business profiles, completed projects and service information before deciding who you want to contact.',
   },
