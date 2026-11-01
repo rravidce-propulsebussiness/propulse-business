@@ -471,5 +471,43 @@ groups["Interior project timeline & quality inspection"] = [
 ["How do I compare two interior contractor quotations?","Use identical dimensions, specifications, hardware, quantities, exclusions, taxes, timelines and payment milestones."]
 ];
 
+
+groups["Kitchen countertop edges, sinks & accessories"] = [
+["Which countertop edge profile is best for a modular kitchen?","Compare eased, pencil, bullnose and bevel profiles by material, cleaning, impact exposure and appearance."],
+["What is the difference between an under-mount and top-mount kitchen sink?","Compare cut-out, support, sealing, cleaning and compatibility with countertop material."],
+["Which is better, a single-bowl or double-bowl kitchen sink?","Match bowl size and configuration to cookware, washing routine, counter space and drainboard needs."],
+["What is the best sink size for an Indian kitchen?","Measure cabinet width, bowl depth, cookware, faucet reach and available countertop before choosing."],
+["How much does a modular kitchen sink cost?","Separate sink material, bowl configuration, gauge or thickness, accessories, cut-out and installation."],
+["Which kitchen sink material is best, stainless steel or quartz composite?","Compare care, impact, heat, stain response, finish and manufacturer-specific guidance."],
+["What is the difference between a kitchen sink strainer and waste coupling?","Explain drain components and confirm compatibility with the selected sink and plumbing."],
+["Should I install a sink grid or bottom rack?","Consider sink dimensions, finish protection, cleaning, drainage and replacement availability."],
+["What is the best kitchen faucet for an under-mount sink?","Check spout reach, height, swivel, spray function, water pressure and countertop hole positions."],
+["What should be included in a kitchen sink quotation?","List exact model, cut-out, mounting method, faucet, waste fittings, accessories, support, plumbing and warranty."]
+];
+groups["Wardrobe dimensions & storage layouts"] = [
+["What is the standard depth of a bedroom wardrobe?","Determine usable internal depth from garment type, shutter system, hardware and room constraints rather than relying on one fixed number."],
+["How much height should be provided for hanging clothes?","Separate short-hang and long-hang zones using actual garments and hanger dimensions."],
+["How much space is needed for a wardrobe loft?","Check ceiling height, loft shutter operation, safe access, structural support and stored-item size."],
+["What is the ideal shelf spacing inside a wardrobe?","Plan around folded clothing, bags and accessories and check reach and visibility."],
+["How many drawers should a 3-door wardrobe have?","Base drawer quantity and width on storage inventory, cabinet dimensions and hardware capacity."],
+["What is the difference between internal wardrobe depth and external depth?","Account for back panels, shutters, tracks, hinges and accessories when calculating usable storage."],
+["How do I plan a wardrobe for sarees and long dresses?","Allocate suitable hanging or folded zones, garment length, shelf access and storage protection."],
+["What is the best wardrobe layout for a small master bedroom?","Balance hanging, shelves, drawers and loft storage with door swing, bed clearance and circulation."],
+["How much clearance is required in front of a wardrobe?","Check shutter opening, drawer extension, bed and walking path using the actual room plan."],
+["What dimensions should be shown in a wardrobe drawing?","Include overall size, internal partitions, shelf heights, drawers, hanging rods, hardware and finished clearances."]
+];
+groups["Bedroom false ceilings & lighting design"] = [
+["Which false ceiling design is best for a small bedroom?","Compare simple perimeter details and partial drops by ceiling height, maintenance and visual proportion."],
+["How much does a bedroom cove ceiling cost?","Specify area, framing, board, cove profile, LED strip, driver access, wiring, paint and labour."],
+["How many lights are needed in a bedroom?","Create a layered lighting plan based on room size, tasks, luminaire output and user comfort."],
+["Which colour temperature is suitable for bedroom lighting?","Compare warm and neutral appearance with actual samples and the intended activity."],
+["Where should bedside reading lights be placed?","Coordinate bed size, headboard, seated reading position, glare, switches and wiring."],
+["How do I plan wardrobe profile lighting?","Specify LED profile, diffuser, sensor or switch, driver location, cable route and service access."],
+["Can a ceiling fan be installed with a false ceiling?","Coordinate structural support, fan downrod, blade clearance, ceiling level and electrical installation."],
+["What is the difference between cove lighting and recessed downlights?","Compare indirect ambience and focused or general illumination, glare, energy use and maintenance."],
+["How do I avoid glare from bedroom ceiling lights?","Choose appropriate beam angles, diffusers, positions and dimming after reviewing the room layout."],
+["What should be included in a bedroom lighting quotation?","List fixture model, wattage, colour temperature, quantity, driver, wiring, controls, installation and warranty."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
