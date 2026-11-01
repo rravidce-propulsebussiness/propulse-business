@@ -105,5 +105,11 @@ groups["More interior cost, layout & material questions"] = [
 ["What should I finalise before starting interior work?","A checklist for approved drawings, material codes, electrical points, appliance sizes, finishes, BOQ and payment milestones."]
 ];
 
-export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
+groups["Hardware & accessories"]=[
+["Which hinges are best for kitchen cabinets?","Compare concealed and soft-close hinges by load, adjustment, opening angle and manufacturer rating."],
+["What is the difference between soft-close and normal hinges?","Explain damping, adjustment, durability and maintenance."],
+["Which channel is best for kitchen drawers?","Compare roller, telescopic and tandem systems by load rating, extension and serviceability."],
+["What is edge banding and why does it matter?","Explain edge protection, thickness, adhesive and finish quality."]
+];
+\nexport const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
