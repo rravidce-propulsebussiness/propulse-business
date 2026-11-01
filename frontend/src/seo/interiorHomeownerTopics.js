@@ -784,5 +784,51 @@ groups["Interior windows, doors and project quotation"] = [
 ["How do I protect furniture during interior installation?","Agree floor and wall protection, dust control, safe storage, waste removal and damage responsibility before work."]
 ];
 
+
+groups["Plywood verification and cabinet board selection"] = [
+["How do I identify the grade of plywood used in a modular kitchen?","Check the manufacturer's exact product declaration, grade, intended application, markings and supporting documentation."],
+["What is the difference between MR, BWR and BWP plywood?","Compare the declared exposure classification and test requirements from the manufacturer; these terms should not be treated as interchangeable."],
+["How do I check whether plywood is genuine?","Verify traceable sheet markings, batch details, invoice, supplier and current manufacturer or certification records."],
+["Can I identify waterproof plywood by its colour?","No. Colour, smell or a quick water splash cannot establish grade or bonding performance; check product documentation and test evidence."],
+["What is the difference between commercial plywood and calibrated plywood?","Understand the intended grade and whether thickness calibration and dimensional consistency are declared for the product."],
+["How do I check plywood thickness before modular furniture fabrication?","Measure representative sheets at multiple points with a suitable gauge and compare with the declared tolerance."],
+["What should I inspect on the edge of a plywood sheet?","Look for veneer gaps, overlaps, voids, delamination and damage while remembering that visual inspection cannot replace formal testing."],
+["Which plywood is suitable below a kitchen sink?","Specify a substrate suitable for the exposure and protect cut-outs, plumbing penetrations and edges from moisture."],
+["Can MDF be used for kitchen cabinets?","Assess the exact board grade, moisture exposure, edge sealing, construction detail and manufacturer's application guidance."],
+["What is the difference between HDHMR and plywood for wardrobes?","Compare declared properties, fixing performance, edge treatment, weight, cost and the cabinet maker's tested construction system."],
+["How do I check the quality of a modular kitchen carcass?","Inspect board specification, thickness, squareness, joints, back panel, edge sealing, support and hardware fixing."],
+["What is the best board thickness for wardrobe shelves?","Select thickness and support span based on shelf width, expected load, material properties and the cabinet system."],
+["Why is edge banding important in modular furniture?","It protects exposed board edges, improves appearance and helps reduce moisture entry when correctly specified and applied."],
+["What is the difference between PVC and ABS edge banding?","Compare material properties, finish, thickness options, availability and compatibility with the fabricator's process."],
+["Which edge band thickness should be used for wardrobe shutters?","Specify based on shutter construction, impact exposure, design and manufacturer or fabricator recommendations."],
+["How can I identify poor edge banding workmanship?","Look for open seams, glue lines, chipped corners, uneven trimming, sharp edges and lifting."],
+["What is PUR edge banding adhesive?","Understand how PUR adhesive differs from other systems and why process control and supplier specifications matter."],
+["Can edge banding prevent water damage completely?","No. It is one part of cabinet protection; substrate selection, sealing, detailing and moisture control remain essential."],
+["How do I compare plywood brands without relying on advertisements?","Compare exact product codes, certifications, test documentation, traceability, warranty and supplier service."],
+["What documents should an interior contractor provide for plywood?","Request product datasheets, grade declaration, invoice, batch identification and relevant certification for the supplied product."]
+];
+groups["Cabinet hinges, drawer channels and hardware checks"] = [
+["How do I choose full overlay or half overlay hinges?","Match hinge geometry to cabinet partitions, shutter overlay, side panels and the manufacturer's drilling schedule."],
+["What is the difference between inset and overlay hinges?","Compare how the shutter sits relative to the cabinet frame and how the hinge and mounting plate are configured."],
+["Are soft-close hinges worth the extra cost?","Compare noise, user comfort, adjustment, durability, serviceability and the quality of the exact hinge model."],
+["How many hinges are needed for a wardrobe shutter?","Use the hinge manufacturer's chart for shutter height, width, weight and material rather than a universal count."],
+["What does a 165-degree cabinet hinge do?","It provides a wider opening angle for suitable layouts; confirm clearance and compatibility with adjacent cabinets and pull-outs."],
+["How do I adjust a cabinet hinge when the shutter is uneven?","Identify the hinge's side, depth and height adjustments and follow its installation instructions without over-tightening."],
+["What is the difference between telescopic and tandem channels?","Compare side-mounted runners with integrated drawer systems for extension, appearance, adjustment, load and cost."],
+["What does full-extension drawer channel mean?","The drawer can travel out farther for access; verify the manufacturer's actual extension specification."],
+["How do I check the load capacity of drawer channels?","Read the rating conditions, whether capacity applies to a pair, drawer dimensions and specified test method."],
+["Why does a modular kitchen drawer become noisy or stuck?","Check runner alignment, cabinet squareness, loading, fasteners, obstruction and adjustment before replacing hardware."],
+["Which hardware is suitable for a heavy pantry pull-out?","Select a complete system using the manufacturer's load, cabinet dimension, mounting and cycle specifications."],
+["How do I identify original branded kitchen hardware?","Check exact model codes, traceable packaging, invoice and official manufacturer verification or warranty channels."],
+["Can a hardware logo prove that a hinge is original?","No. Use model traceability, authorized supply evidence and manufacturer verification rather than appearance alone."],
+["What should be included in a modular kitchen hardware schedule?","Record brand, series, model, quantity, dimensions, finish, load rating, soft-close function and warranty."],
+["How do I compare kitchen basket quality?","Inspect material, wire diameter or sheet construction, coating, welds, runner system, load rating and replacement availability."],
+["What is the difference between tandem box and regular drawer channels?","Compare the complete drawer-side construction, adjustment, usable space, extension, finish and compatible cabinet dimensions."],
+["How do I check a soft-close drawer before accepting modular kitchen work?","Test smooth movement, closing action, alignment, side play and performance with a representative load."],
+["What should I do if the contractor changes the approved hardware brand?","Request written disclosure, exact model details, specification comparison, revised price and warranty before accepting substitution."],
+["How do I maintain modular kitchen hinges and channels?","Follow the manufacturer's cleaning and adjustment instructions and avoid harsh chemicals or unapproved lubricants."],
+["What hardware details should I collect at interior handover?","Keep model codes, invoices, warranties, installation locations, spare parts and service contact details."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
