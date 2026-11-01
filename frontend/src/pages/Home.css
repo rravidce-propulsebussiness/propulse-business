@@ -1051,7 +1051,7 @@
   --pp-white:#fff;
   --pp-ink:#252b32;
   --pp-muted:#72777c;
-  --pp-accent:#c87945;
+  --pp-accent:#f36b12;
   background:var(--pp-ivory);
   color:var(--pp-ink);
 }
@@ -1106,7 +1106,7 @@
   transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;
 }
 .hc-home .hc-project-grid article:hover{
-  transform:translateY(-5px);border-color:#d9c2ae;
+  transform:translateY(-5px);border-color:#f6c39f;
   box-shadow:0 20px 42px rgba(37,43,50,.11);
 }
 .hc-home .hc-project-grid article>a{
@@ -1140,7 +1140,7 @@
   background:#fff;font-size:13px;font-weight:800;text-decoration:none;
   transition:background .2s ease,border-color .2s ease,transform .2s ease;
 }
-.hc-home .hc-projects-more a:hover{background:#f8eee6;border-color:#c87945;transform:translateY(-2px)}
+.hc-home .hc-projects-more a:hover{background:#f8eee6;border-color:#f36b12;transform:translateY(-2px)}
 .hc-home .hc-about-band{background:linear-gradient(180deg,#f1ede6,#f8f6f1);border-color:#e9e2d8}
 .hc-home .hc-secondary-paths{background:#f2eee8}
 .hc-home .hc-benefits{background:#eee9e1}
