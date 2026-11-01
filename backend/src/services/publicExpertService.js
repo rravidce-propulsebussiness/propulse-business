@@ -3,6 +3,7 @@ const expertDirectoryService=require('./expertDirectoryService');
 const projectVideoService=require('./projectVideoService');
 const projectPlanService=require('./projectPlanService');
 const projectImageService=require('./projectImageService');
+const videoSeo=require('./projectVideoSeoService');
 const brochureService=require('./brochureService');
 
 // Public video playback depends on a completed, source-matched redacted copy,
@@ -35,10 +36,18 @@ function publicProjectVideoStatusColumn(alias,officialOnly=false){
     : `${expression}::text AS video_publication_status`;
 }
 
+function publicProjectThumbnailColumn(alias){
+  return `CASE WHEN ${publicRedactedVideoReadySql(alias)}
+     AND ${alias}.video_thumbnail_source_url=${alias}.video_url
+     AND ${alias}.video_thumbnail_url LIKE 'private-object-s3:business-project-thumbnails/%'
+    THEN ${alias}.video_thumbnail_url ELSE NULL::text END AS video_thumbnail_url`;
+}
+
 async function materializeProjectMedia(rows){
   return Promise.all((rows||[]).map(async row=>({
     ...row,
     cover_image_url:row.cover_image_url?await projectImageService.displayUrl(row.cover_image_url):row.cover_image_url,
+    video_thumbnail_url:videoSeo.thumbnailPath(row),
     video_url:row.video_url?await projectVideoService.displayUrl(row.video_url):row.video_url,
     plan_url:row.plan_url?await projectPlanService.displayUrl(row.plan_url):row.plan_url,
     brochure_url:row.brochure_url?await projectPlanService.displayUrl(row.brochure_url):row.brochure_url,
@@ -302,6 +311,8 @@ async function listRecentProjectVideos({page=1,pageSize=12}={}){
        bpp.budget_text,
        bpp.cover_image_url,
        ${publicProjectVideoColumn('bpp')},
+       ${publicProjectThumbnailColumn('bpp')},
+       bpp.video_duration_seconds,
        COALESCE(bpp.video_published_at,bpp.created_at) AS video_published_at,
        bp.id AS business_profile_id,
        bp.business_name,
@@ -367,6 +378,9 @@ async function listRecentProjects({page=1,pageSize=18}={}){
        bpp.brochure_url,
        ${publicProjectVideoColumn('bpp',!settings.showVideos)},
        ${publicProjectVideoStatusColumn('bpp',!settings.showVideos)},
+       ${publicProjectThumbnailColumn('bpp')},
+       bpp.video_duration_seconds,
+       COALESCE(bpp.video_published_at,bpp.created_at) AS video_published_at,
        ${settings.showPlans?'bpp.plan_url':'NULL::text AS plan_url'},
        COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) AS published_at,
        bp.id AS business_profile_id,
@@ -411,6 +425,9 @@ async function getPublicProject(projectId,{materializeMedia=true}={}){
       bpp.cover_image_url,bpp.image_urls,bpp.package_name,bpp.brochure_url,
       ${publicProjectVideoColumn('bpp',!settings.showVideos)},
        ${publicProjectVideoStatusColumn('bpp',!settings.showVideos)},
+       ${publicProjectThumbnailColumn('bpp')},
+       bpp.video_duration_seconds,
+       COALESCE(bpp.video_published_at,bpp.created_at) AS video_published_at,
       ${settings.showPlans?'bpp.plan_url':'NULL::text AS plan_url'},
       COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) AS published_at,
       bp.id AS business_profile_id,bp.business_name,

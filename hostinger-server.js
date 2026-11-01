@@ -67,7 +67,9 @@ function startBackend(){
 startBackend();
 
 function backendRoute(requestPath){
-  return requestPath.startsWith('/project-cover/')
+  return requestPath.startsWith('/project-video-thumbnail/')
+    ||requestPath.startsWith('/project-video-stream/')
+    ||requestPath.startsWith('/project-cover/')
     ||requestPath==='/robots.txt'
     ||requestPath==='/sitemap.xml'
     ||requestPath==='/release.json'

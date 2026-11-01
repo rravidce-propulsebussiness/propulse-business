@@ -3,6 +3,8 @@ const fs=require('fs');
 const path=require('path');
 const {renderProjectHtml}=require('../services/projectSeoPageService');
 const coverService=require('../services/projectCoverService');
+const videoSeo=require('../services/projectVideoSeoService');
+const s3Storage=require('../services/s3PrivateObjectStorageService');
 
 const router=express.Router();
 const publicExpertService=require('../services/publicExpertService');
@@ -212,6 +214,63 @@ router.get('/project-cover/:projectKey',async(req,res)=>{
     res.setHeader('Cache-Control','no-store');
     res.setHeader('X-Robots-Tag','noindex');
     return res.status(503).type('text/plain').send('Project cover temporarily unavailable');
+  }
+});
+
+// Expose only the JPEG frame generated from an approved-for-public-playback
+// derivative. Original uploaded video and private R2 keys are never revealed.
+router.get('/project-video-thumbnail/:projectKey',async(req,res)=>{
+  const key=String(req.params.projectKey||'');
+  if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(key)||key.length>100){
+    res.setHeader('X-Robots-Tag','noindex');
+    return res.status(404).end();
+  }
+  const match=/^project-([1-9]\d*)$/.exec(key);
+  try{
+    const project=await publicExpertService.getPublicProject(match?match[1]:key,{materializeMedia:false});
+    if(!videoSeo.thumbnailPath(project)){
+      res.setHeader('Cache-Control','no-store');
+      res.setHeader('X-Robots-Tag','noindex');
+      return res.status(404).end();
+    }
+    const image=await videoSeo.readThumbnail(project);
+    res.setHeader('Content-Type','image/jpeg');
+    res.setHeader('Content-Length',String(image.length));
+    res.setHeader('Cache-Control','public,max-age=300');
+    return res.status(200).send(image);
+  }catch(error){
+    if(error?.providerStatus===404)return res.status(404).end();
+    console.error('Public video thumbnail failed:',error?.message||error);
+    res.setHeader('Cache-Control','no-store');
+    res.setHeader('Retry-After','30');
+    return res.status(503).end();
+  }
+});
+
+// Stable media URL for video search engines. Each request redirects to a short-
+// lived signed *playback derivative*, never to the private original upload.
+// Range and seek requests are passed directly to R2 after the redirect.
+router.get('/project-video-stream/:projectKey.mp4',async(req,res)=>{
+  const key=String(req.params.projectKey||'');
+  if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(key)||key.length>100){
+    res.setHeader('X-Robots-Tag','noindex');
+    return res.status(404).end();
+  }
+  const match=/^project-([1-9]\d*)$/.exec(key);
+  try{
+    const project=await publicExpertService.getPublicProject(match?match[1]:key,{materializeMedia:false});
+    const derivativeKey=videoSeo.playbackReference(project);
+    if(!derivativeKey){
+      res.setHeader('Cache-Control','no-store');
+      return res.status(404).end();
+    }
+    const signed=await s3Storage.getMediaGetUrl(derivativeKey,{expiresSeconds:600});
+    res.setHeader('Cache-Control','no-store');
+    return res.redirect(302,signed);
+  }catch(error){
+    console.error('Public project video redirect failed:',error?.message||error);
+    res.setHeader('Cache-Control','no-store');
+    return res.status(503).end();
   }
 });
 

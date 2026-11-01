@@ -34,6 +34,15 @@ class VideoPreservationTests(unittest.TestCase):
             self.assertEqual(result["audio"], "original retained")
             self.assertEqual(stream_hash(src, "v"), stream_hash(out, "v"))
             self.assertEqual(stream_hash(src, "a"), stream_hash(out, "a"))
+            thumbnail=Path(directory)/"thumbnail.jpg"
+            duration=worker.generate_thumbnail(out, thumbnail)
+            self.assertGreater(duration, 1.0)
+            self.assertEqual(thumbnail.read_bytes()[:3], bytes([255,216,255]))
+            self.assertGreater(thumbnail.stat().st_size, 1024)
+            self.assertEqual(stream_hash(src, "v"), stream_hash(out, "v"),
+                "Thumbnail extraction must not alter video frames")
+            self.assertEqual(stream_hash(src, "a"), stream_hash(out, "a"),
+                "Thumbnail extraction must not alter original audio")
 
     def test_without_audio_no_music_added(self):
         with tempfile.TemporaryDirectory() as directory:

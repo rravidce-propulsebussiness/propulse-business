@@ -116,14 +116,37 @@ export default function ProjectDetail(){
     property('og:description',description)
     property('og:url',canonical)
     property('og:type','article')
+    if(project.videoThumbnail){
+      named('twitter:image',project.videoThumbnail)
+      named('twitter:card','summary_large_image')
+      property('og:image',project.videoThumbnail)
+      property('og:video:image',project.videoThumbnail)
+    }
     let link=document.head.querySelector('link[rel="canonical"]')
     if(!link){link=document.createElement('link');link.rel='canonical';document.head.append(link)}
     link.href=canonical
     let jsonLd=document.head.querySelector('script[data-propulse-project-seo]')
-    if(!jsonLd){jsonLd=document.createElement('script');jsonLd.type='application/ld+json';jsonLd.dataset.propulseProjectSeo='';document.head.append(jsonLd)}
-    jsonLd.textContent=JSON.stringify({'@context':'https://schema.org','@type':'CreativeWork',name:project.seoTitle||project.title,description,url:canonical,keywords:project.seoKeyword||undefined,
-      contentLocation:project.location?{'@type':'Place',name:project.location}:undefined})
-    return()=>{document.head.querySelector('script[data-propulse-project-seo]')?.remove()}
+    // Preserve the server-generated WebPage/VideoObject graph on initial loads.
+    // On client-side navigation, replace stale structured data for the new project.
+    const serverGraphMatches=jsonLd?.dataset.propulseProjectSeo==='server'
+      &&jsonLd.textContent?.includes(canonical)
+    if(!serverGraphMatches){
+      if(!jsonLd){jsonLd=document.createElement('script');jsonLd.type='application/ld+json';document.head.append(jsonLd)}
+      jsonLd.dataset.propulseProjectSeo='client'
+      const videoDate=project.videoPublishedAt||project.publishedAt
+      const videoObject=project.video&&project.videoThumbnail&&project.videoStream&&videoDate&&!Number.isNaN(Date.parse(videoDate))
+        ?{'@type':'VideoObject',name:project.seoTitle||project.title,description,thumbnailUrl:project.videoThumbnail,
+          uploadDate:new Date(videoDate).toISOString(),contentUrl:'https://propulsetechnologies.online'+project.videoStream,
+          creator:{'@type':'Organization',name:project.businessName||'ProPulse'},
+          ...(project.videoDurationSeconds?{duration:'PT'+Math.round(project.videoDurationSeconds)+'S'}:{})}
+        :null
+      jsonLd.textContent=JSON.stringify({'@context':'https://schema.org','@graph':[
+        {'@type':'CreativeWork',name:project.seoTitle||project.title,description,url:canonical,keywords:project.seoKeyword||undefined,
+          contentLocation:project.location?{'@type':'Place',name:project.location}:undefined},
+        ...(videoObject?[videoObject]:[])
+      ]})
+    }
+    return()=>{document.head.querySelector('script[data-propulse-project-seo="client"]')?.remove()}
   },[project])
 
   useEffect(()=>{
@@ -217,7 +240,7 @@ export default function ProjectDetail(){
             <section className="pjd-gallery-block" aria-label="Completed project photos and videos">
               <div className="pjd-main-image">
                 {videoSelected
-                  ?<ProjectMediaContent key={project.video} preview={videoPreview} title={project.title+' project video'} className="pjd-feature-media"/>
+                  ?<ProjectMediaContent key={project.video} preview={videoPreview} poster={project.videoThumbnail} title={project.title+' project video'} className="pjd-feature-media"/>
                   :activePhoto?<img className="pjd-feature-media" src={activePhoto} alt={project.title+' completed work photo '+(photoIndex+1)}/>
                   :['queued','processing','awaiting_review','processing_failed'].includes(project.videoPublicationStatus)
                     ?<div className="pjd-no-photo pjd-video-pending" role="status">

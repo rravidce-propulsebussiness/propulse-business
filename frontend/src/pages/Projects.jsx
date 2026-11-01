@@ -64,6 +64,10 @@ export function normalizeProject(project, index) {
     document: publicMediaUrl(project.plan_url),
     brochure: publicMediaUrl(project.brochure_url),
     video: publicMediaUrl(project.video_url),
+    videoThumbnail: publicMediaUrl(project.video_thumbnail_url),
+    videoStream: project.video_url&&project.project_id?'/project-video-stream/'+(clean(project.seo_slug)||'project-'+(project.project_id||project.id))+'.mp4':'',
+    videoDurationSeconds: Number(project.video_duration_seconds)||null,
+    videoPublishedAt: clean(project.video_published_at),
     videoPublicationStatus:clean(project.video_publication_status),
     publishedAt: clean(project.published_at),
     sample:false,
@@ -86,7 +90,7 @@ export function projectPhotos(project){
 // Video-only projects can show a real paused frame without uploading a separate photo.
 // Defer remote video requests until the card approaches the viewport, and keep a
 // visible fallback if the browser cannot decode or load a video preview.
-export function ProjectVideoCover({src}) {
+export function ProjectVideoCover({src,thumbnail}) {
   const ref=useRef(null)
   const [inView,setInView]=useState(false)
   const [ready,setReady]=useState(false)
@@ -114,6 +118,11 @@ export function ProjectVideoCover({src}) {
       try{video.currentTime=Math.min(0.8,video.duration/3)}catch{/* A non-seekable stream can still display its first frame. */}
     }
   }
+
+  if(thumbnail)return <div className="pj-video-cover is-ready">
+    <img src={thumbnail} loading="lazy" alt="" className="pj-video-cover-thumbnail"/>
+    <span className="pj-video-cover-cue" aria-hidden="true">▶</span>
+  </div>
 
   return <div className={'pj-video-cover'+(ready&&!failed?' is-ready':'')}>
     <video ref={ref} src={inView?src:undefined} muted playsInline preload="metadata"
@@ -240,8 +249,8 @@ export default function Projects() {
           {filtered.map((project,index)=><article key={'business-'+project.id} className="pj-project-card">
             <Link to={projectPath(project)} className="pj-card-open" aria-label={'View details for '+project.title}>
               <div className="pj-project-photo">
-                {projectPhotos(project).length?<img src={projectPhotos(project)[0]} loading={index<3?'eager':'lazy'} alt={project.title}/>
-                  :project.video?<ProjectVideoCover src={project.video}/>
+                {project.video?<ProjectVideoCover src={project.video} thumbnail={project.videoThumbnail}/>
+                  :projectPhotos(project).length?<img src={projectPhotos(project)[0]} loading={index<3?'eager':'lazy'} alt={project.title}/>
                   :['queued','processing','awaiting_review','processing_failed'].includes(project.videoPublicationStatus)
                     ?<div className="pj-video-processing-placeholder" role="status">
                        <span className="pj-video-processing-icon" aria-hidden="true">▶</span>

@@ -45,8 +45,8 @@ export function projectMediaPreview(raw, type='video'){
   return {kind:'unsupported'}
 }
 
-export function ProjectMediaContent({preview,title='',className=''}) {
-  if(preview.kind==='video')return <video className={className} src={preview.src} controls playsInline preload="metadata"/>
+export function ProjectMediaContent({preview,title='',className='',poster=''}) {
+  if(preview.kind==='video')return <video className={className} src={preview.src} poster={poster||undefined} controls playsInline preload="metadata"/>
   if(preview.kind==='image')return <img className={className} src={preview.src} alt={title||'Project drawing'}/>
   if(preview.kind==='pdf')return <iframe className={className} src={preview.src} title={title||'Project PDF'} sandbox="allow-same-origin" referrerPolicy="no-referrer" loading="lazy"/>
   if(preview.kind==='embed')return <iframe className={className} src={preview.src} title={title||preview.provider+' preview'} allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen sandbox="allow-scripts allow-same-origin allow-presentation" referrerPolicy="strict-origin-when-cross-origin" loading="lazy"/>
