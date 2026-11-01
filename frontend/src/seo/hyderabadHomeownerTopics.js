@@ -490,6 +490,29 @@ groups["Planning, room sizes & building services"] = [
     ["What should I check before waterproofing a bathroom?","Inspect slope, substrate, corners, pipe penetrations, floor trap details, specified membrane and test procedure."],
     ["What should I inspect before taking handover of a new house?","Use a room-wise snag list for finishes, doors, windows, plumbing, electrical, waterproofing records and documents."]
   ]
+,
+  "Construction quotations, payment milestones and windows": [
+    ["How do I compare two house construction quotations in Hyderabad?","Compare identical drawings, BOQ quantities, material specifications, exclusions, taxes, timelines and defect terms."],
+    ["What is included in a house construction quotation per square foot?","Ask for a written scope because per-square-foot packages can exclude approvals, compound walls, services, external works and finish upgrades."],
+    ["What hidden charges should I check in a builder quotation?","Review excavation disposal, rock removal, transport, scaffolding, temporary utilities, external works, taxes and owner-supplied items."],
+    ["How do I check whether a construction estimate is realistic?","Compare measured quantities, specifications, current supplier quotations, labour scope and site conditions with professional review."],
+    ["Should I choose the lowest construction quotation?","Compare scope completeness, quality specifications, contractor capacity, references, schedule and contract protections—not price alone."],
+    ["What payment milestones are common in house construction?","Agree project-specific milestones tied to measurable completed work and documented verification rather than copying a generic percentage schedule."],
+    ["How do I verify a contractor's running bill?","Check item descriptions, measured quantities, drawing references, previous payments, advances and approved variations."],
+    ["Is it safe to pay a large construction advance?","Document the purpose, procurement evidence, adjustment method, security and refund or cancellation terms in the agreement."],
+    ["How do I handle extra work charges during construction?","Require a written variation with scope, quantity, rate, time impact and approval before execution."],
+    ["What documents should I collect with a construction payment request?","Request the bill, measurement details, progress evidence, supplier invoices where relevant and approved variation records."],
+    ["Which is better for Hyderabad homes, UPVC or aluminium windows?","Compare complete profiles, glazing, hardware, weather seals, opening size, solar exposure and installation quality."],
+    ["What is the cost of UPVC windows in Hyderabad?","Obtain a measured quotation specifying profile series, glass, hardware, mesh, colour, installation and warranty."],
+    ["What is the cost of aluminium sliding windows in Hyderabad?","Compare profile section, finish, glass, rollers, locks, mesh, sealing and installation rather than frame area alone."],
+    ["How do I prevent rainwater leakage around windows?","Coordinate sill slope, flashing, frame drainage, sealants, wall junctions and installation inspection."],
+    ["Which window glass is suitable for a west-facing house?","Review solar exposure, glare, heat gain, safety and acoustic requirements with the glazing supplier or designer."],
+    ["How do I compare terrace waterproofing quotations?","Check substrate repairs, system type, detailing, coats or membrane thickness, protection, water testing and warranty conditions."],
+    ["How do I stop water stagnating on a house terrace?","Have falls, outlet levels, drain capacity and overflow paths checked; do not rely on a coating to correct poor drainage."],
+    ["Does heat-reflective roof coating reduce indoor temperature?","Performance depends on reflectance, roof build-up, insulation, application quality, exposure and maintenance."],
+    ["How do I budget terrace waterproofing for a new house?","Measure the terrace and parapets and specify preparation, junction treatment, outlets, membrane, protection and testing."],
+    ["What should I inspect after terrace waterproofing?","Check specified test records, outlets, corners, penetrations, protection layer, ponding and warranty documentation."]
+  ]
 };
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
