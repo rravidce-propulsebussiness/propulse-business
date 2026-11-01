@@ -141,6 +141,47 @@ export default function Home() {
         </div>
       </section>
       <section className="hc-section hc-services"><div className="hc-container"><div className="hc-section-head hc-section-head-centered"><h2>House Construction Services in Hyderabad</h2></div><div className="hc-service-grid">{SERVICES.map(item => <article className="hc-service-card" key={item.title}><img src={item.image} alt={item.title} loading="lazy"/><div className="hc-service-copy"><span className="hc-service-icon"><Icon name={item.icon} size={19}/></span><div><h3>{item.title}</h3><b>{item.eyebrow}</b><p>{item.text}</p></div><button type="button" onClick={() => openRequirement(item.key)} aria-label={'Start '+item.title}><Icon name="arrow" size={15}/></button></div></article>)}</div></div></section>
+      <section className="hc-section pp-home-seo" aria-labelledby="pp-home-seo-title">
+        <div className="hc-container pp-home-seo-inner">
+          <div className="pp-home-seo-copy">
+            <span className="hc-section-kicker">A CLEARER WAY TO PLAN YOUR HOME</span>
+            <h2 id="pp-home-seo-title">House Construction &amp; Home Interiors in Hyderabad, Planned Around You</h2>
+            <p>ProPulse helps homeowners take a more informed approach to residential construction and interior projects in Hyderabad. Start with your plot, location, built-up area, floor requirements, preferred materials, finish expectations and budget. These details help shape a clear project brief before an estimate or consultation.</p>
+            <p>Whether you are planning an independent house, a villa, a turnkey construction project, a modular kitchen or complete home interiors, compare the scope, specifications, timelines and commercial terms before making a decision.</p>
+            <div className="pp-home-seo-links">
+              <Link to="/packages">Explore construction &amp; interior packages <span aria-hidden="true">↗</span></Link>
+              <Link to="/hyderabad/construction-cost">Understand house construction costs <span aria-hidden="true">↗</span></Link>
+              <Link to="/experts">Find construction &amp; interior professionals <span aria-hidden="true">↗</span></Link>
+            </div>
+          </div>
+          <div className="pp-home-seo-panel">
+            <span className="pp-home-seo-panel-label">YOUR PROJECT BRIEF</span>
+            <ul>
+              <li><b>01</b><span>Plot size, location &amp; site conditions</span></li>
+              <li><b>02</b><span>Built-up area, floors &amp; room requirements</span></li>
+              <li><b>03</b><span>Material grades, brands &amp; finish preferences</span></li>
+              <li><b>04</b><span>Budget, milestones &amp; expected timeline</span></li>
+            </ul>
+            <Link to="/quote#construction">Create your project brief <span aria-hidden="true">→</span></Link>
+          </div>
+        </div>
+      </section>
+      <section className="hc-section pp-home-faq" aria-labelledby="pp-home-faq-title">
+        <div className="hc-container">
+          <div className="hc-section-head hc-section-head-centered">
+            <span className="hc-section-kicker">QUICK ANSWERS</span>
+            <h2 id="pp-home-faq-title">Planning a Construction or Interior Project?</h2>
+            <p>Useful starting points before you request an estimate or speak with a professional.</p>
+          </div>
+          <div className="pp-home-faq-grid">
+            <article><h3>Does ProPulse provide house construction in Hyderabad?</h3><p>ProPulse directly undertakes selected independent-house and villa construction projects. Project location, scope, specifications and availability are reviewed before a proposal is confirmed.</p></article>
+            <article><h3>What details are needed for a construction estimate?</h3><p>Share your plot dimensions, location, planned built-up area, number of floors, drawings if available, preferred specifications, budget and expected timeline.</p></article>
+            <article><h3>Can I explore interior design and turnkey options?</h3><p>Yes. You can discuss room-wise interior requirements, modular kitchens, finishes and turnkey scope. The final inclusions and exclusions should be agreed in writing.</p></article>
+            <article><h3>Can I compare independent construction professionals?</h3><p>Explore published professional profiles and project information on ProPulse. Check credentials, relevant work, references and written commercial terms before appointing a provider.</p></article>
+          </div>
+          <p className="pp-home-faq-more">Need more detail? <Link to="/faq">Browse construction, interior and property FAQs</Link>.</p>
+        </div>
+      </section>
       <section className="hc-section hc-secondary-paths"><div className="hc-container"><div className="hc-section-head"><div><span className="hc-section-kicker">OTHER WAYS WE CAN HELP</span><h2>What do you need?</h2><p>Construction leads the way. Explore ProPulse’s other divisions when your project needs them.</p></div></div><div className="hc-secondary-path-grid"><article><span>01</span><h3>Build Your Home</h3><p><strong>Direct Home Construction</strong> for homeowners planning a house or villa, with scope and specifications discussed before an estimate.</p><button type="button" onClick={() => openRequirement('build')}>Plan construction <span aria-hidden="true">→</span></button></article><article><span>02</span><h3>Design Your Space</h3><p><strong>Direct Interior Execution</strong> for homeowners planning interiors, finishes and space improvements.</p><button type="button" onClick={() => openRequirement('design')}>Explore interiors <span aria-hidden="true">→</span></button></article><article><span>03</span><h3>Find a Property</h3><p>Buy or sell the right property, or compare independent professionals through the ProPulse marketplace.</p><Link to="/experts">Find Professionals <span aria-hidden="true">→</span></Link></article></div><p className="hc-secondary-path-note">Our Construction, Interiors, Marketplace &amp; Technology Divisions serve different needs. Technology tools support construction businesses; service availability and scope are confirmed for each enquiry.</p></div></section>
       <section className="hc-section hc-benefits"><div className="hc-container"><div className="hc-section-head compact hc-section-head-centered"><h2>What to Clarify Before You Build</h2></div><div className="hc-benefit-grid">{[{icon:'clipboard',title:'Defined Scope',text:'Align built-up area, floor count, drawings and included work.',link:'/guides/home-construction-checklist'},{icon:'layers',title:'Material Specifications',text:'Discuss grades, brands, finishes and quality checks before work begins.',link:'/guides/best-steel-for-house-construction'},{icon:'people',title:'Compare Professionals',text:'Review published profiles and relevant work where available.',link:'/experts'},{icon:'shield',title:'Clear Commercial Terms',text:'Ask about milestones, exclusions, variations, warranty and handover.',link:'/guides/choose-construction-contractor-hyderabad'}].map((item,index) => <article key={item.title}><span className={'tone-'+(index+1)}><Icon name={item.icon} size={19}/></span><div><h3>{item.title}</h3><p>{item.text}</p><Link to={item.link}><span>Explore details</span><span aria-hidden="true">↗</span></Link></div></article>)}</div></div></section>
       <section className="hc-section hc-how"><div className="hc-container"><div className="hc-section-head hc-section-head-centered"><h2>How It Works: A Clear, Transparent Construction Process</h2></div><div className="hc-step-grid">{STEPS.map((step,index) => <article key={step.number}><span className={'hc-step-number tone-'+(index+1)}>{step.number}</span><span className={'hc-step-icon tone-'+(index+1)}><Icon name={step.icon} size={18}/></span><h3>{step.title}</h3><p>{step.text}</p>{index < STEPS.length-1 && <i className="hc-step-arrow"><Icon name="arrow" size={15}/></i>}</article>)}</div></div></section>
