@@ -703,5 +703,485 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   "What should be included in a construction site inspection checklist?": {
     answer: "A useful site inspection checklist follows the construction sequence and records what will become hidden. Before foundation concrete, check setting-out, excavation dimensions, soil conditions, reinforcement, cover, formwork and any required engineer approval. Before each slab or beam pour, verify the latest drawings, bar sizes and spacing, laps, anchorage, cover, openings, embedded services, shuttering, props, concrete grade, testing and curing arrangements. During masonry and services, inspect line, level, junctions, conduits, pipe pressure tests and drainage falls. For waterproofing, record substrate preparation, corners, penetrations, membrane application and water-test results. At handover, close snags and collect approvals, test reports, warranties and as-built drawings. Record date, location, photos, responsible person, corrective action and sign-off for every inspection.",
     sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"},{"label":"BuildNow – approval checklist","url":"https://buildnow.telangana.gov.in/checklist/"}]
+  },
+
+  "How much does a 2BHK interior cost in Hyderabad?": {
+    answer: "A 2BHK interior budget depends on the number and size of wardrobes, kitchen layout, TV and storage units, ceiling and lighting, finish and hardware grades, civil/electrical changes and installation. Ask for a room-wise drawing and BOQ with board type, finish code, hardware make, quantities, taxes and exclusions. Separate modular furniture from appliances, loose furniture, curtains and decor. Compare equivalent scopes rather than an unexplained package total.",
+    sources: []
+  },
+
+  "How much does a 3BHK interior cost in Hyderabad?": {
+    answer: "A 3BHK quote changes with wardrobe length, number of bathrooms, kitchen configuration, storage, ceiling and lighting, finish level and civil modifications. Prepare a room-wise scope and specify board grades, shutter finishes, hardware, accessories, countertop and installation. Keep appliances, loose furniture, curtains and decor separate unless expressly included. Compare itemised BOQs based on the same drawings; do not rely on a generic package rate.",
+    sources: []
+  },
+
+  "How much does a TV unit cost in Hyderabad?": {
+    answer: "TV-unit cost depends on width and height, wall treatment, storage, board material, shutter finish, fluted or stone-look panels, lighting, hardware and installation. Ask for an elevation with dimensions, internal storage details, cable routing, ventilation for electronics and finish samples. Confirm whether TV back panel, electrical points, floating supports and wall repairs are included. Compare the same design and material schedule.",
+    sources: []
+  },
+
+  "How much does a simple TV unit cost?": {
+    answer: "A simple TV unit is usually a smaller scope than a full feature wall, but its price still depends on dimensions, board and finish, drawers or shutters, wall mounting, cable management and installation. Request a dimensioned drawing and itemised quote. Keep the design simple by limiting decorative panels and accessories, but do not compromise on secure fixing, edge sealing or ventilation for electronic equipment.",
+    sources: []
+  },
+
+  "What is the cost of a premium TV unit with fluted panels?": {
+    answer: "A premium TV wall can include a carcass, fluted panels, decorative backboard, stone or laminate finish, concealed lighting, drawers and custom metal details. Cost depends on panel material, coverage area, detailing, hardware, electrical work and site preparation. Ask for separate prices for the base cabinet, fluted treatment, lighting and feature finish, and inspect a physical sample before approval.",
+    sources: []
+  },
+
+  "How much does a modular kitchen cost for a 2BHK?": {
+    answer: "The price depends on kitchen shape, running length, base and overhead units, tall storage, board and shutter finishes, drawer systems, accessories, countertop, sink and appliance integration. Ask for a dimensioned layout and separate quantities for carcass, shutters, hardware and countertop. Specify moisture protection near the sink, edge banding, brands, taxes, delivery and installation. A per-foot figure without layout and hardware detail is not comparable.",
+    sources: []
+  },
+
+  "How much does a wardrobe cost in Hyderabad?": {
+    answer: "Wardrobe cost depends on width, height, depth, internal layout, number of shutters, board grade, finish, hinges or sliding tracks, drawers, lofts and installation. Ask for an elevation and internal section showing hanging, shelves, drawers and loft storage. Specify carcass and shutter materials separately, plus edge treatment and hardware brands. Compare the complete installed scope rather than a square-foot rate alone.",
+    sources: []
+  },
+
+  "How much does a false ceiling cost for a 2BHK flat?": {
+    answer: "A 2BHK false-ceiling quote depends on covered area, room geometry, gypsum or other board system, framing, levels, coves, access panels, lighting cut-outs, insulation and painting. Request a reflected ceiling plan and BOQ stating board thickness, framing specification, suspension spacing and access provisions. Confirm whether lights, drivers, wiring and paint are included, and preserve access to AC and electrical services.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How much does a complete 2BHK interior package include?": {
+    answer: "There is no universal definition of a complete package. It may include a modular kitchen, wardrobes, TV unit, beds, ceiling, lighting and selected storage, while appliances, loose furniture, curtains, decor, civil work and painting may be excluded. Obtain a room-wise inclusion/exclusion schedule, drawings, board and finish specifications, hardware brands, quantities, taxes, timeline and warranty before comparing package prices.",
+    sources: []
+  },
+
+  "How can I reduce home interior cost without losing quality?": {
+    answer: "Prioritise functional storage and durable hardware in high-use areas, keep standard module sizes, limit unnecessary ceiling levels and decorative finishes, and phase non-essential furniture. Do not cut costs on moisture protection, board suitability, edge sealing, safe electrical work or installation quality. Freeze the design before production, compare itemised BOQs and approve material samples so savings do not create expensive rework.",
+    sources: []
+  },
+
+  "Which TV unit design is best for a small living room?": {
+    answer: "For a small living room, use a compact wall-mounted or shallow-depth unit with closed storage and a visually light finish. Measure viewing distance, TV size, door swings and circulation before fixing dimensions. Avoid oversized side panels and deep cabinets that narrow the walkway. Plan ventilation, cable access and a secure fixing method suited to the wall construction.",
+    sources: []
+  },
+
+  "What is the ideal height for a TV unit?": {
+    answer: "There is no single ideal height for every room. Set the TV so the screen centre is comfortable for the usual seated eye level, considering sofa height, screen size and viewing distance. Coordinate the console height with the TV mounting position, soundbar, sockets and cable outlets. Mock up the screen position on the wall before drilling or fabricating the unit.",
+    sources: []
+  },
+
+  "Which material is best for a TV unit: plywood, MDF or HDHMR?": {
+    answer: "Choose by load, span, finish, moisture exposure and fixing requirements. Plywood is commonly used for structural carcass work; MDF can give a smooth finish for routed or painted panels but needs protection from moisture; HDHMR products vary by manufacturer and should be checked against technical data. Specify exact grade, thickness, edge sealing and support rather than relying on the board name alone.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "Should I choose a floating or floor-standing TV unit?": {
+    answer: "A floating unit keeps the floor visually open and makes cleaning easier, but it needs a wall and anchoring system capable of carrying the cabinet and stored contents. A floor-standing unit transfers load to the floor and may provide more storage, but needs plinth or leg detailing and floor-level access. Check wall construction, cable routing, child safety and service access before deciding.",
+    sources: []
+  },
+
+  "How do I hide wires in a TV unit?": {
+    answer: "Plan power, data, antenna and speaker routes before closing the wall or installing the unit. Use accessible conduits or cable channels, separate power and low-voltage wiring as required, and provide ventilation for equipment. Keep sockets reachable, avoid overloading extensions and do not bury joints or adapters behind fixed panels. Have a qualified electrician provide or relocate electrical points safely.",
+    sources: []
+  },
+
+  "Which laminate colour is best for a TV unit?": {
+    answer: "Choose colour based on room size, natural light, flooring, wall colour and the amount of visual contrast you want. Light neutrals and wood tones can make a compact room feel calmer; darker finishes can create contrast but may show dust and fingerprints. View full-size samples in the actual room lighting and check the finish against the sofa, flooring and wall paint before ordering.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "Are fluted panels good for a TV unit?": {
+    answer: "Fluted panels add texture and can make a feature wall more distinctive, but grooves collect dust and their cost depends on material, profile, spacing and installation. Use a sample to assess cleaning, edge details and colour under room lighting. Confirm whether the panel is MDF, polymer, wood or another product and keep it away from persistent moisture or heat sources.",
+    sources: []
+  },
+
+  "What should I include in a TV unit quotation?": {
+    answer: "Ask for the dimensioned elevation and internal layout, board type and thickness, finish code, edge banding, hardware make, drawer and shutter details, wall panel or fluted area, lighting, electrical points, cable management, mounting supports, installation, transport, taxes and exclusions. Confirm the wall substrate and who is responsible for safe anchoring. Attach approved drawings and samples to the quotation.",
+    sources: []
+  },
+
+  "Which laminate is best for home interiors?": {
+    answer: "Choose laminate by application, abrasion and scratch expectations, cleaning method, finish, thickness, substrate and manufacturer specification. Kitchen shutters, wardrobes and low-use decorative panels may need different performance and surface characteristics. Check product data, shade consistency, warranty and cleaning instructions. Inspect a physical sample and specify the exact product code in the BOQ; “premium laminate” is not a measurable specification.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "Which laminate is best for a kitchen?": {
+    answer: "For kitchen shutters, select a surface that suits frequent cleaning, heat exposure, fingerprints and the chosen substrate. Matte, textured and glossy laminates have different maintenance and appearance trade-offs. Protect edges and cut-outs from moisture and use suitable adhesives and hardware. Keep laminates away from direct flame and follow the manufacturer’s cleaning instructions. Ask for product data and a sample before approval.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "Which laminate is best for a wardrobe?": {
+    answer: "Wardrobe laminate should be selected for appearance, scratch resistance, cleaning and the room’s lighting. Matte textures can reduce glare and fingerprints, while glossy finishes reflect light but may show marks. Specify the exact product code, thickness, substrate, edge banding and finish direction. Check the sample beside flooring and wall paint, and use suitable edge treatment on all exposed sides.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "What is the difference between 0.8mm and 1mm laminate?": {
+    answer: "The numbers refer to nominal laminate thickness, but thickness alone does not determine durability. Surface composition, backing, grade, application, substrate flatness, adhesive and edge treatment also matter. A thicker sheet may suit some applications, but it does not compensate for poor bonding or unsupported panels. Compare the manufacturer’s technical specification and warranty for the exact product.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "Is 1mm laminate better than 0.8mm laminate?": {
+    answer: "Not automatically. A 1mm sheet is thicker, but the better choice depends on the product grade, substrate, application, edge details, bending requirements and installation. Check the manufacturer’s intended use and performance data. For a fair comparison, compare products from the same category and brand family, and inspect how the edges and corners are finished.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "Which is better: matte or glossy laminate?": {
+    answer: "Matte laminate usually reduces reflections and can conceal minor smudges, while glossy laminate reflects more light and can make a surface appear brighter but may show fingerprints and scratches more clearly. Cleaning requirements vary by product. Choose by room lighting, usage, colour and maintenance preference, and inspect samples in the actual space before ordering.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "Which is better: acrylic or laminate for kitchen shutters?": {
+    answer: "Acrylic often gives a smooth, high-gloss appearance and can be easy to wipe, but may show scratches or fingerprints depending on the finish. Laminate offers a wider range of textures and matte options and can be more forgiving in daily use. Compare the exact product, substrate, edge finish, repairability, cleaning instructions and warranty rather than treating either category as universally superior.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "Which is better: veneer or laminate for wardrobes?": {
+    answer: "Veneer is a real wood surface with natural grain variation and generally needs more careful finishing and maintenance. Laminate is a manufactured decorative surface with more predictable patterns and usually simpler routine cleaning. Compare cost, scratch behaviour, repair options, UV exposure, edge detailing and the room’s humidity. Specify the exact veneer species/finish or laminate code and protective coating.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "What is the difference between BWR and BWP plywood?": {
+    answer: "BWR and BWP are plywood classifications associated with different levels of resistance to moisture exposure under their relevant standards; they are not a guarantee that a board can remain submerged or tolerate leaks indefinitely. Check the exact standard, grade, manufacturer marking and intended application. Protect cut edges and fix plumbing leaks promptly, even when moisture-resistant plywood is used.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "Which plywood thickness is suitable for kitchen cabinets?": {
+    answer: "Thickness depends on cabinet span, load, carcass design, shelf support, shutter size and hardware. Base cabinets, tall units, shelves and shutters may require different specifications. Ask the designer to state thickness and grade separately for carcass, shelves, shutters and back panels, and confirm the manufacturer’s load and fixing guidance. Avoid choosing thickness by a generic online rule.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "Is HDHMR board good for kitchen cabinets?": {
+    answer: "HDHMR can be used in some interior applications, but suitability depends on the manufacturer’s tested properties, moisture exposure, edge sealing, load and installation. It should not be treated as waterproof or assumed equivalent across brands. Check technical data, intended-use limits and warranty, and use proper protection around sinks, plumbing cut-outs and wet areas. Compare it with plywood for the specific cabinet location.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "How many doors should a house have according to Vastu?": {
+    answer: "Vastu traditions include different beliefs about entrances and door placement, but there is no building-code rule that prescribes a universal number of doors. Plan doors around circulation, privacy, accessibility, ventilation, furniture clearance and safe exit routes. If Vastu matters to the household, discuss preferences with the architect early and balance them with functional planning and applicable approval rules.",
+    sources: []
+  },
+
+  "Which direction should the main door face according to Vastu?": {
+    answer: "Vastu schools commonly express preferences about entrance directions, but interpretations vary and these beliefs are not substitutes for technical design or statutory requirements. First consider the road, plot access, sunlight, privacy, ventilation and internal circulation. If the family follows Vastu, share the preferred options before the floor plan is frozen so the architect can assess feasible alternatives.",
+    sources: []
+  },
+
+  "Where should the kitchen be according to Vastu?": {
+    answer: "Vastu traditions often recommend particular kitchen zones and cooking orientations, but practices differ and are belief-based rather than building regulations. The practical design should prioritise safe gas/electrical connections, exhaust ventilation, daylight, workflow, sink and hob separation, storage and service access. Discuss Vastu preferences with the architect before fixing plumbing, windows and kitchen modules.",
+    sources: []
+  },
+
+  "Where should the master bedroom be according to Vastu?": {
+    answer: "Vastu guidance commonly expresses preferences for master-bedroom placement, but recommendations vary between traditions and are not statutory building rules. Choose the room based on privacy, noise, daylight, ventilation, access to bathrooms and furniture layout. If Vastu is important, consider it alongside the site orientation and functional requirements rather than compromising safe circulation or ventilation.",
+    sources: []
+  },
+
+  "Where should the pooja room be placed according to Vastu?": {
+    answer: "Vastu traditions offer different suggestions for pooja-room placement and orientation; these are personal or cultural preferences, not building-code requirements. In practical terms, choose a clean, quiet and accessible location with adequate ventilation, safe lighting and clearance from wet areas or electrical hazards. Coordinate storage, door swing and ritual use with the family before finalising the plan.",
+    sources: []
+  },
+
+  "Where should toilets be placed according to Vastu?": {
+    answer: "Vastu traditions discuss preferred toilet zones, but interpretations vary and do not replace plumbing, ventilation, sanitation or approval requirements. Place bathrooms to allow efficient drainage and venting, waterproofing, access to service shafts and privacy. Avoid routing waste pipes through structural members without design approval. If Vastu preferences matter, ask the architect to test options without compromising hygiene or technical function.",
+    sources: []
+  },
+
+  "Which direction should I sleep facing according to Vastu?": {
+    answer: "Vastu traditions express beliefs about sleeping direction, but these are not medical or building-code requirements and interpretations vary. Choose a bedroom layout that supports comfort, safe access, ventilation, privacy and practical placement of bed, windows and wardrobes. Treat orientation as a personal preference rather than a guaranteed health or financial outcome.",
+    sources: []
+  },
+
+  "What Vastu precautions should I take before building a house?": {
+    answer: "If Vastu is important to the family, discuss it with the architect before the floor plan and structural grid are fixed. Record preferred entrance, kitchen, bedroom, pooja and staircase arrangements, then test them against plot shape, road access, setbacks, daylight, ventilation, privacy, plumbing and structural design. Avoid costly structural changes or unapproved deviations to satisfy a late-stage preference. Vastu is a traditional belief system, not a substitute for engineering or local rules.",
+    sources: []
+  },
+
+  "Can a house plan be changed to follow Vastu?": {
+    answer: "Some room uses, furniture positions and non-structural partitions may be adjusted during design, but moving columns, beams, stairs, wet areas or external walls can affect structure, services and approval. Ask the architect and structural engineer to evaluate alternatives before work starts. Once permission is issued, material changes may require revised approval. Do not cut or relocate structural elements on site based on informal advice.",
+    sources: []
+  },
+
+  "What should I check in a Vastu-compliant 2BHK floor plan?": {
+    answer: "Treat “Vastu-compliant” as a description of how the designer has addressed the family’s stated traditional preferences, not as a universal certification. Check entrance and room placements against those preferences while also reviewing room dimensions, daylight, cross-ventilation, bathroom plumbing, kitchen exhaust, privacy, storage, furniture clearances, setbacks and structural grid. Ask the designer to explain any compromise and avoid claims that a plan guarantees health, wealth or success.",
+    sources: []
+  },
+
+  "Is a staircase in the north-east acceptable according to Vastu?": {
+    answer: "Vastu interpretations differ on staircase placement, so there is no single universally accepted answer. From a building-design perspective, the staircase must meet safe geometry, headroom, handrail, structural support, circulation and applicable approval requirements. Ask the architect to compare alternative locations and have the structural engineer design the stair. Do not move a staircase after sanction without checking whether revised approval is required.",
+    sources: []
+  },
+
+  "Can doors face each other in a house according to Vastu?": {
+    answer: "Some Vastu traditions discuss door alignment, but interpretations vary and it is not a general building-code prohibition. Check whether opposing doors create privacy, noise, furniture or circulation problems. Door swings should not block escape routes or collide with each other. If the household has a Vastu preference, adjust the layout during design where practical without sacrificing safe clearances.",
+    sources: []
+  },
+
+  "Which wardrobe design is best for a small bedroom?": {
+    answer: "Use the full available height where practical, keep depth suited to hanging clothes, and choose sliding shutters only if track quality and access are adequate. Hinged doors provide full access but need swing clearance. Combine hanging, shelves, drawers and loft storage based on actual belongings, and avoid bulky side panels. Check bed-to-wardrobe clearance, door swing and ventilation before fabrication.",
+    sources: []
+  },
+
+  "Which is better: sliding or hinged wardrobe shutters?": {
+    answer: "Sliding shutters save swing space but overlap, so only part of the wardrobe is accessible at once and the tracks need accurate installation and maintenance. Hinged shutters provide full access and simpler hardware but require clear space in front. Choose based on room size, bed position, wardrobe width, access needs and hardware quality. Verify internal drawers will not clash with the shutter system.",
+    sources: []
+  },
+
+  "How much does a 6 feet wardrobe cost?": {
+    answer: "A six-foot wardrobe quote depends on height, depth, internal configuration, carcass and shutter material, finish, hinged or sliding hardware, loft, drawers and installation. Ask whether six feet refers to width or height and request a dimensioned elevation. Specify board grade, thickness, edge banding, hardware make, back panel and taxes. Compare equivalent internal layouts and finishes.",
+    sources: []
+  },
+
+  "Should I add loft storage above the wardrobe?": {
+    answer: "A loft can use otherwise wasted vertical space for seasonal or rarely used items, but it must be safely supported and accessible. Check ceiling height, false-ceiling services, ventilation, door access and whether stored loads are appropriate for the cabinet structure. Avoid placing heavy items in a poorly supported loft. Include the loft in the drawing and BOQ so its material and finish match the main wardrobe.",
+    sources: []
+  },
+
+  "Which laminate colour makes a small bedroom look bigger?": {
+    answer: "Light neutrals, soft wood tones and low-contrast finishes can make a small bedroom feel more open, especially when coordinated with wall paint and flooring. A full glossy finish may reflect light but can show fingerprints; matte finishes feel softer. Use one or two coordinated tones rather than many contrasting blocks, and test large samples in the actual room lighting.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "What is the ideal wardrobe depth for a bedroom?": {
+    answer: "Wardrobe depth depends on the clothing type, hanger orientation, shutter system, internal drawers and available room clearance. Standard hanging garments need enough clear depth to avoid rubbing against shutters, but sliding tracks and back panels also consume space. Have the designer show the internal usable depth, not only the outside dimension, and check the walkway between the wardrobe and bed.",
+    sources: []
+  },
+
+  "How do I plan a wardrobe with a dressing unit?": {
+    answer: "Start with the available wall length and the user’s storage needs, then allocate hanging, shelves, drawers, mirror, lighting and a seated or standing dressing zone. Check that drawers and shutters can open without blocking the bed or door. Provide a nearby socket if appliances are used, manage cables safely and ensure lighting renders skin tones accurately. Confirm mirror height and access before production.",
+    sources: []
+  },
+
+  "Which kitchen layout is best for a 2BHK flat?": {
+    answer: "Choose a straight, L-shaped, parallel or U-shaped kitchen based on room dimensions, door and window locations, plumbing, ventilation and available counter length. Plan the sink, hob and refrigerator so movement is convenient and work zones do not clash. Keep adequate aisle clearance and space for appliance doors and drawers. Have the designer measure the actual site before ordering modules.",
+    sources: []
+  },
+
+  "Which countertop is best for a modular kitchen?": {
+    answer: "Compare granite, quartz and other engineered or natural surfaces by heat tolerance, stain behaviour, maintenance, joint visibility, edge profile and budget. No surface is indestructible: follow the supplier’s guidance for hot cookware, cutting and cleaning. Check sink cut-outs, backsplash junctions, support requirements and slab thickness. Ask for a physical sample and confirm the selected material and colour in the BOQ.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "Which is better for kitchen cabinets: laminate or acrylic?": {
+    answer: "Laminate offers many textures and matte options and can be practical for everyday kitchens; acrylic provides a smooth, often high-gloss surface with a different appearance and maintenance profile. The carcass material, edge sealing, adhesive, hardware and installation are as important as the shutter finish. Compare actual samples, cleaning guidance, scratch behaviour, warranty and total cost for the same cabinet layout.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "How do I choose kitchen cabinet colours?": {
+    answer: "Consider daylight, room size, countertop, backsplash, flooring and how much contrast the household wants. Lighter colours can brighten a compact kitchen; darker tones can create depth but may show dust and fingerprints. Limit the palette to a coordinated base and accent, and view full-size samples under the kitchen’s actual lighting. Confirm colour codes and grain direction in the approved drawings.",
+    sources: []
+  },
+
+  "What is the best material for a kitchen sink cabinet?": {
+    answer: "The sink cabinet is exposed to plumbing leaks, damp cleaning and cut-outs, so specify a moisture-appropriate carcass, sealed edges, protected base, accessible plumbing and a leak tray or protection detail where suitable. Plywood or other board products must be selected by grade and manufacturer data; no board should be treated as immune to standing water. Ensure valves and traps remain serviceable and repair leaks promptly.",
+    sources: []
+  },
+
+  "How much does a gypsum false ceiling cost?": {
+    answer: "Cost depends on ceiling area, board type and thickness, framing and suspension system, room shape, levels, access panels, cut-outs, coves, paint and lighting coordination. Ask for a reflected ceiling plan and BOQ that identifies the framing and board specification. Confirm whether wiring, lights, drivers, painting and service access are included. Compare the same system, not just a per-square-foot headline.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "Which false ceiling is best for a bedroom?": {
+    answer: "A simple gypsum ceiling can provide a clean finish and conceal services, while other systems may suit specific moisture, access or design needs. Choose based on room height, AC and fan positions, lighting, maintenance access, fire and electrical safety, and the substrate. Avoid excessive levels that reduce headroom or obstruct service access. Have the ceiling plan coordinated before electrical work.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How many lights are needed in a living room?": {
+    answer: "Light quantity depends on room area, ceiling height, fixture output, colour temperature, wall finishes and the activities in the space. Use layered lighting: general ambient light, task light for reading and accent light for art or feature walls. Ask the designer or lighting supplier for a layout and lux calculation rather than counting fixtures alone. Provide separate switching or dimming for different scenes.",
+    sources: []
+  },
+
+  "Which colour temperature is best for home interiors?": {
+    answer: "Warm white lighting often creates a relaxed atmosphere in bedrooms and living areas, while neutral or cooler white may suit task-focused kitchens and work areas. The best choice depends on the activity, finish colours and personal comfort. Keep colour temperature consistent within connected spaces where possible and check the actual fixture sample; colour-rendering quality matters as well as Kelvin rating.",
+    sources: []
+  },
+
+  "How long does a complete 2BHK interior take?": {
+    answer: "The timeline depends on design approvals, site measurement, material availability, factory production, civil and electrical modifications, installation access and snag closure. Ask for a programme that separates design freeze, drawings, procurement, production, site preparation, installation and handover. Confirm when the home will be unavailable for use and how changes affect dates. Late selections and revisions are common causes of delay.",
+    sources: []
+  },
+
+  "How do I compare two interior design quotations?": {
+    answer: "Compare identical room-wise drawings and quantities. Check board grade and thickness, finish codes, edge banding, hardware make/model, drawer accessories, internal layouts, countertop, lighting, electrical/civil work, installation, transport, taxes, warranty, timeline and exclusions. Ask each designer to identify provisional sums and chargeable revisions. A low total may omit internal accessories, lofts, appliance panels or finishing work.",
+    sources: []
+  },
+
+  "What questions should I ask an interior designer before hiring?": {
+    answer: "Ask who measures the site, prepares working drawings, selects materials, coordinates electrical and plumbing changes, supervises production and installation, and handles defects. Request a room-wise BOQ, finish and hardware schedule, timeline, revision policy, payment milestones, warranty and exclusions. Visit completed work and speak to clients. Confirm who owns the drawings and what happens if site dimensions differ from the design.",
+    sources: []
+  },
+
+  "What is included in a turnkey interior project?": {
+    answer: "Turnkey scope varies by provider. It may include design, drawings, procurement, modular furniture, installation and project coordination, but civil work, appliances, loose furniture, curtains, decor, painting, electrical upgrades or plumbing changes may be excluded. Get a written room-wise scope with materials, quantities, brands, taxes, milestones, site protection, handover and warranty. Do not rely on the word “turnkey” alone.",
+    sources: []
+  },
+
+  "How do I check modular furniture quality before handover?": {
+    answer: "Inspect alignment and level of cabinets, consistent gaps, smooth drawer and shutter operation, soft-close function, secure handles, edge banding, finished cut-outs, wall anchoring, plinth stability and clean internal surfaces. Check that doors do not scrape and drawers do not collide. Verify material labels, hardware brands, warranty cards and approved drawings. Test lights and electrical accessories, photograph defects and obtain a signed snag-closure record.",
+    sources: []
+  },
+
+  "What is the difference between carpenter-made and factory-made modular interiors?": {
+    answer: "Factory-made modular units are cut and assembled in controlled production settings, which can improve repeatability and installation speed when measurements are accurate. Carpenter-made work is fabricated on site and can adapt to irregular walls, but depends heavily on workmanship, supervision and material control. Compare board grade, finish, edge banding, hardware, tolerances, installation, site protection and warranty. Neither method guarantees quality without a clear specification.",
+    sources: []
+  },
+
+  "What warranty should I get for modular kitchen and wardrobes?": {
+    answer: "Ask for separate written warranties for carcass boards, shutters and finishes, hinges and channels, accessories, installation workmanship and any electrical components. State duration, exclusions, moisture or misuse conditions, response time, repair or replacement process and service contact. Retain invoices, product codes and handover photos. A general “warranty included” statement is not enough to understand what is covered.",
+    sources: []
+  },
+
+  "How much does a complete 1BHK interior cost in Hyderabad?": {
+    answer: "A 1BHK budget depends on kitchen scope, wardrobe length, TV/storage units, bed and other furniture, ceiling and lighting, finish grade, hardware and civil/electrical changes. Prepare a room-wise list and separate essential fixed furniture from loose furniture and decor. Ask for dimensioned drawings, exact materials, quantities, taxes, installation and exclusions. Compare equivalent BOQs rather than a generic package price.",
+    sources: []
+  },
+
+  "How much does a 4BHK interior cost in Hyderabad?": {
+    answer: "A 4BHK scope can vary widely depending on room sizes, number of wardrobes, kitchen and utility, family lounge, study, pooja, ceiling, lighting, premium finishes and loose furniture. Prepare a room-by-room brief and phase the budget by priority. Require a detailed BOQ, material schedule, hardware specification, taxes, timeline, warranty and exclusions before comparing providers.",
+    sources: []
+  },
+
+  "How much does a shoe rack cost for a home?": {
+    answer: "Shoe-rack cost depends on width, height, depth, number of shelves, ventilation, seating, shutter style, board and finish, hardware and installation. Measure footwear sizes and count, allow air circulation and ensure doors do not obstruct the entrance. Ask for a dimensioned drawing and separate quote for seating, mirror or decorative panels if included.",
+    sources: []
+  },
+
+  "How much does a crockery unit cost?": {
+    answer: "A crockery unit quote depends on size, open or closed display, glass shutters, lighting, drawers, shelves, board and finish, hardware and wall fixing. Decide what crockery and appliances it must store, then specify shelf load, glass type, cable routing and cleaning access. Request an elevation and itemised BOQ, including electrical work and installation.",
+    sources: []
+  },
+
+  "How much does a pooja unit cost in Hyderabad?": {
+    answer: "Cost depends on dimensions, material, carving or CNC detail, finish, storage, doors, lighting and installation. Plan ventilation and safe electrical wiring for lamps or lights, and choose finishes that are easy to clean. If the family has Vastu preferences, discuss them during design; those preferences are traditional beliefs rather than building requirements. Request samples and a dimensioned drawing.",
+    sources: []
+  },
+
+  "How much does a study table with storage cost?": {
+    answer: "The price depends on desk width and depth, drawers, shelves, overhead storage, board and finish, cable management, lighting and chair requirements. Set the height and leg clearance for the actual user, and plan sockets and data points before installation. Ask for a dimensioned drawing, load support, edge treatment and a written material/hardware schedule.",
+    sources: []
+  },
+
+  "How much does a bedroom false ceiling cost?": {
+    answer: "Bedroom ceiling cost depends on room area, ceiling levels, board and framing system, cove lighting, fan and AC positions, access panels and paint. Keep adequate clear height and do not place a fan where it conflicts with the bed or lights. Request a reflected ceiling plan and a BOQ that includes framing, boards, cut-outs, wiring, drivers and finish.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How much does a 7 feet sliding wardrobe cost?": {
+    answer: "Clarify whether seven feet refers to width or height. Price depends on full dimensions, internal configuration, number of shutters, track and roller system, board grade, finish, loft and installation. Ask for the internal usable depth and a drawing showing overlapping shutters and drawer access. Specify hardware make and warranty, and ensure the wall and floor are suitable for accurate track installation.",
+    sources: []
+  },
+
+  "How much does a kitchen tall unit cost?": {
+    answer: "Tall-unit cost depends on height, width, depth, internal pull-outs, pantry baskets, appliance housing, board and shutter finish, hardware and installation. Decide whether it stores groceries, appliances or a built-in oven, and check ventilation and electrical requirements for appliances. Ask for a dimensioned internal layout and specify the exact pull-out brand/model and load rating.",
+    sources: []
+  },
+
+  "What is the cost of a quartz kitchen countertop in Hyderabad?": {
+    answer: "Quartz countertop pricing depends on brand and slab series, colour, thickness, edge profile, cut-outs, backsplash, joints, transport and installation. Measure the actual counter run and include sink and hob openings. Ask whether the quote includes support, polishing, sealing where required, backsplash and removal of the old top. Confirm care instructions and limitations for heat and impact before selecting.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How much does a home interior designer charge in Hyderabad?": {
+    answer: "Design fees may be fixed, per-area, percentage-based or bundled with execution, and the service scope differs. Ask what deliverables are included: concept, 3D views, working drawings, BOQ, site visits, vendor coordination, revisions and supervision. Separate design fee from material and execution cost, define revision limits and taxes, and confirm who owns the drawings. Compare service deliverables rather than only the fee format.",
+    sources: []
+  },
+
+  "What is the difference between interior design fees and execution cost?": {
+    answer: "Design fees pay for planning and documentation such as space planning, drawings, material selection and coordination. Execution cost pays for materials, fabrication, hardware, labour, transport and installation. Some firms bundle both, while others charge separately. Ask for a clear split, identify taxes and third-party purchases, and check whether site supervision and revisions are included so the same service is not charged twice.",
+    sources: []
+  },
+
+  "Which board is best for wardrobe carcass?": {
+    answer: "Choose carcass board by expected load, room moisture, span, fixing method and manufacturer quality. Plywood, MDF and particleboard have different strength, screw-holding and moisture characteristics. Specify the exact grade and thickness, shelf supports, back panel and edge sealing, and ask for technical data and warranty. Protect wardrobes from leaking walls and avoid treating any board as waterproof.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "Can MDF be used in a kitchen?": {
+    answer: "MDF may be suitable for selected dry kitchen components or finished shutters when the product is designed for that application, but ordinary MDF should not be assumed suitable for wet sink-base exposure. Check moisture rating, edge sealing, coating, hardware and manufacturer guidance. Keep plumbing accessible and protect the cabinet from leaks. Choose material by cabinet location and risk, not by a blanket yes/no.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "What is edge banding and why does it matter?": {
+    answer: "Edge banding covers the exposed edges of board panels, improves appearance and helps protect the core from moisture and impact. Quality depends on band material, thickness, adhesive, machine application and corner finishing. Inspect for gaps, lifting, rough edges and exposed core, especially near sinks and floors. Include the edge-band specification in the BOQ rather than accepting an unspecified finish.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "Which kitchen shutter finish is easiest to maintain?": {
+    answer: "Maintenance depends on the exact surface and household use. Laminate, acrylic, membrane and painted finishes differ in fingerprint visibility, scratch repair, heat tolerance and cleaning requirements. Choose a finish with clear manufacturer care instructions and test a sample with the cleaning products you normally use. Good edge sealing and installation matter as much as the decorative surface.",
+    sources: []
+  },
+
+  "How do I choose handles for kitchen cabinets?": {
+    answer: "Choose handles by grip comfort, cabinet size, cleaning, style and the clearance available around appliances and walkways. Check that handle projections will not catch clothing or collide with adjacent doors. Use a consistent finish and confirm screw positions, length and fixing strength on the selected shutter thickness. Test a sample in the actual kitchen before ordering all units.",
+    sources: []
+  },
+
+  "What is the best lighting for a wardrobe?": {
+    answer: "Wardrobe lighting should illuminate shelves and hanging areas without creating glare or heat. Options include sensor-controlled LED strips, vertical profiles or internal puck lights, depending on cabinet layout. Plan low-voltage drivers, access for replacement, cable routing and safe power supply before fabrication. Keep lights away from stored fabric where heat could accumulate and use a suitable colour rendering for clothing selection.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How much space is needed between a bed and wardrobe?": {
+    answer: "Allow enough clearance for the wardrobe doors or drawers to open and for a person to stand and move comfortably. The required space depends on hinged versus sliding shutters, drawer depth, bed size and room circulation. Draw the bed and wardrobe to scale and test door swings and drawer extension before fabrication; do not rely only on nominal room dimensions.",
+    sources: []
+  },
+
+  "What should I finalise before starting interior work?": {
+    answer: "Finalise measured site dimensions, room layouts, furniture positions, electrical and data points, plumbing changes, ceiling plan, appliance models, board and finish codes, hardware, countertop, lighting, paint colours, budget and installation sequence. Approve working drawings and BOQ in writing before production. Record site deviations and responsibilities, and protect completed flooring and walls during installation.",
+    sources: []
+  },
+
+  "Which hinges are best for kitchen cabinets?": {
+    answer: "Choose hinges by shutter weight and size, opening angle, overlay type, corrosion exposure, adjustment range and expected cycle life. Soft-close is a feature, not a guarantee of quality. Specify the manufacturer and model, confirm compatibility with the board thickness and cabinet geometry, and ask for replacement/service terms. Test the hinge on a sample shutter before mass installation.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "What is the difference between soft-close and normal hinges?": {
+    answer: "Normal hinges allow the shutter to close without a built-in damping mechanism, while soft-close hinges use a damper to slow the final movement. Soft-close can reduce slamming and noise, but performance depends on hinge quality, adjustment and shutter weight. Confirm that the hinge is genuine and compatible with the door, and check whether the damper can be serviced or replaced.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "Which channel is best for kitchen drawers?": {
+    answer: "Drawer channels should be selected by drawer width, load, extension requirement, side clearance, corrosion exposure and frequency of use. Options include roller, telescopic and concealed undermount systems, with different adjustment and soft-close features. Specify the exact brand/model and load rating, and ensure the drawer box dimensions follow the hardware template. Test loaded drawers before handover.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "What is the standard height of a kitchen countertop in India?": {
+    answer: "Countertop height should suit the primary users’ height, appliance dimensions and comfortable working posture; a single standard measurement may not suit everyone. Check the finished floor level, cabinet plinth, carcass and countertop thickness together. Mock up the height if possible and coordinate sink depth, hob and backsplash before fabrication. Follow the approved kitchen drawing rather than adjusting after cabinets are installed.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How much space is needed between kitchen counter and overhead cabinets?": {
+    answer: "The gap should allow safe appliance use, comfortable work and access to overhead storage, while accounting for the hob, chimney, microwave and user height. The correct dimension depends on the selected appliances and kitchen design. Use appliance installation instructions and the architect’s elevation to set the distance; do not copy a generic value that may conflict with a chimney or tall user.",
+    sources: []
+  },
+
+  "What is the ideal loft height above a wardrobe?": {
+    answer: "Loft height depends on ceiling height, wardrobe height, access method, items stored and whether a false ceiling or services occupy the space. Leave practical clearance to open shutters and avoid storing heavy items beyond safe reach. Show the loft in the elevation and specify its support, doors and finish. Use a safe step or access arrangement rather than climbing on furniture.",
+    sources: []
+  },
+
+  "How much clearance is needed for sliding wardrobe doors?": {
+    answer: "Sliding wardrobes need clearance for the track system, overlapping shutters and handles, and the user needs room to stand and access drawers. The exact dimensions depend on the hardware profile and cabinet depth. Use the selected manufacturer’s installation drawing and verify that bed, side tables and room doors do not obstruct operation. Confirm the internal usable depth after track allowance.",
+    sources: []
+  },
+
+  "How do I plan a kids bedroom that can grow with the child?": {
+    answer: "Use flexible furniture and neutral durable finishes, then add age-specific colour and accessories that can be changed later. Plan safe storage at child height, secure tall units to the wall, protect sockets, avoid sharp corners and provide task lighting for study. Leave room for changing bed size and desk needs, and use washable finishes. Review window, balcony and furniture safety with the designer.",
+    sources: []
+  },
+
+  "How do I identify good-quality plywood before buying?": {
+    answer: "Check the manufacturer and product markings, grade, applicable BIS standard, thickness, batch traceability, invoice and technical data. Inspect for delamination, voids, warping and damaged edges, but visual checks cannot prove internal bond strength or moisture performance. Buy from an authorised supplier and retain documentation. Ask for test certificates or independent testing when the project specification requires it.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "What is the difference between commercial plywood and BWR plywood?": {
+    answer: "“Commercial plywood” is a broad market term and does not by itself define a tested moisture-resistance grade. BWR refers to a specified grade under the relevant standard, but it still does not mean the board can tolerate continuous water exposure. Verify the exact standard, grade, manufacturer and intended use, and protect edges and cut-outs. Do not rely on informal sales labels.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "How do I clean matte laminate without leaving marks?": {
+    answer: "Use a soft microfibre cloth and a mild cleaner approved by the laminate manufacturer, then wipe dry. Avoid abrasive pads, harsh solvents, bleach and excessive water, which can damage the surface or edges. Test any cleaner on an inconspicuous area first and wipe along the texture direction where relevant. Remove grease promptly without scraping the finish.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "How do I maintain acrylic kitchen shutters?": {
+    answer: "Clean acrylic shutters with a soft microfibre cloth and a mild, non-abrasive cleaner recommended by the supplier. Avoid scouring pads, strong solvents and rough wiping that can create fine scratches. Use a clean cloth to prevent trapped dust from marking the surface, and keep shutters away from direct flame and excessive heat. Follow the product warranty and care sheet for polishing or scratch treatment.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
   }
 };
