@@ -172,6 +172,20 @@ function businessIdentityContent(route){
   return ''
 }
 
+function homepageSeoContent(route){
+  if(route.path!=='/')return ''
+  return '<section style="padding:42px 0;border-top:1px solid #e4ebef"><h2>House Construction &amp; Home Interiors in Hyderabad, Planned Around You</h2>'+
+    '<p style="max-width:850px;line-height:1.75">ProPulse helps homeowners take a more informed approach to residential construction and interior projects in Hyderabad. Start with your plot, location, built-up area, floor requirements, preferred materials, finish expectations and budget. These details help shape a clear project brief before an estimate or consultation.</p>'+
+    '<p style="max-width:850px;line-height:1.75">Whether you are planning an independent house, a villa, a turnkey construction project, a modular kitchen or complete home interiors, compare the scope, specifications, timelines and commercial terms before making a decision.</p>'+
+    '<p><a href="/packages">Explore construction and interior packages</a> · <a href="/hyderabad/construction-cost">Understand house construction costs</a> · <a href="/experts">Find construction and interior professionals</a></p>'+
+    '<h2>Planning a Construction or Interior Project?</h2>'+
+    '<article><h3>Does ProPulse provide house construction in Hyderabad?</h3><p>ProPulse directly undertakes selected independent-house and villa construction projects. Project location, scope, specifications and availability are reviewed before a proposal is confirmed.</p></article>'+
+    '<article><h3>What details are needed for a construction estimate?</h3><p>Share your plot dimensions, location, planned built-up area, number of floors, drawings if available, preferred specifications, budget and expected timeline.</p></article>'+
+    '<article><h3>Can I explore interior design and turnkey options?</h3><p>Yes. You can discuss room-wise interior requirements, modular kitchens, finishes and turnkey scope. The final inclusions and exclusions should be agreed in writing.</p></article>'+
+    '<article><h3>Can I compare independent construction professionals?</h3><p>Explore published professional profiles and project information on ProPulse. Check credentials, relevant work, references and written commercial terms before appointing a provider.</p></article>'+
+    '<p><a href="/faq">Browse more construction, interior and property FAQs</a></p></section>'
+}
+
 function aboutExperienceContent(route){
   if(route.path!=='/about')return ''
   return '<section style="padding:10px 0 42px">'+
@@ -230,7 +244,7 @@ function fallback(route){
   return '<main data-seo-static-fallback="true" style="font-family:Arial,sans-serif;max-width:1100px;margin:0 auto;padding:32px;color:#173f5e">'+
     '<header style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap"><a href="/" aria-label="'+escapeHtml(SITE_NAME)+' home"><img src="/brand/propulse-logo.svg" alt="'+escapeHtml(SITE_NAME)+'" width="180" height="48"></a><nav aria-label="Primary">'+nav+'</nav></header>'+
     '<section style="padding:72px 0 34px"><p style="font-weight:700;color:#f05b24">PROPULSE BUSINESS</p><h1 style="max-width:850px;font-size:44px;line-height:1.08;margin:12px 0">'+escapeHtml(route.heading)+'</h1><p style="max-width:780px;font-size:18px;line-height:1.6">'+escapeHtml(route.summary)+'</p><p style="max-width:780px;line-height:1.6">'+escapeHtml(route.description)+'</p><p><a href="/quote" style="font-weight:700;color:#d94f22">Start your requirement</a> · <a href="/experts" style="font-weight:700;color:#173f5e">Find professionals</a></p></section>'+
-    businessIdentityContent(route)+cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+guideContent(route)+regionalConstructionContent(route)+homeownerFaqContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
+    businessIdentityContent(route)+homepageSeoContent(route)+cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+guideContent(route)+regionalConstructionContent(route)+homeownerFaqContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
 }
 
 function breadcrumbItems(route){
@@ -270,6 +284,12 @@ function staticJsonLd(route){
     website,
     page,
     {'@context':'https://schema.org','@type':'Service',name:'House and villa construction',serviceType:'Residential house construction',description:'Plan residential house and villa construction in Hyderabad with a defined project scope, material preferences and estimate request.',areaServed:{'@type':'City',name:'Hyderabad',containedInPlace:{'@type':'State',name:'Telangana'}},provider:{'@type':'Organization',name:SITE_NAME,url:absolute('/')},url:absolute('/')},
+    {'@context':'https://schema.org','@type':'FAQPage',mainEntity:[
+      {'@type':'Question',name:'Does ProPulse provide house construction in Hyderabad?',acceptedAnswer:{'@type':'Answer',text:'ProPulse directly undertakes selected independent-house and villa construction projects. Project location, scope, specifications and availability are reviewed before a proposal is confirmed.'}},
+      {'@type':'Question',name:'What details are needed for a construction estimate?',acceptedAnswer:{'@type':'Answer',text:'Share your plot dimensions, location, planned built-up area, number of floors, drawings if available, preferred specifications, budget and expected timeline.'}},
+      {'@type':'Question',name:'Can I explore interior design and turnkey options?',acceptedAnswer:{'@type':'Answer',text:'Yes. You can discuss room-wise interior requirements, modular kitchens, finishes and turnkey scope. The final inclusions and exclusions should be agreed in writing.'}},
+      {'@type':'Question',name:'Can I compare independent construction professionals?',acceptedAnswer:{'@type':'Answer',text:'Explore published professional profiles and project information on ProPulse. Check credentials, relevant work, references and written commercial terms before appointing a provider.'}},
+    ]},
   ]:[organization,page,{'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:breadcrumbItems(route)}]
   return JSON.stringify(data).replaceAll('</script','<\\/script')
 }
