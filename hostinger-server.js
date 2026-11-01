@@ -208,6 +208,15 @@ app.use((req,res,next)=>{
   return proxyToBackend(req,res);
 });
 
+// Professional detail pages must return server-rendered factual business HTML.
+// Quote pages remain client-side.
+app.use((req,res,next)=>{
+  if(!['GET','HEAD'].includes(req.method)||!/^\/experts\/[1-9]\d*\/?$/.test(req.path))return next();
+  const accept=String(req.get('accept')||'');
+  if(accept&&!accept.includes('text/html')&&!accept.includes('*/*'))return next();
+  return proxyToBackend(req,res);
+});
+
 // Browsers request /favicon.ico even though the app ships a favicon.svg.
 // Give it a deterministic public redirect instead of relying on webroot fallback.
 app.get('/favicon.ico',(req,res)=>res.redirect(308,'/favicon.svg'));
