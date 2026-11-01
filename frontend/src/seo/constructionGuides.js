@@ -660,6 +660,93 @@ export const CONSTRUCTION_GUIDES=[
       section('Store materials to preserve their condition','Separate steel from soil and standing water, protect cement from moisture, keep aggregates segregated and prevent contamination. Good storage cannot correct a nonconforming material, but poor storage can damage an otherwise acceptable delivery.')
     ],
   },
+
+  {
+    slug:'bathroom-renovation-cost-hyderabad',
+    type:'construction-guide', category:'Interior Cost Guides',
+    title:'Bathroom Renovation Cost in Hyderabad | Tiles, Plumbing & Vanity Guide | ProPulse',
+    description:'Plan a bathroom renovation budget by demolition, waterproofing, tiles, plumbing, sanitaryware, shower partition, vanity, electrical work and installation scope.',
+    heading:'How much does bathroom renovation cost in Hyderabad?',
+    summary:'Bathroom renovation cost depends on the room size, existing plumbing, waterproofing condition, tile selection, sanitaryware, fittings and whether the layout changes. Separate essential repair work from upgrades.',
+    searchTerms:['bathroom renovation cost Hyderabad','bathroom remodelling cost','small bathroom renovation price','bathroom tiles and plumbing cost','bathroom waterproofing cost Hyderabad','bathroom vanity cost'],
+    ctaLabel:'Get an Interior Renovation Quote', cta:'/quote?package=standard#interior',
+    note:'A site inspection is important before estimating demolition, concealed plumbing and waterproofing repairs. Quotes should state the measured area, product models, labour, debris removal, taxes and exclusions.',
+    sections:[
+      section('Inspect the existing bathroom before budgeting','Record room dimensions, floor slope, water seepage, tile condition, plumbing routes, ventilation, electrical points and ceiling condition. Identify whether the work is a surface refresh or a full strip-out.'),
+      section('Separate demolition and civil work','List removal of old tiles and fixtures, debris handling, wall or floor repairs, masonry changes, niche creation and any door or threshold changes. Confirm building access and disposal arrangements.'),
+      section('Treat waterproofing as a defined system','Specify substrate preparation, compatible waterproofing product, number of coats or layers as required by the system, corner and pipe-junction treatment, curing and a documented pond or water test where appropriate. Do not cover an unverified leak.'),
+      section('Calculate tile supply and installation separately','Measure floor and wall areas, tile size, pattern, skirting, niches, edge trims, wastage, adhesive, grout and labour. Choose slip-resistant flooring appropriate for wet use and confirm slope to the drain.'),
+      section('Plan plumbing and sanitaryware','List WC type, basin, tap, shower, diverter, health faucet, floor trap, concealed or exposed fittings, valves and pipe changes. Confirm compatibility, service access, water pressure and drainage before closing walls.'),
+      section('Include vanity, mirror and storage','Specify cabinet dimensions, material suitability, finish, countertop, basin, mirror cabinet, lighting and plumbing access. Protect cabinetry from direct leaks and provide ventilation.'),
+      section('Check electrical and ventilation requirements','Plan safe lighting, exhaust fan, geyser point, switches and wiring with a qualified electrician. Wet-area electrical protection and equipment placement must follow applicable safety requirements.'),
+      section('Compare quotations by scope and product model','Ask for brand and model, dimensions, quantities, waterproofing method, tile allowance, plumbing scope, installation, debris removal, taxes, warranty and exclusions. Keep layout changes and concealed repairs as separately approved items.')
+    ],
+  },
+  {
+    slug:'false-ceiling-cost-hyderabad-design-materials',
+    type:'construction-guide', category:'Interior Cost Guides',
+    title:'False Ceiling Cost in Hyderabad | Gypsum, POP & Lighting Guide | ProPulse',
+    description:'Understand false ceiling quotations by measured area, gypsum or POP system, framing, levels, access panels, lighting cut-outs, painting and electrical scope.',
+    heading:'What is the false ceiling cost in Hyderabad?',
+    summary:'False ceiling cost depends on ceiling area, system, framing, design complexity, room height, access requirements and lighting. Compare a simple flat ceiling with layered or cove designs using the same specification.',
+    searchTerms:['false ceiling cost Hyderabad','gypsum false ceiling price per sq ft','POP ceiling cost Hyderabad','2BHK false ceiling cost','bedroom false ceiling design cost','cove lighting false ceiling price'],
+    ctaLabel:'Get an Interior Quote', cta:'/quote?package=standard#interior',
+    note:'Rates vary by system, board, framing, finish, height and site conditions. Ask for a dated quote with measured area, board and framing specifications, cut-outs, access panels, paint and electrical exclusions.',
+    sections:[
+      section('Measure the actual ceiling scope','Record room-wise ceiling dimensions, beam drops, slab level, wall offsets, AC units, fans, curtain tracks, wardrobes and service routes. Do not compare rates using an unclear carpet-area assumption.'),
+      section('Choose a suitable ceiling system','Gypsum board on a metal framework, POP work and other ceiling systems have different installation methods and finish characteristics. Ask the contractor to specify the exact system, board thickness and framing details.'),
+      section('Understand flat, layered and cove designs','A plain ceiling is generally simpler than multi-level designs, curved details, floating borders, concealed coves or extensive profiles. Extra drops and shapes can increase framing, board, jointing and finishing work.'),
+      section('Coordinate lights, fans and access panels','Freeze downlight, track light, pendant, fan, speaker, detector and access-panel positions before framing. Heavy fixtures need suitable independent support rather than relying on the ceiling board alone.'),
+      section('Plan cove lighting as a separate item','Specify LED strip type, profile or channel, diffuser, driver, wattage, wiring, dimmer and access for replacement. Confirm the desired light output using a sample before closing the ceiling.'),
+      section('Check moisture and maintenance conditions','Use a system suitable for the room environment and address roof or plumbing leaks first. Bathrooms and utility areas need appropriate product selection, ventilation and access to concealed services.'),
+      section('Compare finish and painting scope','Confirm joint tape, jointing compound, corner details, sanding, primer, paint coats, shadow gaps and final touch-ups. Clarify whether electrical wiring and fixtures are included.'),
+      section('Ask for an itemised room-wise quotation','Compare area, system, framing, board, design levels, cut-outs, access panels, lighting, paint, taxes, installation and warranty. Approve a reflected ceiling plan before work starts.')
+    ],
+  },
+  {
+    slug:'electrical-point-planning-new-house-interiors',
+    type:'construction-guide', category:'Electrical & Interior Planning',
+    title:'Electrical Point Planning for a New House | Room-by-Room Checklist | ProPulse',
+    description:'Plan switches, sockets, appliance circuits, lighting, data, AC, geyser, kitchen and TV points before interior fabrication and wall finishing.',
+    heading:'How should you plan electrical points for a new house?',
+    summary:'Electrical planning should start with furniture layouts and appliance schedules. A room-wise point plan helps avoid extension boards, blocked sockets, rework and unsafe last-minute changes.',
+    searchTerms:['electrical point planning for new house','2BHK electrical points checklist','kitchen electrical points planning','bedroom switch socket height planning','TV unit electrical points','AC geyser dedicated circuit planning'],
+    ctaLabel:'Discuss Your Home Planning Requirement', cta:'/quote?package=standard#construction',
+    note:'Electrical layouts, circuit sizing, protection, earthing and installation must be designed and executed by qualified professionals in accordance with applicable electrical rules and safety standards. This checklist is for coordination, not wiring instructions.',
+    sections:[
+      section('Start with furniture and appliance layouts','Mark beds, wardrobes, study desks, sofa, TV, dining, kitchen counters, refrigerator, washing machine and work areas. Place switches and sockets where furniture will not block access.'),
+      section('Prepare a room-wise electrical schedule','List lighting, fan, general sockets, data points, controls and special appliance connections for each room. Record the intended use and approximate location on a coordinated drawing.'),
+      section('Plan bedroom and living-room points','Coordinate bedside switches, reading lights, charging sockets, TV, router, soundbar, floor lamps, AC and curtains. Keep service access and cable routes in mind when designing panelling or wardrobes.'),
+      section('Plan kitchen appliance connections','Confirm refrigerator, microwave, oven, hob ignition, chimney, dishwasher, RO, mixer and countertop appliance requirements. Dedicated circuits and socket locations should be assessed by the electrician based on appliance loads and applicable rules.'),
+      section('Coordinate bathroom and utility points','List geyser, exhaust, mirror light, washing machine and other equipment. Wet-area locations, protective devices, earthing and safe separation must be handled by a qualified electrician under applicable requirements.'),
+      section('Decide switch locations and controls','Review door swing, approach path, bed position, staircase movement and accessibility. Consider two-way switching, dimming or smart controls only after confirming compatibility and service support.'),
+      section('Plan distribution board, circuits and protection','The electrical professional should prepare circuit schedules, load assessment, cable and protective-device selection, earthing and testing records. Do not select wire sizes or breakers from generic online tables.'),
+      section('Coordinate concealed work before closing walls','Approve conduit routes, box positions, data conduits, AC drains and service penetrations before plaster, tile or cabinetry. Photograph and record concealed routes for future maintenance.'),
+      section('Inspect and test before handover','Obtain circuit labels, test records, earthing and protective-device checks, product warranties and as-built drawings. Verify sockets, switches, lights and equipment under professional supervision.')
+    ],
+  },
+  {
+    slug:'plumbing-layout-pressure-testing-new-house',
+    type:'construction-guide', category:'Plumbing & Waterproofing',
+    title:'New House Plumbing Layout & Pressure Testing | Homeowner Checklist | ProPulse',
+    description:'Plan water supply, drainage, vents, bathroom and kitchen points, access panels, pipe testing and documentation before plastering and tiling.',
+    heading:'What should you check in new house plumbing work?',
+    summary:'Good plumbing planning coordinates fixture locations, pipe routes, water pressure, drainage slope, venting, access and testing before concealed pipes are covered.',
+    searchTerms:['new house plumbing checklist','plumbing layout for 2BHK house','water pipe pressure testing house','bathroom plumbing before tiling','kitchen sink plumbing points','house drainage slope planning'],
+    ctaLabel:'Discuss Your Construction Requirement', cta:'/quote?package=standard#construction',
+    note:'Pipe sizing, materials, jointing, pressure-test procedure, drainage gradients and venting must follow the approved design, manufacturer instructions and applicable plumbing requirements. Use a qualified plumber or engineer.',
+    sections:[
+      section('Freeze fixture positions and schedules','Confirm WC, basin, shower, kitchen sink, washing machine, dishwasher, RO, geyser, utility sink and outdoor taps. Fixture dimensions and connection requirements should be coordinated with architectural and interior drawings.'),
+      section('Separate water supply and drainage planning','Show cold and hot water lines, valves, soil and waste pipes, floor traps, vents and rainwater routes on coordinated drawings. Avoid ad hoc routing through structural members.'),
+      section('Choose pipes and fittings by specification','Record approved material type, pressure or service class where applicable, diameter, fitting system, manufacturer and compatible jointing method. Keep product and batch details for concealed work.'),
+      section('Provide isolation and maintenance access','Locate accessible stop valves, cleanouts, traps, inspection points and service panels. Avoid permanently sealing critical joints, valves or equipment connections behind fixed cabinetry.'),
+      section('Check drainage and floor slopes','Coordinate finished floor levels, bathroom thresholds, floor traps and drain routes so water flows correctly without creating trip hazards or backflow. Confirm the design with the plumbing professional.'),
+      section('Coordinate geyser, solar and hot-water routes','Confirm equipment location, pipe insulation where specified, safety valves, electrical provision, access and future replacement path. Coordinate with the electrician and equipment manufacturer.'),
+      section('Test concealed supply pipes before covering','Require the specified pressure or leak test using the approved method and duration, with documented results and rectification of any leakage. Do not accept a verbal “checked” statement for concealed work.'),
+      section('Check drainage and fixture operation','Inspect drainage flow, traps, cleanouts, venting and fixture connections at the required stage. Test for leaks and odour issues before closing shafts, walls and floors.'),
+      section('Keep as-built drawings and handover records','Record pipe routes, valve locations, material details, test reports, pump and tank information, warranties and maintenance instructions for future repairs.')
+    ],
+  },
 ]
 
 export function guideBySlug(slug){
