@@ -595,6 +595,71 @@ export const CONSTRUCTION_GUIDES=[
       section('Make a side-by-side comparison sheet','Compare scope, quantities, specifications, exclusions, taxes, timeline, payment schedule and change-order rules. Ask each contractor to clarify gaps in writing before selecting one.')
     ],
   },
+
+  {
+    slug:'ghmc-hmda-house-building-permission-hyderabad',
+    type:'construction-guide', category:'Approvals & Permissions',
+    title:'GHMC & HMDA House Building Permission in Hyderabad | Homeowner Checklist | ProPulse',
+    description:'Understand the documents, plan checks and professional steps commonly involved in house building permission in Hyderabad. Confirm the current authority, rules and process for your specific plot.',
+    heading:'How do you get house building permission in Hyderabad?',
+    summary:'The applicable approval route depends on the plot location, local body, land status, road width, proposed use, building height and current regulations. Confirm jurisdiction and current requirements before construction.',
+    searchTerms:['GHMC house building permission Hyderabad','HMDA building permission process','house construction approval Hyderabad','building plan sanction Hyderabad','documents required for house building permission','TS building permission application'],
+    ctaLabel:'Discuss Your Construction Requirement', cta:'/quote?package=standard#construction',
+    note:'Approval rules, portals, fees and required documents can change. This is a general homeowner checklist, not legal advice or confirmation that a particular plot is eligible. Verify the current process with the competent authority and a qualified licensed professional before starting work.',
+    sections:[
+      section('First identify the authority for the plot','Do not assume every Hyderabad-area property follows the same approval process. Confirm the exact survey number, municipal limits, planning jurisdiction and whether the site falls under GHMC, HMDA or another local authority.'),
+      section('Verify land title and permitted land use','Have the title chain, registered documents, survey details, layout approval and land-use status reviewed by qualified professionals. Check for restrictions, road widening, lake or nala buffers, easements and other applicable constraints.'),
+      section('Prepare an accurate site and building plan','A licensed architect or engineer should prepare the site plan, floor plans, elevations, sections, area statement, setbacks, parking, access and service details using a verified site measurement.'),
+      section('Check building rules before finalising the design','Review applicable setbacks, permissible height, floor area, coverage, parking, road width, fire and life-safety provisions where applicable, and any special restrictions for the plot. Requirements depend on the site and proposal.'),
+      section('Keep commonly requested documents ready','Depending on the authority and application, documents may include ownership records, identity and authorisation documents, property or survey particulars, approved layout information, site photographs, drawings and professional certificates. Obtain the exact current checklist for your case.'),
+      section('Submit through the applicable official process','Use the current official authority portal or notified submission route with the licensed professional. Save the application reference, submitted drawings, acknowledgements, fee receipts and every clarification or revised submission.'),
+      section('Respond to scrutiny and obtain the written sanction','Resolve authority queries through the appointed professional. Check the final sanctioned drawings, conditions, validity and any commencement requirements; do not rely only on an agent’s verbal confirmation.'),
+      section('Build according to the approved plan','Keep a copy of sanctioned drawings on site. Material changes to setbacks, floor area, height, use or structural layout may require review or revised permission. Arrange inspections and completion or occupancy formalities where applicable.')
+    ],
+  },
+  {
+    slug:'house-foundation-types-soil-conditions',
+    type:'construction-guide', category:'Foundation & Soil',
+    title:'House Foundation Types in India | Soil Conditions & Design Basics | ProPulse',
+    description:'Understand isolated, combined, strip, raft and pile foundations, what soil testing tells you and why a structural engineer must select the foundation for each site.',
+    heading:'Which foundation is suitable for a house?',
+    summary:'Foundation selection depends on soil profile, groundwater, building loads, neighbouring structures and settlement risk. The foundation type must come from geotechnical information and structural design—not a generic online rule.',
+    searchTerms:['types of foundation for house construction','best foundation for house in India','isolated footing vs raft foundation','pile foundation for residential building','foundation for black cotton soil house','soil test before foundation'],
+    ctaLabel:'Discuss Your Construction Requirement', cta:'/quote?package=standard#construction',
+    note:'Never choose footing size, depth, reinforcement or foundation type from a generic chart. A qualified geotechnical professional and structural engineer must assess the actual site and building.',
+    sections:[
+      section('Why the soil and building must be assessed together','Foundation design transfers building loads safely to the ground while controlling settlement. Soil layers, bearing behaviour, groundwater, fill, slope, nearby excavation and the proposed structure all matter.'),
+      section('Understand common shallow foundations','Isolated footings may support individual columns where conditions permit. Combined or strap footings can address column positions or boundary constraints. Strip footings support continuous walls, while raft foundations spread loads over a larger area when justified by design.'),
+      section('Understand deep foundations','Pile foundations transfer loads to deeper suitable strata through a designed pile system. They may be considered for certain weak near-surface soils, heavier loads or site constraints, but require specialist investigation, design and quality control.'),
+      section('Know why black cotton soil needs special attention','Expansive soils can change volume with moisture variation. Foundation and ground-floor details must be designed for the actual soil profile and site drainage; copying a neighbour’s foundation is unsafe.'),
+      section('What a soil investigation can reveal','A geotechnical report may describe soil layers, groundwater, field or laboratory test results, engineering parameters and recommendations for foundation design. The investigation scope should suit the site and proposed building.'),
+      section('Check drainage and neighbouring properties','Surface water, leaking services, retaining walls, adjacent foundations, basements and excavation sequence can affect ground behaviour. Include these conditions in the design and construction method.'),
+      section('Inspect foundation work before it is covered','Check setting out, founding level, soil condition, reinforcement placement, cover, formwork, embedded services and concrete placement against approved drawings and inspection requirements.'),
+      section('Do not change the foundation on site without approval','If excavation reveals unexpected soil, water or obstructions, pause and seek the engineer’s written assessment. Changes to depth, footing dimensions or reinforcement need formal design review.')
+    ],
+  },
+  {
+    slug:'steel-cement-sand-quality-checks-site',
+    type:'construction-guide', category:'Material Quality & Site Checks',
+    title:'Steel, Cement & Sand Quality Checks at a Construction Site | ProPulse',
+    description:'A practical homeowner checklist for receiving and storing TMT steel, cement and sand, checking labels and documents, and arranging proper tests when needed.',
+    heading:'How do you check steel, cement and sand quality at a house construction site?',
+    summary:'Visual checks help identify obvious storage or delivery issues, but they cannot certify material strength or compliance. Verify product documentation, approved specifications, traceable batches and required tests.',
+    searchTerms:['steel quality check at construction site','cement quality test before buying','how to check sand quality for construction','TMT bar site inspection checklist','cement manufacturing date check','construction material quality tests'],
+    ctaLabel:'Discuss Your Construction Requirement', cta:'/quote?package=standard#construction',
+    note:'Do not accept or reject structural materials based only on colour, sound, touch, a bend test or an improvised water test. Follow project specifications, applicable standards, manufacturer guidance and tests arranged by competent personnel.',
+    sections:[
+      section('Start with the approved material specification','The engineer’s drawings and project specifications should define reinforcement grade and diameter, cement type, aggregate and sand requirements, concrete grade and any approved alternatives. Obtain written approval before substitution.'),
+      section('Check reinforcement steel at delivery','Verify manufacturer identification, grade and size markings where provided, bundle tags, invoices and test certificates. Inspect for excessive rust, oil, mud, damage or mixed sizes; ask the engineer or quality team to assess questionable bars.'),
+      section('Do not rely on a casual steel bend test','Bend and rebend performance must be assessed using the applicable standard and controlled test procedure. A site worker’s improvised bending test does not establish compliance or ductility.'),
+      section('Check cement bags and storage','Inspect bag markings, manufacturer, type, batch and packing details, invoice and declared standard. Reject torn or wet bags for review, store cement dry and off the floor, protect it from moisture and follow stock rotation guidance.'),
+      section('Understand the limits of cement freshness checks','Lumps, damaged packaging or an old manufacturing date are warning signs that need review, but hand-feel or colour cannot certify cement strength. Refer to manufacturer instructions and appropriate laboratory testing where required.'),
+      section('Inspect sand and aggregates for contamination','Look for visible clay lumps, organic matter, debris, excess silt or inconsistent grading. Visual inspection is only preliminary; use specified grading, silt or other tests through a competent laboratory when the project requires them.'),
+      section('Keep batch traceability and test records','Record delivery date, supplier, product, grade, batch or lot, quantity, invoice, certificate and where the material was used. Keep concrete delivery tickets, sampling records and test results with the site quality file.'),
+      section('Use qualified testing and approval','Arrange tests at the frequency and stage required by the project specification and applicable standards. The engineer or designated quality professional should review results and document acceptance, rejection or corrective action.'),
+      section('Store materials to preserve their condition','Separate steel from soil and standing water, protect cement from moisture, keep aggregates segregated and prevent contamination. Good storage cannot correct a nonconforming material, but poor storage can damage an otherwise acceptable delivery.')
+    ],
+  },
 ]
 
 export function guideBySlug(slug){
