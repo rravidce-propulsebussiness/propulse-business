@@ -49,10 +49,16 @@ function setCanonical(href){
 
 function siteOrigin(){
   const configured=String(import.meta.env.VITE_PUBLIC_SITE_URL||'').trim()
-  if(/^https?:\/\//i.test(configured)){
-    try{return new URL(configured).origin}catch{}
+  const candidate=/^https?:\/\//i.test(configured)?configured:window.location.origin
+  try{
+    const parsed=new URL(candidate)
+    // The public ProPulse site is HTTPS-only, even if the env value is missing
+    // or a visitor reaches the site through an HTTP alias.
+    if(parsed.hostname==='propulsetechnologies.online')parsed.protocol='https:'
+    return parsed.origin
+  }catch{
+    return 'https://propulsetechnologies.online'
   }
-  return window.location.origin
 }
 
 function pageJsonLd(route,origin){
@@ -274,7 +280,7 @@ export default function SeoManager(){
     setPropertyMeta('og:image:alt','ProPulse Business logo')
     setPropertyMeta('og:locale','en_IN')
 
-    setNamedMeta('twitter:card','summary')
+    setNamedMeta('twitter:card','summary_large_image')
     setNamedMeta('twitter:title',effective.title)
     setNamedMeta('twitter:description',effective.description)
     setNamedMeta('twitter:image',origin+'/brand/propulse-logo.png')
