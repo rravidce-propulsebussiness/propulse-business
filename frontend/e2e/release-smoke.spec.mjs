@@ -75,9 +75,9 @@ test('public homepage presents homeowner acquisition journeys',async({page})=>{
   await expect(page.getByRole('heading',{name:'Find a Property'})).toBeVisible()
   await expect(page.getByRole('button',{name:'Start Your Requirement'})).toBeVisible()
 
-  await page.getByRole('button',{name:'Start Build Your Home'}).click()
-  await expect(page.getByText('Tell Us Your Requirement',{exact:true})).toBeVisible()
-  await expect(page.getByRole('button',{name:/submit requirement/i})).toBeVisible()
+  await page.getByRole('link',{name:/get construction estimate/i}).first().click()
+  await expect(page).toHaveURL(/\/quote#construction$/)
+  await expect(page.getByRole('heading',{name:/construction/i}).first()).toBeVisible()
 })
 
 test('protected customer route redirects anonymous users to login',async({page})=>{
