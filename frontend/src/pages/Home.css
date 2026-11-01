@@ -163,6 +163,36 @@
 .hc-benefit-grid article>span svg{width:29px;height:29px}
 .hc-benefit-grid h3{margin:0;color:#14305c;font-size:22px;line-height:1.25;font-weight:800}
 .hc-benefit-grid p{margin:12px 0 0;color:#5d6b80;font-size:17px;line-height:1.65}
+.hc-benefit-grid article a{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  min-height:40px;
+  margin-top:18px;
+  padding:9px 15px;
+  border:1px solid #f3c1aa;
+  border-radius:999px;
+  background:#fff7f2;
+  color:#c94c1b;
+  font-size:13px;
+  line-height:1.2;
+  font-weight:850;
+  text-decoration:none;
+  transition:background-color .18s ease,border-color .18s ease,color .18s ease,transform .18s ease,box-shadow .18s ease;
+}
+.hc-benefit-grid article a:hover{
+  border-color:#ef5a22;
+  background:#ef5a22;
+  color:#fff;
+  box-shadow:0 7px 16px rgba(239,90,34,.18);
+  transform:translateY(-1px);
+}
+.hc-benefit-grid article a:focus-visible{
+  outline:3px solid #f2a17e;
+  outline-offset:3px;
+}
+
 .hc-benefits .hc-section-head h2{color:#14305c;font-size:clamp(32px,4.4vw,52px);line-height:1.13}
 .tone-1{background:#fbe9e0;color:#d2602f}
 .tone-2{background:#eaf2ff;color:#2367c9}
