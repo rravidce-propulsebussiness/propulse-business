@@ -208,5 +208,31 @@ groups["Room-wise material selection"] = [
 ["How do I select matching finishes for the whole house?","Coordinate wood tones, sheen, metal finishes, flooring, wall colours and light temperature with approved samples."]
 ];
 
+
+groups["False ceilings & lighting details"] = [
+["Gypsum vs PVC vs metal false ceiling: which is better?","Compare complete systems, room exposure, framing, access, finish and manufacturer documentation."],
+["Is gypsum board suitable for a bathroom ceiling?","Explain damp-resistant board limitations, ventilation, leak control and manufacturer-approved applications."],
+["What is the difference between cove lighting and profile lighting?","Compare light distribution, glare, access, drivers, recess depth and maintenance."],
+["How do I plan downlights in a false ceiling?","Coordinate beam angle, spacing, ceiling height, task zones, glare and electrical layout with a lighting designer."],
+["What is a shadow gap in a false ceiling?","Explain the perimeter detail, framing accuracy, paint finish, dust and cleaning considerations."],
+["How do I provide access to AC and electrical services above a ceiling?","Plan removable access panels for valves, drivers, junctions, filters and serviceable equipment before closing the ceiling."],
+["Which ceiling finish is easiest to maintain in a kitchen?","Compare grease exposure, cleaning method, heat, ventilation, access and approved material use."],
+["What should be included in a false ceiling quotation?","List area, board/panel, framing, suspension, fasteners, jointing, cut-outs, access panels, lights and exclusions."],
+["Can a ceiling fan be fixed directly to a gypsum board?","Explain that heavy fixtures need suitable structural support independent of the board and must follow approved installation details."],
+["How much height is lost in a false ceiling?","Measure slab level, framing, service routes, light fittings and fan/AC clearances rather than using one generic drop."]
+];
+groups["Kitchen countertops & surfaces"] = [
+["Granite vs quartz: which is better for an Indian kitchen?","Compare actual slab/product, heat, staining, joints, sealing, maintenance and installation quality."],
+["Is quartz countertop heat resistant?","Explain product-specific heat limitations and the need for trivets; avoid universal temperature claims."],
+["Does granite need sealing in a kitchen?","Explain stone-specific porosity, sealer suitability, application and maintenance guidance."],
+["What is the difference between granite and marble for kitchen counters?","Compare staining, acid sensitivity, hardness, maintenance and suitability for cooking areas."],
+["What is the difference between quartz and porcelain slabs?","Compare engineered composition, thickness, fabrication, heat, UV, edge and installation constraints."],
+["Which countertop edge profile is best?","Compare eased, bullnose, bevel and other profiles by comfort, cleaning, appearance and chip exposure."],
+["How do I plan a sink cut-out in a countertop?","Coordinate sink template, tap, cabinet support, cut-out polish, clips, sealant and plumbing access."],
+["What is the difference between a backsplash and a countertop upstand?","Explain wall protection, jointing, cleaning, water ingress and design coordination."],
+["How do I compare kitchen countertop quotations?","Compare slab identity, grade, thickness, area, cut-outs, edge profile, joints, transport, supports and installation."],
+["Can I use the same countertop material in a bathroom vanity?","Consider water, cosmetics, cleaners, basin cut-out, support, edge sealing and manufacturer care."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
