@@ -77,3 +77,26 @@
 @media(max-width:900px){.locality-homepage .locality-home-hero-grid{grid-template-columns:1fr}.pp-locality-visual{grid-column:1;grid-row:auto;max-width:720px;width:100%;margin:0 auto}.locality-homepage .locality-home-summary{grid-template-columns:1fr}.district-page .district-hero{grid-template-columns:1fr}.district-page .pp-landing-art{grid-column:1;grid-row:auto;min-height:300px;max-width:700px;width:100%;margin:0 auto}}
 @media(max-width:620px){.locality-homepage .locality-home-hero{padding:20px 16px 42px}.locality-homepage .locality-home-hero h1{font-size:clamp(34px,10vw,46px)}.pp-landing-art{min-height:250px;border-radius:20px}.locality-homepage .locality-home-summary{padding:20px}.locality-homepage .locality-home-summary ul{grid-template-columns:1fr}.locality-homepage .locality-package-section,.locality-homepage .locality-partner-section,.locality-homepage .locality-faq-section,.locality-homepage .locality-context-grid{padding:42px 16px}.district-page .district-hero{padding:38px 16px}.district-page .pp-landing-art{min-height:245px}}
 @media(prefers-reduced-motion:reduce){.pp-house-svg,.pp-art-orbit,.pp-art-blueprint{animation:none!important}}
+
+
+/* Mobile polish: keep CTA copy legible and prevent fixed chrome collisions. */
+.district-page .regional-cta,
+.regional-page .regional-cta{color:#fff}
+.district-page .regional-cta h2,
+.regional-page .regional-cta h2{color:#fff!important}
+.district-page .regional-cta p,
+.regional-page .regional-cta p{color:#dce8ef!important}
+.district-page .regional-cta span,
+.regional-page .regional-cta span{color:#ffad87}
+.district-page .regional-cta a,
+.regional-page .regional-cta a{color:#fff!important}
+@media(max-width:640px){
+  .district-page .public-site-header-spacer,
+  .regional-page .public-site-header-spacer{height:72px;min-height:72px;flex-basis:72px}
+  .district-page .district-hero{padding-top:34px;padding-bottom:38px;row-gap:18px}
+  .district-page .district-hero .regional-breadcrumb{position:relative;z-index:2;margin:0 0 4px;line-height:1.5}
+  .district-page .district-hero h1{position:relative;z-index:1;margin-top:8px}
+  .district-page .pp-landing-art{display:grid;min-height:245px;margin-top:6px}
+  .district-page .regional-cta{padding:42px 18px}
+  .district-page .regional-cta h2{font-size:clamp(27px,8vw,36px);line-height:1.12}
+}
