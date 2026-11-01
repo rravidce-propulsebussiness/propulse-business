@@ -44,7 +44,7 @@ global.fetch=async(uri,opts={})=>{
   if(url===watch)return new Response(html,{status:200,headers:{'Content-Type':'text/html'}});
   if(url===poster)return new Response(Buffer.concat([Buffer.from([0xff,0xd8,0xff]),Buffer.alloc(1300,1)]),{status:200,headers:{'Content-Type':'image/jpeg'}});
   if(url===playback)return new Response('',{status:302,headers:{location:signed}});
-  if(url===signed)return new Response(Buffer.from([0,0,0,0,0,0,0,16,102,116,121,112]),{
+  if(url===signed)return new Response(Buffer.from([0,0,0,16,102,116,121,112,105,115,111,109]),{
     status:206,headers:{'Content-Type':'video/mp4','Content-Range':'bytes 0-11/15000000'}});
   return new Response('Unknown mock '+url,{status:404});
 };
