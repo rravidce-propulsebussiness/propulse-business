@@ -14,7 +14,7 @@ const indexPath=path.join(dist,'index.html')
 const template=fs.readFileSync(indexPath,'utf8')
 const configuredOrigin=String(process.env.VITE_PUBLIC_SITE_URL||'').trim().replace(/\/+$/,'')
 const parsedConfiguredOrigin=/^https?:\/\//i.test(configuredOrigin)?new URL(configuredOrigin):null
-const isProductionDomain=parsedConfiguredOrigin&&/(^|\\.)propulsetechnologies\\.online$/i.test(parsedConfiguredOrigin.hostname)
+const isProductionDomain=parsedConfiguredOrigin&&(parsedConfiguredOrigin.hostname==='propulsetechnologies.online'||parsedConfiguredOrigin.hostname.endsWith('.propulsetechnologies.online'))
 const origin=isProductionDomain?'https://propulsetechnologies.online':parsedConfiguredOrigin?parsedConfiguredOrigin.origin:'https://propulsetechnologies.online'
 const googleSiteVerification=String(process.env.VITE_GOOGLE_SITE_VERIFICATION||'').trim()
 
