@@ -30,10 +30,10 @@ const BENEFITS = [
 ]
 
 const STEPS = [
-  { number: '1', icon: 'clipboard', title: 'Share Your Requirement', text: 'Tell us about your plot, budget and preferences.' },
-  { number: '2', icon: 'layers', title: 'Get Estimated Plan', text: 'Use the estimator to understand an indicative budget range.' },
-  { number: '3', icon: 'people', title: 'Connect with Professionals', text: 'Relevant professionals can understand the same structured brief.' },
-  { number: '4', icon: 'home', title: 'Move Forward', text: 'Compare quotations and choose the option you like.' },
+  { number: '1', icon: 'consult', title: 'Plan & Consult', text: 'Discuss your plot, built-up area, budget and project goals.' },
+  { number: '2', icon: 'layers', title: 'Design & Specify', text: 'Align drawings, materials, finishes and the scope of work.' },
+  { number: '3', icon: 'people', title: 'Build & Review', text: 'Agree milestones, quality checks and project communication.' },
+  { number: '4', icon: 'home', title: 'Handover', text: 'Review completed scope, documents and agreed handover items.' },
 ]
 
 // These are explicitly labelled as illustrative inspiration. They are never presented
@@ -142,7 +142,7 @@ export default function Home() {
       </section>
       <section className="hc-section hc-services"><div className="hc-container"><div className="hc-section-head hc-section-head-centered"><h2>House Construction Services in Hyderabad</h2></div><div className="hc-service-grid">{SERVICES.map(item => <article className="hc-service-card" key={item.title}><img src={item.image} alt={item.title} loading="lazy"/><div className="hc-service-copy"><span className="hc-service-icon"><Icon name={item.icon} size={19}/></span><div><h3>{item.title}</h3><b>{item.eyebrow}</b><p>{item.text}</p></div><button type="button" onClick={() => openRequirement(item.key)} aria-label={'Start '+item.title}><Icon name="arrow" size={15}/></button></div></article>)}</div></div></section>
       <section className="hc-section hc-benefits"><div className="hc-container"><div className="hc-section-head compact hc-section-head-centered"><h2>What to Clarify Before You Build</h2></div><div className="hc-benefit-grid">{[{icon:'clipboard',title:'Defined Scope',text:'Align built-up area, floor count, drawings and included work.',link:'/guides/home-construction-checklist'},{icon:'layers',title:'Material Specifications',text:'Discuss grades, brands, finishes and quality checks before work begins.',link:'/guides/best-steel-for-house-construction'},{icon:'people',title:'Compare Professionals',text:'Review published profiles and relevant work where available.',link:'/experts'},{icon:'shield',title:'Clear Commercial Terms',text:'Ask about milestones, exclusions, variations, warranty and handover.',link:'/guides/choose-construction-contractor-hyderabad'}].map((item,index) => <article key={item.title}><span className={'tone-'+(index+1)}><Icon name={item.icon} size={19}/></span><div><h3>{item.title}</h3><p>{item.text}</p><Link to={item.link}>Learn more →</Link></div></article>)}</div></div></section>
-      <section className="hc-section hc-how"><div className="hc-container"><div className="hc-section-head hc-section-head-centered"><h2>How It Works</h2></div><div className="hc-step-grid">{STEPS.map((step,index) => <article key={step.number}><span className={'hc-step-number tone-'+(index+1)}>{step.number}</span><span className={'hc-step-icon tone-'+(index+1)}><Icon name={step.icon} size={18}/></span><h3>{step.title}</h3><p>{step.text}</p>{index < STEPS.length-1 && <i className="hc-step-arrow"><Icon name="arrow" size={15}/></i>}</article>)}</div></div></section>
+      <section className="hc-section hc-how"><div className="hc-container"><div className="hc-section-head hc-section-head-centered"><h2>A Clear, Transparent Construction Process</h2></div><div className="hc-step-grid">{STEPS.map((step,index) => <article key={step.number}><span className={'hc-step-number tone-'+(index+1)}>{step.number}</span><span className={'hc-step-icon tone-'+(index+1)}><Icon name={step.icon} size={18}/></span><h3>{step.title}</h3><p>{step.text}</p>{index < STEPS.length-1 && <i className="hc-step-arrow"><Icon name="arrow" size={15}/></i>}</article>)}</div></div></section>
       <section className="hc-section hc-projects">
         <div className="hc-container">
           <div className="hc-section-head hc-section-head-centered">
