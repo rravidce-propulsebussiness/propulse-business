@@ -1,5 +1,6 @@
 const s3=require('./s3PrivateObjectStorageService');
 const SITE='https://propulsetechnologies.online';
+const {projectSeoTitle,projectSeoDescription}=require('./projectSeoDefaults');
 const THUMB_PREFIX='business-project-thumbnails/';
 const VIDEO_PREFIX='business-project-redacted/';
 const projectKey=project=>{
@@ -48,8 +49,8 @@ function videoObject(project){
   const date=project.video_published_at||project.published_at;
   const parsed=date?new Date(date):null;
   if(!parsed||Number.isNaN(parsed.getTime()))return null;
-  const title=String(project.seo_title||project.title||'Completed project video').trim();
-  const description=String(project.seo_description||project.description||title).replace(/\s+/g,' ').trim().slice(0,500);
+  const title=projectSeoTitle(project);
+  const description=projectSeoDescription(project);
   const duration=Number(project.video_duration_seconds);
   return {
     '@type':'VideoObject',

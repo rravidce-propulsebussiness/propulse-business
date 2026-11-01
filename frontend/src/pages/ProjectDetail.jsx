@@ -4,6 +4,7 @@ import {Link,Navigate,useParams} from 'react-router-dom'
 import {publicRequest} from '../utils/auth'
 import {PublicHeader,PublicFooter} from '../components/PublicSiteChrome'
 import {normalizeProject,projectPhotos,categoryLabel,Icon} from './Projects'
+import {projectSeoTitle,projectSeoDescription} from '../utils/projectSeoDefaults'
 import ProjectMediaViewer,{ProjectMediaContent,projectMediaPreview} from '../components/ProjectMediaViewer'
 import './Projects.css'
 import ProfessionalCallbackRequirementForm, {emptyProfessionalCallback} from '../components/ProfessionalCallbackRequirementForm'
@@ -93,8 +94,9 @@ export default function ProjectDetail(){
 
   useEffect(()=>{
     if(!project)return undefined
-    const title=(project.seoTitle||project.title)+' | ProPulse'
-    const description=(project.seoDescription||project.description||'Explore this completed construction or interior design project on ProPulse.').slice(0,320)
+    const seoName=projectSeoTitle(project)
+    const title=seoName+' | ProPulse'
+    const description=projectSeoDescription(project)
     const canonical='https://propulsetechnologies.online/projects/'+(project.seoSlug||'project-'+project.id)
     const named=(name,content)=>{
       let meta=document.head.querySelector('meta[name="'+name+'"]')
@@ -135,13 +137,13 @@ export default function ProjectDetail(){
       jsonLd.dataset.propulseProjectSeo='client'
       const videoDate=project.videoPublishedAt||project.publishedAt
       const videoObject=project.video&&project.videoThumbnail&&project.videoStream&&videoDate&&!Number.isNaN(Date.parse(videoDate))
-        ?{'@type':'VideoObject',name:project.seoTitle||project.title,description,thumbnailUrl:project.videoThumbnail,
+        ?{'@type':'VideoObject',name:seoName,description,thumbnailUrl:project.videoThumbnail,
           uploadDate:new Date(videoDate).toISOString(),contentUrl:'https://propulsetechnologies.online'+project.videoStream,
           creator:{'@type':'Organization',name:project.businessName||'ProPulse'},
           ...(project.videoDurationSeconds?{duration:'PT'+Math.round(project.videoDurationSeconds)+'S'}:{})}
         :null
       jsonLd.textContent=JSON.stringify({'@context':'https://schema.org','@graph':[
-        {'@type':'CreativeWork',name:project.seoTitle||project.title,description,url:canonical,keywords:project.seoKeyword||undefined,
+        {'@type':'CreativeWork',name:seoName,description,url:canonical,keywords:project.seoKeyword||undefined,
           contentLocation:project.location?{'@type':'Place',name:project.location}:undefined},
         ...(videoObject?[videoObject]:[])
       ]})
