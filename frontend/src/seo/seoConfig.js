@@ -16,6 +16,14 @@ export const HOME_SEO={
 export const CORE_PUBLIC_SEO_ROUTES=[
   HOME_SEO,
   {
+    path:'/blog',
+    type:'blog-hub',
+    title:'Construction & Interior Design Blog | ProPulse Journal',
+    description:'Read practical articles on house construction, home interiors, materials, project planning and quality checks from the ProPulse Journal.',
+    heading:'Construction and interior design ideas, explained clearly',
+    summary:'Explore practical articles and planning guidance for construction, home interiors and better project decisions.',
+  },
+  {
     path:'/technology',
     title:'Construction Business Software & Technology | ProPulse',
     description:'Explore ProPulse technology for construction and interior companies, including Business OS for CRM, quotations, projects, operations and finance.',
