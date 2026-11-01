@@ -8,7 +8,7 @@ import {districtBySlug,districtPath,stateBySlug} from '../src/seo/regionalSeo.js
 import {CONSTRUCTION_GUIDES,guideBySlug} from '../src/seo/constructionGuides.js'
 import {SEO_FAQ_CATEGORIES,homeownerSeoFaqs} from '../src/seo/faqKnowledge.js'
 import {interiorNeeds,interiorChecklist} from '../src/seo/interiorSeo.js'
-import {HYDERABAD_HOMEOWNER_TOPIC_GROUPS} from '../src/seo/hyderabadHomeownerTopics.js'
+import {HYDERABAD_HOMEOWNER_TOPIC_GROUPS} from '../src/seo/hyderabadHomeownerTopics.js'\nimport {INTERIOR_HOMEOWNER_TOPIC_GROUPS} from '../src/seo/interiorHomeownerTopics.js'
 
 const here=path.dirname(fileURLToPath(import.meta.url))
 const dist=path.resolve(here,'../dist')
@@ -254,7 +254,13 @@ function interiorLandingContent(route){
 }
 
 function blogHubContent(route){
-  if(route.type!=='blog-hub')return ''
+  if(!['blog-hub','construction-blog','interior-blog'].includes(route.type))return ''
+  if(route.type==='construction-blog'||route.type==='interior-blog'){
+    const interior=route.type==='interior-blog'
+    const groups=interior?INTERIOR_HOMEOWNER_TOPIC_GROUPS:HYDERABAD_HOMEOWNER_TOPIC_GROUPS.filter(group=>group.category!=='Interior design & renovation searches')
+    const topics=groups.map(group=>'<details><summary>'+escapeHtml(group.category)+' ('+group.topics.length+' questions)</summary><ol>'+group.topics.map(topic=>'<li><strong>'+escapeHtml(topic.title)+'</strong><p>'+escapeHtml(topic.description)+'</p></li>').join('')+'</ol></details>').join('')
+    return '<section style="padding:10px 0 42px"><h2>'+escapeHtml(route.heading)+'</h2><p style="max-width:850px;line-height:1.65">'+escapeHtml(route.summary)+'</p><p>These are homeowner-style questions with article briefs, not verified monthly search-volume rankings. Cost ranges must be dated and itemised; Vastu is described as a traditional belief or preference, not a building requirement.</p>'+topics+'<p><a href="/blog">All blog categories</a> · <a href="/quote">Start a project requirement</a></p></section>'
+  }
   const articles=CONSTRUCTION_GUIDES.map(item=>'<li><a href="/guides/'+escapeHtml(item.slug)+'">'+escapeHtml(item.heading)+'</a> — '+escapeHtml(item.summary)+'</li>').join('')
   const topicGroups=HYDERABAD_HOMEOWNER_TOPIC_GROUPS.map(group=>'<details><summary>'+escapeHtml(group.category)+' ('+group.topics.length+' topic ideas)</summary><ol>'+group.topics.map(topic=>'<li><strong>'+escapeHtml(topic.title)+'</strong><p>'+escapeHtml(topic.description||'Practical homeowner guidance and checks.')+'</p></li>').join('')+'</ol></details>').join('')
   return '<section style="padding:10px 0 42px"><h2>Practical construction and interior articles</h2><p style="max-width:850px;line-height:1.65">The ProPulse Journal brings together practical reading for homeowners planning construction, interiors and property improvements. Use each article as a starting point, then confirm project-specific decisions with qualified professionals.</p><h2>Browse published articles</h2><ul>'+articles+'</ul><h2>Homeowner questions informed by Google search research</h2><p>These distinct homeowner questions are informed by Google Trends research guidance and public search-result patterns. Google Trends reports relative interest, while exact monthly search-volume estimates require Google Ads Keyword Planner. Each question includes a practical explanation of the information a homeowner needs.</p>'+topicGroups+'<p><a href="/guides">Browse the full knowledge guide library</a> · <a href="/quote">Start a project requirement</a></p></section>'
@@ -270,7 +276,7 @@ function fallback(route){
 
 function breadcrumbItems(route){
   const items=[{'@type':'ListItem',position:1,name:'Home',item:absolute('/')}]
-  if(route.type==='blog-hub')return [...items,{'@type':'ListItem',position:2,name:'Blog',item:absolute('/blog')}];
+  if(route.type==='blog-hub')return [...items,{'@type':'ListItem',position:2,name:'Blog',item:absolute('/blog')}];\n  if(route.type==='construction-blog'||route.type==='interior-blog')return [...items,{'@type':'ListItem',position:2,name:'Blog',item:absolute('/blog')},{'@type':'ListItem',position:3,name:route.type==='interior-blog'?'Interior Blog':'Construction Blog',item:absolute(route.path)}];
   if(route.type==='guide-hub')return [...items,{'@type':'ListItem',position:2,name:'Guides',item:absolute('/guides')}]
   if(route.type==='construction-guide')return [...items,{'@type':'ListItem',position:2,name:'Guides',item:absolute('/guides')},{'@type':'ListItem',position:3,name:route.heading,item:absolute(route.path)}]
   if(route.type==='interior-state-hub')return [...items,{'@type':'ListItem',position:2,name:route.stateName,item:absolute(route.path)}]
@@ -292,7 +298,7 @@ function breadcrumbItems(route){
 function staticJsonLd(route){
   const page={
     '@context':'https://schema.org',
-    '@type':(route.type==='city-hub'||route.type==='guide-hub'||route.type==='blog-hub')?'CollectionPage':route.type==='construction-guide'?'Article':'WebPage',
+    '@type':(['city-hub','guide-hub','blog-hub','construction-blog','interior-blog'].includes(route.type))?'CollectionPage':route.type==='construction-guide'?'Article':'WebPage',
     name:route.title,
     url:absolute(route.path),
     description:route.description,
