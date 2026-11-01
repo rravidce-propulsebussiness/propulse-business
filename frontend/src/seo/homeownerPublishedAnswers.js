@@ -1183,5 +1183,10 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   "How do I maintain acrylic kitchen shutters?": {
     answer: "Clean acrylic shutters with a soft microfibre cloth and a mild, non-abrasive cleaner recommended by the supplier. Avoid scouring pads, strong solvents and rough wiping that can create fine scratches. Use a clean cloth to prevent trapped dust from marking the surface, and keep shutters away from direct flame and excessive heat. Follow the product warranty and care sheet for polishing or scratch treatment.",
     sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "What is included in a complete 2BHK interior package?": {
+    answer: "A complete 2BHK interior package should be defined room by room rather than by its name. It may cover a modular kitchen, wardrobes, TV/storage units, beds, ceiling, lighting and selected furniture, but appliances, loose furniture, curtains, decor, civil changes, painting and electrical upgrades may be excluded. Ask for dimensioned drawings, board and finish specifications, hardware brands, quantities, taxes, installation timeline, warranty and a signed exclusions list. Compare packages only after matching the same scope.",
+    sources: []
   }
 };
