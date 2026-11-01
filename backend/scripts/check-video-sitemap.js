@@ -59,8 +59,9 @@ pool.query=async(sql,params=[])=>{queries.push({sql,params});return {rows}};
       fetch(origin+'/robots.txt'),fetch(origin+'/sitemap.xml'),fetch(origin+'/video-sitemap.xml')
     ]);
     assert.equal(robots.status,200);
-    assert.match(await robots.text(),/Sitemap: https:\/\/propulsetechnologies\.online\/sitemap\.xml/);
-    assert.match(await robots.text(),/Sitemap: https:\/\/propulsetechnologies\.online\/video-sitemap\.xml/);
+    const robotsText=await robots.text();
+    assert.match(robotsText,/Sitemap: https:\/\/propulsetechnologies\.online\/sitemap\.xml/);
+    assert.match(robotsText,/Sitemap: https:\/\/propulsetechnologies\.online\/video-sitemap\.xml/);
     assert.equal(indexSitemap.status,200,'Main sitemap must be publicly fetchable');
     assert.match(indexSitemap.headers.get('content-type'),/^application\/xml\s*;?\s*charset=utf-8/i,'Main sitemap must explicitly be served as XML, not HTML or plain text');
     const indexXml=await indexSitemap.text();
