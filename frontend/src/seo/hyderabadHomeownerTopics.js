@@ -110,8 +110,7 @@ const groups = {
     ["How do I reduce construction delays?","Explains design freeze, procurement planning, approvals, decision turnaround and milestone tracking."],
     ["What warranty should a construction company provide?","Explains why warranty scope, exclusions, duration and defect reporting should be written into the contract."]
   ]
-};
-
+  ],
   "Construction estimates & execution": [
     ["How much does foundation work cost for a house in Hyderabad?","Explains how soil, foundation type, excavation, concrete, reinforcement and site access affect a project estimate."],
     ["What is the cost of RCC slab construction?","Separates concrete, steel, shuttering, labour, pumping and structural design; a single rate can mislead."],
