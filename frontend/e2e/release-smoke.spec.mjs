@@ -65,7 +65,7 @@ test('public homepage presents homeowner acquisition journeys',async({page})=>{
   await expect(visualHero).toHaveAttribute('data-p','3')
   await expect(stageTabs.getByRole('tab',{name:'Interior'})).toHaveAttribute('aria-selected','true')
   await expect(page.getByRole('link',{name:/view packages/i}).first()).toHaveAttribute('href','/packages')
-  await expect(page.getByRole('link',{name:/get free quote/i}).first()).toHaveAttribute('href','/quote#interiors')
+  await expect(page.getByRole('link',{name:/get construction estimate/i}).first()).toHaveAttribute('href','/quote#construction')
   await expect(page.getByRole('link',{name:/find professionals/i}).first()).toHaveAttribute('href','/experts')
   await expect(page.getByRole('link',{name:/for professionals/i}).first()).toHaveAttribute('href','/professionals')
   await expect(page.getByRole('heading',{name:/what do you need/i})).toBeVisible()
