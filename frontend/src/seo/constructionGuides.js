@@ -529,6 +529,105 @@ export const CONSTRUCTION_GUIDES=[
     ]
   },
 
+
+  {
+    slug:'plywood-vs-mdf-vs-hdhmr-interiors',
+    type:'construction-guide',category:'Interior Materials',
+    title:'Plywood vs MDF vs HDHMR | Which Board Is Best for Interiors? | ProPulse',
+    description:'Compare plywood, MDF and HDHMR for wardrobes, kitchen cabinets and furniture by moisture exposure, strength, screw holding, finish and cost.',
+    heading:'Plywood vs MDF vs HDHMR: which board should you choose?',
+    summary:'There is no single best board for every interior. Choose the substrate based on the location, expected load, moisture exposure, shutter design, finish system, hardware and documented product specification.',
+    searchTerms:['plywood vs MDF vs HDHMR','which board is best for kitchen cabinets','HDHMR vs plywood wardrobe','MDF vs plywood for furniture','best board for modular interiors'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Board names alone do not establish quality or suitability. Ask for manufacturer, product grade, thickness, technical data, applicable standard or test report, and confirm the actual use with the designer/fabricator.',
+    sections:[
+      section('Understand what each board is','Plywood is made by bonding layers of veneer, typically with alternating grain directions. MDF is a wood-fibre panel made by pressing fibres with resin under heat and pressure. HDHMR is a high-density, moisture-resistant engineered fibreboard category sold by different manufacturers. Product properties vary by manufacturer and grade.'),
+      section('Compare the practical trade-offs','Plywood is often selected where panel strength, screw fixing and certain moisture-exposure requirements matter. MDF provides a smooth, consistent surface that can suit painted or routed profiles, but edge fixing and prolonged wetting need care. HDHMR products are marketed for higher density and moisture resistance than standard MDF, but the exact performance must be checked in the manufacturer’s technical data.'),
+      section('Choose by room and exposure','Dry wardrobe shelves, bedroom shutters, kitchen carcasses and sink-base cabinets are not identical applications. Near sinks, plumbing joints and wet utility areas, prevent leaks, seal edges and provide ventilation regardless of board type. Do not treat a “moisture resistant” label as permission for continuous water exposure.'),
+      section('Consider shutter design and finish','Flat laminate shutters, routed painted shutters, membrane profiles and veneer finishes can favour different substrates and fabrication methods. Ask the fabricator to confirm compatibility of the board, adhesive, primer, coating and edge treatment as one tested system.'),
+      section('Check hardware fixing and shelf spans','Heavy shutters, wide shelves, pull-outs and frequently used drawers impose different loads. Ask for the board thickness, support spacing, fixing method and manufacturer guidance for hinges, channels and accessories. A stronger board cannot compensate for an undersized fixing or unsupported span.'),
+      section('Compare cost on a complete panel specification','A fair comparison includes board price, thickness, wastage, machining, edge banding, finish, hardware fixing, installation and expected maintenance. A low sheet price may not be the lowest finished-cabinet cost if it needs additional reinforcement or finishing work.'),
+      section('What to write in the BOQ','Specify board manufacturer and product, grade, thickness, intended location, finish, edge treatment, back-panel details, shelf supports, hardware and warranty. Ask to approve a sample and retain product labels or invoices for traceability.')
+    ],
+    sources:[
+      {label:'BIS — IS 303:2024, Plywood for General Purposes',url:'https://www.bis.gov.in/is-303-2024/?lang=en'},
+      {label:'BIS — IS 710:2024, Marine Plywood',url:'https://www.bis.gov.in/is-710-2024/?lang=en'},
+      {label:'BIS — Compendium of Indian Standards on Plywood',url:'https://www.services.bis.gov.in/tmp/compendium_2025-06-02-04-13-12.pdf'}
+    ]
+  },
+  {
+    slug:'laminate-thickness-08mm-vs-1mm-interiors',
+    type:'construction-guide',category:'Interior Materials',
+    title:'0.8mm vs 1mm Laminate | Thickness, Uses & Selection Guide | ProPulse',
+    description:'Understand 0.8mm and 1mm decorative laminate choices for wardrobes, kitchen shutters and furniture, including substrate, balancing, edge details and maintenance.',
+    heading:'Is 0.8mm or 1mm laminate better for home interiors?',
+    summary:'A thicker laminate is not automatically the right choice for every panel. Selection depends on the manufacturer’s product range, application, substrate, bonding method, panel size, edge detailing and finish.',
+    searchTerms:['0.8mm vs 1mm laminate','which laminate thickness is best','1mm laminate for kitchen shutters','0.8mm laminate for wardrobe','laminate thickness for furniture'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Confirm the actual nominal thickness and tolerance from the selected manufacturer’s datasheet. Decorative laminate thickness is only one part of the finished panel system.',
+    sections:[
+      section('What the thickness number tells you','The 0.8mm and 1mm labels refer to the nominal thickness of a decorative laminate sheet, not the total thickness or strength of the finished shutter. The substrate, adhesive, pressing process, panel size and support all influence the final result.'),
+      section('Where 0.8mm and 1mm may be considered','Both thicknesses are used in interior applications depending on the product line and fabricator specification. A thicker sheet may provide a different feel or handling characteristics, but it does not automatically make a cabinet waterproof, impact-proof or structurally stronger. Follow the laminate maker’s recommended application.'),
+      section('Do not ignore balancing on the reverse side','Panels can warp when the face and back are not balanced appropriately. Ask whether the reverse side uses a balancing laminate or another specified backing system compatible with the face material and substrate.'),
+      section('Check edge finishing and joints','Inspect edge banding, corner quality, seams, adhesive marks, alignment and exposed edges. A well-specified face laminate with poor edge execution can still fail visually and in service.'),
+      section('Approve the actual colour and texture sample','Laminate shade, gloss and texture can look different under showroom, daylight and warm indoor lighting. Approve a physical sample with the product code and batch/lot reference; check it beside flooring, wall paint and other finishes.'),
+      section('How to compare two laminate quotations','Compare brand and series, product code, nominal thickness, finish/texture, substrate, adhesive/process, backing, edge band, area/quantity, wastage, installation and warranty. Do not compare only “1mm premium” against “0.8mm standard.”'),
+      section('Care and maintenance','Use the manufacturer’s cleaning guidance. Avoid abrasive pads, harsh solvents and prolonged standing water at joints or edges. Repair chips and water ingress early, because the substrate below the decorative surface can be affected.')
+    ],
+    sources:[
+      {label:'Greenlam — Decorative laminates product information',url:'https://www.greenlam.com/'},
+      {label:'Merino — Decorative laminates product information',url:'https://www.merinolaminates.com/'}
+    ]
+  },
+  {
+    slug:'modular-kitchen-drawer-channels-tandem-box-systems',
+    type:'construction-guide',category:'Interior Hardware',
+    title:'Kitchen Drawer Channels vs Tandem Box Systems | Hardware Guide | ProPulse',
+    description:'Compare telescopic drawer slides, concealed runners and tandem box systems for modular kitchens by extension, load, adjustment, accessories and maintenance.',
+    heading:'What is the difference between drawer channels and tandem box systems?',
+    summary:'Drawer hardware affects usable storage, smooth movement and serviceability. Compare the complete drawer system—including runner, box sides, front adjustment and rated load—not only whether it has soft close.',
+    searchTerms:['drawer channels vs tandem box','tandem box system kitchen','telescopic channel vs concealed runner','soft close drawer channel','best kitchen drawer hardware'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Load capacity and installation dimensions are product-specific. Use the hardware manufacturer’s technical catalogue for the exact model and drawer width.',
+    sections:[
+      section('Understand a basic telescopic channel','A telescopic slide is commonly mounted to the drawer and cabinet sides and may use multiple sliding members to provide partial or full extension. Quality, load rating, length, fixing and alignment vary by model.'),
+      section('Understand concealed runners and tandem boxes','Concealed runners are mounted beneath or alongside a drawer so the mechanism is less visible. Tandem box systems use a coordinated metal drawer-side and runner system, often with integrated adjustment and accessory options. Product names and features differ by manufacturer.'),
+      section('Compare extension and usable access','Check whether the drawer is partial, full or over extension, and whether the back of the drawer is accessible when open. Confirm clearance with adjacent doors, handles, appliances and internal partitions.'),
+      section('Compare load rating properly','Check the stated dynamic load capacity and the conditions under which it applies. Drawer width, depth, contents, mounting and cycle use can affect performance. Do not assume every runner in a brand family has the same rating.'),
+      section('Soft close and push-to-open options','Soft-close damping slows the drawer near closure. Push-to-open hardware is designed for handleless fronts and requires correct gaps and alignment. Some systems combine functions; others require separate compatible components. Confirm the exact model and accessories.'),
+      section('Choose accessories for the actual storage','Cutlery trays, plate holders, bottle dividers, inner drawers and waste bins should match drawer dimensions and the user’s routine. Accessories reduce usable internal space and may affect the required load rating.'),
+      section('What to check at installation and handover','Check smooth travel, equal gaps, front adjustment, full extension, soft-close action, stability under the intended load and access to adjustment screws. Ask for brand/model, warranty, spare-part availability and care instructions.')
+    ],
+    sources:[
+      {label:'Blum India — Drawer Systems',url:'https://www.blum.com/in/en/products/boxsystems/overview/'},
+      {label:'Hettich India — Drawer Systems',url:'https://www.hettich.com/en-in/products/drawer-systems'}
+    ]
+  },
+  {
+    slug:'wardrobe-interior-layout-accessories-guide',
+    type:'construction-guide',category:'Interior Planning',
+    title:'Wardrobe Interior Layout & Accessories | Drawers, Lofts & Hanging Space | ProPulse',
+    description:'Plan wardrobe internals with hanging sections, shelves, drawers, lofts, shoe storage, pull-outs and accessories based on clothing, room space and daily use.',
+    heading:'How should you plan the inside of a wardrobe?',
+    summary:'A useful wardrobe is designed around what the household stores and how often it is accessed. Plan clear internal dimensions, hanging lengths, shelf spacing, drawer access and door swing before choosing accessories.',
+    searchTerms:['wardrobe internal design ideas','wardrobe accessories list','wardrobe hanging space dimensions','wardrobe drawers and shelves layout','wardrobe loft design'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Dimensions below should be site-measured and coordinated with the selected hardware and clothing needs. Avoid treating generic online dimensions as mandatory standards.',
+    sections:[
+      section('List what the wardrobe must store','Separate long garments, shirts, trousers, folded clothes, sarees, bags, footwear, jewellery, bedding and seasonal storage. Count users and decide which items need daily access versus high-level storage.'),
+      section('Plan hanging zones and clear heights','Provide hanging sections based on actual garment lengths and hanger type. Check rod strength, fixing into the cabinet sides or supports and clear space below. Long garments need a different arrangement from shirts or folded trousers.'),
+      section('Design shelves and drawers around access','Frequently used items are easier to reach in drawers or mid-height shelves. Very deep shelves can hide items at the back; use pull-outs or divide the storage where appropriate. Check drawer opening against bed, door and walking clearance.'),
+      section('Use lofts for occasional storage','Lofts can store luggage, blankets and seasonal items, but require safe access and suitable shutter hardware. Check ceiling level, access height, ventilation and whether the loft doors can open without obstruction.'),
+      section('Select accessories only where they solve a problem','Trouser pull-outs, tie racks, jewellery trays, laundry baskets, pull-down hanging rails and shoe pull-outs can improve organisation but add cost and reduce usable cabinet space. Confirm exact dimensions and rated load.'),
+      section('Coordinate lighting and electrical safety','Wardrobe lights should not obstruct drawers or hinges. Plan sensor location, driver access, wiring routes and safe electrical installation before the wardrobe is closed. Avoid inaccessible drivers that cannot be serviced.'),
+      section('Check the final drawing and BOQ','Approve internal elevations with dimensions, shelf count, drawer sizes, rod locations, hardware model, board thickness, finish code, edge treatment, loft details and accessory schedule. Keep one signed drawing as the production reference.')
+    ],
+    sources:[
+      {label:'Blum India — Storage and cabinet solutions',url:'https://www.blum.com/in/en/products/'},
+      {label:'Hettich India — Furniture fittings and storage solutions',url:'https://www.hettich.com/en-in/products'}
+    ]
+  },
+
 ]
 
 export function guideBySlug(slug){
