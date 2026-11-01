@@ -132,6 +132,7 @@ const groups = {
     ["What affects house construction cost in Miyapur?","Explains built-up area, specification, site logistics, soil, labour availability and quotation scope without claiming a fixed locality rate."],
     ["How do I plan a house construction project in Kondapur?","A practical sequence for plot checks, design, approvals, contractor selection, procurement and site supervision."]
   ],
+};
 
 const intentLabels = ["Google Trends / public search-informed question","Homeowner problem-solving query","Comparison or purchase-intent query","Local service-intent query"];
 
