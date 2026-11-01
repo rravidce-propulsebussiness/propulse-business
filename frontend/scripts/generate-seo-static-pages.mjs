@@ -260,7 +260,7 @@ function blogHubContent(route){
     const interior=route.type==='interior-blog'
     const groups=interior?INTERIOR_HOMEOWNER_TOPIC_GROUPS:HYDERABAD_HOMEOWNER_TOPIC_GROUPS.filter(group=>group.category!=='Interior design & renovation searches')
     const featuredSlugs=interior
-      ?['2bhk-interiors-hyderabad','modular-kitchen-planning-hyderabad','wardrobe-materials-plywood-mdf-hdhmr','how-to-check-plywood-quality-for-interiors','cabinet-hinge-types-overlay-inset-soft-close','laminate-acrylic-veneer-pu-membrane-finish-comparison','08mm-vs-1mm-laminate-interior-shutters']
+      ?['2bhk-interiors-hyderabad','modular-kitchen-planning-hyderabad','wardrobe-materials-plywood-mdf-hdhmr','how-to-check-plywood-quality-for-interiors','cabinet-hinge-types-overlay-inset-soft-close','laminate-acrylic-veneer-pu-membrane-finish-comparison','08mm-vs-1mm-laminate-interior-shutters','vastu-precautions-before-house-planning']
       :['best-steel-for-house-construction','best-cement-for-house-construction','prevent-cracks-in-house','waterproofing-precautions-new-house','home-construction-checklist','soil-test-before-house-construction']
     const featured=CONSTRUCTION_GUIDES.filter(item=>featuredSlugs.includes(item.slug)).map(item=>'<article><h3><a href="/guides/'+escapeHtml(item.slug)+'">'+escapeHtml(item.heading)+'</a></h3><p>'+escapeHtml(item.summary)+'</p></article>').join('')
     const topics=groups.map(group=>'<details><summary>'+escapeHtml(group.category)+' ('+group.topics.length+' questions)</summary><ol>'+group.topics.map(topic=>'<li><strong>'+escapeHtml(topic.title)+'</strong><p>'+escapeHtml(topic.description)+'</p></li>').join('')+'</ol></details>').join('')
