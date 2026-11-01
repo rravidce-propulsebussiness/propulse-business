@@ -719,5 +719,39 @@ groups["Interior cost and electrical-plumbing coordination"] = [
 ["How do I compare interior project timelines?","Review design approvals, procurement lead times, site readiness, trade sequence, installation and snagging."]
 ];
 
+
+groups["Flooring installation and wall finishes"] = [
+["Which flooring is best for a living room?","Compare vitrified tile, natural stone, engineered wood and resilient flooring by use, finish, maintenance and budget."],
+["What is the difference between full-body and glazed vitrified tiles?","Understand tile construction, surface design, wear characteristics, edge appearance and suitable applications."],
+["How do I choose the right tile size for a small room?","Consider room proportions, layout, cutting, grout lines, door thresholds and available tile dimensions."],
+["What is tile lippage and how can it be checked?","Learn how adjacent tile edges differ in height and why substrate, tile calibration and installation technique matter."],
+["Which tile adhesive should be used for large-format tiles?","Select a compatible adhesive system based on tile type, substrate, location and manufacturer guidance."],
+["How wide should floor tile grout joints be?","Follow tile manufacturer recommendations and project specifications for tile size, variation and installation conditions."],
+["What is the difference between epoxy and cement grout?","Compare stain resistance, chemical resistance, application, cleaning, repair and cost considerations."],
+["How do I plan skirting with floor tiles?","Coordinate skirting height, tile cuts, wall finish, door frames, furniture and cleaning needs."],
+["How do I choose flooring for a kitchen?","Prioritize slip resistance, cleaning, stain performance, joints and compatibility with wet-area detailing."],
+["Which flooring is suitable for bedrooms?","Compare comfort, acoustics, temperature, durability, cleaning and moisture conditions."],
+["What should I check before tile installation starts?","Inspect substrate soundness, levels, moisture, setting-out, tile batch, adhesive and movement-joint details."],
+["Why do floor tiles sound hollow after installation?","Understand possible causes and why inspection and appropriate repair assessment are needed before assuming every hollow sound means failure."],
+["Can the same floor tile be used in bathrooms and living rooms?","Check wet-area slip performance, surface finish, drainage falls and intended-use suitability before selecting one tile throughout."],
+["What is the difference between wallpaper and texture paint?","Compare pattern options, substrate preparation, moisture suitability, cleaning, repair and installation."],
+["Which wall finish is easy to maintain in a living room?","Evaluate washable paint, wallpaper, panels and cladding for dust, fingerprints, repair and cleaning."],
+["Are decorative wall panels suitable behind a TV unit?","Consider heat sources, cable access, fixing substrate, panel joints, service access and finish durability."],
+["What is the difference between laminate wall panels and veneer panels?","Compare appearance, substrate, natural variation, maintenance, edge detailing and repair."],
+["Can wallpaper be installed on a damp wall?","No decorative covering should hide active dampness; identify and resolve the moisture source before finishing."],
+["How do I select a feature wall finish for a bedroom?","Coordinate headboard, bedside lighting, wardrobe, textiles, cleaning and visual scale."],
+["How do I match flooring with interior laminate colours?","Compare physical samples in daylight and artificial light with wall paint, doors, countertops and furniture."]
+];
+groups["Vastu-aware interior and floor plan coordination"] = [
+["How do I coordinate Vastu with modern interior design?","Treat Vastu preferences as a design input while retaining safe circulation, ventilation, structure and practical room use."],
+["Where should I place the bed according to common Vastu preferences?","Discuss traditional preferences alongside door positions, window drafts, bedside access and comfortable circulation."],
+["How do I plan a pooja unit in a small apartment?","Consider available wall space, ventilation, electrical safety, storage, clearances and household routines."],
+["What should I consider before placing a pooja unit in the living room?","Coordinate privacy, visual focus, lighting, storage, ventilation and safe placement away from cooking or wet areas."],
+["How can I plan a kitchen around Vastu preferences?","Balance preferred orientation with hob-sink workflow, exhaust, plumbing, appliance clearances and storage."],
+["Can wardrobe placement follow Vastu and still be practical?","Check wall strength, door swings, window access, circulation and storage dimensions before fixing the location."],
+["How do I plan a study room with Vastu preferences?","Prioritize daylight, glare control, desk ergonomics, power and data points, quiet and storage."],
+["What should I check before changing a room layout for Vastu?","Recheck structure, approvals, ventilation, plumbing, electrical routes and the actual usable area."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
