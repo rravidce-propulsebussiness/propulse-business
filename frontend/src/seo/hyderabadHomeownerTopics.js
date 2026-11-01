@@ -177,6 +177,32 @@ groups["Waterproofing, windows & building envelope"] = [
 ["What should I check before accepting waterproofing work?","Request product system details, surface preparation, application records, junction photos, test records and written warranty scope."]
 ];
 
+
+groups["Electrical planning & home safety"] = [
+["What is the difference between MCB, RCCB and RCBO?","Explain overcurrent versus residual-current protection and why device selection must be designed by a qualified electrician."],
+["What is an earthing wire and why is it important?","Explain protective earthing and bonding, continuity testing and the limits of visual checks."],
+["How do I plan electrical points in a 2BHK house?","Build a room-wise appliance and usage schedule before the electrician prepares circuit layouts and load calculations."],
+["What should I check before closing electrical conduits in walls?","Inspect routes, bends, box alignment, separation from plumbing, draw wires and photographic records before plaster."],
+["How do I check house wiring quality before handover?","Request circuit schedules, continuity, insulation resistance, polarity, earthing and protective-device test records from qualified personnel."],
+["What is the difference between FR, FRLS and FRLSH wires?","Explain cable marking categories only as defined by the applicable standard and product datasheet; do not infer performance from marketing shorthand."],
+["Can AC, geyser and kitchen appliances share one circuit?","Explain that circuit allocation and conductor/protection sizing require load calculations and electrical design."],
+["What is a distribution board and how should it be labelled?","Explain circuit identification, isolation, protective devices, spare capacity and clear handover schedules."],
+["How many electrical points are needed in a bedroom?","Plan from furniture layout, bed sides, study, TV, charging, lighting, AC and likely future use rather than a fixed count."],
+["Why is RCCB tripping in a house?","List possible leakage, appliance faults, wiring issues or neutral/earth problems and advise safe isolation and qualified diagnosis."]
+];
+groups["Plumbing systems & water management"] = [
+["CPVC vs UPVC vs PPR: which pipe is suitable for a house?","Compare service temperature, pressure, application, jointing and product standards."],
+["What is the difference between CPVC and PVC pipes?","Explain material modification and typical service uses without relying on colour coding."],
+["How do I check plumbing pressure before tiling?","Explain documented pressure testing of the specified system before concealment by a qualified plumber."],
+["What is the difference between a soil pipe and a waste pipe?","Explain fixture discharge, pipe sizing, venting and drainage design at a homeowner level."],
+["Why does a bathroom drain smell?","Investigate trap water seal, venting, dry traps, leaks and cleaning access rather than masking odour."],
+["What is a P-trap vs an S-trap?","Explain outlet direction and fixture compatibility; selection depends on the actual drainage connection and code."],
+["How do I prevent leakage below a kitchen sink?","Check trap joints, flexible hoses, tap connections, cabinet base protection, access and periodic inspection."],
+["What is the purpose of a plumbing vent pipe?","Explain pressure balance, trap seal protection and safe termination according to plumbing design."],
+["What should be included in a plumbing BOQ?","Specify material, standard, size, pressure class, fittings, valves, supports, jointing, testing and warranty."],
+["How do I plan hot-water lines for multiple bathrooms?","Coordinate heater capacity, route length, pipe rating, insulation, valves, pressure and maintenance access."]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
