@@ -154,7 +154,21 @@ groups["Planning, room sizes & building services"] = [
 ["What is a bar bending schedule and why is it important?","Explains reinforcement quantities, cutting lengths, laps, bends and checking against structural drawings."],
 ["When should anti-termite treatment be done during construction?","Describes treatment stages, approved products, applicator instructions and safety precautions."],
 ["How do I prevent cracks between brick walls and RCC columns?","Covers junction detailing, mesh where specified, curing, workmanship and movement assessment."],
-["What should I inspect before taking handover of a new house?","Provides a snag checklist for structure, waterproofing, plumbing, electrical, doors, windows, finishes and documents."]
+["What should be included in a construction site inspection checklist?","Lists the records and inspection points to review at foundation, reinforcement, concrete, masonry, waterproofing and handover stages."]
+];
+
+
+groups["Permissions, legal checks & homeowner handover"] = [
+  ["How can I verify a building permission in Telangana?","Explains how to retrieve the digitally issued permission, sanctioned plan and proceedings from the official portal and compare them with the site."],
+  ["What is the difference between layout approval and building permission?","Clarifies approval of a plotted layout versus sanction or registration for an individual building proposal."],
+  ["Is an Encumbrance Certificate enough to verify a property title?","Explains what an EC can reveal, what it may not show and why independent title review is still required."],
+  ["What happens if my house is built differently from the sanctioned plan?","Explains deviation risks, enforcement and why the approved drawings must be checked before making changes."],
+  ["Can I change my house plan after building permission is approved?","Explains when revised approval is needed and why owners should not build first and seek permission later."],
+  ["What is a road-widening line and how can it affect my plot?","Explains how master-plan or road proposals can affect buildable area, access and setbacks."],
+  ["When should I hire a structural engineer for house construction?","Covers design, foundation, structural drawings, site inspections, alterations and defect assessment."],
+  ["What documents should I collect when my house construction is complete?","Lists sanctioned drawings, completion/occupancy records where applicable, warranties, test reports, manuals and handover records."],
+  ["What is a defect-liability period in house construction?","Explains written defect reporting, contractor obligations, exclusions and the importance of defining the period in the agreement."],
+  ["How should I approve extra work and cost variations during construction?","Explains written variation orders, scope, rates, time impact and approval before work proceeds."]
 ];
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
