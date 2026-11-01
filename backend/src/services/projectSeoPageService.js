@@ -2,6 +2,7 @@
 // Data comes exclusively from the published, public-project service; no private media URLs
 // or customer contact records are embedded here.
 const SITE_ORIGIN='https://propulsetechnologies.online';
+const {coverPathFor}=require('./projectCoverService');
 const PROJECT_PREFIX='/projects/';
 const META_DESCRIPTION_LENGTH=180;
 const safeText=(value,max=3000)=>String(value??'').trim().slice(0,max);
@@ -50,6 +51,8 @@ function fallback(project,path){
     '<li><strong>Published by:</strong> '+publishedBy+'</li>',
   ].filter(Boolean).join('');
   const official=project.is_official===true;
+  const photoPath=coverPathFor(project);
+  const photo=photoPath?'<figure style="margin:20px 0"><img src="'+escapeHtml(photoPath)+'" alt="'+title+' completed project photograph" style="width:100%;height:auto;max-width:1000px"></figure>':'';
   const contact=official
     ?'<a href="/contact#direct-project">Request construction or interior services directly from ProPulse</a>'
     :'<a href="/experts">Compare independent construction and interior professionals</a>';
@@ -58,17 +61,18 @@ function fallback(project,path){
     '<nav aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/projects">Completed projects</a> / '+title+'</nav>'+
     '<article><header><p style="color:#c95628;font-weight:700">'+(official?'OFFICIAL PROPULSE COMPLETED PROJECT':'PUBLISHED PROFESSIONAL PROJECT')+'</p>'+
     '<h1 style="font-size:clamp(26px,4vw,44px);line-height:1.14">'+title+'</h1>'+
-    '<p>'+short+'</p></header><section aria-label="Project facts"><h2>Project overview</h2><ul>'+facts+'</ul>'+budget+'</section>'+
+    '<p>'+short+'</p>'+photo+'</header><section aria-label="Project facts"><h2>Project overview</h2><ul>'+facts+'</ul>'+budget+'</section>'+
     (desc?'<section><h2>About this completed project</h2><p style="white-space:pre-line">'+desc+'</p></section>':'')+
     '<section><h2>Explore a similar project</h2><p>'+contact+'</p><p><a href="/projects">View more completed projects</a></p></section>'+
     '</article></main>';
 }
-function projectSchema(project,canonical,description){
+function projectSchema(project,canonical,description,coverImageUrl=null){
   const name=safeText(project.seo_title||project.title,180);
   const publishedBy=safeText(project.business_name||'ProPulse',180);
   const location=safeText(project.location_text,180);
   const work={
     '@type':'CreativeWork',name,url:canonical,description,
+    ...(coverImageUrl?{image:coverImageUrl}:{}),
     author:{'@type':'Organization',name:publishedBy},
     ...(location?{contentLocation:{'@type':'Place',name:location}}:{}),
     ...(project.project_type?{about:safeText(project.project_type,120)}:{}),
@@ -97,25 +101,29 @@ function renderProjectHtml(template,project){
   const name=safeText(project.seo_title||project.title,180);
   const title=name+' | ProPulse';
   const description=descriptionFor(project);
+  const coverPath=coverPathFor(project);
+  const imageUrl=coverPath?SITE_ORIGIN+coverPath:SITE_ORIGIN+'/brand/propulse-logo.png';
   let html=template.replace(/<title>[^<]*<\/title>/i,'<title>'+escapeHtml(title)+'</title>');
   html=meta(html,'name','description',description);
   html=meta(html,'name','robots','index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1');
   html=meta(html,'name','googlebot','index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1');
   html=meta(html,'name','twitter:title',title);
   html=meta(html,'name','twitter:description',description);
-  html=meta(html,'name','twitter:card','summary');
-  html=meta(html,'name','twitter:image',SITE_ORIGIN+'/brand/propulse-logo.png');
+  html=meta(html,'name','twitter:card',coverPath?'summary_large_image':'summary');
+  html=meta(html,'name','twitter:image',imageUrl);
+  html=meta(html,'name','twitter:image:alt',coverPath?name+' - completed project photograph':'ProPulse logo');
   html=meta(html,'property','og:title',title);
   html=meta(html,'property','og:description',description);
   html=meta(html,'property','og:url',canonical);
   html=meta(html,'property','og:type','article');
-  html=meta(html,'property','og:image',SITE_ORIGIN+'/brand/propulse-logo.png');
+  html=meta(html,'property','og:image',imageUrl);
+  html=meta(html,'property','og:image:alt',coverPath?name+' - completed project photograph':'ProPulse logo');
   html=html.replace(/<link\b[^>]*rel=["']canonical["'][^>]*>/gi,'');
   html=html.replace(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi,'');
   html=html.replace('</head>',
     '  <link rel="canonical" href="'+escapeHtml(canonical)+'" />\n'+
     '  <script type="application/ld+json" data-propulse-project-seo="server">'+
-      safeJson(projectSchema(project,canonical,description))+'</script>\n</head>');
+      safeJson(projectSchema(project,canonical,description,coverPath?imageUrl:null))+'</script>\n</head>');
   // Built home HTML is pre-rendered for SEO. Replace only root fallback,
   // keeping the boot loader, fingerprinted scripts and styles untouched.
   const start=html.indexOf('<div id="root">');
