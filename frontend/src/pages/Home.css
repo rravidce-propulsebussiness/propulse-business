@@ -748,7 +748,7 @@
 .hc-home .hc-service-copy{grid-template-columns:30px minmax(0,1fr) 28px;gap:8px;padding:12px 10px 13px}
 .hc-home .hc-service-icon{width:30px;height:30px;border-radius:9px}
 .hc-home .hc-service-copy h3{font-size:12px;line-height:1.35}
-.hc-home .hc-service-copy p{font-size:11px}
+.hc-home .hc-service-copy p{font-size:12px}
 .hc-home .hc-section-head.hc-section-head-centered{flex-wrap:wrap}
 @media(max-width:1100px){.hc-home .hc-service-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.hc-home .hc-service-copy{grid-template-columns:34px minmax(0,1fr) 30px;padding:13px}.hc-home .hc-service-icon{width:34px;height:34px}.hc-home .hc-service-copy h3{font-size:13px}}
 @media(max-width:700px){.hc-home .hc-service-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.hc-home .hc-service-card>img{height:120px}.hc-home .hc-service-copy{grid-template-columns:28px minmax(0,1fr);gap:8px;padding:11px}.hc-home .hc-service-copy>button{grid-column:2;justify-self:start;width:28px;height:28px}.hc-home .hc-service-copy h3{font-size:12px}}
