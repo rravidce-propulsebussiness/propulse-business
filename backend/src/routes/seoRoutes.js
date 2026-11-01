@@ -203,7 +203,7 @@ router.get('/video-sitemap.xml',async(req,res)=>{
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">',
     ...videos.map(entry=>{
       const video=entry.video;
-      const duration=Number(video.duration?.match(/^PT(\\d+)S$/)?.[1]);
+      const duration=Number(video.duration?.match(/^PT(\d+)S$/)?.[1]);
       return [
         '  <url>',
         '    <loc>'+xmlEscape(origin+entry.path)+'</loc>',
@@ -218,11 +218,11 @@ router.get('/video-sitemap.xml',async(req,res)=>{
           ?['      <video:duration>'+duration+'</video:duration>']:[]),
         '    </video:video>',
         '  </url>',
-      ].join('\\n');
+      ].join('\n');
     }),
     '</urlset>',
     '',
-  ].join('\\n');
+  ].join('\n');
   res.type('application/xml');
   res.setHeader('Cache-Control','public, max-age=900');
   return res.send(body);
