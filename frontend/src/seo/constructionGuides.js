@@ -628,6 +628,85 @@ export const CONSTRUCTION_GUIDES=[
     ]
   },
 
+
+  {
+    slug:'kitchen-baskets-pantry-pullouts-magic-corner-guide',
+    type:'construction-guide',category:'Interior Hardware',
+    title:'Kitchen Baskets, Pantry Pull-outs & Magic Corners | Selection Guide | ProPulse',
+    description:'Compare kitchen baskets, tall pantry pull-outs, magic corners and carousel units by cabinet dimensions, access, load ratings and daily use.',
+    heading:'Which kitchen baskets and pull-out accessories should you choose?',
+    summary:'Kitchen accessories should solve a real storage or access problem. Start with cabinet dimensions and the items you store, then compare the complete mechanism, load rating, adjustment and service support.',
+    searchTerms:['types of kitchen baskets','pantry pull out vs tall unit','magic corner vs carousel','kitchen bottle pull out size','which kitchen accessories are useful'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Do not select accessories from catalogue pictures alone. Verify the exact model’s installation dimensions, rated load, cabinet compatibility and warranty with the manufacturer.',
+    sections:[
+      section('List the storage problem before selecting hardware','Identify what needs to be stored: plates, thalis, cups, cutlery, bottles, groceries, cleaning products or heavy cookware. Consider who uses the kitchen and whether the items need daily access.'),
+      section('Understand common basket types','Common options include cutlery trays, plate and thali baskets, cup-and-saucer baskets, bottle pull-outs, plain storage baskets and tall pantry systems. Names and layouts vary by brand. Match the basket to the cabinet width, depth, height and door arrangement.'),
+      section('Tall pantry pull-outs and internal drawers','A tall pantry can use pull-out frames, internal drawers or shelves. Compare visibility, full access, usable capacity, door fixing, loading and the ability to remove or clean components. Check the exact installation drawing before finalising cabinet dimensions.'),
+      section('Magic corner versus carousel','Corner pull-out mechanisms and rotating carousel shelves solve different cabinet geometries. A magic-corner style mechanism can bring stored items outward from a blind corner; a carousel rotates shelves within a corner cabinet. Neither automatically makes every corner fully usable.'),
+      section('Check load ratings and runner quality','Ask for the dynamic load rating for the complete fitted system, not just a generic statement about metal thickness. Confirm whether the rating applies per basket or to the whole mechanism, and whether it changes with cabinet width or extension.'),
+      section('Check finish, cleaning and corrosion exposure','Compare the specified surface finish, weld quality, edges, removable trays and cleaning instructions. Keep water and cleaning chemicals from accumulating in cabinet bases; no hardware finish should be treated as maintenance-free in a wet or corrosive environment.'),
+      section('Measure before ordering','Record clear internal cabinet width, depth and height after accounting for hinges, door thickness, plumbing, skirting, wall irregularities and adjacent appliances. Use the selected manufacturer’s installation drawing for minimum clearances.'),
+      section('Write the hardware schedule into the BOQ','Record brand, series, model code, dimensions, finish, load rating, accessories, quantity, warranty and service contact. Inspect smooth travel, alignment, fixing and stability at handover.')
+    ],
+    sources:[
+      {label:'Blum India — Cabinet applications and storage systems',url:'https://www.blum.com/in/en/products/'},
+      {label:'Hettich India — Furniture fittings and storage solutions',url:'https://www.hettich.com/en-in/products'}
+    ]
+  },
+  {
+    slug:'edge-banding-pvc-abs-pur-eva-guide',
+    type:'construction-guide',category:'Interior Materials',
+    title:'PVC vs ABS Edge Banding, PUR vs EVA | Modular Furniture Guide | ProPulse',
+    description:'Understand edge banding materials, thickness, PUR and EVA adhesive systems, peeling causes and what to specify for modular furniture.',
+    heading:'What is the difference between PVC and ABS edge banding?',
+    summary:'Edge quality depends on the board edge, band material, adhesive, machine setup, trimming and site conditions. A thicker band or a premium adhesive name alone cannot guarantee a durable joint.',
+    searchTerms:['PVC vs ABS edge banding','0.8mm vs 2mm edge banding','PUR vs EVA edge banding','why is edge banding peeling','edge banding for modular kitchen'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Adhesive selection and processing are manufacturer- and machine-specific. Follow the adhesive and edge-band supplier’s technical data and safety instructions.',
+    sections:[
+      section('What edge banding does','Edge banding covers exposed panel edges, improves appearance and helps protect the substrate edge from everyday knocks and moisture ingress. It does not make a cabinet waterproof.'),
+      section('PVC and ABS edge bands','PVC and ABS are common thermoplastic edge-band materials. Compare the actual product’s thickness, colour match, texture, impact behaviour, processing guidance and environmental/product declarations where available. Do not assume all products within one material category perform identically.'),
+      section('0.8mm versus 2mm edge banding','Thickness changes the visible edge profile and may affect impact protection and machining requirements. The appropriate choice depends on panel location, corner exposure, design and the fabricator’s equipment. Confirm nominal thickness and tolerance in the BOQ.'),
+      section('EVA and PUR adhesive systems','EVA hot-melt adhesives are widely used in edge-banding processes. PUR reactive hot-melt systems cure through moisture reaction and may offer different joint properties. Performance depends on the exact adhesive formulation, machine settings, substrate, edge band and process control.'),
+      section('Why edges peel or open','Potential causes include poor panel preparation, dust, unsuitable adhesive, incorrect temperature or feed settings, inadequate pressure, incompatible materials, poor trimming, moisture exposure or damage during transport. Identify the failure mode before deciding on repair.'),
+      section('Inspect a finished sample','Look for continuous bonding, clean trimming, consistent flushness, tight corners, no glue lines or gaps, and colour/texture match. Inspect both visible and less visible edges on a sample cabinet before production.'),
+      section('What to specify in the BOQ','Record edge-band material, brand/series, colour code, nominal thickness, application location, adhesive/process where contractually relevant, corner treatment and workmanship acceptance criteria.'),
+      section('Care and repair','Wipe spills promptly and avoid soaking exposed joints. For peeling or chipped edges, have the fabricator assess the substrate and rebond or replace the band using a compatible process rather than masking the defect with sealant.')
+    ],
+    sources:[
+      {label:'Hettich India — Furniture fittings and furniture solutions',url:'https://www.hettich.com/en-in/products'},
+      {label:'BIS — Know Your Standard portal',url:'https://www.bis.gov.in/know-your-standard/?lang=en'}
+    ]
+  },
+  {
+    slug:'cement-opc-ppc-house-construction-guide',
+    type:'construction-guide',category:'Construction Materials',
+    title:'OPC vs PPC Cement for House Construction | Selection & Quality Checks | ProPulse',
+    description:'Compare OPC and PPC cement, Indian Standards, storage, bag checks and why cement choice must follow structural and project specifications.',
+    heading:'Which cement is better for house construction: OPC or PPC?',
+    summary:'Neither OPC nor PPC is universally best for every building element. Select cement according to the project specification, structural requirements, exposure conditions, construction sequence and approved mix design.',
+    searchTerms:['OPC vs PPC cement for house construction','which cement is best for slab','how to check cement quality','IS 269 OPC cement','IS 1489 PPC cement'],
+    ctaLabel:'Get Construction Quote',cta:'/quote?package=standard#construction',
+    note:'Do not change cement type or concrete mix on site without approval from the structural engineer or concrete technologist. Follow the current applicable BIS standard and project specification.',
+    sections:[
+      section('Understand the cement categories','Ordinary Portland Cement is covered by IS 269. Portland Pozzolana Cement is covered by IS 1489, with separate parts for fly-ash-based and calcined-clay-based PPC. The standard and product grade should be checked on the actual bag and supporting documentation.'),
+      section('OPC and PPC are not a simple good-versus-bad choice','Different cement compositions can influence early strength development, heat evolution, workability and longer-term performance. Actual behaviour depends on the product, mix proportions, curing, temperature and construction conditions. Do not select solely from a general online rule.'),
+      section('Match cement to the approved work specification','The engineer’s specification and approved concrete mix govern the material choice for footings, columns, beams, slabs, masonry and plaster. A cement used for one task should not automatically be substituted in another.'),
+      section('Check the bag and traceability','Check manufacturer, cement type, applicable IS number, grade where relevant, BIS Standard Mark and licence details, batch/date information, net quantity and intact packaging. Keep invoices and batch records. Verify certification through BIS resources rather than relying on a logo alone.'),
+      section('Store cement correctly on site','Keep bags in a dry, weather-protected store, off the floor on a raised platform and away from damp walls. Follow FIFO stock rotation and the manufacturer/project storage instructions. Reject bags that are wet, torn or visibly affected by moisture.'),
+      section('Do not rely on informal field tests','Feel, colour, hand-squeeze or floating tests cannot certify cement compliance or strength. Laboratory tests under the relevant standard and traceable manufacturer documentation are the appropriate evidence.'),
+      section('Curing and workmanship matter','Correct batching, water control, mixing, placing, compaction and curing are essential. A premium brand cannot compensate for excess water, poor workmanship or inadequate curing.'),
+      section('What to record in the material approval','Record cement type, manufacturer, applicable IS number, grade if applicable, batch, delivery date, approved use, test/certification documents and storage inspection.')
+    ],
+    sources:[
+      {label:'BIS — Compendium of Cement Standards (2025)',url:'https://www.bis.gov.in/wp-content/uploads/2025/05/COMPENDIUM-OF-CEMENT-STANDARDS.pdf'},
+      {label:'BIS — IS 269:2015 Ordinary Portland Cement',url:'https://www.bis.gov.in/is-269-2015/?lang=en'},
+      {label:'BIS — Know Your Standard portal',url:'https://www.bis.gov.in/know-your-standard/?lang=en'},
+      {label:'BIS — Scheme I mandatory certification listing',url:'https://www.bis.gov.in/product-certification/products-under-compulsory-certification/scheme-i-mark-scheme/?lang=en'}
+    ]
+  },
+
 ]
 
 export function guideBySlug(slug){
