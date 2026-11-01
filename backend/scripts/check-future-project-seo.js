@@ -16,6 +16,19 @@ const generated=projectSeoDescription(project);
 assert(generated.includes('Uppal, Hyderabad'),'Location should be discoverable without manual metadata');
 assert(!/modular kitchen|premium|warranty|five.star/i.test(generated),'Do not fabricate project features');
 assert.equal(projectSeoTitle({...project,seo_title:'Custom title'}),'Custom title');
+assert.equal(projectSeoTitle({...project,seo_title:'Compact title | ProPulse'}),'Compact title',
+  'The website adds the ProPulse brand suffix exactly once');
+assert.equal(projectSeoTitle({...project,
+  title:'Modern 3BHK Interior Design in Uppal, Hyderabad | Luxury Home Interiors',
+  seo_title:'Explore modern 3BHK interior design in Uppal, Hyderabad, featuring a modular kitchen, stylish TV unit, false ceilings and custom wardrobes.'
+}),'Modern 3BHK Interior Design in Uppal, Hyderabad',
+  'Overlong promotional SEO titles must become factual project titles');
+const fs=require('node:fs');
+const path=require('node:path');
+const editor=fs.readFileSync(path.join(__dirname,'../../frontend/src/pages/Profile.jsx'),'utf8');
+assert(editor.includes('SEO page title <input value={project.seoTitle||\'\'} maxLength="68"'),
+  'Project editor should prevent overlong custom titles');
+assert(editor.includes('Search preview:'),'Project editor should show the real public title');
 assert.equal(projectSeoDescription({...project,seo_description:'Custom factual description'}),'Custom factual description');
 assert.equal(projectSeoTitle({...project,title:'3BHK apartment interiors in Uppal, Hyderabad'}),
   '3BHK apartment interiors in Uppal, Hyderabad','Do not repeat an existing locality');
