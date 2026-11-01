@@ -208,6 +208,14 @@ app.use((req,res,next)=>{
   return proxyToBackend(req,res);
 });
 
+// Publish crawlable, eligible professional links without requiring React.
+app.use((req,res,next)=>{
+  if(req.path!=='/experts'||!['GET','HEAD'].includes(req.method))return next();
+  const accept=String(req.get('accept')||'');
+  if(accept&&!accept.includes('text/html')&&!accept.includes('*/*'))return next();
+  return proxyToBackend(req,res);
+});
+
 // Professional detail pages must return server-rendered factual business HTML.
 // Quote pages remain client-side.
 app.use((req,res,next)=>{
