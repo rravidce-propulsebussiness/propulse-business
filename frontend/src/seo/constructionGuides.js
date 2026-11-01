@@ -345,6 +345,85 @@ export const CONSTRUCTION_GUIDES=[
       section('Ask for exact brand/grade/thickness in the quotation','Avoid generic words like “premium board.” Write substrate type, grade, thickness, finish, edge treatment and hardware range into the scope.')
     ],
   },
+
+  {
+    slug:'how-to-check-plywood-quality-for-interiors',
+    type:'construction-guide', category:'Interior Materials & Quality',
+    title:'How to Check Plywood Quality Before Buying | Interior Guide | ProPulse',
+    description:'A practical checklist to inspect plywood for modular kitchens, wardrobes and furniture: grade, markings, thickness, layers, edges, bonding, storage and documents.',
+    heading:'How can you check plywood quality before buying for home interiors?',
+    summary:'Do not judge plywood only by colour, weight or a quick water test. Verify the declared grade and standard, inspect the full sheet and edges, measure thickness, check traceability and match the board to its actual use.',
+    searchTerms:['how to check plywood quality','plywood quality test before buying','how to identify original plywood','BWR vs BWP plywood for kitchen','IS 303 plywood marking','plywood for modular kitchen','plywood for wardrobe Hyderabad'],
+    ctaLabel:'Plan Your Interior Requirement', cta:'/quote?package=standard#interior',
+    note:'A visual or on-site check cannot certify plywood performance. Ask for the manufacturer’s current technical documents and applicable conformity evidence. Use the grade specified for the exposure and application; do not rely on a seller’s verbal “waterproof” claim.',
+    sections:[
+      section('Start with the correct grade for the location','Choose the board for the exposure, not just the room name. Dry wardrobe carcasses, kitchen cabinets, sink units and utility storage can face very different moisture risks. Confirm the grade and intended application in writing, especially near sinks, plumbing and damp walls.'),
+      section('Read the marking and verify the paperwork','Check the manufacturer, product name, declared grade, thickness, batch or traceability details and applicable standard marking. Ask for an invoice and current product datasheet or test documentation. If a standard or certification is claimed, verify the claim with the manufacturer or relevant official certification directory rather than accepting a printed sticker alone.'),
+      section('Inspect the sheet edges and construction','Look along the full edge for gaps, voids, overlapping veneers, uneven bonding, delamination, cracks and obvious core defects. A clean edge is useful evidence of workmanship but does not by itself prove the grade or long-term durability. Inspect more than one sheet from the delivered batch.'),
+      section('Measure thickness and check flatness','Use a suitable caliper or thickness gauge at several points and compare the result with the declared product specification and permitted tolerance. Check for bowing, twisting, surface damage and inconsistent thickness. Do not compare nominal thickness labels without checking the actual product specification.'),
+      section('Understand what simple site tests can and cannot tell you','A seller may demonstrate a sample, but soaking, boiling, smelling, tapping or weighing a small offcut is not a reliable substitute for standardised testing. Avoid destructive tests on delivered material unless the supplier agrees and the method is appropriate. Bond quality, emission class and structural properties require relevant test evidence.'),
+      section('Check storage and installation conditions','Reject sheets that have been stored directly on a wet floor or exposed to rain. Store them flat, supported and protected from moisture. Seal exposed edges where the design requires it, use suitable fasteners and keep sink-zone plumbing accessible for leak inspection.'),
+      section('Put the plywood specification into the BOQ','Record brand or approved equivalent, grade, thickness, application, finish, edge treatment and hardware fixing method for each cabinet type. Ask the contractor to identify the board before cutting and retain labels, invoices and batch details until handover.')
+    ],
+  },
+  {
+    slug:'cabinet-hinge-types-overlay-inset-soft-close',
+    type:'construction-guide', category:'Interior Hardware',
+    title:'Cabinet Hinge Types Explained | Overlay, Inset & Soft-Close | ProPulse',
+    description:'Understand common concealed cabinet hinges, overlay and inset applications, opening angles, soft-close mechanisms, adjustment and quotation checks for kitchens and wardrobes.',
+    heading:'Which cabinet hinge type is best for modular kitchens and wardrobes?',
+    summary:'Choose a hinge by shutter overlay, cabinet construction, opening clearance, weight, opening angle and service access. Soft-close is a mechanism option, not a substitute for correct hinge selection and installation.',
+    searchTerms:['types of cabinet hinges','overlay vs inset hinges','soft close hinge for kitchen cabinet','full overlay half overlay hinge difference','165 degree cabinet hinge','kitchen cabinet hinge selection','wardrobe shutter hinge types'],
+    ctaLabel:'Plan Your Interior Requirement', cta:'/quote?package=standard#interior',
+    sections:[
+      section('Understand the shutter position first','Full overlay, half overlay and inset describe how the shutter sits relative to the cabinet side. The correct hinge arm and mounting plate depend on the cabinet layout, side-panel arrangement, gaps and whether two shutters share a partition.'),
+      section('Compare common concealed hinge arrangements','Straight-arm hinges are commonly used for full-overlay shutters, while cranked hinge arms support partial-overlay or inset arrangements when paired with the correct plate. Exact terminology and geometry vary by manufacturer, so use the brand’s drilling and mounting chart.'),
+      section('Choose the opening angle for the room','Standard opening angles may suit ordinary cabinet doors; wider-angle options can help where an adjacent wall, pull-out or internal accessory needs more access. Check the actual opening path against handles, walls, appliances and neighbouring shutters before ordering.'),
+      section('Decide whether soft-close is useful','Soft-close dampers reduce the speed of closing when correctly matched and adjusted. Confirm whether the damping is integrated or added separately, whether it can be disabled, and whether the hinge is rated for the shutter dimensions and weight.'),
+      section('Match hinge count and capacity to the shutter','Hinge quantity depends on shutter height, width, weight, material and manufacturer guidance. Do not use a universal hinge-count rule for every door. Tall or heavy shutters may need additional hinges or a different system; verify the layout with the hardware supplier.'),
+      section('Inspect installation and adjustment','Check consistent gaps, level alignment, smooth travel, secure screws and that the shutter does not scrape or collide. Concealed hinges typically allow adjustments in multiple directions, but the available range depends on the model and mounting plate.'),
+      section('Specify the exact hardware in the quotation','List brand, model or series, hinge type, opening angle, soft-close feature, finish, mounting plate and quantity. “Premium soft-close hinges” is not a measurable specification. Ask for the warranty and a sample demonstration before bulk installation.')
+    ],
+  },
+  {
+    slug:'laminate-acrylic-veneer-pu-membrane-finish-comparison',
+    type:'construction-guide', category:'Interior Finishes',
+    title:'Laminate vs Acrylic vs Veneer vs PU vs Membrane | Interior Finish Guide',
+    description:'Compare popular interior shutter finishes by appearance, maintenance, repairability, cost drivers, edge detailing and suitable uses for kitchens, wardrobes and TV units.',
+    heading:'What is the difference between laminate, acrylic, veneer, PU and membrane finishes?',
+    summary:'Each finish has a different look, maintenance profile and fabrication process. Choose after comparing physical samples, substrate compatibility, edge details, sunlight exposure and the care you are willing to provide.',
+    searchTerms:['laminate vs acrylic vs veneer','PU vs laminate finish for interiors','membrane finish vs acrylic','best finish for kitchen shutters','wardrobe shutter finish comparison','high gloss vs matte laminate','interior finishes Hyderabad'],
+    ctaLabel:'Plan Your Interior Requirement', cta:'/quote?package=standard#interior',
+    sections:[
+      section('Laminate: practical and available in many textures','Decorative laminates offer a broad range of colours, wood grains, mattes and textures. They are often selected for everyday cabinetry because the surface is relatively easy to clean when the correct product and edge detailing are used. Check thickness, grade, surface texture, joint visibility and edge banding.'),
+      section('Acrylic: smooth, reflective and colour-forward','Acrylic-faced shutters can create a high-gloss or selected matte appearance with a consistent surface. Fingerprints, scratches, reflection and edge finishing vary by product. Ask whether the finish is acrylic sheet, acrylic laminate or another coated panel, and inspect the actual edge profile.'),
+      section('Veneer: natural wood character','Veneer uses a thin layer of real wood, so grain and shade variation are part of the appearance. It usually needs a specified polish or protective coating and more deliberate care than many decorative laminates. Approve a larger sample and clarify veneer matching, grain direction and repair expectations.'),
+      section('PU paint: seamless colour and custom detailing','PU-coated surfaces can support custom colours and routed profiles when the substrate and preparation are suitable. Finish quality depends heavily on surface preparation, coating system, application environment and curing. Confirm gloss level, sample approval, repair process and warranty.'),
+      section('Membrane: wrapped profiles and shaped shutters','Membrane or vacuum-pressed finishes can wrap selected routed or profiled shutter shapes. Check the film specification, substrate, edge adhesion and suitability near heat or moisture. Ask how corners and damaged areas are repaired and whether replacement film or shutters are available.'),
+      section('Compare the full installed system, not only the face material','A shutter includes substrate, adhesive or coating system, back finish, edge treatment, handle or profile, hinges and fabrication. A premium-looking face on a poorly prepared substrate can still fail. Compare complete samples and written specifications.'),
+      section('Choose by room and maintenance habits','For busy kitchens, prioritise cleaning, heat exposure, edge sealing and proximity to water. For wardrobes, consider fingerprints, scratch visibility and room lighting. For TV units, balance reflections, dust visibility and coordination with wall finishes. Test samples under the actual room lighting.'),
+      section('Record finish codes and approved samples','Write the manufacturer, product range, colour code, texture, sheen, thickness where applicable, substrate, edge treatment and approved sample reference into the BOQ. Keep a signed sample or photograph with a scale and colour reference to reduce site substitutions.')
+    ],
+  },
+  {
+    slug:'08mm-vs-1mm-laminate-interior-shutters',
+    type:'construction-guide', category:'Interior Finishes',
+    title:'0.8mm vs 1mm Laminate | Which Thickness Should You Choose? | ProPulse',
+    description:'Compare 0.8 mm and 1 mm decorative laminates for home interiors, including application, handling, substrate, edge details, cost and specification checks.',
+    heading:'Is 1 mm laminate better than 0.8 mm laminate for home interiors?',
+    summary:'A thicker laminate may suit some applications, but thickness alone does not determine durability. Check the product grade, intended use, substrate flatness, adhesive, edge detailing and workmanship.',
+    searchTerms:['0.8mm vs 1mm laminate','1mm laminate for wardrobe','0.8mm laminate for kitchen','laminate thickness for modular kitchen','best laminate thickness for interiors','1mm laminate price Hyderabad'],
+    ctaLabel:'Plan Your Interior Requirement', cta:'/quote?package=standard#interior',
+    sections:[
+      section('Know what the thickness number describes','The stated thickness generally refers to the decorative laminate sheet, not the complete shutter or cabinet panel. Confirm the manufacturer’s declared nominal thickness and product series; do not confuse it with board thickness.'),
+      section('Compare application and product grade','Both 0.8 mm and 1 mm products may be offered in different grades, textures and performance categories. Choose a product intended for the application and follow the manufacturer’s bonding and handling instructions.'),
+      section('Remember that the substrate matters','A flat, stable substrate and correct adhesive application are essential. Poor board preparation, uneven pressure, trapped dust or unsuitable adhesive can cause problems regardless of laminate thickness.'),
+      section('Inspect edges, corners and balancing','Ask how exposed edges will be finished and whether the back surface needs a balancing laminate for the chosen panel construction. Corners, cut-outs and joints should be neat and protected from moisture ingress.'),
+      section('Do not assume thicker always means scratch-proof','Scratch, stain, heat and wear resistance depend on the product construction and surface specification, not only the thickness figure. Request the product datasheet and compare the relevant performance claims.'),
+      section('Compare cost on the same basis','Ask for the exact brand, range, colour code, thickness, sheet size, wastage assumptions, adhesive, labour and edge treatment. A quote that says only “1 mm laminate” is not enough to compare two vendors.'),
+      section('Approve samples before production','View a large sample in daylight and the room’s artificial lighting. Check fingerprints, texture, cleaning response and colour coordination with flooring, countertop and wall paint. Record the approved code in the final BOQ.')
+    ],
+  },
 ]
 
 export function guideBySlug(slug){
