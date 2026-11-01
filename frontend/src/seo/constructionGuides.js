@@ -345,6 +345,109 @@ export const CONSTRUCTION_GUIDES=[
       section('Ask for exact brand/grade/thickness in the quotation','Avoid generic words like “premium board.” Write substrate type, grade, thickness, finish, edge treatment and hardware range into the scope.')
     ],
   },
+
+  {
+    slug:'2bhk-interior-cost-hyderabad-2026',
+    type:'construction-guide', category:'Interior Costs',
+    title:'2BHK Interior Cost in Hyderabad (2026) | Room-wise Budget Guide | ProPulse',
+    description:'Plan a 2BHK interior budget in Hyderabad with indicative package ranges, room-wise costs, inclusions, exclusions and a quotation checklist.',
+    heading:'How much does a 2BHK interior cost in Hyderabad in 2026?',
+    summary:'A 2BHK interior budget depends on cabinet sizes, room scope, materials, hardware, finishes and civil or electrical changes. Published Hyderabad guides show wide variation, so compare the same itemised scope rather than one headline package price.',
+    searchTerms:['2BHK interior cost Hyderabad 2026','2BHK flat interior design price','2BHK modular kitchen and wardrobe cost','2BHK interior package Hyderabad','room wise interior cost 2BHK'],
+    ctaLabel:'Plan Your Interior Requirement', cta:'/quote?package=standard#interior',
+    note:'These are indicative market references from published Hyderabad vendor/platform guides, not ProPulse quotations or guaranteed rates. Confirm dimensions, quantities, brands, taxes, installation, civil work and exclusions in a current written BOQ before budgeting or paying an advance.',
+    sections:[
+      section('Start with a realistic budget range','Published 2026 Hyderabad guides vary materially. NoBroker reports a broad ₹5 lakh–₹18 lakh range, with standard packages around ₹8 lakh–₹12 lakh and premium around ₹13 lakh–₹18 lakh. Livvouge publishes essential packages around ₹4.5 lakh–₹6 lakh, premium around ₹7 lakh–₹10 lakh and luxe from ₹11 lakh. These are different providers’ package definitions, not a like-for-like market average. Use them as a first planning envelope only.'),
+      section('Understand what a 2BHK package may include','A typical core scope may include a modular kitchen, wardrobes for two bedrooms, a TV unit, selected storage, basic false ceiling and lighting. Some packages include painting or basic electrical work; others charge separately. Beds, sofas, dining tables, appliances, curtains, decor, bathroom renovations, extensive civil work, AC work and balcony furniture may be excluded. Ask for a room-by-room inclusion schedule.',['Kitchen: base and wall cabinets, shutters, countertop and accessories—confirm what is included','Bedrooms: wardrobe dimensions, lofts, drawers, internal accessories and dressing units','Living/dining: TV console, wall panelling, shoe storage, crockery or pooja units','Ceiling and lighting: covered area, gypsum design, wiring, fixtures and drivers','Site work: painting, electrical relocation, plumbing, dismantling and debris removal']),
+      section('Build a room-wise estimate before comparing vendors','For each room, record dimensions and quantities rather than relying on flat area alone. Kitchen cabinetry is often priced by running length or module; wardrobes by elevation area or specified unit; ceilings by covered area; and electrical changes by points and fittings. A small change in loft height, drawer count, shutter finish or hardware can shift the total.'),
+      section('Know the major cost drivers','The biggest drivers are total cabinetry, kitchen layout, wardrobe size, board/plywood grade, laminate/acrylic/veneer/PU finish, hardware brand and accessory count. Full-height wall panelling, fluted details, glass shutters, profile lighting, quartz counters and custom furniture add cost. A compact home can still be expensive if it has dense custom storage and premium finishes.'),
+      section('Compare quotations on the same specification','Ask every vendor to quote against the same approved drawings and BOQ.',['Exact width, height and depth of every cabinet','Board type, grade, thickness and internal finish','Laminate/veneer/acrylic/PU brand, code and thickness','Hinge, channel, lift-up and basket brand/model or allowance','Edge band thickness, back-panel thickness and installation method','Countertop, sink, hob, chimney, handles and accessories—supply or owner-supplied','GST, transport, installation, design fees and civil/electrical exclusions','Payment milestones, delivery schedule, warranty and snag rectification']),
+      section('Keep contingency and decisions in the right order','Finalise appliance sizes, kitchen layout, electrical points, plumbing, ceiling levels and wardrobe internals before factory production. Keep a separate contingency for site discoveries and approved variations. Do not treat a per-square-foot package rate as a complete quote unless its area basis and inclusions are explicit.'),
+      section('A practical 2BHK budget checklist','Before requesting a final estimate, prepare your floor plan, carpet area, room dimensions, family storage needs, appliance list, preferred finish level, move-in date and a list of must-have versus optional work. This turns a broad “2BHK interior cost” search into a comparable project brief.')
+    ],
+    sources:[
+      {label:'NoBroker — 2 BHK Interior Design Cost in Hyderabad (published 10 April 2026)',url:'https://www.nobroker.in/interiors/design-guides/2-bhk-interior-design-cost-in-hyderabad/'},
+      {label:'Livvouge — 2BHK & 3BHK Interior Design Cost in Hyderabad (published 5 September 2026)',url:'https://www.livvouge.com/blog/2bhk-3bhk-interior-design-cost-hyderabad'},
+      {label:'Member of Architecture — 2BHK Interior Design Cost in Hyderabad (published 29 October 2026)',url:'https://www.memberofarchitecture.com/blog/6ae353d359e3e1f78572-2bhk-interior-design-cost-hyderabad-2026'}
+    ]
+  },
+  {
+    slug:'3bhk-interior-cost-hyderabad-2026',
+    type:'construction-guide', category:'Interior Costs',
+    title:'3BHK Interior Cost in Hyderabad (2026) | Complete Budget Guide | ProPulse',
+    description:'Explore 3BHK interior cost references in Hyderabad, room-wise scope, kitchen and wardrobe budgets, finish choices and quotation checks.',
+    heading:'How much does a 3BHK interior cost in Hyderabad in 2026?',
+    summary:'A 3BHK needs more storage and often an additional bedroom workspace or wardrobe, but the final price is driven by scope and specification—not simply the number of bedrooms.',
+    searchTerms:['3BHK interior cost Hyderabad 2026','3BHK interior design price Hyderabad','3 bedroom flat interior budget','3BHK modular kitchen wardrobe cost','3BHK interior package comparison'],
+    ctaLabel:'Plan Your Interior Requirement', cta:'/quote?package=standard#interior',
+    note:'Published vendor ranges are indicative and not directly comparable because package inclusions, apartment size, taxes and finish levels differ. Get a site-measured BOQ with explicit inclusions and exclusions.',
+    sections:[
+      section('What published Hyderabad guides indicate','For 2026, Livvouge publishes essential 3BHK packages around ₹6.5 lakh–₹8.5 lakh, premium around ₹9.5 lakh–₹14 lakh and luxe from ₹16 lakh. Parthu Interiors publishes essential around ₹6.5 lakh–₹9.5 lakh, premium around ₹9.5 lakh–₹15 lakh and luxury around ₹16 lakh–₹25 lakh. These are provider-specific guide prices; they are not a guaranteed quote or a single citywide rate.'),
+      section('Why two 3BHK homes can have very different budgets','A 1,200 sq ft apartment with only essential wardrobes and a compact kitchen is not comparable with a larger home that includes three full wardrobes, a tall pantry, study units, crockery storage, a pooja unit, layered ceilings, decorative wall panels and loose furniture. Carpet area is only one input; actual cabinet dimensions and included work matter.'),
+      section('Room-wise scope to define','Write down the expected work for each space.',['Kitchen: layout, cabinet running length, tall units, countertop and accessories','Master bedroom: wardrobe, loft, dresser, bed-back panel and side tables','Bedroom two and three: wardrobes, study desks, bookshelves and storage','Living/dining: TV unit, foyer/shoe storage, crockery and pooja unit','Ceiling/lighting: rooms covered, cove details, profile lights and fixtures','Other: utility cabinets, balcony storage, painting, electrical and civil changes']),
+      section('Choose where to spend and where to simplify','Prioritise durable carcass construction, reliable hinges/channels, good edge sealing and functional storage. Save budget by limiting decorative panelling, using a consistent laminate palette, simplifying ceiling layers and phasing optional loose furniture. Premium surface finishes are visible, but concealed construction and hardware affect daily use.'),
+      section('How to compare 3BHK interior quotations','Use one drawing set and BOQ for every vendor. Check cabinet dimensions, board grade/thickness, finish codes, hardware models, accessories, countertop, electrical points, ceiling area, taxes, installation, transport, warranty and timeline. Ask vendors to identify provisional quantities and owner-supplied items.'),
+      section('Plan production and installation around site readiness','Complete measurements after critical civil changes. Confirm appliance and plumbing points before kitchen fabrication; confirm flooring and ceiling levels before tall storage and ceiling installation. Agree on access, lift booking, working hours, material storage, debris removal and a snag list before handover.'),
+      section('A useful 3BHK project brief','Share the floor plan, carpet area, room dimensions, number of occupants, storage needs, appliance list, preferred finish tier, budget ceiling and move-in deadline. Ask for a phased option—essential first, optional upgrades separately—so you can compare scope without losing control of cost.')
+    ],
+    sources:[
+      {label:'Livvouge — 2BHK & 3BHK Interior Design Cost in Hyderabad (5 September 2026)',url:'https://www.livvouge.com/blog/2bhk-3bhk-interior-design-cost-hyderabad'},
+      {label:'Parthu Interiors — Interior Design Cost in Hyderabad (2026)',url:'https://parthuinteriors.in/blog/how-much-does-interior-design-cost-in-hyderabad'},
+      {label:'Fleegl — 3BHK Interior Cost in Hyderabad (updated 24 August 2026)',url:'https://fleegl.in/blog/3bhk-interior-design-cost-hyderabad'}
+    ]
+  },
+  {
+    slug:'tv-unit-cost-hyderabad-2026',
+    type:'construction-guide', category:'Interior Costs',
+    title:'TV Unit Cost in Hyderabad (2026) | Design & Material Price Guide | ProPulse',
+    description:'Compare TV unit costs in Hyderabad by width, floating or full-wall design, laminate, fluted panels, storage, lighting and installation scope.',
+    heading:'How much does a TV unit cost in Hyderabad in 2026?',
+    summary:'TV unit pricing depends on the width and height, storage volume, substrate, finish, wall panelling, lighting, hardware and cable-management details. Compare a measured design—not only a style photo.',
+    searchTerms:['TV unit cost Hyderabad 2026','how much does TV unit cost','TV cabinet price Hyderabad','floating TV unit price','fluted TV panel cost'],
+    ctaLabel:'Discuss Your Interior Design', cta:'/quote?package=standard#interior',
+    note:'The price examples below are published vendor estimates and may exclude GST, stone cladding, electrical changes or site-specific work. Obtain a dimensioned drawing and itemised BOQ for your wall.',
+    sections:[
+      section('Indicative TV unit price bands','A Hyderabad 2026 guide from Hyderabad Listings places a basic TV unit around ₹25,000–₹60,000. AlcorOne publishes indicative examples around ₹45,000–₹65,000 for a low-profile floating laminate unit, ₹65,000–₹95,000 for a floor-standing cabinet and ₹1.2 lakh–₹2.2 lakh for a full-height wall panel. Fleegl lists broader tiers from ₹35,000–₹65,000 basic to ₹1.6 lakh–₹3.5 lakh+ premium. These are not equivalent designs; dimensions and inclusions differ.'),
+      section('Choose the design type before asking for a price','A floating console uses less floor space but needs suitable wall anchoring and concealed wiring. A floor-standing cabinet can provide more storage and easier access. A full-wall design may include panels, shelves, display niches and concealed doors, increasing material and installation work. Fluted backdrops, stone-look surfaces and glass display units add further cost.'),
+      section('Measure the wall and television together','Record wall width, ceiling height, TV size, viewing distance, sofa position, socket locations, internet/router needs and door/window positions. The TV centre and console height should be checked against actual seating comfort; do not copy a measurement blindly from an online image.'),
+      section('Materials and finishes affect both price and maintenance','Ask what the carcass and shutters are made from, including board/ply grade and thickness. Laminate is generally easier to specify and maintain; veneer or PU finishes require different care and finishing processes. Fluted profiles collect dust, while glass and glossy finishes show fingerprints. Confirm edge treatment and surface codes.'),
+      section('Do not forget cable management and ventilation','Plan power, HDMI, internet and speaker routes before panelling. Provide accessible service openings and ventilation for set-top boxes, consoles and routers. Avoid sealing heat-producing devices inside an unventilated compartment. Keep electrical work and extra sockets itemised.'),
+      section('What a proper TV unit quotation should include','Ask for wall and cabinet dimensions, carcass and shutter materials, board thickness, laminate/veneer/PU codes, edge banding, hardware, shelves, drawers, back panel, wall panelling, lighting drivers, wiring, anchoring, transport, installation, GST and warranty. Stone or tile cladding should be a separate line item.'),
+      section('Ways to control cost without making the unit look unfinished','Use one main finish and one accent, keep the console proportionate to the TV, avoid unnecessary full-wall cladding, use open shelves selectively and plan lighting only where it adds function. A clean cable route and aligned joints often matter more than adding multiple decorative materials.')
+    ],
+    sources:[
+      {label:'Hyderabad Listings — 2 BHK Interior Design Cost in Hyderabad (TV unit reference)',url:'https://hyderabadlistings.com/blog/2-bhk-interior-design-cost-hyderabad'},
+      {label:'AlcorOne — TV Unit Interior Design Hyderabad (2026)',url:'https://www.alcorone.com/blog/tv-unit-interior-guide-hyderabad/'},
+      {label:'Fleegl — Premium TV Unit Design Ideas Hyderabad (2026)',url:'https://fleegl.in/blog/tv-unit-design-ideas-hyderabad'}
+    ]
+  },
+  {
+    slug:'modular-kitchen-cost-hyderabad-2026',
+    type:'construction-guide', category:'Interior Costs',
+    title:'Modular Kitchen Cost in Hyderabad (2026) | Layout & Cabinet Budget | ProPulse',
+    description:'Understand modular kitchen cost in Hyderabad by layout, running length, cabinet materials, shutters, countertop, hardware and accessories.',
+    heading:'How much does a modular kitchen cost in Hyderabad in 2026?',
+    summary:'A modular kitchen quote depends on layout and measured cabinet length, not just the flat’s BHK label. Compare carcass, shutters, hardware, countertop, accessories and installation separately.',
+    searchTerms:['modular kitchen cost Hyderabad 2026','2BHK modular kitchen cost','L shaped kitchen cost Hyderabad','modular kitchen price per running foot','kitchen cabinet cost Hyderabad'],
+    ctaLabel:'Plan Your Interior Requirement', cta:'/quote?package=standard#interior',
+    note:'Published rates vary by kitchen dimensions and package scope. Appliance prices, plumbing/electrical relocation, civil work, countertop and GST may be excluded. Treat online prices as planning references only.',
+    sections:[
+      section('Why there is no single modular kitchen price','An 8-foot straight kitchen, a 12-foot L-shaped kitchen and a U-shaped kitchen with tall pantry storage have different cabinet quantities and hardware needs. Some quotes price base and wall units by running foot; others price individual modules or a complete package. Confirm exactly what the quoted running length includes.'),
+      section('Published Hyderabad reference points','Hyderabad Listings publishes an indicative ₹85,000–₹2.2 lakh range for an example L-shaped kitchen, depending on laminate or acrylic finish and hardware. Livvouge notes an L-shaped kitchen starting around ₹1.6 lakh. Member of Architecture’s 2BHK line-item estimate places kitchen cabinetry at ₹1.2 lakh–₹1.8 lakh budget, ₹2 lakh–₹3.5 lakh mid and ₹3.8 lakh–₹5.5 lakh premium for its stated example. These are provider-specific estimates with different dimensions and specifications.'),
+      section('Select the layout around workflow and available space','Common options include straight, L-shaped, parallel and U-shaped kitchens. Choose based on room dimensions, door/window positions, sink and hob locations, refrigerator clearance and safe aisle width. An island should only be considered when circulation remains comfortable after stools, appliance doors and drawers are accounted for.'),
+      section('Specify carcass, shutters and finish separately','The carcass is the cabinet structure; the shutter is the visible door. Ask for board or plywood type, grade, thickness, internal finish, edge sealing and moisture protection. Then specify laminate, acrylic, membrane, veneer or PU finish by brand and code. A premium-looking shutter does not compensate for poorly specified cabinet construction.'),
+      section('Hardware and accessories can change the total','List hinges, drawer channels, tandem boxes, lift-up systems, bottle pull-outs, corner units, cutlery trays, tall pantry baskets and bin systems. Confirm brand/model or a clear allowance, load rating and warranty. “Soft close” alone is not a sufficient hardware specification.'),
+      section('Countertop, sink and services must be clear','State whether granite or quartz is included, the thickness and edge profile, sink and hob cut-outs, backsplash, sink, faucet and installation. Plan chimney ducting, RO, gas, water purifier, dishwasher, refrigerator, sockets and under-cabinet lighting before fabrication.'),
+      section('Kitchen quotation checklist','Ask for a dimensioned layout and elevations, cabinet running lengths, module schedule, carcass and shutter specification, finish codes, hardware schedule, accessories, countertop, sink/faucet, installation, transport, taxes, civil/plumbing/electrical exclusions, warranty and completion timeline.'),
+      section('Where to save and where not to cut corners','Simplify decorative shutters and reduce rarely used accessories if budget is tight. Do not compromise on accurate measurement, safe wall fixing, appropriate moisture detailing near the sink, reliable hinges/channels, edge sealing or service access. Finalise appliance dimensions before production.')
+    ],
+    sources:[
+      {label:'Hyderabad Listings — 2 BHK Interior Design Cost in Hyderabad (kitchen examples)',url:'https://hyderabadlistings.com/blog/2-bhk-interior-design-cost-hyderabad'},
+      {label:'Livvouge — 2BHK & 3BHK Interior Design Cost in Hyderabad (2026)',url:'https://www.livvouge.com/blog/2bhk-3bhk-interior-design-cost-hyderabad'},
+      {label:'Member of Architecture — 2BHK Interior Design Cost in Hyderabad (2026)',url:'https://www.memberofarchitecture.com/blog/6ae353d359e3e1f78572-2bhk-interior-design-cost-hyderabad-2026'}
+    ]
+  },
+
 ]
 
 export function guideBySlug(slug){
