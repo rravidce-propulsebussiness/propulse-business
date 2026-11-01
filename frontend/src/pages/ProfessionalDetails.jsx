@@ -140,7 +140,7 @@ export default function ProfessionalDetails(){
                 {safeUrl(project.cover_image_url)?<img src={safeUrl(project.cover_image_url)} alt={project.title} loading="lazy"/>:<div className="pr-project-fallback">Project showcase</div>}
                 <div className="pr-project-text"><span>{[project.project_type,project.completion_year].filter(Boolean).join(' · ')||'Project'}</span><h3>{project.title}</h3><p>{project.description||'Published professional project.'}</p>
                   <small>{[project.location_text,project.area_text].filter(Boolean).join(' · ')}</small>
-                  <div className="pr-project-links"><Link to={'/projects/project-'+project.id}>View project details →</Link>{safeUrl(project.video_url)&&<a href={safeUrl(project.video_url)} target="_blank" rel="noreferrer">Watch video ↗</a>}{safeUrl(project.plan_url)&&<a href={safeUrl(project.plan_url)} target="_blank" rel="noreferrer">View drawing ↗</a>}{safeUrl(project.brochure_url)&&<a href={safeUrl(project.brochure_url)} target="_blank" rel="noopener noreferrer">Specifications PDF ↗</a>}</div>
+                  <div className="pr-project-links"><Link to={'/projects/'+(project.seo_slug||'project-'+project.id)}>View project details →</Link>{safeUrl(project.video_url)&&<a href={safeUrl(project.video_url)} target="_blank" rel="noreferrer">Watch video ↗</a>}{safeUrl(project.plan_url)&&<a href={safeUrl(project.plan_url)} target="_blank" rel="noreferrer">View drawing ↗</a>}{safeUrl(project.brochure_url)&&<a href={safeUrl(project.brochure_url)} target="_blank" rel="noopener noreferrer">Specifications PDF ↗</a>}</div>
                 </div>
               </article>)}</div>:<div className="pr-empty">No completed projects have been published yet.</div>}
             </section>
