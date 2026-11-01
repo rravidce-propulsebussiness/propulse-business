@@ -294,6 +294,29 @@ groups["Planning, room sizes & building services"] = [
     ["What documents should be collected at house handover?","Collect as-built drawings, test records, warranties, product manuals, invoices, approvals, keys and snag closure."],
     ["How much contingency should I keep for house construction?","Build a project-specific allowance based on design maturity, site conditions, exclusions and uncertainty with the cost professional."]
   ]
+,
+  "Wall dampness, seepage, compound walls & construction contracts": [
+    ["What causes damp patches on interior walls?","Investigate plumbing, terrace, façade, ground moisture and condensation before choosing a repair."],
+    ["How do I stop wall seepage in a bedroom?","Trace the water source, inspect adjacent wet areas and external walls, then repair and dry the substrate before repainting."],
+    ["Why is white salt powder appearing on my walls?","Explain efflorescence as a moisture-related symptom and recommend identifying water movement and substrate conditions."],
+    ["Can I paint directly over a damp wall?","Explain why active moisture must be resolved and the wall must meet the coating manufacturer’s moisture requirements."],
+    ["How do I repair cracks in plaster walls?","Distinguish superficial plaster cracks from movement or structural cracks and obtain professional assessment where needed."],
+    ["When is a wall crack structurally dangerous?","Describe warning signs such as changing width, diagonal patterns, displacement or related movement and advise qualified engineering review."],
+    ["How much does wall seepage repair cost in Hyderabad?","Separate diagnosis, source repair, substrate removal, waterproofing, plaster, drying and repainting."],
+    ["What is the difference between damp proofing and waterproofing?","Explain their different purposes and the need to specify systems for the source and exposure."],
+    ["How do I prevent water leakage from an external wall?","Inspect cracks, joints, windows, parapets, façade details and compatible exterior protection."],
+    ["What should be checked before repainting a damp house?","Verify leak repair, drying, salts, loose plaster, primer compatibility and moisture limits."],
+    ["What is the cost of a compound wall in Hyderabad?","Break down survey, foundation, wall type, height, reinforcement, plaster, finish, gate and drainage."],
+    ["Which material is best for a compound wall?","Compare masonry and other systems by site, structural design, durability, privacy, maintenance and local requirements."],
+    ["How much does a main gate cost for a house?","Include opening dimensions, frame, infill, coating, hinges, lock, automation, wiring and installation."],
+    ["Which is better, MS gate or aluminium gate?","Compare weight, corrosion protection, strength, maintenance, design and suitability for the actual opening."],
+    ["What is the best exterior cladding for a house elevation?","Compare stone, tile, metal and other cladding by fixing system, water detailing, movement, maintenance and approvals."],
+    ["What should be included in a house construction BOQ?","Specify item descriptions, units, quantities, materials, workmanship, inclusions, exclusions and measurement rules."],
+    ["How do I compare house construction contractors?","Compare identical drawings, BOQ, specifications, exclusions, site supervision, milestones, warranties and references."],
+    ["What should a house construction agreement include?","Define scope, drawings, BOQ, materials, responsibilities, payment milestones, variations, timelines and handover."],
+    ["How should construction stage payments be planned?","Tie payments to measurable completed work, documented inspection and agreed contract milestones."],
+    ["What should I check before signing a turnkey construction contract?","Review deliverables, material specifications, approvals, exclusions, taxes, payment terms, defect liability and dispute process."]
+  ]
 };
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
