@@ -2,6 +2,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const {renderPublicExpertHtml,publicProfilePath}=require('../src/services/publicExpertSeoPageService');
+const {projectCards}=require('../src/services/projectListingSeoService');
 const pool=require('../src/config/database');
 const experts=require('../src/services/publicExpertService');
 
@@ -37,6 +38,9 @@ const schema=JSON.parse(json);
 assert(schema['@graph'].some(entry=>entry['@type']==='HomeAndConstructionBusiness'
   &&entry.name==='Propulse Constructions and Interiors'));
 assert(!html.includes('private-object-s3:'),'Never leak original media references');
+const gallery=projectCards([{project_id:3,title:'Uppal 3BHK Interior',seo_slug:'3bhk-interior-design-uppal-hyderabad',is_official:true,public_profile_enabled:true,business_profile_id:27}]).cards;
+assert(gallery.includes('href="/experts/27"'),'Project gallery must link to official professional page');
+assert(!projectCards([{project_id:3,title:'Private profile',is_official:true,public_profile_enabled:false,business_profile_id:27}]).cards.includes('href="/experts/27"'),'Hidden official profiles must never receive crawlable links');
 assert.equal(publicProfilePath(example),'/experts/27');
 assert.throws(()=>publicProfilePath({business_profile_id:0}),/valid profile ID/);
 
