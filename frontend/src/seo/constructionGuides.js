@@ -446,6 +446,92 @@ export const CONSTRUCTION_GUIDES=[
       section('Prepare a Vastu-aware design brief','Share the surveyed plot orientation, family preferences, room requirements, floor count, parking needs and any non-negotiable beliefs with the architect at the start. Ask for two compliant layout options if a preference creates a difficult trade-off, and review the consequences before approving drawings.')
     ],
   },
+
+  {
+    slug:'tv-unit-cost-hyderabad-design-materials',
+    type:'construction-guide', category:'Interior Cost Guides',
+    title:'TV Unit Cost in Hyderabad | Design, Size & Material Price Factors | ProPulse',
+    description:'Understand what affects a TV unit quotation in Hyderabad, including width, height, storage, wall panelling, board, laminate, fluted panels, lighting, wiring and installation.',
+    heading:'How much does a TV unit cost in Hyderabad?',
+    summary:'TV unit cost depends on the actual design and scope—not just the TV wall width. Compare a simple floating console, storage unit and full-height feature wall using the same dimensions, material and electrical scope.',
+    searchTerms:['TV unit cost Hyderabad','TV unit price Hyderabad','how much does TV unit cost','TV cabinet design cost','modern TV unit with storage price','TV wall panelling cost Hyderabad','custom TV unit quotation'],
+    ctaLabel:'Get an Interior Quote', cta:'/quote?package=standard#interior',
+    note:'There is no reliable single price for every TV unit. Ask vendors for a current, itemised quotation based on site measurements, selected materials, hardware, finish codes and installation scope.',
+    sections:[
+      section('Choose the type of TV unit before comparing prices','A floating console, low storage cabinet, full-height TV wall, open display shelves and a complete wall-panelling design involve different quantities and labour. Save a reference image, but also record the actual wall width, ceiling height and TV size.'),
+      section('Measure the complete design, not only the cabinet','Record console length, depth and height, panel area, side storage, lofts, open shelves and any return walls. Check walking clearances, door swings, window positions and access to electrical points before finalising the layout.'),
+      section('Understand material and finish cost drivers','Specify the carcass board, shutter substrate, laminate or other finish, back panel, edge treatment and any glass or metal elements. Fluted panels, veneer, acrylic, PU paint, stone-look surfaces and custom profiles can change fabrication and finishing effort.'),
+      section('Include hardware and internal storage','Drawer channels, hinges, push-to-open fittings, handles, cable organisers and adjustable shelves should be listed by type and quantity. Ask for hardware brand or series instead of accepting a generic “premium fittings” description.'),
+      section('Plan TV, soundbar and cable management','Confirm TV bracket type, socket locations, data points, router, set-top box, gaming console, soundbar and ventilation. Provide access for service and avoid trapping heat around electronic equipment. Electrical work and concealed wiring should be itemised separately if not included.'),
+      section('Separate lighting and wall preparation','LED strips, profiles, drivers, access panels, wall levelling, painting, wallpaper, stone cladding and decorative panels may be priced separately. Clarify who provides drivers, wiring, switches and future maintenance access.'),
+      section('Compare quotations line by line','Ask each vendor to quote the same drawing, dimensions, board specification, finish code, hardware, lighting and exclusions. Compare taxes, transport, installation, wall repair, warranty and change-order rates before choosing.'),
+      section('Approve drawings and samples before fabrication','Freeze the elevation, section, internal storage, cable route, finish samples and handle positions. Check the wall condition and service routes on site before production begins.')
+    ],
+  },
+  {
+    slug:'1bhk-2bhk-3bhk-4bhk-interior-budget-comparison',
+    type:'construction-guide', category:'Interior Cost Guides',
+    title:'1BHK vs 2BHK vs 3BHK vs 4BHK Interior Cost | Hyderabad Planning Guide',
+    description:'Compare how interior budgets change across 1BHK, 2BHK, 3BHK and 4BHK homes in Hyderabad by room scope, storage, kitchen size, finishes and optional work.',
+    heading:'How does interior cost change for 1BHK, 2BHK, 3BHK and 4BHK homes?',
+    summary:'Bedroom count is only a starting point. A fair comparison separates essential cabinetry from optional ceiling, lighting, civil, electrical, appliances, loose furniture and decor, then measures each room.',
+    searchTerms:['1BHK interior cost Hyderabad','2BHK interior cost Hyderabad','3BHK interior cost Hyderabad','4BHK interior cost Hyderabad','1bhk vs 2bhk interior cost','3bhk full home interiors budget','4bhk interior design price'],
+    ctaLabel:'Get an Interior Quote', cta:'/quote?package=standard#interior',
+    note:'Indicative market quotes change with date, city, scope, material brands, dimensions, taxes and execution model. This guide explains cost drivers; it does not promise a fixed package price. Request a current itemised BOQ for your measured home.',
+    sections:[
+      section('Why bedroom count cannot determine the final budget','Two homes with the same BHK label can have different carpet areas, wall lengths, ceiling heights, kitchen layouts, storage needs and finish expectations. Ask for room measurements and a written scope before comparing any per-square-foot estimate.'),
+      section('Build an essential scope for a 1BHK','A compact scope may include a practical kitchen, one wardrobe, a TV or living storage unit and basic bedroom storage. Decide whether the bed, study, shoe storage, false ceiling, curtains and loose furniture are included or optional.'),
+      section('Compare a 2BHK room by room','List kitchen base and wall units, master wardrobe and loft, second-bedroom storage or study, TV unit, shoe cabinet and any selected ceiling or lighting. Make a separate allowance for civil and electrical changes.'),
+      section('Plan the extra rooms in a 3BHK','A third bedroom can become a guest room, children’s room, study or multipurpose room. The budget changes depending on whether it needs a full wardrobe, desk, bed storage, display shelves or only basic provisions.'),
+      section('Treat 4BHK homes as a scope and finish exercise','Larger homes may include more wardrobes, multiple bathrooms’ vanity storage, larger kitchens, utility cabinets, foyer units, family lounge storage and custom furniture. Decide which rooms receive premium finishes and which use simpler specifications.'),
+      section('Use the same cost categories for every BHK size','Separate modular cabinetry, countertop, appliances, electrical, plumbing, false ceiling, painting, wall panelling, lighting, curtains, loose furniture, decor, taxes and project management. This prevents a low headline quote from hiding exclusions.'),
+      section('Understand the biggest cost variables','Cabinet running length and height, board type, finish, hardware, internal accessories, drawer count, lofts, glass, profiles, edge details, site access and installation complexity all affect cost. Premium finishes in a small home can cost more than a basic larger home.'),
+      section('Prepare a comparable quotation sheet','Give each vendor the same floor plan, room list, appliance sizes, reference finish level and required drawings. Ask for quantities, brand or approved equivalent, thickness, hardware series, warranty, taxes, delivery and payment milestones.'),
+      section('Keep a contingency and freeze decisions early','Set aside a project contingency for site discoveries and approved changes. Freeze layouts, electrical points, finish codes and appliance models before fabrication to reduce rework and variation costs.')
+    ],
+  },
+  {
+    slug:'modular-kitchen-cost-hyderabad-price-factors',
+    type:'construction-guide', category:'Interior Cost Guides',
+    title:'Modular Kitchen Cost in Hyderabad | Cabinets, Hardware & Finish Guide | ProPulse',
+    description:'Learn how modular kitchen quotations are calculated by layout, running length, cabinet material, shutters, hardware, countertop, accessories, appliances and installation.',
+    heading:'What determines modular kitchen cost in Hyderabad?',
+    summary:'A modular kitchen quote should show cabinet dimensions and specifications, not only a per-running-foot figure. Base units, wall units, tall units, accessories, countertop and services should be separated.',
+    searchTerms:['modular kitchen cost Hyderabad','modular kitchen price per running feet Hyderabad','L shape kitchen cost','parallel kitchen cost Hyderabad','U shape modular kitchen price','kitchen cabinet cost estimate','modular kitchen accessories price'],
+    ctaLabel:'Get a Kitchen Quote', cta:'/quote?package=standard#interior',
+    note:'Prices vary by dimensions, brand, material, hardware, accessories, countertop, taxes and installation. Request a dated BOQ and confirm whether appliances, civil work and electrical or plumbing changes are included.',
+    sections:[
+      section('Freeze the layout and appliance list','Straight, L-shaped, parallel and U-shaped kitchens use different cabinet quantities and clearances. Confirm refrigerator, hob, chimney, oven, microwave, dishwasher, sink and RO dimensions before cabinet design.'),
+      section('Measure base, wall and tall units separately','A running-foot rate can hide differences in cabinet depth, height, internal divisions and shutter area. Ask for separate measurements and quantities for base cabinets, wall cabinets, lofts, pantry and tall units.'),
+      section('Specify the carcass and shutter materials','Write the board type, grade, thickness and intended application for each cabinet zone. List the shutter substrate and visible finish separately, including laminate, acrylic, membrane, veneer or painted finish.'),
+      section('Compare hardware and accessories','List hinge model, drawer channel, tandem box, cutlery tray, bottle pull-out, corner unit, lift-up fitting, pantry mechanism and waste bin by brand or series, quantity and load guidance.'),
+      section('Clarify countertop, sink and dado scope','Countertop material, thickness, edge profile, cut-outs, supports, sink, faucet, backsplash and wall tile or glass dado may be separate. Confirm who measures, supplies and installs each item.'),
+      section('Coordinate electrical, plumbing and ventilation','Plan sockets, dedicated appliance circuits, chimney duct, gas line, water purifier, sink waste, dishwasher point and under-cabinet lighting before fabrication. Service relocation and wall repairs should be itemised.'),
+      section('Check installation and warranty','Ask about factory fabrication, edge banding, levelling, wall fixing, sealing near wet zones, site protection, snagging and service response. Separate warranty for board, finish, hardware and workmanship.'),
+      section('Compare total installed cost, not a headline rate','Use identical drawings and specifications for every vendor. Compare taxes, transport, installation, accessories, countertop, appliances, civil/electrical work, exclusions and variation charges.')
+    ],
+  },
+  {
+    slug:'wardrobe-cost-hyderabad-size-materials',
+    type:'construction-guide', category:'Interior Cost Guides',
+    title:'Wardrobe Cost in Hyderabad | Sliding vs Hinged, Loft & Material Guide | ProPulse',
+    description:'Understand wardrobe cost drivers in Hyderabad including width, height, sliding or hinged shutters, lofts, internal accessories, board, finish and hardware.',
+    heading:'How much does a wardrobe cost in Hyderabad?',
+    summary:'Wardrobe quotations depend on measured width and height, shutter type, internal layout, board and finish, lofts, drawers, accessories and installation—not just the number of bedrooms.',
+    searchTerms:['wardrobe cost Hyderabad','sliding wardrobe price Hyderabad','6 feet wardrobe cost','7 feet wardrobe cost','hinged wardrobe vs sliding wardrobe cost','wardrobe with loft price','custom wardrobe quotation'],
+    ctaLabel:'Get an Interior Quote', cta:'/quote?package=standard#interior',
+    note:'A reliable quote requires site measurements and a defined internal layout. Confirm whether rates include lofts, drawers, mirrors, accessories, taxes, delivery and installation.',
+    sections:[
+      section('Measure width, height and depth on site','Record wall-to-wall width, ceiling height, skirting, floor level, beam projections, switches and nearby door or window clearances. Note whether the wardrobe is full-height or leaves space for a loft.'),
+      section('Choose hinged or sliding shutters by room clearance','Hinged shutters need swing clearance and can provide simple access to the full cabinet opening. Sliding systems save swing space but need suitable tracks, overlap and access planning. Compare the hardware and usable opening, not only the appearance.'),
+      section('Plan the internal layout before pricing','List hanging sections, long-hang space, shelves, drawers, pull-outs, shoe storage, luggage shelves, accessories and safe storage. Internal divisions and drawer hardware can change the cost materially.'),
+      section('Specify carcass, shutters and finish separately','State board type, grade and thickness, shutter substrate, laminate or other finish, back panel, edge banding and any glass, mirror, aluminium profile or routed detail. Avoid vague “premium material” descriptions.'),
+      section('Include lofts and ceiling closures','Loft shutters, top fillers, side panels and ceiling gaps should be measured and quoted separately. Confirm access for luggage and whether the design obstructs curtain pelmets, AC units or ventilation.'),
+      section('Compare hardware by model and load','List hinges, sliding tracks, soft-close mechanisms, handles, drawer channels and accessories by brand or series. Ask the supplier to confirm compatibility with shutter size and weight.'),
+      section('Check wall moisture and anchoring','Resolve dampness before enclosing a wall with cabinetry. Confirm safe fixing points, skirting treatment, floor clearance and ventilation where the wardrobe is near an external or bathroom wall.'),
+      section('Ask for an itemised installed quotation','Compare dimensions, internal layout, material codes, hardware, finish, taxes, transport, installation, warranty and exclusions. Approve elevations and samples before fabrication.')
+    ],
+  },
 ]
 
 export function guideBySlug(slug){
