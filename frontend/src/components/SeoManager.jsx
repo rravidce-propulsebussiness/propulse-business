@@ -284,7 +284,7 @@ export default function SeoManager(){
     setPropertyMeta('og:image:alt','ProPulse Business logo')
     setPropertyMeta('og:locale','en_IN')
 
-    setNamedMeta('twitter:card','summary')
+    setNamedMeta('twitter:card','summary_large_image')
     setNamedMeta('twitter:title',effective.title)
     setNamedMeta('twitter:description',effective.description)
     setNamedMeta('twitter:image',origin+'/brand/propulse-logo.png')
