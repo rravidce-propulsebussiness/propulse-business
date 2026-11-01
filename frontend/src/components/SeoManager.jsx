@@ -8,6 +8,15 @@ const SERVICE_LABELS={
   'real-estate':'Real Estate',
 }
 
+// Dynamic public pages have server-rendered canonical HTML. Never transiently
+// mark them noindex during React hydration or while their API data loads.
+function publicDetailType(pathname){
+  const path=String(pathname||'').replace(/\/+$/,'')||'/'
+  if(/^\/projects\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(path))return 'project'
+  if(/^\/experts\/[1-9]\d*$/.test(path))return 'professional'
+  return null
+}
+
 function ensureMeta(selector,attributes={}){
   let node=document.head.querySelector(selector)
   if(!node){
@@ -187,8 +196,44 @@ export default function SeoManager(){
 
   useEffect(()=>{
     const route=seoForPath(location.pathname)
-    const indexable=isIndexablePath(location.pathname)
     const origin=siteOrigin()
+    const detailType=publicDetailType(location.pathname)
+    if(detailType){
+      const canonical=origin+(String(location.pathname).replace(/\/+$/,'')||'/')
+      const currentSelector=detailType==='project'
+        ?'script[data-propulse-project-seo]'
+        :'script[data-propulse-expert-seo]'
+      const otherSelector=detailType==='project'
+        ?'script[data-propulse-expert-seo]'
+        :'script[data-propulse-project-seo]'
+      document.head.querySelector('script[data-propulse-seo="jsonld"]')?.remove()
+      document.head.querySelector(otherSelector)?.remove()
+      const schema=document.head.querySelector(currentSelector)
+      const matchesServerGraph=schema?.dataset[detailType==='project'?'propulseProjectSeo':'propulseExpertSeo']==='server'
+        &&schema.textContent?.includes(canonical)
+      if(!matchesServerGraph){
+        // Client-side navigation starts with a neutral, indexable shell. The
+        // page component supplies its factual project/company metadata.
+        schema?.remove()
+        const title=detailType==='project'?'Completed Project | ProPulse':'Construction & Interior Professional | ProPulse'
+        const description=detailType==='project'
+          ?'View the completed construction or interior project and its published details on ProPulse.'
+          :'Explore this published construction or interior professional on ProPulse.'
+        document.title=title
+        setNamedMeta('description',description)
+        setNamedMeta('robots','index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1')
+        setNamedMeta('googlebot','index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1')
+        setPropertyMeta('og:title',title)
+        setPropertyMeta('og:description',description)
+        setPropertyMeta('og:url',canonical)
+        setCanonical(canonical)
+      }
+      return
+    }
+    // Remove stale profile or project schemas after client-side navigation.
+    document.head.querySelector('script[data-propulse-project-seo]')?.remove()
+    document.head.querySelector('script[data-propulse-expert-seo]')?.remove()
+    const indexable=isIndexablePath(location.pathname)
     const effective=route||HOME_SEO
     const canonical=origin+(route?.path||location.pathname||'/')
     const robots=indexable
