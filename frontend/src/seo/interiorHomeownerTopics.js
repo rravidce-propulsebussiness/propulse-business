@@ -631,5 +631,55 @@ groups["Interior material schedules & sample approvals"] = [
 ["What records should I keep after interior handover?","Retain approved drawings, BOQ, product codes, spare samples, invoices, warranties and care instructions."]
 ];
 
+
+groups["Room-wise interior cost estimation"] = [
+["How much does a living room interior cost?","Estimate TV unit, storage, wall panelling, ceiling, lighting, paint and loose furniture separately."],
+["What is the cost of a master bedroom interior?","Measure wardrobe, bed, side tables, dressing, study, ceiling, lighting and finish specifications."],
+["How much does a kids bedroom interior cost?","List wardrobe, study desk, storage, bed, safety considerations, lighting and age-flexible furniture."],
+["How much does a modular kitchen cost in a 2BHK?","Measure base, wall and tall units and specify carcass, shutters, hardware, countertop, sink and appliances."],
+["What is included in a living room interior package?","Clarify TV unit, foyer, crockery, wall finishes, ceiling, lighting, curtains and loose furniture."],
+["How do I calculate wardrobe cost by square feet?","Check the vendor's measurement basis and compare cabinet dimensions, internals, shutters, hardware and finishes."],
+["How much does a TV unit cost per running foot?","Compare width, height, storage, substrate, finish, back panel, lighting and installation."],
+["How do I estimate interior cost for a 3BHK?","Build a room-wise quantity schedule instead of multiplying a generic rate by apartment area."],
+["What is the difference between turnkey and design-only interior cost?","Separate design fees from procurement, manufacture, civil work, services, installation and project management."],
+["Which interior items should be prioritized on a limited budget?","Prioritize daily-use storage, kitchen functionality, durable hardware, lighting and essential repairs before decorative upgrades."]
+];
+groups["Kitchen site measurements & ergonomic planning"] = [
+["What measurements are required before modular kitchen design?","Record wall lengths, ceiling, openings, beams, sill heights, plumbing, electrical points and appliance locations."],
+["How do I measure an L-shaped modular kitchen?","Measure both wall runs, corner condition, openings and usable lengths after accounting for fillers and appliances."],
+["What is the kitchen work triangle?","Understand the relationship between sink, cooking and refrigeration zones and adapt it to the actual layout."],
+["How much space should be left between kitchen counters?","Plan aisle clearance around user movement and open appliance doors using the actual cabinet and appliance drawings."],
+["What is the ideal kitchen counter height for my family?","Choose a comfortable finished height based on user ergonomics, appliance needs and countertop thickness."],
+["How deep should a kitchen countertop be?","Coordinate cabinet depth, appliance fit, wall conditions and usable work surface with the designer."],
+["How do I plan a parallel kitchen in a narrow room?","Check aisle width, opposing shutter and drawer movement, appliance doors and safe circulation."],
+["Where should the sink be placed in an L-shaped kitchen?","Coordinate plumbing, window position, preparation area, dishwasher and countertop joints."],
+["How do I measure kitchen loft height?","Check ceiling variation, cabinet height, access, shutter movement and safe retrieval of stored items."],
+["What drawings should I approve before kitchen fabrication?","Review plan, elevations, sections, appliance schedule, countertop cut-outs, service points and cabinet BOQ."]
+];
+groups["Wardrobe measurement & bedroom clearances"] = [
+["How do I measure a wall for a custom wardrobe?","Measure width at multiple points, ceiling height, skirting, beams, windows and wall irregularities."],
+["How much space is needed to open hinged wardrobe shutters?","Test the actual shutter width and swing against the bed, side tables, doors and walking route."],
+["What clearance is needed for sliding wardrobe doors?","Use the selected track and panel drawings to allow for overlap, handles and installation tolerances."],
+["How do I calculate internal wardrobe storage space?","Subtract board, back, shutter and mechanism allowances before allocating hanging, shelves and drawers."],
+["How should I divide a wardrobe for two people?","Allocate zones by clothing inventory, hanging lengths, folded storage, drawers and user reach."],
+["How do I plan a wardrobe around a bedroom window?","Coordinate window opening, curtain stack, sill, daylight, ventilation and cabinet depth."],
+["Can a wardrobe cover an electrical switchboard?","Keep switches and service points accessible and coordinate any relocation with a qualified electrician."],
+["How do I design a wardrobe loft for a low ceiling?","Check usable ceiling height, shutter operation, access and practical reach before adding loft storage."],
+["What should be shown in a wardrobe measurement drawing?","Include overall and internal dimensions, shutter type, gaps, hardware, lofts and installation tolerances."],
+["How do I avoid wardrobe drawers hitting the bed?","Check full drawer extension in the room plan with the bed, side tables and circulation clearances."]
+];
+groups["Bathroom renovation budgets & scope"] = [
+["How much does a small bathroom renovation cost?","Measure the room and define demolition, waterproofing, tiles, fixtures, plumbing, electrical and labour scope."],
+["What is included in a bathroom renovation quotation?","Check removal, disposal, repairs, pipes, waterproofing, tiles, grout, sanitaryware, fittings and testing."],
+["How much does it cost to replace bathroom tiles only?","Clarify whether old tile removal, substrate repair, waterproofing, tile supply, adhesive, grout and disposal are included."],
+["Can I renovate a bathroom without changing plumbing?","Inspect pipe condition, fixture positions, leakage and compatibility before deciding to retain concealed plumbing."],
+["How do I budget for a bathroom shower partition?","Compare glass specification, hardware, dimensions, opening, installation and water containment details."],
+["What is the cost difference between wall-hung and floor-mounted toilets?","Include the WC model, cistern or frame, wall work, plumbing, flush plate and future service access."],
+["How much does bathroom waterproofing add to renovation cost?","Compare substrate repairs, system, detailing, application, testing and protection before tiling."],
+["Should bathroom renovation include a new ceiling and exhaust?","Check moisture, ventilation, electrical scope, access and the condition of existing ceiling materials."],
+["How long does a full bathroom renovation take?","Build a programme for demolition, repairs, waterproofing and testing, tiling, curing, fixtures and snagging."],
+["How do I compare bathroom renovation contractors?","Use the same measured BOQ, fixture schedule, waterproofing system, tile specification, exclusions and payment milestones."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
