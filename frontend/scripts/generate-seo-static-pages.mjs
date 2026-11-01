@@ -252,16 +252,23 @@ function interiorLandingContent(route){
   return '<section style="padding:18px 0 44px"><h2>Interior design planning in '+escapeHtml(area)+'</h2><p style="max-width:850px;line-height:1.65">Plan complete home interiors, modular kitchens, wardrobes, living rooms, bedrooms, false ceiling, lighting and office interiors. Start with property type, carpet area, rooms, measurements, style preferences, material choices, budget and target handover.</p><h2>Interior services</h2><ul>'+interiorNeeds.map(item=>'<li>'+escapeHtml(item)+'</li>').join('')+'</ul><h2>Details to prepare before requesting an interior estimate</h2><ul>'+interiorChecklist.map(item=>'<li>'+escapeHtml(item)+'</li>').join('')+'</ul>'+(centers?'<h2>Major areas in '+escapeHtml(area)+' district</h2><ul>'+centers+'</ul>':'')+(links?'<h2>Explore interior design by location</h2><ul>'+links+'</ul>':'')+'<h2>How to compare interior quotations</h2><ol><li>Compare the same rooms and dimensions.</li><li>Confirm material brands, board grades, finishes and hardware.</li><li>Check inclusions, exclusions, installation and warranty.</li><li>Agree milestones, payment terms and handover scope.</li></ol><p><a href="/quote#interiors">Start an interior requirement</a> · <a href="/packages#interior">Explore interior packages</a> · <a href="/projects">Explore projects</a></p></section>'
 }
 
+function blogHubContent(route){
+  if(route.type!=='blog-hub')return ''
+  const articles=CONSTRUCTION_GUIDES.map(item=>'<li><a href="/guides/'+escapeHtml(item.slug)+'">'+escapeHtml(item.heading)+'</a> — '+escapeHtml(item.summary)+'</li>').join('')
+  return '<section style="padding:10px 0 42px"><h2>Practical construction and interior articles</h2><p style="max-width:850px;line-height:1.65">The ProPulse Journal brings together practical reading for homeowners planning construction, interiors and property improvements. Use each article as a starting point, then confirm project-specific decisions with qualified professionals.</p><h2>Browse articles by topic</h2><ul>'+articles+'</ul><p><a href="/guides">Browse the full knowledge guide library</a> · <a href="/quote">Start a project requirement</a></p></section>'
+}
+
 function fallback(route){
   const nav=baseLinks(route).map(item=>'<a href="'+item[1]+'" style="margin-right:14px;color:#173f5e">'+escapeHtml(item[0])+'</a>').join('')
   return '<main data-seo-static-fallback="true" style="font-family:Arial,sans-serif;max-width:1100px;margin:0 auto;padding:32px;color:#173f5e">'+
     '<header style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap"><a href="/" aria-label="'+escapeHtml(SITE_NAME)+' home"><img src="/brand/propulse-logo.svg" alt="'+escapeHtml(SITE_NAME)+'" width="180" height="48"></a><nav aria-label="Primary">'+nav+'</nav></header>'+
     '<section style="padding:72px 0 34px"><p style="font-weight:700;color:#f05b24">PROPULSE BUSINESS</p><h1 style="max-width:850px;font-size:44px;line-height:1.08;margin:12px 0">'+escapeHtml(route.heading)+'</h1><p style="max-width:780px;font-size:18px;line-height:1.6">'+escapeHtml(route.summary)+'</p><p style="max-width:780px;line-height:1.6">'+escapeHtml(route.description)+'</p><p><a href="/quote" style="font-weight:700;color:#d94f22">Start your requirement</a> · <a href="/experts" style="font-weight:700;color:#173f5e">Find professionals</a></p></section>'+
-    businessIdentityContent(route)+homepageSeoContent(route)+cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+guideContent(route)+regionalConstructionContent(route)+interiorLandingContent(route)+homeownerFaqContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
+    businessIdentityContent(route)+blogHubContent(route)+homepageSeoContent(route)+cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+guideContent(route)+regionalConstructionContent(route)+interiorLandingContent(route)+homeownerFaqContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
 }
 
 function breadcrumbItems(route){
   const items=[{'@type':'ListItem',position:1,name:'Home',item:absolute('/')}]
+  if(route.type==='blog-hub')return [...items,{'@type':'ListItem',position:2,name:'Blog',item:absolute('/blog')}];
   if(route.type==='guide-hub')return [...items,{'@type':'ListItem',position:2,name:'Guides',item:absolute('/guides')}]
   if(route.type==='construction-guide')return [...items,{'@type':'ListItem',position:2,name:'Guides',item:absolute('/guides')},{'@type':'ListItem',position:3,name:route.heading,item:absolute(route.path)}]
   if(route.type==='interior-state-hub')return [...items,{'@type':'ListItem',position:2,name:route.stateName,item:absolute(route.path)}]
@@ -283,7 +290,7 @@ function breadcrumbItems(route){
 function staticJsonLd(route){
   const page={
     '@context':'https://schema.org',
-    '@type':(route.type==='city-hub'||route.type==='guide-hub')?'CollectionPage':route.type==='construction-guide'?'Article':'WebPage',
+    '@type':(route.type==='city-hub'||route.type==='guide-hub'||route.type==='blog-hub')?'CollectionPage':route.type==='construction-guide'?'Article':'WebPage',
     name:route.title,
     url:absolute(route.path),
     description:route.description,

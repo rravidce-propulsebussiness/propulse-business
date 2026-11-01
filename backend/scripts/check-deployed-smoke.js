@@ -96,6 +96,7 @@ async function main() {
     '/login',
     '/profile',
     '/forgot-password',
+    '/blog',
     '/hyderabad/construction',
     '/hyderabad/interior-designers',
     '/hyderabad/interior-designers/uppal',
