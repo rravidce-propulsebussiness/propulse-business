@@ -15,30 +15,9 @@ const HOME_TRUST_HEADLINES = [
 const DEFAULT_HERO = 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=2200&q=92'
 
 const SERVICES = [
-  {
-    key: 'build',
-    eyebrow: 'Construction',
-    title: 'Build Your Home',
-    text: 'Independent house, villa, apartment and commercial construction.',
-    image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=88',
-    icon: 'home',
-  },
-  {
-    key: 'design',
-    eyebrow: 'Interiors',
-    title: 'Design Your Space',
-    text: 'Home interiors, office interiors and customized spaces.',
-    image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=88',
-    icon: 'sofa',
-  },
-  {
-    key: 'property',
-    eyebrow: 'Real Estate',
-    title: 'Find a Property',
-    text: 'Buy or sell the right property with a clear requirement.',
-    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=88',
-    icon: 'building',
-  },
+  { key: 'build', eyebrow: 'Construction', title: 'Build Your Home', text: 'Independent house, villa, apartment and commercial construction.', image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=88', icon: 'home' },
+  { key: 'design', eyebrow: 'Interiors', title: 'Design Your Space', text: 'Home interiors, office interiors and customized spaces.', image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=88', icon: 'sofa' },
+  { key: 'property', eyebrow: 'Real Estate', title: 'Find a Property', text: 'Buy or sell the right property with a clear requirement.', image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=88', icon: 'building' },
 ]
 
 const BENEFITS = [
@@ -55,41 +34,23 @@ const STEPS = [
   { number: '4', icon: 'home', title: 'Move Forward', text: 'Compare quotations and choose the option you like.' },
 ]
 
-const PROJECTS = [
-  {
-    title: 'Independent House',
-    location: 'Hyderabad, Telangana',
-    image: 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1200&q=90',
-  },
-  {
-    title: 'Living Room Interiors',
-    location: 'Vijayawada, Andhra Pradesh',
-    image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=90',
-  },
-  {
-    title: 'Apartment Project',
-    location: 'Bengaluru, Karnataka',
-    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=90',
-  },
-  {
-    title: 'Modular Kitchen',
-    location: 'Visakhapatnam, Andhra Pradesh',
-    image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=90',
-  },
+// These are explicitly labelled as illustrative inspiration. They are never presented
+// as completed ProPulse work when no public project has been published.
+const INSPIRATION = [
+  { title: 'Independent House Inspiration', image: 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1200&q=90' },
+  { title: 'Living Room Interior Inspiration', image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=90' },
+  { title: 'Apartment Design Inspiration', image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=90' },
+  { title: 'Modular Kitchen Inspiration', image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=90' },
 ]
 
+function clean(value) { return typeof value === 'string' ? value.trim() : value == null ? '' : String(value).trim() }
+function projectPath(project) { return '/projects/' + (clean(project.seo_slug) || 'project-' + (project.project_id || project.id)) }
+function projectImage(project) {
+  return clean(project.video_thumbnail_url) || clean(project.cover_image_url) || (Array.isArray(project.image_urls) ? clean(project.image_urls[0]) : '')
+}
+
 function Icon({ name, size = 20 }) {
-  const common = {
-    width: size,
-    height: size,
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    strokeWidth: '1.8',
-    strokeLinecap: 'round',
-    strokeLinejoin: 'round',
-    'aria-hidden': true,
-  }
+  const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '1.8', strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }
   if (name === 'home') return <svg {...common}><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
   if (name === 'sofa') return <svg {...common}><path d="M5 11V8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3"/><path d="M4 10a2 2 0 0 0-2 2v5h20v-5a2 2 0 0 0-2-2"/><path d="M5 17v2M19 17v2"/></svg>
   if (name === 'building') return <svg {...common}><path d="M4 21V4h10v17"/><path d="M14 8h6v13"/><path d="M7 8h3M7 12h3M7 16h3M17 12h1M17 16h1"/></svg>
@@ -106,47 +67,31 @@ function Icon({ name, size = 20 }) {
 }
 
 function openRequirement(flowKey = '') {
-  window.dispatchEvent(new CustomEvent('propulse:open-lead-popup', {
-    detail: { flowKey },
-  }))
+  window.dispatchEvent(new CustomEvent('propulse:open-lead-popup', { detail: { flowKey } }))
 }
 
 export default function Home() {
   const [contactData, setContactData] = useState({})
   const [homepageMedia, setHomepageMedia] = useState({ hero_image_url: '' })
+  const [publishedProjects, setPublishedProjects] = useState([])
   const [trustTyping, setTrustTyping] = useState({ index: 0, length: 0, phase: 'typing' })
   const activeTrustHeadline = HOME_TRUST_HEADLINES[trustTyping.index]
 
   useEffect(() => {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-      setTrustTyping({
-        index: 0,
-        length: HOME_TRUST_HEADLINES[0].lead.length + HOME_TRUST_HEADLINES[0].accent.length,
-        phase: 'static',
-      })
+      setTrustTyping({ index: 0, length: HOME_TRUST_HEADLINES[0].lead.length + HOME_TRUST_HEADLINES[0].accent.length, phase: 'static' })
       return
     }
-
     const timeout = window.setTimeout(() => {
       setTrustTyping(current => {
         const phrase = HOME_TRUST_HEADLINES[current.index]
         const phraseLength = phrase.lead.length + phrase.accent.length
-
-        if (current.phase === 'typing') {
-          return current.length < phraseLength
-            ? { ...current, length: current.length + 1 }
-            : { ...current, phase: 'holding' }
-        }
+        if (current.phase === 'typing') return current.length < phraseLength ? { ...current, length: current.length + 1 } : { ...current, phase: 'holding' }
         if (current.phase === 'holding') return { ...current, phase: 'erasing' }
-        if (current.phase === 'erasing') {
-          return current.length > 0
-            ? { ...current, length: current.length - 1 }
-            : { index: (current.index + 1) % HOME_TRUST_HEADLINES.length, length: 0, phase: 'typing' }
-        }
+        if (current.phase === 'erasing') return current.length > 0 ? { ...current, length: current.length - 1 } : { index: (current.index + 1) % HOME_TRUST_HEADLINES.length, length: 0, phase: 'typing' }
         return current
       })
     }, trustTyping.phase === 'holding' ? 2000 : trustTyping.phase === 'erasing' ? 34 : 65)
-
     return () => window.clearTimeout(timeout)
   }, [trustTyping])
 
@@ -155,155 +100,76 @@ export default function Home() {
     Promise.allSettled([
       publicRequest('/contact?audience=website'),
       publicRequest('/homepage-media'),
-    ]).then(([contactResult, mediaResult]) => {
+      publicRequest('/experts/projects?page=1&pageSize=4'),
+    ]).then(([contactResult, mediaResult, projectsResult]) => {
       if (!active) return
       if (contactResult.status === 'fulfilled') setContactData(contactResult.value || {})
-      if (mediaResult.status === 'fulfilled') {
-        setHomepageMedia({ hero_image_url: mediaResult.value?.hero_image_url || '' })
+      if (mediaResult.status === 'fulfilled') setHomepageMedia({ hero_image_url: mediaResult.value?.hero_image_url || '' })
+      if (projectsResult.status === 'fulfilled') {
+        const value = projectsResult.value
+        const rows = Array.isArray(value) ? value : Array.isArray(value?.data) ? value.data : []
+        setPublishedProjects(rows.slice(0, 4))
       }
     })
     return () => { active = false }
   }, [])
 
-
   const phone = contactData.phone || contactData.phone_number || contactData.mobile || ''
-  const email = contactData.email || contactData.support_email || ''
+  const email = contactData.email || contactData.support_email || contactData.mobile || ''
   const heroImage = homepageMedia.hero_image_url || DEFAULT_HERO
+  const hasPublishedProjects = publishedProjects.length > 0
 
   return <div className="hc-home">
     <PublicHeader />
-
     <main>
       <section className="hc-hero hc-premium-hero" id="home">
         <div className="hc-container hc-premium-hero-inner">
           <div className="hc-premium-hero-copy">
             <span className="hc-premium-kicker">CONSTRUCTION · INTERIORS · MARKETPLACE · TECHNOLOGY</span>
             <h1>Don’t Leave Your <em>Dream Home</em> to <strong>Chance.</strong></h1>
-            <p className="hc-premium-typewriter" style={{
-               position: 'relative', minHeight: '1.4em', margin: '22px 0 26px',
-               fontFamily: "'Sora', Inter, ui-sans-serif, sans-serif",
-               fontSize: 'clamp(14px,2.4vw,23px)', fontWeight: 700,
-               letterSpacing: '-.035em', lineHeight: 1.4,
-             }}>
-               <span className="hc-premium-typewriter-sr" style={{
-                 position: 'absolute', width: '1px', height: '1px', overflow: 'hidden',
-                 clipPath: 'inset(50%)', whiteSpace: 'nowrap',
-               }}>Branded materials with clear specifications, a dedicated site engineer, expert supervision, workmanship warranty and transparent quotations.</span>
-               <span className="hc-premium-typewriter-line" aria-hidden="true" style={{
-                 position: 'relative', display: 'block', minHeight: '1.4em',
-               }}>
-                 <span className="hc-premium-typewriter-lead" style={{ color: '#f7f9ff' }}>{activeTrustHeadline.lead.slice(0, trustTyping.length)}</span>
-                 <span className="hc-premium-typewriter-accent" style={{ color: '#ff9d70' }}>{activeTrustHeadline.accent.slice(0, Math.max(0, trustTyping.length - activeTrustHeadline.lead.length))}</span>
-                 <span className="hc-premium-typewriter-caret" style={{
-                   display: 'inline-block', width: '2px', height: '1.07em',
-                   marginLeft: '3px', background: '#ff8c56', verticalAlign: '-.12em',
-                 }} />
-               </span>
-             </p>
+            <p className="hc-premium-typewriter" style={{ position: 'relative', minHeight: '1.4em', margin: '22px 0 26px', fontFamily: "'Sora', Inter, ui-sans-serif, sans-serif", fontSize: 'clamp(14px,2.4vw,23px)', fontWeight: 700, letterSpacing: '-.035em', lineHeight: 1.4 }}>
+              <span className="hc-premium-typewriter-sr" style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clipPath: 'inset(50%)', whiteSpace: 'nowrap' }}>Branded materials with clear specifications, a dedicated site engineer, expert supervision, workmanship warranty and transparent quotations.</span>
+              <span className="hc-premium-typewriter-line" aria-hidden="true" style={{ position: 'relative', display: 'block', minHeight: '1.4em' }}>
+                <span className="hc-premium-typewriter-lead" style={{ color: '#f7f9ff' }}>{activeTrustHeadline.lead.slice(0, trustTyping.length)}</span>
+                <span className="hc-premium-typewriter-accent" style={{ color: '#ff9d70' }}>{activeTrustHeadline.accent.slice(0, Math.max(0, trustTyping.length - activeTrustHeadline.lead.length))}</span>
+                <span className="hc-premium-typewriter-caret" style={{ display: 'inline-block', width: '2px', height: '1.07em', marginLeft: '3px', background: '#ff8c56', verticalAlign: '-.12em' }} />
+              </span>
+            </p>
             <p className="hc-business-intro">Hire ProPulse directly for construction or interiors, or explore independent professionals through our marketplace. We also build technology for these businesses.</p>
             <div className="hc-premium-actions">
-              <button className="hc-hero-cta hc-hero-cta-primary" type="button" onClick={() => openRequirement()}>
-                <span className="hc-hero-cta-label">Compare Professionals</span>
-                <span className="hc-hero-cta-arrow" aria-hidden="true">→</span>
-              </button>
-              <Link className="hc-hero-cta hc-hero-cta-secondary" to="/contact">
-                <span className="hc-hero-cta-label">Contact ProPulse Directly</span>
-                <span className="hc-hero-cta-arrow" aria-hidden="true">→</span>
-              </Link>
+              <button className="hc-hero-cta hc-hero-cta-primary" type="button" onClick={() => openRequirement()}><span className="hc-hero-cta-label">Compare Professionals</span><span className="hc-hero-cta-arrow" aria-hidden="true">→</span></button>
+              <Link className="hc-hero-cta hc-hero-cta-secondary" to="/contact"><span className="hc-hero-cta-label">Contact ProPulse Directly</span><span className="hc-hero-cta-arrow" aria-hidden="true">→</span></Link>
             </div>
-            <div className="hc-premium-trust" aria-label="ProPulse benefits">
-              <span><Icon name="clipboard" size={22}/>Free Consultation</span>
-              <span><Icon name="layers" size={22}/>Relevant Professionals</span>
-              <span><Icon name="check" size={22}/>Warranty Options</span>
-            </div>
+            <div className="hc-premium-trust" aria-label="ProPulse benefits"><span><Icon name="clipboard" size={22}/>Free Consultation</span><span><Icon name="layers" size={22}/>Relevant Professionals</span><span><Icon name="check" size={22}/>Warranty Options</span></div>
           </div>
-          <div className="hc-premium-scene">
-
-            <HeroBlueprintAnimation />
-          </div>
+          <div className="hc-premium-scene"><HeroBlueprintAnimation /></div>
         </div>
       </section>
 
-      <section className="hc-section hc-services">
-        <div className="hc-container">
-          <div className="hc-section-head hc-section-head-centered">
-            <h2>What do you need?</h2>
-          </div>
-          <div className="hc-service-grid">
-            {SERVICES.map(item => <article className="hc-service-card" key={item.key}>
-              <img src={item.image} alt={item.title} loading="lazy" />
-              <div className="hc-service-copy">
-                <span className="hc-service-icon"><Icon name={item.icon} size={19}/></span>
-                <div>
-                  <h3>{item.title}</h3>
-                  <b>{item.eyebrow}</b>
-                  <p>{item.text}</p>
-                </div>
-                <button type="button" onClick={() => openRequirement(item.key)} aria-label={'Start '+item.title}><Icon name="arrow" size={15}/></button>
-              </div>
-            </article>)}
-          </div>
-        </div>
-      </section>
+      <section className="hc-section hc-services"><div className="hc-container"><div className="hc-section-head hc-section-head-centered"><h2>What do you need?</h2></div><div className="hc-service-grid">{SERVICES.map(item => <article className="hc-service-card" key={item.key}><img src={item.image} alt={item.title} loading="lazy"/><div className="hc-service-copy"><span className="hc-service-icon"><Icon name={item.icon} size={19}/></span><div><h3>{item.title}</h3><b>{item.eyebrow}</b><p>{item.text}</p></div><button type="button" onClick={() => openRequirement(item.key)} aria-label={'Start '+item.title}><Icon name="arrow" size={15}/></button></div></article>)}</div></div></section>
 
-      <section className="hc-section hc-benefits">
-        <div className="hc-container">
-          <div className="hc-section-head compact hc-section-head-centered">
-            <h2>Our Construction, Interiors, Marketplace &amp; Technology Divisions</h2>
-          </div>
-          <div className="hc-benefit-grid">
-            {BENEFITS.map((item,index) => <article key={item.title}>
-              <span className={'tone-'+(index+1)}><Icon name={item.icon} size={19}/></span>
-              <div><h3>{item.title}</h3><p>{item.text}</p><Link to={item.link}>Explore service →</Link></div>
-            </article>)}
-          </div>
-        </div>
-      </section>
+      <section className="hc-section hc-benefits"><div className="hc-container"><div className="hc-section-head compact hc-section-head-centered"><h2>Our Construction, Interiors, Marketplace &amp; Technology Divisions</h2></div><div className="hc-benefit-grid">{BENEFITS.map((item,index) => <article key={item.title}><span className={'tone-'+(index+1)}><Icon name={item.icon} size={19}/></span><div><h3>{item.title}</h3><p>{item.text}</p><Link to={item.link}>Explore service →</Link></div></article>)}</div></div></section>
 
-      <section className="hc-section hc-how">
-        <div className="hc-container">
-          <div className="hc-section-head hc-section-head-centered">
-            <h2>How It Works</h2>
-          </div>
-          <div className="hc-step-grid">
-            {STEPS.map((step,index) => <article key={step.number}>
-              <span className={'hc-step-number tone-'+(index+1)}>{step.number}</span>
-              <span className={'hc-step-icon tone-'+(index+1)}><Icon name={step.icon} size={18}/></span>
-              <h3>{step.title}</h3>
-              <p>{step.text}</p>
-              {index < STEPS.length-1 && <i className="hc-step-arrow"><Icon name="arrow" size={15}/></i>}
-            </article>)}
-          </div>
-        </div>
-      </section>
+      <section className="hc-section hc-how"><div className="hc-container"><div className="hc-section-head hc-section-head-centered"><h2>How It Works</h2></div><div className="hc-step-grid">{STEPS.map((step,index) => <article key={step.number}><span className={'hc-step-number tone-'+(index+1)}>{step.number}</span><span className={'hc-step-icon tone-'+(index+1)}><Icon name={step.icon} size={18}/></span><h3>{step.title}</h3><p>{step.text}</p>{index < STEPS.length-1 && <i className="hc-step-arrow"><Icon name="arrow" size={15}/></i>}</article>)}</div></div></section>
 
       <section className="hc-section hc-projects">
         <div className="hc-container">
           <div className="hc-section-head hc-section-head-centered">
-            <h2>Home Inspiration</h2>
+            <h2>{hasPublishedProjects ? 'Published Project Work' : 'Design Inspiration'}</h2>
+            <p>{hasPublishedProjects ? 'Real projects published by eligible ProPulse businesses. Open a project to see its public details and video when available.' : 'Illustrative design inspiration only. These images are not presented as completed ProPulse projects.'}</p>
           </div>
           <div className="hc-project-grid">
-            {PROJECTS.map(project => <article key={project.title}>
-              <img src={project.image} alt={project.title} loading="lazy"/>
-              <div><h3>{project.title}</h3><p><Icon name="pin" size={12}/>{project.location}</p></div>
-            </article>)}
+            {hasPublishedProjects ? publishedProjects.map(project => {
+              const image = projectImage(project)
+              return <article key={project.project_id || project.id}><Link to={projectPath(project)} aria-label={'View '+clean(project.title)}>{image ? <img src={image} alt={clean(project.title)} loading="lazy"/> : <div className="hc-project-placeholder" aria-hidden="true">Project video</div>}<div><h3>{clean(project.title) || 'Published project'}</h3><p>{clean(project.location_text) || 'Published project'}</p></div></Link></article>
+            }) : INSPIRATION.map(project => <article key={project.title}><img src={project.image} alt={project.title} loading="lazy"/><div><h3>{project.title}</h3><p>Illustrative reference</p></div></article>)}
           </div>
+          {hasPublishedProjects && <p className="hc-projects-more"><Link to="/projects">View all published projects →</Link></p>}
         </div>
       </section>
 
-
-      <section className="hc-slim-cta">
-        <div className="hc-container hc-slim-cta-inner">
-          <img src={heroImage} alt="" loading="lazy"/>
-          <div><h2>Ready to Start Your Project?</h2><p>Contact ProPulse for direct construction or interiors, or compare independent contractors.</p></div>
-          <div className="hc-slim-actions">
-            <button type="button" onClick={() => openRequirement('')}>Start Your Requirement <Icon name="arrow" size={14}/></button>
-            <Link to="/packages">View Packages</Link>
-          </div>
-        </div>
-      </section>
+      <section className="hc-slim-cta"><div className="hc-container hc-slim-cta-inner"><img src={heroImage} alt="" loading="lazy"/><div><h2>Ready to Start Your Project?</h2><p>Contact ProPulse for direct construction or interiors, or compare independent contractors.</p></div><div className="hc-slim-actions"><button type="button" onClick={() => openRequirement('')}>Start Your Requirement <Icon name="arrow" size={14}/></button><Link to="/packages">View Packages</Link></div></div></section>
     </main>
-
     <PublicFooter phone={phone} email={email} />
   </div>
 }
