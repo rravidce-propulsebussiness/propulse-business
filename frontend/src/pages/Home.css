@@ -753,3 +753,15 @@
 @media(max-width:1100px){.hc-home .hc-service-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.hc-home .hc-service-copy{grid-template-columns:34px minmax(0,1fr) 30px;padding:13px}.hc-home .hc-service-icon{width:34px;height:34px}.hc-home .hc-service-copy h3{font-size:13px}}
 @media(max-width:700px){.hc-home .hc-service-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.hc-home .hc-service-card>img{height:120px}.hc-home .hc-service-copy{grid-template-columns:28px minmax(0,1fr);gap:8px;padding:11px}.hc-home .hc-service-copy>button{grid-column:2;justify-self:start;width:28px;height:28px}.hc-home .hc-service-copy h3{font-size:12px}}
 @media(max-width:440px){.hc-home .hc-container{width:calc(100% - 32px)}.hc-home .hc-service-grid{grid-template-columns:1fr}.hc-home .hc-service-card>img{height:150px}.hc-home .hc-service-copy{grid-template-columns:36px minmax(0,1fr) 30px}.hc-home .hc-service-copy>button{grid-column:auto;justify-self:auto}}
+
+
+/* Secondary pathways retain the broader ProPulse offering without diluting construction-first hierarchy. */
+.hc-home .hc-secondary-paths{background:#f7f9fb}
+.hc-home .hc-secondary-path-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.hc-home .hc-secondary-path-grid article{padding:24px;border:1px solid #e1e8ee;border-radius:16px;background:#fff}
+.hc-home .hc-secondary-path-grid article>span{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:9px;background:#fff0e8;color:#e95a22;font-size:12px;font-weight:900}
+.hc-home .hc-secondary-path-grid h3{margin:16px 0 8px;color:#173955;font-size:19px}
+.hc-home .hc-secondary-path-grid p,.hc-home .hc-secondary-path-note{color:#5c7182;font-size:14px;line-height:1.7}
+.hc-home .hc-secondary-path-grid button,.hc-home .hc-secondary-path-grid a{display:inline-flex;gap:8px;align-items:center;margin-top:8px;padding:0;border:0;background:transparent;color:#e95a22;font-size:13px;font-weight:850;text-decoration:none;cursor:pointer}
+.hc-home .hc-secondary-path-note{margin:20px 0 0}
+@media(max-width:760px){.hc-home .hc-secondary-path-grid{grid-template-columns:1fr}.hc-home .hc-secondary-path-grid article{padding:20px}}
