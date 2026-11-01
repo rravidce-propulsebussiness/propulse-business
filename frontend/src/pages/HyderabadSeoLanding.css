@@ -111,3 +111,13 @@
   .locality-homepage .local-seo-breadcrumb{position:relative;z-index:2;line-height:1.5}
   .locality-homepage .locality-home-hero-grid{row-gap:18px}
 }
+
+/* Keep headings readable when global typography rules load after page styles. */
+.local-seo-page .local-seo-hero:not(.locality-home-hero) h1{
+  color:#fff!important;
+  -webkit-text-fill-color:#fff;
+}
+.local-seo-page .local-seo-cta h2{
+  color:#fff!important;
+  -webkit-text-fill-color:#fff;
+}
