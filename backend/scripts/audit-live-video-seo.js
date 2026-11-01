@@ -121,7 +121,16 @@ async function checkEntry(entry){
   const type=videoResponse.headers.get('content-type')||'';
   assert(/video\/mp4|application\/octet-stream/i.test(type),
     'Playback bytes must have an MP4-compatible content type');
-  await videoResponse.body?.cancel();
+  const reader=videoResponse.body?.getReader();
+  assert(reader,'Playback response must contain actual media bytes');
+  try{
+    const {value}=await reader.read();
+    assert(value?.length>=12,'Playback media response was empty');
+    assert(Buffer.from(value).subarray(4,8).toString('ascii')==='ftyp',
+      'Playback did not deliver MP4 file bytes');
+  }finally{
+    await reader.cancel();
+  }
   return {watch:entry.watch,thumbnail:poster.pathname,video:'public playback accessible',status:'pass'};
 }
 async function audit({origin=DEFAULT_BASE,limit=MAX_VIDEO_CHECKS}={}){
