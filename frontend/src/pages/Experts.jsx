@@ -11,7 +11,6 @@ function collection(value){
   if(Array.isArray(value?.rows))return value.rows
   return []
 }
-
 function Icon({name,size=20}){
   const p={width:size,height:size,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:'1.8',strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true}
   if(name==='search')return <svg {...p}><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
@@ -28,7 +27,6 @@ function Icon({name,size=20}){
   if(name==='users')return <svg {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
   return null
 }
-
 function initials(name){return String(name||'Business').split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]?.toUpperCase()).join('')||'B'}
 function unique(values){return [...new Set(values.filter(Boolean))]}
 
@@ -41,14 +39,7 @@ export default function Experts(){
   const [filters,setFilters]=useState({search:'',industryId:'',cityId:'',verified:false})
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
-
-  useEffect(()=>{
-    Promise.allSettled([publicRequest('/industries'),publicRequest('/cities')]).then(([industryResult,cityResult])=>{
-      if(industryResult.status==='fulfilled')setIndustries(collection(industryResult.value))
-      if(cityResult.status==='fulfilled')setCities(collection(cityResult.value))
-    })
-  },[])
-
+  useEffect(()=>{Promise.allSettled([publicRequest('/industries'),publicRequest('/cities')]).then(([industryResult,cityResult])=>{if(industryResult.status==='fulfilled')setIndustries(collection(industryResult.value));if(cityResult.status==='fulfilled')setCities(collection(cityResult.value))})},[])
   useEffect(()=>{
     let live=true
     const timer=setTimeout(()=>{
@@ -58,35 +49,28 @@ export default function Experts(){
       if(filters.industryId)params.set('industryId',filters.industryId)
       if(filters.cityId)params.set('cityId',filters.cityId)
       if(filters.verified)params.set('verified','true')
-      publicRequest('/experts?'+params.toString()).then(value=>{
-        if(!live)return
-        setExperts(collection(value));setSettings(value?.settings||null);setPagination(current=>({...current,...(value?.pagination||{})}))
-      }).catch(err=>{if(live)setError(err.message||'Unable to load subscribed professionals.')}).finally(()=>{if(live)setLoading(false)})
+      publicRequest('/experts?'+params.toString()).then(value=>{if(!live)return;setExperts(collection(value));setSettings(value?.settings||null);setPagination(current=>({...current,...(value?.pagination||{})}))}).catch(err=>{if(live)setError(err.message||'Unable to load public professionals.')}).finally(()=>{if(live)setLoading(false)})
     },filters.search?250:0)
     return()=>{live=false;clearTimeout(timer)}
   },[filters,pagination.page])
-
   function updateFilter(key,value){setFilters(current=>({...current,[key]:value}));setPagination(current=>({...current,page:1}))}
   const visibleCities=useMemo(()=>cities.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))),[cities])
 
   return <main className="experts-page">
     <PublicHeader />
-
     <section className="experts-directory" id="expert-directory">
       <div className="experts-directory-intro">
-        <div className="experts-intro-pill"><Icon name="users" size={17}/><span>TRUSTED PROFESSIONALS</span></div>
+        <div className="experts-intro-pill"><Icon name="users" size={17}/><span>TRUSTED PROFESSIONALS · CONSTRUCTION &amp; INTERIOR</span></div>
         <h1><span>Expert</span> <em>Engineers</em></h1>
         <i aria-hidden="true"/>
-        <p>Find trusted construction, interior and real-estate professionals.</p>
+        <p>Find trusted construction, interior and real-estate professionals. Explore public business profiles, services, locations and published project work. Official ProPulse construction and interior execution is identified separately from independent marketplace professionals.</p>
+        <h2>Construction &amp; Interior Professionals in Hyderabad</h2>
       </div>
-
       <div className="experts-filter-bar"><label className="experts-search"><Icon name="search" size={18}/><input value={filters.search} onChange={event=>updateFilter('search',event.target.value)} placeholder="Search by name, service, or location..."/></label><label><Icon name="briefcase" size={17}/><select value={filters.industryId} onChange={event=>updateFilter('industryId',event.target.value)}><option value="">All categories</option>{industries.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label><label><Icon name="pin" size={17}/><select value={filters.cityId} onChange={event=>updateFilter('cityId',event.target.value)}><option value="">All cities</option>{visibleCities.map(item=><option value={item.id} key={item.id}>{item.name}{item.state_name?' · '+item.state_name:''}</option>)}</select></label><button className={filters.verified?'active':''} type="button" onClick={()=>updateFilter('verified',!filters.verified)}><Icon name="filter" size={17}/>{filters.verified?'Verified only':'More Filters'}</button></div>
-
       {error&&<div className="experts-state error">{error}</div>}
       {loading&&<BootLoader contained message="Loading professionals" />}
       {!loading&&!error&&settings?.directoryEnabled===false&&<div className="experts-state"><Icon name="filter" size={30}/><h3>Professional profiles are temporarily unavailable</h3></div>}
-      {!loading&&!error&&settings?.directoryEnabled!==false&&experts.length===0&&<div className="experts-state"><Icon name="filter" size={30}/><h3>No subscribed professionals match these filters</h3><p>Try another city, industry or search term.</p></div>}
-
+      {!loading&&!error&&settings?.directoryEnabled!==false&&experts.length===0&&<div className="experts-state"><Icon name="filter" size={30}/><h3>No public professionals match these filters</h3><p>Try another city, service category or search term.</p></div>}
       {!loading&&!error&&experts.length>0&&<div className="experts-grid">{experts.map(expert=>{
         const services=Array.isArray(expert.services)?expert.services:[]
         const locations=Array.isArray(expert.locations)?expert.locations:[]
@@ -99,26 +83,16 @@ export default function Experts(){
             <span className={expert.is_official?'official-badge':expert.is_verified?'verified-badge':'subscribed-badge'}>{expert.is_official?<><Icon name="star" size={13}/> Official ProPulse</>:expert.is_verified?<><Icon name="check" size={13}/> Verified</>:<><Icon name="check" size={13}/> Listed professional</>}</span>
             {expert.is_featured&&!expert.is_official&&<span className="featured-badge"><Icon name="star" size={12}/> Featured</span>}
           </div>
-          <div className="expert-card-identity">
-            <div className="expert-avatar">{expert.is_official?<img src="/brand/propulse-logo.png" alt=""/>:initials(expert.business_name)}</div>
-            <div className="expert-card-title"><h3>{expert.business_name}</h3><p>{expert.public_headline||industriesForExpert[0]||'Professional services'}</p></div>
-            <span className={`expert-membership ${expert.plan_group||'grow'}`}>{String(expert.plan_group||'member').toUpperCase()}</span>
-          </div>
+          <div className="expert-card-identity"><div className="expert-avatar">{expert.is_official?<img src="/brand/propulse-logo.png" alt=""/>:initials(expert.business_name)}</div><div className="expert-card-title"><h3>{expert.business_name}</h3><p>{expert.public_headline||industriesForExpert[0]||'Professional services'}</p></div><span className={`expert-membership ${expert.plan_group||'grow'}`}>{String(expert.plan_group||'member').toUpperCase()}</span></div>
           <div className="expert-industries">{industriesForExpert.slice(0,3).map(name=><span key={name}>{name}</span>)}{industriesForExpert.length===0&&serviceNames.slice(0,3).map(name=><span key={name}>{name}</span>)}</div>
           <div className="expert-location"><Icon name="pin" size={16}/><span>{cityNames.slice(0,2).join(', ')||'Service areas configured'}{cityNames.length>2?' +'+(cityNames.length-2):''}</span></div>
-          <p className="expert-description">{expert.public_summary||'Trusted ProPulse professional offering the listed services and project support.'}</p>
+          <p className="expert-description">{expert.public_summary||'Public professional profile with listed services and project information.'}</p>
           <div className="expert-proof-stats"><span><b>{expert.project_count||0}</b> Projects</span><span><b>{serviceNames.length||0}</b> Services</span><span><b>{expert.years_experience||'—'}</b> Years</span></div>
-          <div className="expert-card-actions">
-            <Link className="expert-view" to={'/experts/'+expert.business_profile_id}>View Full Profile</Link>
-            <Link className="expert-requirement" to={'/experts/'+expert.business_profile_id+'#callback'}>Request Callback <Icon name="arrow" size={14}/></Link>
-          </div>
+          <div className="expert-card-actions"><Link className="expert-view" to={'/experts/'+expert.business_profile_id}>View Full Profile</Link><Link className="expert-requirement" to={'/experts/'+expert.business_profile_id+'#callback'}>Request Callback <Icon name="arrow" size={14}/></Link></div>
         </article>
       })}</div>}
-
       {!loading&&pagination.totalPages>1&&<div className="experts-pagination"><button disabled={!pagination.hasPreviousPage} onClick={()=>setPagination(current=>({...current,page:Math.max(1,current.page-1)}))}>← Previous</button><span>Page {pagination.page} of {pagination.totalPages}</span><button disabled={!pagination.hasNextPage} onClick={()=>setPagination(current=>({...current,page:current.page+1}))}>Next →</button></div>}
     </section>
-
-
-    <PublicFooter description="Helping homeowners compare trusted professional profiles and start structured project requirements." />
+    <PublicFooter description="Explore independent construction and interior professionals on ProPulse, or contact ProPulse directly for construction and interior execution." />
   </main>
 }
