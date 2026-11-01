@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { to: '/hyderabad/construction-cost', label: 'Cost & Guides', match: path => path.startsWith('/hyderabad/construction-cost') || path.startsWith('/guides') },
   { to: '/about', label: 'About', match: path => path.startsWith('/about') },
   { to: '/technology', label: 'Technology', match: path => path.startsWith('/technology') },
+  { to: '/faq', label: 'FAQ', match: path => path.startsWith('/faq') },
   { to: '/contact', label: 'Contact', match: path => path.startsWith('/contact') },
 ]
 
@@ -41,9 +42,8 @@ export function PublicHeader() {
     const onKeyDown = event => { if (event.key === 'Escape') { setOpen(false); setProfessionalsOpen(false) } }
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('resize', onResize)
-    return () => { window.removeEventListener('resize', onResize); window.removeEventListener('keydown', onKeyDown) }
+    return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('resize', onResize) }
   }, [])
-
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12)
@@ -55,11 +55,9 @@ export function PublicHeader() {
   return <>
   <header className={'public-site-header' + (scrolled ? ' is-scrolled' : '')}>
     <div className="public-site-header__inner">
-
       <Link className="public-site-logo" to="/" aria-label="ProPulse home">
         <img src="/brand/propulse-logo.svg" alt="ProPulse"/>
       </Link>
-
       <nav className="public-site-nav" aria-label="Main navigation">
         {NAV_ITEMS.slice(0, 3).map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
         <div className={'public-site-professionals-menu'+(professionalsOpen?' is-open':'')}>
@@ -72,12 +70,9 @@ export function PublicHeader() {
         </div>
         {NAV_ITEMS.slice(3).map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
       </nav>
-
       <div className="public-site-actions">
         <Link className="public-site-quote" to="/quote#construction">Get Construction Estimate <ArrowIcon/></Link>
       </div>
-
-
       <button
         className={'public-site-menu-toggle' + (open ? ' open' : '')}
         type="button"
@@ -88,7 +83,6 @@ export function PublicHeader() {
       >
         <span/><span/><span/>
       </button>
-
       <div id="public-mobile-navigation" className={'public-site-mobile-menu' + (open ? ' open' : '')}>
         <nav aria-label="Mobile navigation">
           {NAV_ITEMS.map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
