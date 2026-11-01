@@ -258,5 +258,53 @@ groups["False ceiling, lighting & electrical planning costs"] = [
 ["What should be checked before closing a false ceiling?","Check framing, supports, wiring, ducts, access, fixture positions, concealed service photographs and inspection sign-off."]
 ];
 
+
+groups["Kitchen countertops, stone & surface comparisons"] = [
+["Which is better for a kitchen platform, granite or quartz?","Compare exact product data, heat and stain care, porosity, sealing, slab variation, cut-outs and installed scope."],
+["Is quartz better than granite for an Indian kitchen?","Discuss cooking habits, hot cookware precautions, maintenance, slab selection and manufacturer-specific limitations."],
+["What is the difference between marble and granite kitchen countertops?","Compare natural variation, porosity, maintenance, staining, surface finish and application suitability."],
+["How much does a granite kitchen countertop cost in Hyderabad?","Break down slab selection, thickness, measurement, cut-outs, edge profile, backsplash, transport and installation."],
+["How much does a quartz kitchen countertop cost?","Explain product range, colour, slab size, thickness, wastage, cut-outs, edge finishing and installation."],
+["Can I place a hot pan directly on a quartz countertop?","Explain thermal damage risks and advise following manufacturer guidance and using trivets."],
+["Does granite need sealing in a kitchen?","Explain that sealing depends on the stone and product; follow fabricator guidance and perform only the recommended maintenance."],
+["Which countertop is easiest to maintain?","Compare cleaning, stain response, sealing and heat limitations by exact surface product rather than broad category."],
+["What is the best countertop thickness for a modular kitchen?","Explain slab product, support, edge build-up and cabinet design; final thickness should be confirmed by the fabricator."],
+["Which kitchen countertop colour is easiest to maintain?","Discuss visibility of crumbs, water marks, stains and pattern variation using physical samples in the actual lighting."],
+["What is the difference between quartz and solid surface?","Compare composition, seams, repairability, heat tolerance, finish and manufacturer-specific care."],
+["Can a kitchen sink be under-mounted on granite or quartz?","Check sink compatibility, cut-out details, support, sealing, edge finish and service access with the fabricator."],
+["How much does a kitchen backsplash cost?","Separate material, measured area, cut-outs, edge trims, adhesive, grout and installation."],
+["What should be included in a kitchen countertop quotation?","List slab brand or source, thickness, area, cut-outs, edge profile, backsplash, sink support, installation and taxes."],
+["How do I choose a kitchen platform for heavy Indian cooking?","Match surface care and heat limitations to cooking routines, appliance use, cleaning products and supplier instructions."]
+];
+groups["Wardrobe accessories, organisers & storage planning"] = [
+["What accessories should be included in a master bedroom wardrobe?","Select drawers, shelves, long-hang, shoe storage, laundry and accessory trays based on actual storage needs."],
+["What is the cost of a trouser pull-out in a wardrobe?","Compare dimensions, mechanism, finish, load guidance, brand series and quantity."],
+["Are wardrobe pull-out baskets useful?","Discuss visibility, ventilation, cleaning, usable depth, load rating and whether open baskets suit stored items."],
+["What is a wardrobe lift-up hanger and how does it work?","Explain high-level hanging access, cabinet clearance, user reach and manufacturer load limits."],
+["How much does a jewellery organiser tray cost?","Break down tray size, compartments, lining, finish, runner or mounting system and quantity."],
+["What is the best wardrobe layout for a couple?","Plan separate hanging, folded clothing, drawers, accessories and shared storage around each user's habits."],
+["How many drawers should a wardrobe have?","Recommend deciding by folded items, access frequency, cabinet dimensions and drawer hardware rather than a universal count."],
+["How do I plan a wardrobe for sarees and long dresses?","Allow suitable hanging or folded storage, shelf dimensions, garment protection and practical reach."],
+["What is the difference between a wardrobe drawer and pull-out basket?","Compare enclosed storage, visibility, cleaning, privacy, hardware and suitable contents."],
+["Can wardrobe accessories fit inside sliding wardrobes?","Check opening access, track overlap, internal clearances and whether pull-outs collide with shutters."],
+["Which wardrobe accessories are worth the extra cost?","Prioritise daily-use storage and compare benefit, reliability, serviceability and hardware price."],
+["How much does a wardrobe with internal organisers cost?","Separate cabinet dimensions, board, finish, drawers, pull-outs, accessories, hardware and installation."],
+["What is the best shoe storage inside a wardrobe?","Compare shelves, pull-outs and ventilated compartments by shoe type, cleaning and available depth."],
+["How do I plan luggage storage in a wardrobe loft?","Check opening height, load support, access, shutter type and safe retrieval."],
+["What should be shown in a wardrobe internal elevation?","Include shelf heights, drawer dimensions, hanging zones, accessories, clearances and hardware schedule."]
+];
+groups["Room-wise renovation budgets & execution scope"] = [
+["How much does a complete 2BHK flat renovation cost in Hyderabad?","Separate room-wise demolition, civil repairs, kitchen, bathrooms, electrical, plumbing, finishes, cabinetry and loose furniture."],
+["How much does a living room renovation cost?","Break down TV unit, wall finish, ceiling, lighting, painting, flooring, curtains and furniture."],
+["How much does a master bedroom renovation cost?","Include wardrobe, bed, bed-back, side tables, lighting, ceiling, painting, flooring and curtains."],
+["How much does a kitchen renovation cost without changing layout?","Compare cabinet replacement and surface upgrades with plumbing or electrical relocation and appliance changes."],
+["How much does a bathroom renovation cost without changing tiles?","Explain fixture replacement, vanity, accessories, plumbing repairs and limits if waterproofing or concealed leaks are present."],
+["What is the cost of renovating an old apartment?","Include condition survey, society permissions, debris access, concealed services, structural restrictions and room-wise finishes."],
+["How much does interior painting cost during renovation?","Clarify surface preparation, putty, primer, number of coats, paint range, furniture protection and labour."],
+["What is the cost of replacing home flooring?","Separate tile or floor material, demolition, levelling, adhesive, skirting, wastage, debris and installation."],
+["How much does a home renovation designer charge?","Compare design-only, consultation, project management and execution fees with deliverables and site visits."],
+["What is included in a turnkey home renovation?","List design, procurement, civil work, plumbing, electrical, cabinetry, painting, fixtures, taxes, installation and exclusions."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
