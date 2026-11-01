@@ -121,7 +121,7 @@ const subjectGroups={
     "home automation and smart lighting planning"
   ]
 }
-const intentTemplates=s=>`How much does ${s} cost in Hyderabad?`,
+const intentTemplates=[s=>`How much does ${s} cost in Hyderabad?`,
 s=>`Step-by-step guide to ${s} in Hyderabad`,
 s=>`Homeowner checklist for ${s} in Hyderabad`,
 s=>`Common mistakes to avoid with ${s} in Hyderabad`,
@@ -130,7 +130,7 @@ s=>`Materials, measurements and specifications for ${s} in Hyderabad`,
 s=>`How long does ${s} take for a Hyderabad home?`,
 s=>`Questions to ask a contractor or designer about ${s}`,
 s=>`How to plan and budget for ${s} in Hyderabad`,
-s=>`When should a Hyderabad homeowner hire a professional for ${s}?`
+s=>`When should a Hyderabad homeowner hire a professional for ${s}?`]
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS=Object.entries(subjectGroups).map(([category,items])=>({
   category,
