@@ -202,9 +202,11 @@ router.get('/sitemap.xml',async(req,res)=>{
     '</urlset>',
     ''
   ].join('\n');
-  res.type('application/xml');
+  // Set the XML media type explicitly so shared hosting/proxy layers do not
+  // let Express or a static fallback label this response as HTML or plain text.
+  res.setHeader('Content-Type','application/xml; charset=utf-8');
   if(!res.getHeader('Cache-Control'))res.setHeader('Cache-Control','public, max-age=3600');
-  res.send(body);
+  res.status(200).send(body);
 });
 
 // Google's video sitemap points only to publicly eligible video watch pages,
