@@ -145,6 +145,7 @@ function guideContent(route){
   return '<section style="padding:10px 0 42px">'+
     (guide.note?'<aside style="padding:12px;border:1px solid #f0c5b4;background:#fff8f4"><strong>Important</strong><p>'+escapeHtml(guide.note)+'</p></aside>':'')+
     sections+
+    (guide.sources?.length?'<h2>Published price references</h2><p>Third-party market examples; scopes and pricing methods differ. Confirm current rates and inclusions directly.</p><ul>'+guide.sources.map(source=>'<li><a href="'+escapeHtml(source.url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(source.label)+'</a></li>').join('')+'</ul>':'')+
     '<h2>Related searches</h2><ul>'+guide.searchTerms.map(term=>'<li>'+escapeHtml(term)+'</li>').join('')+'</ul>'+
     '<h2>Related guides</h2><ul>'+related+'</ul>'+
     '<p><a href="'+escapeHtml(guide.cta)+'">'+escapeHtml(guide.ctaLabel)+'</a> · <a href="/guides">Browse all guides</a> · <a href="/packages">View packages</a></p>'+
