@@ -55,11 +55,20 @@ pool.query=async(sql,params=[])=>{queries.push({sql,params});return {rows}};
   try{
     await new Promise((resolve,reject)=>{if(server.listening)resolve();else server.once('listening',resolve).once('error',reject)});
     const origin='http://127.0.0.1:'+server.address().port;
-    const [robots,sitemap]=await Promise.all([
-      fetch(origin+'/robots.txt'),fetch(origin+'/video-sitemap.xml')
+    const [robots,indexSitemap,sitemap]=await Promise.all([
+      fetch(origin+'/robots.txt'),fetch(origin+'/sitemap.xml'),fetch(origin+'/video-sitemap.xml')
     ]);
     assert.equal(robots.status,200);
-    assert.match(await robots.text(),/Sitemap: https:\/\/propulsetechnologies\.online\/video-sitemap\.xml/);
+    const robotsText=await robots.text();
+    assert.match(robotsText,/Sitemap: https:\/\/propulsetechnologies\.online\/sitemap\.xml/);
+    assert.match(robotsText,/Sitemap: https:\/\/propulsetechnologies\.online\/video-sitemap\.xml/);
+    assert.equal(indexSitemap.status,200,'Main sitemap must be publicly fetchable');
+    assert.match(indexSitemap.headers.get('content-type'),/^application\/xml\s*;?\s*charset=utf-8/i,'Main sitemap must explicitly be served as XML, not HTML or plain text');
+    const indexXml=await indexSitemap.text();
+    assert.match(indexXml,/^<\?xml version="1\.0" encoding="UTF-8"\?>/,'Main sitemap must start with an XML declaration');
+    assert.match(indexXml,/<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/,'Main sitemap must contain the standard sitemap urlset root');
+    assert.match(indexXml,/<url><loc>https:\/\/propulsetechnologies\.online\//,'Main sitemap must contain canonical production URLs');
+    assert.match(indexXml,/<\/urlset>\s*$/,'Main sitemap XML must close its urlset root');
     assert.equal(sitemap.status,200);
     assert.match(sitemap.headers.get('content-type'),/xml/);
     const xml=await sitemap.text();
