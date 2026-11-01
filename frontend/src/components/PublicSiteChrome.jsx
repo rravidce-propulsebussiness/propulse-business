@@ -7,7 +7,7 @@ const NAV_ITEMS = [
   { to: '/hyderabad/construction', label: 'House Construction', match: path => path.startsWith('/hyderabad/construction') || path === '/hyderabad' },
   { to: '/quote#interiors', label: 'Interiors', match: path => path.includes('interior') || path === '/packages' },
   { to: '/projects', label: 'Projects', match: path => path.startsWith('/projects') },
-  { to: '/how-it-works', label: 'How It Works', match: path => path.startsWith('/how-it-works') },
+  { to: '/hyderabad/construction-cost', label: 'Cost & Guides', match: path => path.startsWith('/hyderabad/construction-cost') || path.startsWith('/guides') },
   { to: '/about', label: 'About', match: path => path.startsWith('/about') },
   { to: '/contact', label: 'Contact', match: path => path.startsWith('/contact') },
 ]
