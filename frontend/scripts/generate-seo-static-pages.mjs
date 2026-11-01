@@ -268,7 +268,7 @@ function blogHubContent(route){
           : '<p class="blog-topic-unpublished">Full answer in preparation. This is a planned topic, not a published answer.</p>'
         return '<li style="padding:14px 0;border-bottom:1px solid #edf0f1"><strong>'+escapeHtml(topic.title)+'</strong>'+answer+'</li>'
       }).join('')
-      return '<details><summary>'+escapeHtml(group.category)+' ('+group.topics.length+' questions)</summary><ol>'+items+'</ol></details>'
+      return '<details class="blog-topic-group"><summary><span>'+escapeHtml(group.category)+'</span><b>'+group.topics.length+' questions</b><i>+</i></summary><ol>'+items+'</ol></details>'
     }).join('')
     return '<section style="padding:10px 0 42px"><h2>'+escapeHtml(route.heading)+'</h2><p style="max-width:850px;line-height:1.65">'+escapeHtml(route.summary)+'</p><p>Questions with complete responses show the answer and official references below. Other entries are clearly marked as planned topics; an editorial brief is not presented as an answer. Cost ranges should be dated and itemised, and Vastu is described as a personal or traditional preference rather than a building requirement.</p>'+topics+'<p><a href="/blog">All blog categories</a> · <a href="/quote">Start a project requirement</a></p></section>'
   }
