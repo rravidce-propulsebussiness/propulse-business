@@ -180,16 +180,7 @@ function jsonLdFor(route,origin){
       provider:{'@type':'Organization',name:SITE_NAME,url:home},
       url:home,
     },
-    {
-      '@context':'https://schema.org',
-      '@type':'FAQPage',
-      mainEntity:[
-        {'@type':'Question',name:'Does ProPulse provide house construction in Hyderabad?',acceptedAnswer:{'@type':'Answer',text:'ProPulse directly undertakes selected independent-house and villa construction projects. Project location, scope, specifications and availability are reviewed before a proposal is confirmed.'}},
-        {'@type':'Question',name:'What details are needed for a construction estimate?',acceptedAnswer:{'@type':'Answer',text:'Share your plot dimensions, location, planned built-up area, number of floors, drawings if available, preferred specifications, budget and expected timeline.'}},
-        {'@type':'Question',name:'Can I explore interior design and turnkey options?',acceptedAnswer:{'@type':'Answer',text:'Yes. You can discuss room-wise interior requirements, modular kitchens, finishes and turnkey scope. The final inclusions and exclusions should be agreed in writing.'}},
-        {'@type':'Question',name:'Can I compare independent construction professionals?',acceptedAnswer:{'@type':'Answer',text:'Explore published professional profiles and project information on ProPulse. Check credentials, relevant work, references and written commercial terms before appointing a provider.'}},
-      ],
-    }
+
   ]
 
   const data=[
