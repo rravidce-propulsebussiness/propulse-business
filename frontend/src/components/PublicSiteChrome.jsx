@@ -4,8 +4,7 @@ import './PublicSiteChrome.css'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Home', match: path => path === '/' },
-  { to: '/hyderabad/construction', label: 'Construction', match: path => path.startsWith('/hyderabad/construction') || path === '/hyderabad' },
-  { to: '/quote#interiors', label: 'Interiors', match: path => path.includes('interior') || path === '/packages' },
+  { to: '/packages', label: 'Packages', match: path => path === '/packages' },
   { to: '/projects', label: 'Projects', match: path => path.startsWith('/projects') },
   { to: '/hyderabad/construction-cost', label: 'Cost & Guides', match: path => path.startsWith('/hyderabad/construction-cost') || path.startsWith('/guides') },
   { to: '/about', label: 'About', match: path => path.startsWith('/about') },
