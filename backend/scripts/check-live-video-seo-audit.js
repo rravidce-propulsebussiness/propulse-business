@@ -18,7 +18,7 @@ const expected=parseVideoEntries(xml,new URL(base));
 assert.equal(expected.length,1);
 assert.equal(expected[0].title,'Modern 3BHK Interiors & Design');
 assert.equal(expected[0].video,playback);
-assert.throws(()=>parseVideoEntries(xml.replace('business-project-redacted','private-object-s3:business-projects'),
+assert.throws(()=>parseVideoEntries(xml.replace('<video:content_loc>'+playback,'<video:content_loc>private-object-s3:business-projects/original.mp4'),
   new URL(base)),/Raw private R2/);
 assert.throws(()=>parseVideoEntries(xml.replace(poster,'https://other-domain.com/thumbnail.jpg'),
   new URL(base)),/public ProPulse origin/);
