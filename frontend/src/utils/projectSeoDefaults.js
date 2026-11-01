@@ -14,11 +14,14 @@ function includesLocation(text,location){
   const locationWords=words(location)
   return locationWords.length>0&&locationWords.every(word=>titleWords.includes(word))
 }
+const MAX_SEO_TITLE_LENGTH=68 // Account for the appended ' | ProPulse' branding.
 export function projectSeoTitle(project={}){
-  if(clean(project.seoTitle))return shorten(project.seoTitle,160)
-  const title=clean(project.title)||clean(project.type)||'Completed project'
+  const custom=clean(project.seoTitle).replace(/\s*\|\s*ProPulse\s*$/i,'')
+  if(custom&&custom.length<=MAX_SEO_TITLE_LENGTH)return custom
+  const original=clean(project.title)||clean(project.type)||'Completed project'
+  const title=original.split(/\s+\|\s+/)[0]
   const location=clean(project.location)
-  return shorten(location&&!includesLocation(title,location)?title+' in '+location:title,145)
+  return shorten(location&&!includesLocation(title,location)?title+' in '+location:title,MAX_SEO_TITLE_LENGTH)
 }
 export function projectSeoDescription(project={}){
   if(clean(project.seoDescription))return shorten(project.seoDescription,180)

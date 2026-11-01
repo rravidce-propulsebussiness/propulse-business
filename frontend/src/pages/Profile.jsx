@@ -14,6 +14,7 @@ import './Profile.css'
 import './ProfileCompact.css'
 import './ProfileWorkspace.css'
 import {playSound} from '../utils/soundEffects'
+import {projectSeoTitle} from '../utils/projectSeoDefaults'
 
 const emptyService=()=>({industryId:'',serviceId:'',subserviceId:''})
 const emptyLocation=()=>({stateId:'',cityId:''})
@@ -770,10 +771,10 @@ export default function Profile(){
                 <details className="profile-project-seo-settings">
                   <summary>SEO &amp; Search Visibility <small>Automatically prepared from your project details; optional to customize</small></summary>
                   <div className="profile-project-seo-grid">
-                    <label>SEO page title <input value={project.seoTitle||''} maxLength="160" onChange={e=>updateProject(index,'seoTitle',e.target.value)} placeholder={project.title||'Modern 3BHK interiors in Hyderabad'}/><small>Optional. When blank, ProPulse uses your real project title and location.</small></label>
+                    <label>SEO page title <input value={project.seoTitle||''} maxLength="68" onChange={e=>updateProject(index,'seoTitle',e.target.value)} placeholder={project.title||'Modern 3BHK interiors in Hyderabad'}/><small>Search preview: {projectSeoTitle({seoTitle:project.seoTitle,title:project.title,location:project.locationText})} | ProPulse · {(project.seoTitle||'').length}/68 characters. Keep your title short; ProPulse is appended automatically.</small></label>
                     <label>Primary SEO keyword <input value={project.seoKeyword||''} maxLength="160" onChange={e=>updateProject(index,'seoKeyword',e.target.value)} placeholder="3BHK interior design in Uppal Hyderabad"/></label>
                     <label className="wide">SEO URL slug <input value={project.seoSlug||''} maxLength="100" onChange={e=>updateProject(index,'seoSlug',projectSlug(e.target.value))} placeholder="3bhk-interior-design-uppal-hyderabad"/><small>Public URL: https://propulsetechnologies.online/projects/{project.seoSlug||'project-'+(project.id||'new')} · use lowercase letters, numbers and hyphens. Changing a published slug changes its URL.</small></label>
-                    <label className="wide">Meta description <textarea rows="3" value={project.seoDescription||''} maxLength="320" onChange={e=>updateProject(index,'seoDescription',e.target.value)} placeholder="Explore modern 3BHK interiors in Uppal, Hyderabad, featuring a modular kitchen, false ceilings and customized wardrobes."/><small>{(project.seoDescription||'').length}/320 characters. Optional. When blank, ProPulse uses the project title, location and submitted description. No project features are invented.</small></label>
+                    <label className="wide">Meta description <textarea rows="3" value={project.seoDescription||''} maxLength="160" onChange={e=>updateProject(index,'seoDescription',e.target.value)} placeholder="Explore modern 3BHK interiors in Uppal, Hyderabad, featuring a modular kitchen, false ceilings and customized wardrobes."/><small>{(project.seoDescription||'').length}/160 characters recommended. Optional. When blank, ProPulse uses the project title, location and submitted description. No project features are invented.</small></label>
                   </div>
                 </details>
                 <div className="profile-project-gallery-field">
