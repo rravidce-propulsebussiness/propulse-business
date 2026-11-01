@@ -7,6 +7,7 @@ import {CONSTRUCTION_PACKAGE_CATALOG} from '../src/data/constructionPackageCatal
 import {districtBySlug,districtPath,stateBySlug} from '../src/seo/regionalSeo.js'
 import {CONSTRUCTION_GUIDES,guideBySlug} from '../src/seo/constructionGuides.js'
 import {SEO_FAQ_CATEGORIES,homeownerSeoFaqs} from '../src/seo/faqKnowledge.js'
+import {interiorNeeds,interiorChecklist} from '../src/seo/interiorSeo.js'
 
 const here=path.dirname(fileURLToPath(import.meta.url))
 const dist=path.resolve(here,'../dist')
@@ -50,6 +51,7 @@ function absolute(urlPath){
 
 function baseLinks(route){
   const links=[['Home','/'],['Hyderabad','/hyderabad'],['Guides','/guides'],['Get Quote','/quote'],['Find Professionals','/experts'],['Technology','/technology'],['Packages','/packages'],['Projects','/projects'],['How It Works','/how-it-works'],['About','/about'],['Contact','/contact']]
+  if(route.type==='interior-hub'||route.type==='interior-locality'||route.type==='interior-state-hub'||route.type==='interior-district')links.push(['Interior Solutions','/hyderabad/interior-designers'])
   if(route.type==='city-service'||route.type==='local-service')links.push(['Compare Hyderabad options','/hyderabad/'+route.serviceSlug+'/compare-options'])
   return links
 }
@@ -241,22 +243,35 @@ function comparisonDisclosure(route){
   return '<section style="padding:10px 0 42px"><h2>Independent comparison note</h2><p style="max-width:850px;line-height:1.55">ProPulse is independent and is not affiliated with or endorsed by '+route.brands.map(escapeHtml).join(', ')+'. Brand names are shown only because customers may be researching these options. Check each provider directly before deciding.</p><p style="max-width:850px;line-height:1.55">'+escapeHtml(route.searchIntent||'')+'</p>'+searches+'</section>'
 }
 
+
+function interiorLandingContent(route){
+  if(!['interior-hub','interior-locality','interior-state-hub','interior-district'].includes(route.type))return ''
+  const area=route.localityName||route.districtName||route.stateName||'Hyderabad'
+  const links=route.type==='interior-hub'?HYDERABAD_LOCALITIES.map(item=>'<li><a href="/hyderabad/interior-designers/'+escapeHtml(item.slug)+'">Interior designers in '+escapeHtml(item.name)+'</a></li>').join(''):route.type==='interior-state-hub'?stateBySlug(route.stateSlug).districts.map(item=>'<li><a href="/'+escapeHtml(route.stateSlug)+'/interior-designers/'+escapeHtml(item.slug)+'">Interior design in '+escapeHtml(item.name)+'</a></li>').join(''):''
+  const centers=(route.majorCenters||[]).map(item=>'<li>'+escapeHtml(item)+'</li>').join('')
+  return '<section style="padding:18px 0 44px"><h2>Interior design planning in '+escapeHtml(area)+'</h2><p style="max-width:850px;line-height:1.65">Plan complete home interiors, modular kitchens, wardrobes, living rooms, bedrooms, false ceiling, lighting and office interiors. Start with property type, carpet area, rooms, measurements, style preferences, material choices, budget and target handover.</p><h2>Interior services</h2><ul>'+interiorNeeds.map(item=>'<li>'+escapeHtml(item)+'</li>').join('')+'</ul><h2>Details to prepare before requesting an interior estimate</h2><ul>'+interiorChecklist.map(item=>'<li>'+escapeHtml(item)+'</li>').join('')+'</ul>'+(centers?'<h2>Major areas in '+escapeHtml(area)+' district</h2><ul>'+centers+'</ul>':'')+(links?'<h2>Explore interior design by location</h2><ul>'+links+'</ul>':'')+'<h2>How to compare interior quotations</h2><ol><li>Compare the same rooms and dimensions.</li><li>Confirm material brands, board grades, finishes and hardware.</li><li>Check inclusions, exclusions, installation and warranty.</li><li>Agree milestones, payment terms and handover scope.</li></ol><p><a href="/quote#interiors">Start an interior requirement</a> · <a href="/packages#interior">Explore interior packages</a> · <a href="/projects">Explore projects</a></p></section>'
+}
+
 function fallback(route){
   const nav=baseLinks(route).map(item=>'<a href="'+item[1]+'" style="margin-right:14px;color:#173f5e">'+escapeHtml(item[0])+'</a>').join('')
   return '<main data-seo-static-fallback="true" style="font-family:Arial,sans-serif;max-width:1100px;margin:0 auto;padding:32px;color:#173f5e">'+
     '<header style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap"><a href="/" aria-label="'+escapeHtml(SITE_NAME)+' home"><img src="/brand/propulse-logo.svg" alt="'+escapeHtml(SITE_NAME)+'" width="180" height="48"></a><nav aria-label="Primary">'+nav+'</nav></header>'+
     '<section style="padding:72px 0 34px"><p style="font-weight:700;color:#f05b24">PROPULSE BUSINESS</p><h1 style="max-width:850px;font-size:44px;line-height:1.08;margin:12px 0">'+escapeHtml(route.heading)+'</h1><p style="max-width:780px;font-size:18px;line-height:1.6">'+escapeHtml(route.summary)+'</p><p style="max-width:780px;line-height:1.6">'+escapeHtml(route.description)+'</p><p><a href="/quote" style="font-weight:700;color:#d94f22">Start your requirement</a> · <a href="/experts" style="font-weight:700;color:#173f5e">Find professionals</a></p></section>'+
-    businessIdentityContent(route)+homepageSeoContent(route)+cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+guideContent(route)+regionalConstructionContent(route)+homeownerFaqContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
+    businessIdentityContent(route)+homepageSeoContent(route)+cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+guideContent(route)+regionalConstructionContent(route)+interiorLandingContent(route)+homeownerFaqContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
 }
 
 function breadcrumbItems(route){
   const items=[{'@type':'ListItem',position:1,name:'Home',item:absolute('/')}]
   if(route.type==='guide-hub')return [...items,{'@type':'ListItem',position:2,name:'Guides',item:absolute('/guides')}]
   if(route.type==='construction-guide')return [...items,{'@type':'ListItem',position:2,name:'Guides',item:absolute('/guides')},{'@type':'ListItem',position:3,name:route.heading,item:absolute(route.path)}]
+  if(route.type==='interior-state-hub')return [...items,{'@type':'ListItem',position:2,name:route.stateName,item:absolute(route.path)}]
+  if(route.type==='interior-district')return [...items,{'@type':'ListItem',position:2,name:route.stateName,item:absolute('/'+route.stateSlug+'/interior-designers')},{'@type':'ListItem',position:3,name:route.districtName,item:absolute(route.path)}]
+  if(route.type==='interior-locality')return [...items,{'@type':'ListItem',position:2,name:'Hyderabad',item:absolute('/hyderabad/interior-designers')},{'@type':'ListItem',position:3,name:route.localityName,item:absolute(route.path)}]
   if(route.type==='state-construction-hub')return [...items,{'@type':'ListItem',position:2,name:route.stateName,item:absolute(route.path)}]
   if(route.type==='district-construction')return [...items,{'@type':'ListItem',position:2,name:route.stateName,item:absolute('/'+route.stateSlug+'/construction')},{'@type':'ListItem',position:3,name:route.districtName,item:absolute(route.path)}]
   if(!route.path.startsWith('/hyderabad'))return [...items,{'@type':'ListItem',position:2,name:route.heading,item:absolute(route.path)}]
   items.push({'@type':'ListItem',position:2,name:'Hyderabad',item:absolute('/hyderabad')})
+  if(route.type==='interior-hub')return [...items,{'@type':'ListItem',position:2,name:'Hyderabad',item:absolute(route.path)}]
   if(route.type==='city-hub')return items
   if(route.type==='cost-guide')return [...items,{'@type':'ListItem',position:3,name:'Construction Cost',item:absolute(route.path)}]
   if(route.type==='city-service')return [...items,{'@type':'ListItem',position:3,name:route.heading,item:absolute(route.path)}]
@@ -277,6 +292,7 @@ function staticJsonLd(route){
   }
   if(route.type==='construction-guide'){page.headline=route.heading;page.articleSection='Home construction and interiors';page.publisher={'@type':'Organization',name:SITE_NAME,url:absolute('/')};page.mainEntityOfPage=absolute(route.path)}
   if(route.type==='cost-guide')page.about={'@type':'Service',name:'House construction cost planning',areaServed:{'@type':'City',name:'Hyderabad, Telangana, India'}}
+  if(['interior-hub','interior-locality','interior-state-hub','interior-district'].includes(route.type))page.about={'@type':'Service',name:'Interior design and execution',areaServed:route.type==='interior-locality'?{'@type':'Place',name:route.localityName+', Hyderabad, Telangana, India'}:route.type==='interior-district'?{'@type':'AdministrativeArea',name:route.districtName+' district, '+route.stateName+', India'}:route.type==='interior-state-hub'?{'@type':'AdministrativeArea',name:route.stateName+', India'}:{'@type':'City',name:'Hyderabad, Telangana, India'}}
   if(route.type==='city-service'||route.type==='local-service')page.about={'@type':'Service',name:route.serviceSlug==='construction'?'Home construction':route.serviceSlug==='interior-designers'?'Interior design':'Real estate services',areaServed:route.type==='local-service'?{'@type':'Place',name:route.localityName+', Hyderabad, Telangana, India'}:{'@type':'City',name:'Hyderabad, Telangana, India'}}
   if(route.type==='state-construction-hub'||route.type==='district-construction')page.about={'@type':'Service',name:'Home construction',areaServed:route.type==='district-construction'?{'@type':'AdministrativeArea',name:route.districtName+' district, '+route.stateName+', India'}:{'@type':'AdministrativeArea',name:route.stateName+', India'}}
   const organization={'@context':'https://schema.org','@type':'Organization',name:SITE_NAME,url:absolute('/'),logo:absolute('/brand/propulse-logo.png')}
