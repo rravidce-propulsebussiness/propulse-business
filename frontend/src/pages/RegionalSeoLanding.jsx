@@ -4,6 +4,34 @@ import {districtBySlug,districtPath,stateBySlug} from '../seo/regionalSeo'
 import './RegionalSeoLanding.css'
 import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 
+
+function LandingHouseArt({area,region='India'}){
+  return <div className="pp-landing-art" aria-label={"Architectural illustration of a modern home in "+area} role="img">
+    <div className="pp-art-orbit pp-art-orbit-one"/><div className="pp-art-orbit pp-art-orbit-two"/>
+    <svg viewBox="0 0 640 470" className="pp-house-svg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs><linearGradient id="ppWall" x1="0" x2="1" y1="0" y2="1"><stop stopColor="#fff" /><stop offset="1" stopColor="#e8dfd4"/></linearGradient><linearGradient id="ppGlass" x1="0" x2="1"><stop stopColor="#203b50"/><stop offset="1" stopColor="#75909a"/></linearGradient></defs>
+      <path d="M65 388H585" stroke="#d6b9a4" strokeWidth="3" strokeLinecap="round"/>
+      <path d="M112 216 315 91l218 126v171H112Z" fill="url(#ppWall)" stroke="#b7a99c" strokeWidth="3"/>
+      <path d="m87 220 228-145 245 142-18 22L315 112 105 246Z" fill="#20384d"/>
+      <path d="M152 239h326v132H152Z" fill="#f5eee6" stroke="#b9aa9b" strokeWidth="2"/>
+      <path d="M180 253h116v104H180Z" fill="url(#ppGlass)" stroke="#d7a27b" strokeWidth="5"/>
+      <path d="M313 253h139v104H313Z" fill="url(#ppGlass)" stroke="#d7a27b" strokeWidth="5"/>
+      <path d="M180 306h116M238 253v104M313 306h139M382 253v104" stroke="#d6dfe0" strokeWidth="3"/>
+      <path d="M152 235h326v14H152Z" fill="#e3d6c8"/>
+      <path d="M130 214h368v13H130Z" fill="#f7f4ef" stroke="#c4b7a9" strokeWidth="2"/>
+      <path d="M112 373h421v15H112Z" fill="#d7c7b7"/>
+      <path d="M480 266h31v105h-31Z" fill="#d9c6b5"/>
+      <path d="M510 272v98" stroke="#a78c78" strokeWidth="3"/>
+      <g fill="#e65b26"><circle cx="135" cy="383" r="5"/><circle cx="510" cy="383" r="5"/></g>
+      <g stroke="#e65b26" strokeWidth="2" fill="none" strokeDasharray="5 8"><path d="M70 120C170 8 438 15 565 135"/></g>
+      <g className="pp-art-blueprint" stroke="#e65b26" strokeWidth="1.6" fill="none"><path d="M50 365V260l58-35 59 35v105M67 365v-80h80v80M50 260h117M82 313h25v52H82Z"/></g>
+      <g fill="#e65b26"><circle cx="565" cy="135" r="7"/><circle cx="70" cy="120" r="7"/></g>
+    </svg>
+    <span className="pp-art-location">{area} · {region}</span>
+    <span className="pp-art-badge">Designed around your site</span>
+  </div>
+}
+
 function Header(){ return <PublicHeader/> }
 function Footer(){ return <PublicFooter/> }
 
@@ -99,6 +127,7 @@ function DistrictPage({state,district}){
       <p>Looking for construction companies, builders or contractors in {district.name}? Start with one site-specific brief, compare package levels and review project-specific quotations against the same scope.</p>
       <div className="regional-actions"><Link className="primary" to="/quote?package=standard#construction">Get Construction Quote</Link><Link className="secondary" to="/packages#construction">Compare Packages</Link></div>
       <div className="regional-trust"><span>{district.name} district requirement</span><span>Major-area prompts</span><span>Relevant business discovery</span></div>
+      <LandingHouseArt area={district.name} region={state.name}/>
     </section>
 
     <section className="regional-centers">
