@@ -139,7 +139,7 @@ async function checkGalleryLinks(base,limit=25){
   assert.equal(gallery.status,200,'Public project gallery must return HTTP 200');
   const html=await gallery.text();
   assert(html.includes('data-seo-project-gallery="true"'),'Public gallery must include real server-rendered project links');
-  const paths=[...new Set([...html.matchAll(/<a\\s+href="(\\/projects\\/[a-z0-9]+(?:-[a-z0-9]+)*)"/gi)]
+  const paths=[...new Set([...html.matchAll(/<a\s+href="(\/projects\/[a-z0-9]+(?:-[a-z0-9]+)*)"/gi)]
     .map(match=>match[1]))].slice(0,limit);
   for(const path of paths){
     const url=new URL(path,base).toString();
