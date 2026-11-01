@@ -150,6 +150,44 @@ async function main() {
   assert(sitemapBody.includes('<loc>'+base.origin+'/hyderabad/construction</loc>'), 'sitemap.xml must include the Hyderabad construction landing page');
   assert(!sitemapBody.includes('localhost'), 'Production sitemap must never advertise localhost URLs');
 
+  // Fetch the initial project HTML, not a JavaScript-rendered browser screenshot.
+  // Search engines and AI crawlers need real case-study content on first response.
+  const projectUrls=[...sitemapBody.matchAll(/<loc>([^<]+)<\/loc>/g)]
+    .map(match=>match[1].replace(/&amp;/g,'&'))
+    .filter(url=>{
+      try{
+        const parsed=new URL(url);
+        return parsed.origin===base.origin&&/^\/projects\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(parsed.pathname);
+      }catch{return false}
+    });
+  if(projectUrls.length){
+    const url=projectUrls[0];
+    const projectPage=await request(new URL(url).pathname,{headers:{accept:'text/html','cache-control':'no-cache'}});
+    assert.equal(projectPage.status,200,'Sitemap project must return crawlable 200 HTML: '+url);
+    assert.match(String(projectPage.headers.get('content-type')||''),/text\/html/i,
+      'Published project response must be HTML');
+    const projectHtml=await projectPage.text();
+    assert(projectHtml.includes('data-seo-project-fallback="true"'),
+      'Published project HTML must show actual case-study content before JavaScript');
+    assert.match(projectHtml,/<h1\b[^>]*>[^<]+<\/h1>/i,'Project HTML must contain its own H1');
+    assert(projectHtml.includes('<link rel="canonical" href="'+url+'"'),
+      'Project initial HTML must contain the matching absolute canonical URL');
+    assert(projectHtml.includes('data-propulse-project-seo="server"'),
+      'Project initial HTML must include server-authored structured data');
+    assert(projectHtml.includes('"CreativeWork"')&&projectHtml.includes('"BreadcrumbList"'),
+      'Project structured data must identify the actual work and its page hierarchy');
+    assert(!projectHtml.includes('private-object-s3:'),
+      'Project HTML must never leak private R2 storage references');
+  }else{
+    console.log('Crawlable project smoke: no public project URLs in sitemap; project page check skipped.');
+  }
+  const missingProject=await request('/projects/project-not-published-crawler-smoke-test',
+    {headers:{accept:'text/html'}});
+  assert.equal(missingProject.status,404,'Unknown completed-project URL must be a real 404, not a soft-404 SPA shell');
+  assert.match(String(missingProject.headers.get('x-robots-tag')||''),/noindex/i,
+    'Unknown project must be explicitly excluded from indexing');
+
+
   const session = await request('/api/auth/session', { headers: { origin: appOrigin } });
   assert.equal(session.status, 200, 'Public auth session bootstrap must return 200');
   const sessionBody = await session.json();
