@@ -8,7 +8,8 @@ import {districtBySlug,districtPath,stateBySlug} from '../src/seo/regionalSeo.js
 import {CONSTRUCTION_GUIDES,guideBySlug} from '../src/seo/constructionGuides.js'
 import {SEO_FAQ_CATEGORIES,homeownerSeoFaqs} from '../src/seo/faqKnowledge.js'
 import {interiorNeeds,interiorChecklist} from '../src/seo/interiorSeo.js'
-import {HYDERABAD_HOMEOWNER_TOPIC_GROUPS} from '../src/seo/hyderabadHomeownerTopics.js'\nimport {INTERIOR_HOMEOWNER_TOPIC_GROUPS} from '../src/seo/interiorHomeownerTopics.js'
+import {HYDERABAD_HOMEOWNER_TOPIC_GROUPS} from '../src/seo/hyderabadHomeownerTopics.js'
+import {INTERIOR_HOMEOWNER_TOPIC_GROUPS} from '../src/seo/interiorHomeownerTopics.js'
 
 const here=path.dirname(fileURLToPath(import.meta.url))
 const dist=path.resolve(here,'../dist')
@@ -276,7 +277,8 @@ function fallback(route){
 
 function breadcrumbItems(route){
   const items=[{'@type':'ListItem',position:1,name:'Home',item:absolute('/')}]
-  if(route.type==='blog-hub')return [...items,{'@type':'ListItem',position:2,name:'Blog',item:absolute('/blog')}];\n  if(route.type==='construction-blog'||route.type==='interior-blog')return [...items,{'@type':'ListItem',position:2,name:'Blog',item:absolute('/blog')},{'@type':'ListItem',position:3,name:route.type==='interior-blog'?'Interior Blog':'Construction Blog',item:absolute(route.path)}];
+  if(route.type==='blog-hub')return [...items,{'@type':'ListItem',position:2,name:'Blog',item:absolute('/blog')}];
+  if(route.type==='construction-blog'||route.type==='interior-blog')return [...items,{'@type':'ListItem',position:2,name:'Blog',item:absolute('/blog')},{'@type':'ListItem',position:3,name:route.type==='interior-blog'?'Interior Blog':'Construction Blog',item:absolute(route.path)}];
   if(route.type==='guide-hub')return [...items,{'@type':'ListItem',position:2,name:'Guides',item:absolute('/guides')}]
   if(route.type==='construction-guide')return [...items,{'@type':'ListItem',position:2,name:'Guides',item:absolute('/guides')},{'@type':'ListItem',position:3,name:route.heading,item:absolute(route.path)}]
   if(route.type==='interior-state-hub')return [...items,{'@type':'ListItem',position:2,name:route.stateName,item:absolute(route.path)}]
