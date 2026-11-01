@@ -698,5 +698,10 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   "What should I check before hiring an interior designer?": {
     answer: "Review completed projects that match your home size and style, and ask to see detailed working drawings rather than only 3D renders. Confirm who measures the site, coordinates electrical and plumbing changes, specifies materials, supervises installation and handles defects. Request a room-wise BOQ with board grades, finish codes, hardware brands, quantities, taxes, timeline, payment stages, exclusions and warranty. Check how design revisions are charged and who owns the drawings. Speak with previous clients and inspect at least one installed project before signing.",
     sources: [{"label":"MCA – company/LLP master data","url":"https://www.mca.gov.in/"}]
+  },
+
+  "What should be included in a construction site inspection checklist?": {
+    answer: "A useful site inspection checklist follows the construction sequence and records what will become hidden. Before foundation concrete, check setting-out, excavation dimensions, soil conditions, reinforcement, cover, formwork and any required engineer approval. Before each slab or beam pour, verify the latest drawings, bar sizes and spacing, laps, anchorage, cover, openings, embedded services, shuttering, props, concrete grade, testing and curing arrangements. During masonry and services, inspect line, level, junctions, conduits, pipe pressure tests and drainage falls. For waterproofing, record substrate preparation, corners, penetrations, membrane application and water-test results. At handover, close snags and collect approvals, test reports, warranties and as-built drawings. Record date, location, photos, responsible person, corrective action and sign-off for every inspection.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"},{"label":"BuildNow – approval checklist","url":"https://buildnow.telangana.gov.in/checklist/"}]
   }
 };
