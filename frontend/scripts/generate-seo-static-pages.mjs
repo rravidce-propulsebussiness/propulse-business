@@ -12,7 +12,7 @@ const here=path.dirname(fileURLToPath(import.meta.url))
 const dist=path.resolve(here,'../dist')
 const indexPath=path.join(dist,'index.html')
 const template=fs.readFileSync(indexPath,'utf8')
-const configuredOrigin=String(process.env.VITE_PUBLIC_SITE_URL||'').trim().replace(/\/+$/,'')
+const configuredOrigin=String(process.env.VITE_PUBLIC_SITE_URL||(process.env.NODE_ENV==='production'?'https://propulsetechnologies.online':'')).trim().replace(/\/+$/,'')
 const origin=(()=>{
   if(!/^https?:\/\//i.test(configuredOrigin))return ''
   try{
@@ -297,6 +297,7 @@ function render(route){
   html=replaceMeta(html,'name','twitter:title',route.title)
   html=replaceMeta(html,'name','twitter:description',route.description)
   html=replaceMeta(html,'name','twitter:image',absolute('/brand/propulse-logo.png'))
+  html=replaceMeta(html,'name','twitter:card','summary_large_image')
   html=replaceCanonical(html,canonical)
   html=html.replace('</head>','  <script type="application/ld+json" data-propulse-seo="jsonld">'+staticJsonLd(route)+'</script>\n  </head>')
   html=html.replace('<div id="root"></div>','<div id="root">'+fallback(route)+'</div>')
