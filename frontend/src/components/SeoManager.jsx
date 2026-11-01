@@ -50,8 +50,13 @@ function setCanonical(href){
 function siteOrigin(){
   const configured=String(import.meta.env.VITE_PUBLIC_SITE_URL||'').trim()
   if(/^https?:\/\//i.test(configured)){
-    try{return new URL(configured).origin}catch{}
+    try{
+      const url=new URL(configured)
+      if(/(^|\\.)propulsetechnologies\\.online$/i.test(url.hostname))return 'https://propulsetechnologies.online'
+      return url.origin
+    }catch{}
   }
+  if(/(^|\\.)propulsetechnologies\\.online$/i.test(window.location.hostname))return 'https://propulsetechnologies.online'
   return window.location.origin
 }
 
