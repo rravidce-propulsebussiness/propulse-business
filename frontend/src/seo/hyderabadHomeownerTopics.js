@@ -432,6 +432,29 @@ groups["Planning, room sizes & building services"] = [
     ["How do I estimate bathroom renovation material quantities?","Measure floor and wall surfaces, tile coverage, fixture count, waterproofing area, adhesive and grout requirements."],
     ["What approvals should I collect before starting a major renovation?","Check the nature of work, local jurisdiction, structural impact and any required permissions or NOCs with qualified professionals."]
   ]
+,
+  "Construction quantities, electrical and plumbing estimates": [
+    ["How do I calculate cement quantity for house construction?","Use measured concrete and mortar quantities with approved mix specifications and project-specific material yield."],
+    ["How is steel quantity calculated for an RCC house?","Use structural drawings and bar bending schedules prepared or checked by the structural engineer."],
+    ["How many bricks are needed for a 2BHK house?","Measure wall areas by thickness and brick or block size, deduct openings as specified and include a stated allowance."],
+    ["How do I calculate concrete for an RCC slab?","Use approved slab dimensions and structural details; account for beams, openings and specified pour quantities."],
+    ["How do I prepare a house construction material BOQ?","List measured items, drawing references, units, specifications, calculations, allowances and revision details."],
+    ["How much does house electrical wiring cost in Hyderabad?","Count room-wise points, measure routes and specify professionally designed circuits, cable, switches, fixtures and testing."],
+    ["How do I estimate electrical points for a 3BHK?","Prepare a furniture and appliance-based point schedule for each room, kitchen, bathrooms and external spaces."],
+    ["What is included in an electrical contractor quotation?","Check conduits, wiring, boxes, switches, distribution equipment, earthing, labour, testing and patching."],
+    ["How much does plumbing work cost for a 2BHK house?","Count fixtures and map water supply, hot water, drainage, valves, pumps, tanks, materials and testing."],
+    ["What is included in a house plumbing BOQ?","List pipes, fittings, fixtures, traps, valves, pumps, tanks, supports, labour, pressure tests and drainage checks."],
+    ["Which is better, labour-only or material contract for house construction?","Compare procurement responsibility, quality control, storage, wastage, supervision, pricing and owner time."],
+    ["What is included in turnkey house construction?","Define design, approvals, materials, labour, services, finishes, external works, exclusions and handover."],
+    ["How do I choose a house construction contractor?","Review completed work, references, BOQ transparency, site supervision, quality records and written contract terms."],
+    ["What should be included in a labour contract agreement?","Specify scope, rates, material responsibility, measurement, safety, schedule, payment, defects and variation process."],
+    ["How do I check a contractor's construction quality?","Use approved drawings, material records, inspection hold points, test reports and qualified site supervision."],
+    ["What is the difference between item-rate and lump-sum construction contracts?","Compare quantity remeasurement, scope definition, provisional sums, variation rules and cost risk."],
+    ["How do I calculate construction labour cost by stage?","Break down work packages, measured quantities, trade rates, site conditions, access and agreed productivity assumptions."],
+    ["What electrical safety checks are needed before house handover?","Request qualified testing records for insulation, continuity, polarity, earthing and protective devices as applicable."],
+    ["What plumbing tests should be completed before handover?","Check specified pressure tests, leak inspections, drainage flow, flushing and fixture operation."],
+    ["How do I calculate material wastage in a construction estimate?","State separate allowances by material and explain the effects of cutting, handling, storage and site conditions."]
+  ]
 };
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
