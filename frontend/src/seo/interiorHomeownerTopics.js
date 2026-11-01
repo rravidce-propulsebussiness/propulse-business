@@ -411,5 +411,65 @@ groups["Interior paint, textures & wall finish budgets"] = [
 ["What should a painting contractor quote include?","List surface preparation, putty, primer, product code, coats, coverage, masking, furniture protection and warranty."]
 ];
 
+
+groups["Modular kitchen layouts & workflow"] = [
+["Which modular kitchen layout is best for a small apartment?","Compare straight, parallel and L-shaped layouts by dimensions, appliance sequence, circulation and storage."],
+["What is the difference between L-shaped and U-shaped kitchens?","Compare counter length, corner storage, work zones, entry clearance and room enclosure."],
+["How much space is required for a kitchen island?","Check circulation on all sides, appliance door swings, seating, service routes and applicable clearances."],
+["Is a parallel kitchen suitable for a narrow room?","Measure the aisle and check opposing cabinet depth, appliance openings, ventilation and safe movement."],
+["What is a peninsula kitchen layout?","Explain how a connected counter can add prep or seating space and what it means for circulation."],
+["Which kitchen layout gives maximum storage?","Compare usable cabinet runs, corner solutions, tall units, overhead storage and access rather than cabinet count alone."],
+["Where should the refrigerator be placed in an L-shaped kitchen?","Coordinate door swing, landing counter, ventilation, electrical point and workflow."],
+["How do I plan the sink and hob in a modular kitchen?","Coordinate plumbing, drainage, chimney, heat separation, preparation space and appliance instructions."],
+["What is the best kitchen work triangle layout?","Explain the traditional workflow concept and adapt it to room dimensions, multiple cooks and current appliance needs."],
+["How much does an L-shaped modular kitchen cost in Hyderabad?","Break down measured cabinets, finish, countertop, hardware, accessories, appliances and installation."],
+["What are the advantages of a U-shaped kitchen?","Discuss worktop continuity, storage, corner access and the need for a suitable room width."],
+["Can I add an island to an existing kitchen?","Review space, floor services, structure, ventilation, circulation and building restrictions before changing layout."],
+["How should a kitchen be designed for two people cooking?","Plan separate prep zones, appliance access, clear paths and storage for shared use."],
+["What is the difference between a modular kitchen and a carpenter-made kitchen?","Compare factory fabrication, site-built work, modularity, measurement, hardware, finish and repair."],
+["What should a modular kitchen layout drawing include?","Include dimensions, elevations, appliances, services, clearances, countertop cut-outs, storage and hardware schedule."]
+];
+groups["Wardrobe shutter designs & opening systems"] = [
+["Which is better, sliding or hinged wardrobe shutters?","Compare access, floor clearance, tracks, overlap, hardware, maintenance and cabinet dimensions."],
+["How much does a sliding wardrobe cost in Hyderabad?","Include track system, shutter material, frame, finish, mirrors or glass, hardware and installation."],
+["What are profile shutters in wardrobes?","Explain frame and infill construction, finish options, joint details and compatible hardware."],
+["Are glass wardrobe shutters durable?","Check glass safety specification, frame support, edge finish, cleaning, hardware and intended use."],
+["What is the difference between acrylic and laminate wardrobe shutters?","Compare appearance, surface characteristics, cleaning, edge treatment, repair and exact product specifications."],
+["Which wardrobe shutter is best for a small bedroom?","Select by door swing, aisle width, storage access, room layout and user preference."],
+["How many hinges are needed for a wardrobe shutter?","Hinge quantity depends on shutter dimensions, weight, material and manufacturer guidance; avoid fixed generic counts."],
+["What causes sliding wardrobe doors to get stuck?","Check track alignment, rollers, debris, installation, shutter plumb and hardware condition."],
+["How do I maintain wardrobe sliding tracks?","Follow manufacturer cleaning and adjustment instructions and avoid incompatible lubricants or forced movement."],
+["What should be included in a wardrobe shutter quotation?","List shutter size, core, finish code, frame or track, hardware model, mirror or glass details and installation."]
+];
+groups["Flooring materials, wood, SPC & vinyl"] = [
+["Which is better, SPC or vinyl flooring for a home?","Compare core construction, wear layer, underlay, acoustic performance, moisture limits and installation requirements."],
+["How much does SPC flooring cost in Hyderabad?","Separate product thickness and wear layer, underlay, floor preparation, trims, skirting and installation."],
+["Is wooden flooring suitable for Indian homes?","Consider humidity, spills, room exposure, product construction, expansion and maintenance guidance."],
+["What is the difference between laminate and wooden flooring?","Compare surface layer, core, moisture response, repairability, sound and installation."],
+["Can SPC flooring be installed over existing tiles?","Check flatness, loose tiles, grout lines, moisture, door clearances and product overlay instructions."],
+["Which flooring is best for bedrooms?","Compare comfort, sound, cleaning, wear, climate and maintenance by exact product."],
+["What is the difference between marble and granite flooring?","Compare natural variation, hardness, staining, sealing, finish and maintenance."],
+["How much does marble flooring installation cost?","Include slab grade, selection, wastage, cutting, laying, polishing, skirting, substrate and labour."],
+["Is vinyl flooring waterproof?","Check the exact product’s water resistance and limits at seams, edges, subfloor and standing-water exposure."],
+["What is the cost of wooden flooring for a 2BHK?","Measure room areas and specify product, underlay, transitions, skirting, preparation and installation."],
+["Which flooring is easiest to clean?","Compare grout lines, surface texture, stain resistance, cleaning instructions and room exposure."],
+["How do I choose flooring for stairs?","Review slip suitability, nosing, edge visibility, fixing, maintenance and consistent step dimensions."],
+["What is the difference between SPC and WPC flooring?","Compare core construction, density, comfort, dimensional stability, acoustic properties and manufacturer specifications."],
+["Can vinyl flooring be used in a kitchen?","Check product approval, water exposure, heat, appliance loads, subfloor and cleaning requirements."],
+["What should be included in a flooring BOQ?","List product code, area, wastage, underlay or adhesive, skirting, trims, preparation, labour and taxes."]
+];
+groups["Interior project timeline & quality inspection"] = [
+["How long does a complete 2BHK interior project take?","Explain that duration depends on scope, design freeze, procurement, site readiness, trade coordination and approvals."],
+["What is the correct sequence of interior work?","Plan demolition, services, waterproofing, ceiling, flooring, painting, cabinetry, fixtures, testing and handover."],
+["When should modular kitchen measurements be taken?","Confirm final wall and service conditions and use verified site dimensions before production drawings."],
+["What should I check before wardrobe installation?","Inspect dimensions, wall condition, floor level, board and finish codes, hardware, anchoring and clearances."],
+["How do I check modular kitchen installation quality?","Inspect cabinet level, alignment, edge finish, shutter gaps, hardware, countertop joints and service access."],
+["What is an interior snag list?","Record room, defect, photograph, responsible party, due date and closure evidence for each item."],
+["When should electrical points be finalised for interiors?","Coordinate furniture and appliance drawings before concealed wiring and wall or ceiling closure."],
+["How do I avoid extra charges during interior work?","Freeze scope, BOQ, materials and drawings; require written approval for every variation."],
+["What documents should an interior designer hand over?","Collect approved drawings, material schedule, warranties, appliance manuals, invoices and as-built service details."],
+["How do I compare two interior contractor quotations?","Use identical dimensions, specifications, hardware, quantities, exclusions, taxes, timelines and payment milestones."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
