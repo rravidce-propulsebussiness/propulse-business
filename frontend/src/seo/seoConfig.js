@@ -18,10 +18,10 @@ export const CORE_PUBLIC_SEO_ROUTES=[
   {
     path:'/blog',
     type:'blog-hub',
-    title:'Construction & Interior Design Blog | ProPulse Journal',
-    description:'Read practical articles on house construction, home interiors, materials, project planning and quality checks from the ProPulse Journal.',
-    heading:'Construction and interior design ideas, explained clearly',
-    summary:'Explore practical articles and planning guidance for construction, home interiors and better project decisions.',
+    title:'Hyderabad Home Construction & Interior Design Blog | ProPulse',
+    description:'Explore Hyderabad homeowner guides on house construction cost, floor plans, materials, building permissions, interiors, modular kitchens, waterproofing, renovation and project planning. Browse 1,000 research-led topic ideas.',
+    heading:'Hyderabad home construction and interior design guides',
+    summary:'Research construction costs, approvals, materials, floor plans, home interiors, repairs and renovation with practical homeowner-focused guidance for Hyderabad.',
   },
   {
     path:'/technology',
