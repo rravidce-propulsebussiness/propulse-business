@@ -141,6 +141,8 @@ async function main() {
     'robots.txt must advertise the production sitemap '+expectedSitemap+
     '; received sitemap lines: '+(robotsBody.split(/\r?\n/).filter(line=>line.startsWith('Sitemap: ')).join(', ')||'none'));
   assert(robotsBody.includes('Disallow: /admin/'), 'robots.txt must keep Admin private');
+  assert(robotsBody.includes('Sitemap: '+base.origin+'/video-sitemap.xml'),
+    'robots.txt must advertise the video sitemap for crawler discovery');
 
   const sitemap = await request('/sitemap.xml');
   assert.equal(sitemap.status, 200, 'sitemap.xml must return 200');
@@ -149,6 +151,59 @@ async function main() {
   assert(sitemapBody.includes('<loc>'+base.origin+'/</loc>'), 'sitemap.xml must include the production homepage');
   assert(sitemapBody.includes('<loc>'+base.origin+'/hyderabad/construction</loc>'), 'sitemap.xml must include the Hyderabad construction landing page');
   assert(!sitemapBody.includes('localhost'), 'Production sitemap must never advertise localhost URLs');
+
+  // Prove video crawlers can discover and fetch an actual video and frame,
+  // without using an authenticated browser session or expiring R2 links.
+  const videoMap=await request('/video-sitemap.xml',{headers:{'cache-control':'no-cache'}});
+  assert.equal(videoMap.status,200,'Video sitemap must return HTTP 200');
+  assert.match(String(videoMap.headers.get('content-type')||''),/xml/i,
+    'Video sitemap must have an XML content type');
+  const videoXml=await videoMap.text();
+  assert(videoXml.includes('xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"'),
+    'Video sitemap must declare the Google video extension');
+  assert(!videoXml.includes('private-object-s3:'),
+    'Never expose original R2 storage references in video sitemap');
+  const videoThumbnail=videoXml.match(/<video:thumbnail_loc>([^<]+)<\/video:thumbnail_loc>/)?.[1];
+  const videoContent=videoXml.match(/<video:content_loc>([^<]+)<\/video:content_loc>/)?.[1];
+  if(videoThumbnail||videoContent){
+    assert(videoThumbnail&&videoContent,'A sitemap video must have both thumbnail and content URL');
+    const thumbnailUrl=new URL(videoThumbnail.replace(/&amp;/g,'&'));
+    const contentUrl=new URL(videoContent.replace(/&amp;/g,'&'));
+    assert.equal(thumbnailUrl.origin,base.origin,'Video thumbnail must use the production public origin');
+    assert.equal(contentUrl.origin,base.origin,'Video media URL must use the production public origin');
+    assert.match(thumbnailUrl.pathname,/^\/project-video-thumbnail\/[a-z0-9-]+$/,
+      'Video thumbnail must be a stable project-specific path');
+    assert.match(contentUrl.pathname,/^\/project-video-stream\/[a-z0-9-]+\.mp4$/,
+      'Video content URL must be a stable processed playback route');
+
+    const thumbnailResponse=await request(thumbnailUrl.pathname,{
+      headers:{accept:'image/jpeg','cache-control':'no-cache'},
+      signal:AbortSignal.timeout(20000)
+    });
+    assert.equal(thumbnailResponse.status,200,'Video thumbnail must return public JPEG bytes');
+    assert.match(String(thumbnailResponse.headers.get('content-type')||''),/image\/jpeg/i);
+    const thumbnailBytes=Buffer.from(await thumbnailResponse.arrayBuffer());
+    assert(thumbnailBytes.length>1024&&thumbnailBytes[0]===255
+      &&thumbnailBytes[1]===216&&thumbnailBytes[2]===255,
+      'Video thumbnail must contain an authentic JPEG frame');
+
+    const streamResponse=await request(contentUrl.pathname,{
+      headers:{accept:'video/mp4','cache-control':'no-cache'}
+    });
+    assert.equal(streamResponse.status,302,
+      'Video content route must redirect to a short-lived signed derivative');
+    const redirect=streamResponse.headers.get('location');
+    assert(redirect,'Video content redirect must provide a media location');
+    const signed=new URL(redirect);
+    assert.equal(signed.protocol,'https:','Video playback redirect must remain HTTPS');
+    assert(signed.pathname.includes('business-project-redacted'),
+      'Video playback must redirect to the processed derivative, not the original upload');
+    assert(!signed.pathname.includes('/business-projects/'),
+      'Video media must not expose the private original project upload');
+  }else{
+    console.log('Video sitemap contains no indexable ready videos; media fetch check skipped.');
+  }
+
 
   // Fetch the initial project HTML, not a JavaScript-rendered browser screenshot.
   // Search engines and AI crawlers need real case-study content on first response.
