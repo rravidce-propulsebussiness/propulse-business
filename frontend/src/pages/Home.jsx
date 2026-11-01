@@ -158,7 +158,7 @@ export default function Home() {
           {hasPublishedProjects && <p className="hc-projects-more"><Link to="/projects">View all published projects →</Link></p>}
         </div>
       </section>
-      <section className="hc-slim-cta"><div className="hc-container hc-slim-cta-inner"><img src={heroImage} alt="" loading="lazy"/><div><h2>Ready to Start Your Project?</h2><p>Start planning your house construction in Hyderabad with a structured project requirement.</p></div><div className="hc-slim-actions"><button type="button" onClick={() => openRequirement('build')}>Get Construction Estimate <Icon name="arrow" size={14}/></button><Link to="/packages">View Packages</Link></div></div></section>
+      <section className="hc-slim-cta"><div className="hc-container hc-slim-cta-inner"><img src={heroImage} alt="" loading="lazy"/><div><h2>Ready to Start Your Project?</h2><p>Start planning your house construction in Hyderabad with a structured project requirement.</p></div><div className="hc-slim-actions"><button type="button" aria-label="Start Your Requirement — Get Construction Estimate" onClick={() => openRequirement('build')}>Get Construction Estimate <Icon name="arrow" size={14}/></button><Link to="/packages">View Packages</Link></div></div></section>
     </main>
     <PublicFooter phone={phone} email={email} />
   </div>
