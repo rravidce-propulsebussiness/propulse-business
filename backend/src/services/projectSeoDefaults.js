@@ -18,12 +18,12 @@ function containsLocation(text,location){
 }
 const MAX_SEO_TITLE_LENGTH=68; // Leave room for the " | ProPulse" brand suffix.
 function projectSeoTitle(project={}){
-  const custom=clean(project.seo_title).replace(/\\s*\\|\\s*ProPulse\\s*$/i,'');
+  const custom=clean(project.seo_title).replace(/\s*\|\s*ProPulse\s*$/i,'');
   // A promotional paragraph accidentally pasted into the title is not a useful
   // search result heading. Fall back to factual project data rather than publishing it.
   if(custom&&custom.length<=MAX_SEO_TITLE_LENGTH)return custom;
   const original=clean(project.title)||clean(project.project_type)||'Completed project';
-  const title=original.split(/\\s+\\|\\s+/)[0];
+  const title=original.split(/\s+\|\s+/)[0];
   const location=clean(project.location_text);
   return shorten(location&&!containsLocation(title,location)?title+' in '+location:title,MAX_SEO_TITLE_LENGTH);
 }
