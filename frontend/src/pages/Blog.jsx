@@ -1,60 +1,24 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { CONSTRUCTION_GUIDES } from '../seo/constructionGuides'
-import { HYDERABAD_HOMEOWNER_TOPIC_GROUPS, HYDERABAD_HOMEOWNER_TOPICS } from '../seo/hyderabadHomeownerTopics'
+import { HYDERABAD_HOMEOWNER_TOPIC_GROUPS } from '../seo/hyderabadHomeownerTopics'
+import { INTERIOR_HOMEOWNER_TOPIC_GROUPS } from '../seo/interiorHomeownerTopics'
 import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 import './Blog.css'
 
-const FEATURED = CONSTRUCTION_GUIDES.slice(0, 3)
+const CONSTRUCTION_GROUPS=HYDERABAD_HOMEOWNER_TOPIC_GROUPS.filter(group=>group.category!=='Interior design & renovation searches')
+const featured=CONSTRUCTION_GUIDES.slice(0,3)
 
-export default function Blog() {
-  const [topicQuery, setTopicQuery] = useState('')
-  const [topicCategory, setTopicCategory] = useState('All topics')
-  const filteredTopics = useMemo(() => HYDERABAD_HOMEOWNER_TOPICS.filter(topic => (topicCategory === 'All topics' || topic.category === topicCategory) && (!topicQuery.trim() || (topic.title + ' ' + topic.subject + ' ' + topic.intent + ' ' + topic.description).toLowerCase().includes(topicQuery.trim().toLowerCase()))), [topicQuery, topicCategory])
-  const categories = [...new Set(CONSTRUCTION_GUIDES.map(item => item.category))]
-  return <main className="propulse-blog">
-    <PublicHeader />
-    <section className="blog-hero">
-      <div className="blog-shell">
-        <div className="blog-breadcrumb"><Link to="/">Home</Link><span> / </span><b>Blog</b></div>
-        <span className="blog-kicker">THE PROPULSE JOURNAL</span>
-        <h1>Ideas and practical guidance for building better spaces.</h1>
-        <p>Explore useful construction, home-interior and project-planning articles. Make informed decisions before you select materials, compare quotations or begin work.</p>
-        <div className="blog-hero-actions"><Link to="/guides">Explore all guides <span>↗</span></Link><Link to="/quote#construction">Plan your project <span>→</span></Link></div>
-        <div className="blog-hero-art" aria-hidden="true"><div className="blog-art-window"/><div className="blog-art-wall"/><div className="blog-art-sofa"/><div className="blog-art-table"/><div className="blog-art-plant"/></div>
-      </div>
-    </section>
-    <section className="blog-shell blog-featured">
-      <div className="blog-section-heading"><div><span>START READING</span><h2>Featured articles</h2></div><Link to="/guides">View all guides <span>→</span></Link></div>
-      <div className="blog-featured-grid">{FEATURED.map((item,index)=><Link className={'blog-featured-card blog-featured-card-'+index} to={'/guides/'+item.slug} key={item.slug}><span className="blog-card-category">{item.category}</span><span className="blog-card-number">0{index+1}</span><div><h3>{item.heading}</h3><p>{item.summary}</p><b>Read article <span>↗</span></b></div></Link>)}</div>
-    </section>
-    <section className="blog-library">
-      <div className="blog-shell">
-        <div className="blog-section-heading"><div><span>THE KNOWLEDGE LIBRARY</span><h2>Browse by topic</h2></div><p>Clear, practical information for every stage of your project.</p></div>
-        {categories.map(category=><section className="blog-category" key={category}><div className="blog-category-title"><h3>{category}</h3><span>{CONSTRUCTION_GUIDES.filter(item=>item.category===category).length} articles</span></div><div className="blog-article-grid">{CONSTRUCTION_GUIDES.filter(item=>item.category===category).map(item=><Link className="blog-article-card" to={'/guides/'+item.slug} key={item.slug}><span>{item.category}</span><h4>{item.heading}</h4><p>{item.summary}</p><b>Read article <span>→</span></b></Link>)}</div></section>)}
-      </div>
-    </section>
-    <section className="blog-topic-directory" id="hyderabad-homeowner-topics">
-      <div className="blog-shell">
-        <div className="blog-section-heading"><div><span>HYDERABAD HOMEOWNER SEARCH LIBRARY</span><h2>Real questions homeowners search before building</h2></div><p>Question-led guides researched from Google search patterns, with practical explanations for homeowners in Hyderabad and across India.</p></div>
-        <div className="blog-topic-intro"><b>Research note</b><p>These are distinct homeowner-style search questions informed by Google Trends research guidance, public search-result patterns and common construction decisions. Google Trends shows relative interest, not exact monthly counts. Exact volume rankings require Keyword Planner data. Each question includes an explanation of what the article should answer.</p></div>
-        <div className="blog-topic-controls">
-          <label className="blog-topic-search"><span>⌕</span><input type="search" value={topicQuery} onChange={event => setTopicQuery(event.target.value)} placeholder="Search topics: 2BHK cost, waterproofing, BuildNow..." aria-label="Search Hyderabad homeowner topics" /></label>
-          <select value={topicCategory} onChange={event => setTopicCategory(event.target.value)} aria-label="Filter topics by category"><option>All topics</option>{HYDERABAD_HOMEOWNER_TOPIC_GROUPS.map(group=><option key={group.category}>{group.category}</option>)}</select>
-        </div>
-        <p className="blog-topic-count">Showing <b>{filteredTopics.length.toLocaleString('en-IN')}</b> of <b>{HYDERABAD_HOMEOWNER_TOPICS.length.toLocaleString('en-IN')}</b> topic ideas</p>
-        {HYDERABAD_HOMEOWNER_TOPIC_GROUPS.filter(group => topicCategory === 'All topics' || group.category === topicCategory).map(group => {
-          const topics = filteredTopics.filter(topic => topic.category === group.category)
-          if (!topics.length) return null
-          return <details className="blog-topic-group" key={group.category} open={Boolean(topicQuery) || topicCategory !== 'All topics'}>
-            <summary><span>{group.category}</span><b>{topics.length} topics</b><i>+</i></summary>
-            <ol>{topics.map(topic=><li key={topic.id}><span>{topic.title}</span><small>{topic.description}</small></li>)}</ol>
-          </details>
-        })}
-        <p className="blog-topic-footnote">Search topics are research-informed, not a verified Google search-volume ranking. Technical, safety, legal and approval guidance must be reviewed against current standards and official sources before publication.</p>
-      </div>
-    </section>
-    <section className="blog-cta"><div className="blog-shell"><span>READY TO TAKE THE NEXT STEP?</span><h2>Turn what you’ve learned into a clear project brief.</h2><p>Share your location, scope, preferences and timeline with ProPulse to start planning your construction or interior project.</p><Link to="/quote">Start a project requirement <span>→</span></Link></div></section>
-    <PublicFooter />
-  </main>
+function BlogHub(){return <main className="propulse-blog"><PublicHeader/><section className="blog-hero"><div className="blog-shell"><div className="blog-breadcrumb"><Link to="/">Home</Link><span> / </span><b>Blog</b></div><span className="blog-kicker">THE PROPULSE JOURNAL</span><h1>Practical answers for every home project.</h1><p>Choose the topic that matches your project. Explore construction guidance or interior design ideas, costs, materials and Vastu-related planning questions.</p><div className="blog-choice-grid"><Link to="/construction-blog" className="blog-choice-card"><span>01 / BUILD</span><h2>Construction Blog</h2><p>Construction costs, steel, cement, concrete defects, floor plans, permissions, waterproofing and contractor selection.</p><b>Explore construction articles <i>→</i></b></Link><Link to="/interior-blog" className="blog-choice-card blog-choice-interior"><span>02 / DESIGN</span><h2>Interior Blog</h2><p>2BHK interior budgets, TV unit prices, laminates, kitchens, wardrobes, false ceilings, lighting and Vastu questions.</p><b>Explore interior articles <i>→</i></b></Link></div></div></section><section className="blog-shell blog-featured"><div className="blog-section-heading"><div><span>START READING</span><h2>Featured construction guides</h2></div><Link to="/construction-blog">View construction blog →</Link></div><div className="blog-featured-grid">{featured.map((item,index)=><Link className={'blog-featured-card blog-featured-card-'+index} to={'/guides/'+item.slug} key={item.slug}><span className="blog-card-category">{item.category}</span><span className="blog-card-number">0{index+1}</span><div><h3>{item.heading}</h3><p>{item.summary}</p><b>Read article ↗</b></div></Link>)}</div></section><PublicFooter/></main>}
+
+export default function Blog(){
+ const location=useLocation(),isInterior=location.pathname.startsWith('/interior-blog')
+ const groups=isInterior?INTERIOR_HOMEOWNER_TOPIC_GROUPS:CONSTRUCTION_GROUPS
+ const topics=useMemo(()=>groups.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category}))),[groups])
+ const [query,setQuery]=useState(''),[category,setCategory]=useState('All topics')
+ const filtered=topics.filter(topic=>(category==='All topics'||topic.category===category)&&(!query.trim()||(topic.title+' '+topic.description).toLowerCase().includes(query.trim().toLowerCase())))
+ if(!location.pathname.startsWith('/interior-blog')&&!location.pathname.startsWith('/construction-blog'))return <BlogHub/>
+ const heading=isInterior?'Interior design ideas, costs and material guides':'House construction guides, costs and practical answers'
+ const intro=isInterior?'Find practical answers about 2BHK interiors, TV unit prices, laminates, kitchens, wardrobes, lighting, execution and Vastu preferences.':'Understand house construction costs, materials, structural defects, floor plans, permissions, waterproofing and contractor selection.'
+ return <main className="propulse-blog"><PublicHeader/><section className="blog-hero"><div className="blog-shell"><div className="blog-breadcrumb"><Link to="/">Home</Link><span> / </span><Link to="/blog">Blog</Link><span> / </span><b>{isInterior?'Interior':'Construction'}</b></div><span className="blog-kicker">{isInterior?'INTERIOR DESIGN JOURNAL':'HOME CONSTRUCTION JOURNAL'}</span><h1>{heading}</h1><p>{intro}</p><div className="blog-hero-actions"><Link to={isInterior?'/construction-blog':'/interior-blog'}>{isInterior?'Explore construction blog':'Explore interior blog'} →</Link><Link to="/quote">Plan your project ↗</Link></div></div></section><section className="blog-shell blog-topic-directory"><div className="blog-section-heading"><div><span>{isInterior?'INTERIOR':'CONSTRUCTION'} HOMEOWNER SEARCH LIBRARY</span><h2>Questions homeowners ask before they decide</h2></div><p>{isInterior?'Costs, material comparisons, room-wise planning and traditional Vastu preferences.':'Cost estimates, construction quality, materials, approvals and contractor decisions.'}</p></div><div className="blog-topic-intro"><b>How to use these guides</b><p>Each question has an editorial brief describing what a useful answer should cover. Cost articles will show dated indicative ranges, itemised scope and exclusions. Vastu content describes traditional beliefs as preferences, not building-code or scientific requirements. Google Trends provides relative interest; exact monthly search-volume rankings are not claimed.</p></div><div className="blog-topic-controls"><label className="blog-topic-search"><span>⌕</span><input type="search" value={query} onChange={event=>setQuery(event.target.value)} placeholder={isInterior?'Search: TV unit cost, 2BHK, laminate, Vastu...':'Search: construction cost, steel, concrete, approval...'} aria-label="Search homeowner topics"/></label><select value={category} onChange={event=>setCategory(event.target.value)} aria-label="Filter topics by category"><option>All topics</option>{groups.map(group=><option key={group.category}>{group.category}</option>)}</select></div><p className="blog-topic-count">Showing <b>{filtered.length}</b> of <b>{topics.length}</b> questions</p>{groups.filter(group=>category==='All topics'||group.category===category).map(group=>{const items=filtered.filter(topic=>topic.category===group.category);if(!items.length)return null;return <details className="blog-topic-group" key={group.category} open={Boolean(query)||category!=='All topics'}><summary><span>{group.category}</span><b>{items.length} questions</b><i>+</i></summary><ol>{items.map(topic=><li key={topic.id}><span>{topic.title}</span><small>{topic.description}</small></li>)}</ol></details>})}<p className="blog-topic-footnote">Search-language research and editorial planning topics, not a verified monthly-volume ranking. Technical, structural, legal and approval guidance must be checked against current standards and official sources before publication.</p></section><section className="blog-cta"><div className="blog-shell"><span>READY TO PLAN YOUR PROJECT?</span><h2>{isInterior?'Bring your interior ideas into a clear scope.':'Turn construction research into a clear project brief.'}</h2><p>Share your location, scope, preferences and timeline with ProPulse.</p><Link to="/quote">{isInterior?'Start an interior requirement':'Start a construction requirement'} →</Link></div></section><PublicFooter/></main>
 }
