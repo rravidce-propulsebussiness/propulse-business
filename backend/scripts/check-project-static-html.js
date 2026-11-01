@@ -10,8 +10,9 @@ const template=String.raw`<!doctype html><html lang="en-IN"><head><title>Homepag
 <meta property="og:url" content="/">
 <meta name="twitter:title" content="Homepage title">
 <link rel="canonical" href="https://propulsetechnologies.online/">
+<script type="module" crossorigin src="/assets/main123.js"></script>
 <script type="application/ld+json" data-propulse-seo="jsonld">{"@type":"WebPage","name":"Homepage"}</script>
-</head><body><div id="propulse-boot-screen"></div><div id="root"><main><h1>Generic homepage fallback</h1></main></div><script type="module" crossorigin src="/assets/main123.js"></script></body></html>`;
+</head><body><div id="propulse-boot-screen"></div><div id="root"><main><h1>Generic homepage fallback</h1></main></div></body></html>`;
 const sample={
   project_id:3,
   seo_slug:'modern-3bhk-interior-design-in-uppal-hyderabad-luxury-home-interiors',
@@ -48,6 +49,13 @@ assert(structured['@graph'].some(item=>item['@type']==='BreadcrumbList'));
 assert(structured['@graph'].some(item=>item['@type']==='CreativeWork'&&item.contentLocation?.name==='Uppal, Hyderabad'));
 assert(!html.includes('private-object-s3:'),'Private media must not be present in the crawler HTML');
 assert(!html.includes('Generic homepage fallback'),'SSR must replace the homepage fallback');
+const sourceTemplate=template.replace('<script type="module" crossorigin src="/assets/main123.js"></script>','')
+  .replace('</div></body></html>','</div><script type="module" crossorigin src="/assets/main123.js"></script></body></html>');
+const sourceRendered=renderProjectHtml(sourceTemplate,sample).html;
+assert(sourceRendered.includes('data-seo-project-fallback="true"'),
+  'Development index with its module script after root must also render');
+assert(sourceRendered.includes('src="/assets/main123.js"'));
+
 
 const withUnsafe={
   ...sample,
