@@ -753,5 +753,36 @@ groups["Vastu-aware interior and floor plan coordination"] = [
 ["What should I check before changing a room layout for Vastu?","Recheck structure, approvals, ventilation, plumbing, electrical routes and the actual usable area."]
 ];
 
+
+groups["Kitchen countertop materials and fabrication"] = [
+["Is granite or quartz better for an Indian kitchen?","Compare actual slab quality, heat exposure, staining, maintenance, appearance and the manufacturer's care instructions."],
+["Which granite colour is easy to maintain in a kitchen?","Inspect actual slabs for pattern, finish, visible marks, cleaning needs and compatibility with cabinet colours."],
+["Is quartz safe for placing hot vessels?","Check the specific manufacturer's heat limits and use trivets because thermal shock can damage engineered surfaces."],
+["What is the difference between quartz and solid-surface countertops?","Compare composition, seams, repairability, heat limits, appearance and integrated sink options."],
+["How do I choose a kitchen countertop thickness?","Coordinate slab thickness, cabinet support, edge build-up, cut-outs and fabricator recommendations."],
+["Which countertop edge profile is best for a modular kitchen?","Compare square, eased, bevelled and rounded edges for appearance, cleaning, durability and fabrication."],
+["Should a kitchen sink be under-mount or top-mount?","Review countertop material, support, sealing, cleaning, cabinet access and replacement requirements."],
+["How do I plan a hob cut-out in a granite countertop?","Confirm the exact appliance template, corner radii, support, clearances and fabrication sequence before cutting."],
+["Can I use the same countertop material for kitchen and utility?","Compare usage, exposure, sink type, cleaning, budget and whether the product is suitable for each location."],
+["How do I match a kitchen countertop with laminate shutters?","Review full-size physical samples in daylight and task lighting with backsplash, flooring and hardware."],
+["What is included in a quartz countertop quotation?","Check slab grade, thickness, template, cut-outs, edge work, backsplash, transport, installation and warranty."],
+["How do I avoid visible joints in a kitchen countertop?","Plan slab dimensions, layout, seam position, pattern direction and installer skill before fabrication."],
+["What backsplash height is practical for a modular kitchen?","Coordinate hob use, chimney, wall cabinets, cleaning, outlets and the selected wall finish."],
+["Can a countertop be replaced without changing modular kitchen cabinets?","Check cabinet condition, dimensions, sink and hob compatibility, wall junctions and installation access."],
+["How do I maintain granite kitchen countertops?","Follow the stone supplier's cleaning and sealing advice and avoid incompatible acidic or abrasive cleaners."]
+];
+groups["Interior windows, doors and project quotation"] = [
+["Which window frame is better for a modern home, UPVC or aluminium?","Compare complete system specifications, glazing, hardware, sealing, thermal needs, opening size and installation."],
+["Are aluminium sliding windows suitable for bedrooms?","Review ventilation opening, acoustic needs, track cleaning, locking, mosquito mesh and weather sealing."],
+["What should I check before ordering interior doors?","Confirm opening size, frame, shutter core, finish, hardware, swing direction, floor clearance and installation scope."],
+["How do I choose a laminate finish for interior doors?","Compare texture, abrasion resistance, cleaning, edge treatment, shade consistency and sample availability."],
+["What is the difference between flush doors and moulded doors?","Compare construction, surface finish, moisture suitability, hardware fixing and intended use."],
+["How do I compare interior design quotations?","Normalize drawings, BOQ quantities, board specifications, laminate codes, hardware brands, installation and exclusions."],
+["What hidden costs can occur in a modular kitchen project?","Clarify civil modifications, electrical shifts, plumbing, appliance fittings, accessories, transport and finishing work."],
+["How do I check a modular kitchen before handover?","Inspect shutter alignment, drawer operation, hardware, edge banding, silicone, sink plumbing and appliance clearances."],
+["What should an interior contractor include in the final bill?","Match completed quantities, approved variations, supplied materials, invoices, snag closure and agreed payment terms."],
+["How do I protect furniture during interior installation?","Agree floor and wall protection, dust control, safe storage, waste removal and damage responsibility before work."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
