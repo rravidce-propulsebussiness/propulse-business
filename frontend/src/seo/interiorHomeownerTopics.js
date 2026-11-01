@@ -509,5 +509,43 @@ groups["Bedroom false ceilings & lighting design"] = [
 ["What should be included in a bedroom lighting quotation?","List fixture model, wattage, colour temperature, quantity, driver, wiring, controls, installation and warranty."]
 ];
 
+
+groups["Kitchen cabinet carcass materials & edge banding"] = [
+["Which board is best for a modular kitchen carcass?","Compare plywood, HDHMR and other boards by grade, moisture exposure, screw holding and documented suitability."],
+["Is BWP plywood completely waterproof?","Understand product grading and exposure limits; no wood-based panel should be treated as immune to prolonged water damage."],
+["What is the difference between HDHMR and plywood for kitchen cabinets?","Compare density, edge machining, fixing, moisture behaviour, weight and manufacturer specifications."],
+["What thickness is used for modular kitchen cabinets?","Confirm panel thickness by component, span, hardware and approved design rather than assuming one thickness fits all."],
+["What is edge banding and why is it important?","Learn how edge material, adhesive and application protect exposed board edges and improve finish."],
+["Which edge band thickness is suitable for kitchen shutters?","Choose by board, shutter design, impact exposure and the edge-band manufacturer's recommendations."],
+["How can I check the quality of kitchen cabinet edge banding?","Inspect adhesion, trimming, corners, joints, bubbles and exposed substrate on samples and completed units."],
+["Should kitchen cabinet backs use the same board as carcass panels?","Specify backs separately according to cabinet span, fixing, service access and expected loading."],
+["How do I protect the cabinet below the kitchen sink?","Use suitable materials, sealed cut edges, accessible plumbing and prompt leak repair; avoid claiming any panel is leak-proof."],
+["What details should be mentioned in a modular kitchen material quotation?","Record substrate, grade, thickness, finish, edge band, hardware, back panel, accessories and warranty."]
+];
+groups["Wardrobe hinges, channels & hardware selection"] = [
+["Which hinge is best for a wardrobe shutter?","Select overlay or inset geometry, opening angle, door size, weight and compatible mounting plate."],
+["What is the difference between soft-close and normal hinges?","Compare closing mechanism, adjustment, compatibility, durability claims and serviceability."],
+["How many hinges are needed for a wardrobe door?","Follow the exact hardware manufacturer's guidance based on shutter dimensions, weight and installation conditions."],
+["Which is better, telescopic or tandem drawer channels?","Compare extension, movement, adjustment, load rating, installation and replacement support."],
+["What does a drawer channel load rating mean?","Check the test conditions, drawer dimensions, mounting and dynamic or static rating defined by the manufacturer."],
+["Are concealed drawer channels worth the extra cost?","Compare appearance, adjustment, usable drawer width, installation precision and service availability."],
+["Which hardware is required for a sliding wardrobe?","Check tracks, rollers, anti-jump devices, guides, soft-close compatibility and door weight limits."],
+["What is a wardrobe lift and where is it useful?","Assess reach, garment load, cabinet width, mechanism clearance and safe operation."],
+["How do I inspect wardrobe hardware before handover?","Test alignment, smooth travel, fixing, soft-close action, clearances and adjustment access."],
+["What hardware details should be included in an interior BOQ?","List manufacturer, model, quantity, finish, rated application, accessories, warranty and replacement terms."]
+];
+groups["Interior material comparison & room-wise budgets"] = [
+["How should I divide a 2BHK interior budget room by room?","Create a measured scope for kitchen, wardrobes, bedrooms, living, ceiling, lighting, paint and loose furniture."],
+["What is the difference between material cost and installed interior cost?","Include substrate, finish, hardware, labour, wastage, transport, installation and finishing."],
+["Which is more affordable, laminate or acrylic for wardrobes?","Compare exact product ranges, substrate, edge treatment, finish, cleaning and replacement cost."],
+["Is veneer more expensive than laminate?","Compare product grade, grain selection, polishing, substrate, labour and maintenance requirements."],
+["What should a modular kitchen quotation include?","Check cabinet modules, substrate, finishes, hardware, countertop, sink, accessories, appliances and installation exclusions."],
+["How much should I allocate for wardrobe accessories?","Prioritize pull-outs and organizers based on actual use, cabinet dimensions, hardware models and load limits."],
+["How do I compare two interior design quotations?","Normalize drawings, quantities, material specifications, hardware, brands, exclusions, taxes and payment milestones."],
+["What are common hidden costs in home interiors?","Check electrical relocation, plumbing changes, civil work, ceiling, appliance connections, transport and post-installation repairs."],
+["Should I choose premium materials for every room?","Prioritize high-use and moisture-exposed areas, then balance appearance, maintenance and available budget."],
+["How do I control interior project variations?","Approve drawings, samples, BOQ and written change orders before production or site execution."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
