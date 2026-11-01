@@ -155,6 +155,7 @@ router.get('/robots.txt',(req,res)=>{
     'Disallow: /estimate/',
     '',
     'Sitemap: '+origin+'/sitemap.xml',
+    'Sitemap: '+origin+'/video-sitemap.xml',
     ''
   ].join('\n'));
 });
@@ -181,6 +182,50 @@ router.get('/sitemap.xml',async(req,res)=>{
   res.type('application/xml');
   if(!res.getHeader('Cache-Control'))res.setHeader('Cache-Control','public, max-age=3600');
   res.send(body);
+});
+
+// Google's video sitemap points only to publicly eligible video watch pages,
+// their authentic video-derived JPEG frames and stable processed playback URLs.
+// No original R2 object references or user contact data are listed.
+router.get('/video-sitemap.xml',async(req,res)=>{
+  const origin=safeOrigin(req);
+  let videos;
+  try{
+    videos=await publicExpertService.listIndexableVideoEntries();
+  }catch(error){
+    console.error('Video sitemap lookup failed:',error?.message||error);
+    res.setHeader('Cache-Control','no-store');
+    res.setHeader('Retry-After','30');
+    return res.status(503).type('text/plain').send('Video sitemap temporarily unavailable');
+  }
+  const body=[
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">',
+    ...videos.map(entry=>{
+      const video=entry.video;
+      const duration=Number(video.duration?.match(/^PT(\\d+)S$/)?.[1]);
+      return [
+        '  <url>',
+        '    <loc>'+xmlEscape(origin+entry.path)+'</loc>',
+        ...(entry.lastmod?['    <lastmod>'+xmlEscape(entry.lastmod)+'</lastmod>']:[]),
+        '    <video:video>',
+        '      <video:thumbnail_loc>'+xmlEscape(video.thumbnailUrl)+'</video:thumbnail_loc>',
+        '      <video:title>'+xmlEscape(video.name)+'</video:title>',
+        '      <video:description>'+xmlEscape(video.description)+'</video:description>',
+        '      <video:content_loc>'+xmlEscape(video.contentUrl)+'</video:content_loc>',
+        '      <video:publication_date>'+xmlEscape(video.uploadDate)+'</video:publication_date>',
+        ...(Number.isInteger(duration)&&duration>0&&duration<=28800
+          ?['      <video:duration>'+duration+'</video:duration>']:[]),
+        '    </video:video>',
+        '  </url>',
+      ].join('\\n');
+    }),
+    '</urlset>',
+    '',
+  ].join('\\n');
+  res.type('application/xml');
+  res.setHeader('Cache-Control','public, max-age=900');
+  return res.send(body);
 });
 
 // Stable publicly eligible cover URLs replace short-lived R2 presigned URLs
