@@ -271,6 +271,29 @@ groups["Planning, room sizes & building services"] = [
     ["How do I compare door and window quotations?","Use identical opening sizes, profile or core specifications, glass, hardware, finish, installation, sealing and warranty."],
     ["What should be checked during door and window handover?","Inspect operation, alignment, locks, seals, drainage, glass markings, finish, warranties and maintenance instructions."]
   ]
+,
+  "Staircase design, balcony utility & construction project management": [
+    ["Which material is best for house staircase steps?","Compare stone, tile and timber by slip performance, wear, maintenance, edge detailing and intended use."],
+    ["How much does a staircase railing cost?","Break down material, design, length, posts, handrail, glass or infill, structural fixing, finish and installation."],
+    ["Which is better for staircase railing, glass or metal?","Compare safety design, fixing, maintenance, visibility, durability and applicable guarding requirements."],
+    ["What is the best lighting for a staircase?","Plan glare-controlled step or wall lighting, switching, wiring routes and safe maintenance access."],
+    ["How do I choose granite or tile for staircase flooring?","Review finish, slip suitability, nosing, edge protection, consistency and cleaning."],
+    ["What staircase dimensions should be checked before construction?","Ask the architect to verify rise, going, width, headroom, landings and local requirements before work."],
+    ["How do I plan a balcony utility area in an apartment?","Coordinate appliances, storage, drainage, waterproofing, ventilation, building rules and service access."],
+    ["What is the cost of a utility area cabinet?","Include dimensions, moisture exposure, board and finish, ventilation, hardware, plumbing clearance and installation."],
+    ["Can I enclose my apartment balcony for utility use?","Check association and local permissions, façade rules, ventilation, drainage and structural implications before changes."],
+    ["How do I prevent water leakage from a balcony?","Inspect slope, drain, threshold, wall junctions and waterproofing system; diagnose the source before repair."],
+    ["Where should a washing machine be placed in a utility area?","Check appliance manual, water and drain connections, power, ventilation, vibration, access and door swing."],
+    ["How much does balcony waterproofing cost in Hyderabad?","Define measured area, substrate repairs, outlets, membrane system, protection, labour and specified testing."],
+    ["What are the stages of house construction from start to finish?","Explain design, approvals, foundation, structure, masonry, services, waterproofing, finishes, testing and handover."],
+    ["When should a contractor receive construction stage payments?","Tie written milestones to measured completed work, inspection evidence, agreed retention and contract terms."],
+    ["What should be checked before paying a construction contractor?","Verify scope, quantities, quality hold points, progress photographs, invoices, approvals and agreed milestone conditions."],
+    ["How do I supervise house construction at site?","Use approved drawings, a dated site diary, inspection records, material documentation and qualified technical supervision."],
+    ["What is a construction site daily progress report?","Record date, manpower, completed work, deliveries, inspections, delays, instructions, safety and photographs."],
+    ["How do I handle extra work in a construction project?","Require written scope, price, time impact and approval before proceeding; maintain a variation register."],
+    ["What documents should be collected at house handover?","Collect as-built drawings, test records, warranties, product manuals, invoices, approvals, keys and snag closure."],
+    ["How much contingency should I keep for house construction?","Build a project-specific allowance based on design maturity, site conditions, exclusions and uncertainty with the cost professional."]
+  ]
 };
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
