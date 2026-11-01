@@ -97,6 +97,11 @@ async function main() {
     '/profile',
     '/forgot-password',
     '/hyderabad/construction',
+    '/hyderabad/interior-designers',
+    '/hyderabad/interior-designers/uppal',
+    '/telangana/interior-designers',
+    '/telangana/interior-designers/rangareddy',
+    '/andhra-pradesh/interior-designers/visakhapatnam',
   ];
   let homepageHtml = '';
   for (const path of publicPages) {
