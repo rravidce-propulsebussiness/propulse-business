@@ -262,7 +262,7 @@ function blogHubContent(route){
     const groups=interior?INTERIOR_HOMEOWNER_TOPIC_GROUPS:HYDERABAD_HOMEOWNER_TOPIC_GROUPS.filter(group=>group.category!=='Interior design & renovation searches')
     const topics=groups.map(group=>{
       const items=group.topics.map(topic=>{
-        const published=!interior?PUBLISHED_HOMEOWNER_ANSWERS[topic.title]:null
+        const published=PUBLISHED_HOMEOWNER_ANSWERS[topic.title]
         const answer=published
           ? '<div class="blog-topic-answer"><strong>Published answer</strong><p>'+escapeHtml(published.answer)+'</p>'+(published.sources.length?'<div class="blog-topic-sources"><strong>Official references</strong>'+published.sources.map(source=>'<a href="'+escapeHtml(source.url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(source.label)+' ↗</a>').join('')+'</div>':'')+'</div>'
           : '<p class="blog-topic-unpublished">Full answer in preparation. This is a planned topic, not a published answer.</p>'
