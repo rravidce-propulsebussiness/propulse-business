@@ -513,6 +513,29 @@ groups["Planning, room sizes & building services"] = [
     ["How do I budget terrace waterproofing for a new house?","Measure the terrace and parapets and specify preparation, junction treatment, outlets, membrane, protection and testing."],
     ["What should I inspect after terrace waterproofing?","Check specified test records, outlets, corners, penetrations, protection layer, ponding and warranty documentation."]
   ]
+,
+  "Interior material procurement and site verification": [
+    ["How do I verify plywood quality before buying for a Hyderabad home?","Check the exact grade, manufacturer declaration, batch marking, product documentation, supplier invoice and intended-use suitability."],
+    ["How do I identify BWP plywood for kitchen cabinets?","Verify the exact product code and current manufacturer documentation; do not rely on colour or a seller's verbal claim."],
+    ["What should I check before plywood sheets are cut for modular interiors?","Photograph markings and batch details, confirm thickness and inspect representative edges before fabrication."],
+    ["How do I check whether a contractor supplied the approved laminate brand?","Match the product code, shade, finish, thickness and invoice with the approved sample and purchase schedule."],
+    ["How do I compare 0.8 mm and 1 mm laminates for furniture?","Compare intended application, substrate, finish, impact exposure, manufacturer specification and complete installed cost."],
+    ["What is the cost of PVC edge banding for modular furniture?","Cost depends on thickness, width, finish, quantity, adhesive process and machine application; request a specified item rate."],
+    ["How do I check edge banding quality in a modular kitchen?","Inspect corners, seams, glue lines, trimming, adhesion and exposed edges before accepting the cabinets."],
+    ["Which hinge brand is best for a modular kitchen in Hyderabad?","Compare exact product series, application charts, cycle and corrosion specifications, warranty and authorized service."],
+    ["How do I verify original soft-close hinges?","Check model codes, traceable invoice and the brand's official verification and warranty process."],
+    ["What is the price difference between soft-close and normal hinges?","Compare the same hinge geometry, model quality, quantity, mounting plates, warranty and installation scope."],
+    ["How do I choose drawer channels for heavy kitchen storage?","Use the manufacturer's load rating, drawer dimensions, extension, cabinet clearances and complete runner-system requirements."],
+    ["What should I inspect in a modular kitchen basket?","Check material, welds, coating, runner movement, load rating, cabinet fit and availability of replacement parts."],
+    ["How do I prevent contractors from replacing approved hardware with cheaper products?","Put exact models in the BOQ, inspect packaging and invoices, and approve substitutions in writing before installation."],
+    ["What should be mentioned in a modular kitchen material schedule?","List board grade, thickness, laminate code, edge band, hardware model, accessories, quantities and warranty details."],
+    ["How do I compare interior material quotations in Hyderabad?","Normalize product codes, specifications, quantities, brands, installation methods, taxes and exclusions."],
+    ["Should I inspect materials before the interior contractor starts fabrication?","Yes, verify approved samples, product markings, dimensions, condition and purchase documentation before cutting or assembly."],
+    ["How should plywood be stored at a house construction site?","Store sheets flat on level supports in a dry, protected area and prevent moisture, bending and edge damage."],
+    ["How do I check cabinet carcass quality before installation?","Inspect squareness, joints, back panels, edge sealing, fixing points, shelf support and dimensions."],
+    ["What documents should I receive for modular kitchen hardware?","Collect invoices, model codes, datasheets, warranty details, installation records and service information."],
+    ["How do I prepare an interior material approval checklist?","Record physical samples, exact codes, finish, dimensions, supplier, approved alternatives and homeowner sign-off."]
+  ]
 };
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
