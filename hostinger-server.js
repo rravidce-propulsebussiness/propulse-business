@@ -67,7 +67,8 @@ function startBackend(){
 startBackend();
 
 function backendRoute(requestPath){
-  return requestPath==='/robots.txt'
+  return requestPath.startsWith('/project-cover/')
+    ||requestPath==='/robots.txt'
     ||requestPath==='/sitemap.xml'
     ||requestPath==='/release.json'
     ||requestPath==='/health'
