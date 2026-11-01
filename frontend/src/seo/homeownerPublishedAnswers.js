@@ -268,5 +268,325 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   "How should I approve extra work and cost variations during construction?": {
     answer: "Use a written variation order before the extra work begins. It should describe the changed scope, drawing or location, quantities and measurement method, material and labour rates, taxes, total price impact, schedule impact and any effect on warranty or other work. Ask the contractor to attach supporting quotations or rate analysis and obtain approval from the person authorised under the contract. Update the BOQ, payment schedule and site records, and keep dated photos. Avoid verbal instructions and retrospective bills; unresolved variations are a common source of budget and completion disputes.",
     sources: [{"label":"BuildNow – official approval and document checklist","url":"https://buildnow.telangana.gov.in/checklist/"}]
+  },
+
+  "What is the house construction cost per square foot in Hyderabad?": {
+    answer: "There is no dependable single per-square-foot rate for every Hyderabad house. A meaningful estimate needs the plot and site conditions, total built-up area, number of floors, structural system, finish level, service scope, access and the contractor’s inclusions. Ask for a BOQ that separates structure, masonry, plaster, waterproofing, electrical, plumbing, doors/windows, flooring, painting, approvals, taxes and external works. Confirm whether the rate is based on built-up or carpet area and whether GST, borewell, compound wall, lift, modular kitchen and interiors are excluded. Compare like-for-like written specifications, not headline rates.",
+    sources: [{"label":"BuildNow – official approvals and project documentation","url":"https://buildnow.telangana.gov.in/"},{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How much does it cost to build a 2BHK house in Hyderabad?": {
+    answer: "A 2BHK label alone is not enough to price a house. First establish the sanctioned buildable area, room sizes, floor count, parking and stair arrangement. Then specify the structural grade, wall system, electrical and plumbing points, windows, doors, tiles, sanitaryware, kitchen scope, painting and external works. Obtain an itemised BOQ with quantities, unit rates, exclusions, taxes and payment stages. Ask contractors to price the same drawings and material schedule. Treat online totals as early budgeting guides only; a measured site visit and design are needed for a project estimate.",
+    sources: [{"label":"BuildNow – Telangana building approval portal","url":"https://buildnow.telangana.gov.in/"}]
+  },
+
+  "How much does it cost to build a 3BHK house in Hyderabad?": {
+    answer: "The cost of a 3BHK depends mainly on total permitted built-up area and specification, not simply the number of bedrooms. A larger living/dining area, additional bathrooms, balconies, staircase, parking, premium windows, electrical loads and kitchen/wardrobe scope can materially change the total. Ask for a room-wise scope and detailed BOQ, identify provisional allowances and exclusions, and compare the same drawings across contractors. Keep a separately identified contingency for unknown site conditions and owner-selected upgrades; do not treat a generic online figure as a quotation.",
+    sources: [{"label":"BuildNow – Telangana building approval portal","url":"https://buildnow.telangana.gov.in/"}]
+  },
+
+  "How much does it cost to build a 100 square yard house?": {
+    answer: "A 100-square-yard plot is 900 square feet of land, not necessarily the permitted built-up area. The actual house size depends on jurisdiction, road width, setbacks, parking, height, land use and sanctioned floor configuration. Confirm the legal buildable envelope first, then calculate total floor area and prepare a BOQ for structure, masonry, services and finishes. Include approval costs and site-specific items such as excavation, retaining work, drainage or utility connections where applicable. Never estimate from plot area alone.",
+    sources: [{"label":"BuildNow – official approval portal","url":"https://buildnow.telangana.gov.in/"},{"label":"BuildNow – current rules and orders","url":"https://buildnow.telangana.gov.in/go-and-act/"}]
+  },
+
+  "What is the construction cost for a 30x40 house in Hyderabad?": {
+    answer: "A 30x40 plot has 1,200 square feet of plot area, but setbacks, parking and other approval conditions determine how much can be built. Decide the permitted floor plan and total built-up area before estimating. Prepare a BOQ covering foundation, RCC, masonry, plaster, waterproofing, doors/windows, electrical, plumbing, flooring, painting and external works. State whether compound wall, sump, overhead tank, borewell, lift, kitchen and wardrobes are included. Compare quotations on identical drawings and specifications rather than using a fixed plot-size price.",
+    sources: [{"label":"BuildNow – official approval portal","url":"https://buildnow.telangana.gov.in/"}]
+  },
+
+  "How much does a G+1 house construction cost?": {
+    answer: "For a G+1 estimate, calculate the total built-up area of both floors and confirm that the plot can legally accommodate the proposed height, setbacks and parking. Foundation and structural design must account for the intended total building, even if the upper floor is constructed later. Separate costs for foundation, frame, slabs, walls, stairs, services and finishes, and clarify whether the roof terrace, parapet, water tanks and future-floor provisions are included. Ask for a stage-wise BOQ and engineer-approved drawings before accepting a lump sum.",
+    sources: [{"label":"BuildNow – official approvals","url":"https://buildnow.telangana.gov.in/"},{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "What is included in a house construction package?": {
+    answer: "A construction package may include only labour, labour plus selected materials, or a turnkey scope. Never assume the label defines the work. Request a written schedule for design and approvals, excavation, foundation, RCC, masonry, plaster, waterproofing, electrical, plumbing, doors/windows, flooring, painting, fixtures, external development, testing and handover. For every item specify brand or performance grade, quantity, finish, exclusions, taxes and who supplies it. Clarify whether compound wall, borewell, sump, septic/sewer connection, lift, modular kitchen, wardrobes and landscaping are included.",
+    sources: [{"label":"BuildNow – approval checklist","url":"https://buildnow.telangana.gov.in/checklist/"}]
+  },
+
+  "How do I calculate the built-up area of a house?": {
+    answer: "Built-up area is generally measured using the covered constructed area at each floor, including wall thickness and certain covered spaces as defined by the measurement convention used in the contract or approval. Carpet area is the usable internal floor area; plot area is the land parcel. These are not interchangeable. Ask the architect and contractor to state the exact measurement method, floor-wise dimensions and treatment of balconies, staircases, shafts and service areas. Use the sanctioned drawings and contract definition when comparing rates so that the same area basis is used.",
+    sources: [{"label":"BuildNow – official approval portal","url":"https://buildnow.telangana.gov.in/"}]
+  },
+
+  "How much does a house construction contractor charge?": {
+    answer: "Contractors may quote a labour-only rate, labour plus materials, item-rate BOQ or turnkey lump sum. The amount varies with design, site access, project size, specification, supervision, risk allocation and inclusions. Ask what the fee covers: labour, procurement, tools, scaffolding, wastage, transport, testing, site management, taxes and defect rectification. Request references and a sample BOQ, then compare the total cost and exclusions. Avoid paying a large advance without a written contract and measurable milestones.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How much extra budget should I keep for unexpected construction costs?": {
+    answer: "Set a project contingency based on design maturity, site uncertainty and how much work remains undefined; there is no universal percentage that fits every project. Early estimates with incomplete drawings need more allowance than a fully surveyed, designed and itemised project. Keep contingency separate from known upgrades and taxes. Track committed cost, approved variations, pending selections and paid invoices in one budget. Do not spend the contingency on cosmetic upgrades before excavation and concealed services are complete.",
+    sources: [{"label":"BuildNow – official approval checklist","url":"https://buildnow.telangana.gov.in/checklist/"}]
+  },
+
+  "How can I verify a construction company in Hyderabad?": {
+    answer: "Verify the legal business name, registration details where applicable, GST details if represented as registered, physical office, authorised signatory and the entity that will sign your contract and issue invoices. Visit active and completed projects, speak to previous clients, inspect workmanship and ask who supervises the site daily. Check whether professional designers and engineers are named and whether required approvals are being obtained. Search for complaints and litigation where appropriate, but assess evidence carefully. Do not rely solely on social-media followers, testimonials or a website portfolio.",
+    sources: [{"label":"MCA – company/LLP master data","url":"https://www.mca.gov.in/"},{"label":"GST – taxpayer search","url":"https://services.gst.gov.in/services/searchtp"}]
+  },
+
+  "Is turnkey house construction better than hiring separate contractors?": {
+    answer: "Turnkey construction can simplify coordination because one contractor manages multiple trades, but the owner depends heavily on the clarity of the scope, quality controls and contract. Separate contractors can provide more direct control over brands and pricing, but the owner or project manager must coordinate sequence, interfaces, delays and defects. Compare total cost, responsibility for design coordination, procurement, site supervision, testing, safety and warranties. Choose based on your time, technical oversight and risk tolerance, and keep an independent professional to review quality.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How do I check the quality of a builder's completed projects?": {
+    answer: "Visit more than one completed home and, if possible, an active site. Look beyond decorative finishes: inspect terrace and bathroom leakage history, external-wall dampness, door and window operation, tile lippage, drainage falls, electrical labelling, plumbing access and visible cracks. Ask owners about delays, variations, after-sales response and defects that appeared after monsoon. Request permission to review sanctioned drawings and handover documents. A short walkthrough cannot certify structural safety, so use an independent engineer for technical concerns.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "What is the difference between a builder, contractor and construction company?": {
+    answer: "A builder may develop or sell a property and can carry responsibility for land, approvals and delivery; a contractor is typically engaged to execute defined construction work; a construction company may provide contracting, project management or turnkey services. These labels are not a substitute for reading the contract. Identify who owns the land, who obtains approvals, who designs, who employs subcontractors, who invoices, who supervises and who is liable for defects. Ensure the exact legal entity and scope are written into the agreement.",
+    sources: [{"label":"MCA – company/LLP master data","url":"https://www.mca.gov.in/"}]
+  },
+
+  "Why is my newly built house wall getting damp?": {
+    answer: "Dampness can come from plumbing leaks, failed bathroom or terrace waterproofing, rain entering through cracks and joints, ground moisture rising through walls, poor drainage or condensation. Map where and when it appears: after rain, after bathing, near pipes, at the wall base or on cold surfaces. Check the other side of the wall and nearby floors/terraces. Ask a plumber or building-envelope specialist to test the likely source before replastering or repainting. A waterproof coating on the visible patch may only hide the symptom.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How do I fix seepage on an external wall?": {
+    answer: "Inspect the full external elevation for open cracks, failed sealant, parapet and coping joints, window perimeters, AC pipe penetrations, balconies and roof junctions. Check whether water is entering from a plumbing line or from rain exposure. Repair the source and substrate first, then use a compatible crack-repair, joint-sealant or facade-waterproofing system specified for the material and exposure. Prepare the surface and allow correct curing; painting over damp masonry traps the problem. For recurring or widespread seepage, obtain a specialist inspection and written method statement.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How do I prevent water leakage from a balcony?": {
+    answer: "Balcony leakage usually relates to poor slope, blocked or undersized outlets, failed waterproofing, cracks, inadequate upturns or water passing at the door threshold and railing fixings. Confirm that water flows to the drain without ponding and that the waterproofing layer is continuous at corners, walls and penetrations. Test the system before installing or reinstating tiles. Keep drain grates clear and inspect sealant joints periodically. If water has already entered the slab or room below, identify and repair the cause before replacing ceiling finishes.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "What causes white salt deposits on house walls?": {
+    answer: "White powdery deposits are often efflorescence: soluble salts move with moisture through masonry or plaster and crystallise as water evaporates. The deposit itself is a symptom, not the moisture source. Check for rising damp, leaks, rain penetration, wet construction materials or poor drainage. Dry brushing may remove loose salts after the area dries, but do not seal or repaint until the moisture path is addressed and the surface is suitable for the specified finish. Persistent or heavy deposits need a building professional to investigate the source.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How often should terrace waterproofing be renewed?": {
+    answer: "There is no fixed renewal interval for every terrace. Service life depends on the waterproofing system, substrate movement, UV and weather exposure, protective screed or tiles, drainage, workmanship and maintenance. Inspect after monsoon and whenever ponding, blistering, open joints or ceiling dampness appears. Follow the manufacturer’s maintenance schedule and keep installation and test records. Renew or repair based on condition and system requirements, not simply by applying a new coating every few years over an unknown or failing layer.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How can I reduce roof heat in Hyderabad?": {
+    answer: "Start by checking roof exposure, existing waterproofing, ventilation and whether the terrace can support the proposed treatment. Options include a compatible high-reflectance roof coating, insulation below or above the slab, shaded terrace structures, pergolas or solar panels with appropriate clearances. Each option has different cost, maintenance, waterproofing and structural implications. Do not cover drains or trap water beneath a new layer. Ask the architect or specialist to coordinate thermal performance with waterproofing, roof slope, access and structural loading.",
+    sources: [{"label":"BIS – National Building Code and building services","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How do I check whether a house is structurally safe?": {
+    answer: "A visual walkthrough cannot certify structural safety. Look for progressive cracks, settlement, tilted or bulging walls, sagging beams or slabs, exposed/corroded reinforcement, water-damaged structural members and doors/windows suddenly binding, but absence of visible signs is not proof of safety. Obtain the approved structural drawings, soil report and alteration history where available. Have a qualified structural engineer inspect the building and decide whether measurements or tests are needed. Do not remove walls, cut structural members or add floors without a designed assessment.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"},{"label":"BIS – reinforced concrete standards","url":"https://standards.bis.gov.in/"}]
+  },
+
+  "What is a snag list in house construction?": {
+    answer: "A snag list is a written record of incomplete work, defects and items that must be corrected before handover or final closure. Organise it room by room and include a photo, exact location, description, responsible party, agreed correction and target date. Check finishes, doors, windows, plumbing, electrical, drainage, waterproofing and supplied equipment. Separate cosmetic snags from safety or technical concerns that need specialist inspection. Reinspect each item after correction and record closure; do not rely on verbal assurances.",
+    sources: [{"label":"BuildNow – occupancy and handover process","url":"https://buildnow.telangana.gov.in/timelines/"}]
+  },
+
+  "How long does it take to construct a 2BHK house?": {
+    answer: "Construction duration depends on approvals, design readiness, built-up area, number of floors, foundation conditions, procurement, labour availability, weather, inspection hold points and how quickly the owner makes decisions. A realistic programme should show design and approvals, site preparation, foundation, structure, masonry, services, finishes, testing and handover as separate activities. Ask the contractor for a baseline schedule with dependencies and milestone dates, then update it weekly. Avoid promises based only on a generic number of months without a site survey and defined scope.",
+    sources: [{"label":"BuildNow – approval service timelines","url":"https://buildnow.telangana.gov.in/timelines/"}]
+  },
+
+  "What is the correct order of house construction work?": {
+    answer: "A typical sequence is site survey and investigation, design and approvals, setting out, excavation and foundations, plinth and ground preparation, columns/beams/slabs, masonry, concealed electrical and plumbing, plastering, waterproofing and testing, flooring and wall finishes, doors/windows, fixtures, painting, external works, commissioning and handover. The exact sequence changes with the design and construction method. Coordinate every concealed service before closing walls or slabs, and do not proceed past structural or waterproofing inspection hold points without sign-off.",
+    sources: [{"label":"BuildNow – approval process","url":"https://buildnow.telangana.gov.in/"},{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How often should a house be painted?": {
+    answer: "Repainting frequency depends on the paint system, surface preparation, exposure, workmanship, ventilation and maintenance. Exterior walls exposed to strong sun and monsoon may weather faster than protected interiors; damp or salt-contaminated walls should not simply be repainted. Inspect for chalking, peeling, cracks, algae and moisture, then fix the underlying cause, prepare the substrate and use a compatible primer and finish. Follow the manufacturer’s maintenance guidance and keep product details for future touch-ups.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How do I identify poor workmanship in a new house?": {
+    answer: "Look for uneven floors, tile lippage, hollow-sounding tiles, inconsistent grout, doors that do not close, leaking traps, low water pressure, unsealed penetrations, poor drainage falls, paint blistering, damp patches, exposed wiring, missing labels and visible cracks. Inspect concealed work before it is covered, because many defects cannot be judged after handover. Record issues with photographs and locations, compare work against drawings and specifications, and ask the relevant professional to assess structural, electrical or plumbing safety concerns.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "What maintenance should I do before monsoon?": {
+    answer: "Before monsoon, clear terrace and balcony drains, inspect roof slopes and ponding, check parapet and window sealant joints, repair external cracks, inspect downpipes and rainwater outlets, and confirm that site grading carries water away from the foundation. Check sump covers, pump operation and electrical protection in wet areas. Do not climb onto unsafe roofs or work near live electrical equipment. Photograph defects and arrange repairs before heavy rain; repeated leakage should be diagnosed rather than covered with a temporary coat.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How do I reduce construction delays?": {
+    answer: "The strongest delay controls are design freeze, early approvals, a realistic procurement schedule and timely owner decisions. Before work starts, complete coordinated architectural and structural drawings, confirm long-lead items, identify utility dependencies and agree inspection hold points. Use a weekly programme showing planned versus actual progress, labour, materials, pending approvals, decisions and blockers. Record changes and their time impact in writing. Avoid starting a trade before preceding work is ready, because rework and site congestion often create more delay than the original task.",
+    sources: [{"label":"BuildNow – approval timelines","url":"https://buildnow.telangana.gov.in/timelines/"}]
+  },
+
+  "What warranty should a construction company provide?": {
+    answer: "There is no one warranty wording that covers every construction project. The agreement should distinguish workmanship defect liability from manufacturer warranties for products such as pumps, fixtures, appliances, waterproofing systems and equipment. State the start date, duration, covered items, exclusions, reporting method, inspection and repair response times, emergency contact and whether the warranty transfers to a future owner. Keep invoices, product serial numbers, test reports and handover records. Have the contract reviewed so that promises are specific and enforceable under the applicable law.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How much does foundation work cost for a house in Hyderabad?": {
+    answer: "Foundation cost cannot be estimated reliably from plot size alone. It depends on soil profile and groundwater, building loads, foundation type, excavation depth, access, dewatering, disposal, concrete and reinforcement quantities, retaining requirements and site constraints. Obtain a geotechnical investigation and structural design, then price the actual footing or raft drawings through a measured BOQ. Clarify whether excavation, PCC, anti-termite treatment, backfilling, plinth beams, waterproofing and disposal are included. Avoid choosing a foundation type or rate from a neighbour’s project.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "What is the cost of RCC slab construction?": {
+    answer: "An RCC slab estimate should be built from the approved structural drawings and quantities for concrete, reinforcement, formwork, props, pumping, labour, placing, vibration, testing and curing. Slab thickness, spans, beams, openings, reinforcement, access and floor height change the quantity and method. Ask whether the quoted rate includes steel cutting/bending, shuttering removal, reshoring and test records. Do not use a generic per-square-foot figure as a substitute for the engineer’s design and a measured BOQ.",
+    sources: [{"label":"BIS – IS 456 reinforced concrete code","url":"https://standards.bis.gov.in/website/standard-details"},{"label":"BIS – concrete mix proportioning","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "How much does plastering cost per square foot in Hyderabad?": {
+    answer: "Plastering cost depends on internal versus external area, wall height, thickness, surface condition, mortar specification, scaffolding, corner beads, mesh details, curing and finish quality. Confirm whether measurement is by square foot or square metre, how openings are deducted, and whether materials, transport and scaffolding are included. Specify the required line, level, plumb and finish, and inspect sample work before large areas proceed. A rate without thickness and surface-preparation scope is not comparable.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How much does brickwork cost for a house?": {
+    answer: "Brickwork cost depends on wall thickness, brick or block type and quality, mortar, wall height, openings, lintels, scaffolding, labour and how quantities are measured. Ask the contractor to state the unit, wall type, material specification, wastage allowance and whether lintels, mesh at junctions and scaffolding are included. Check that the chosen wall system matches the architectural and structural drawings. Compare a measured BOQ rather than a single rate that mixes different wall thicknesses and materials.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How do I estimate steel quantity for house construction?": {
+    answer: "The reliable steel quantity comes from structural drawings and the bar bending schedule (BBS), which lists bar diameter, shape, length, bends, laps and quantities for each member. A generic kilogram-per-square-foot thumb rule can be misleading because spans, loads, foundation type, seismic detailing and architectural layout change reinforcement. Ask the engineer or detailer to issue a BBS and reconcile delivered, cut, installed and scrap quantities by floor and member. Do not reduce reinforcement to meet a budget without a redesigned and approved solution.",
+    sources: [{"label":"BIS – IS 1786 reinforcement steel lookup","url":"https://www.bis.gov.in/know-your-standard/?lang=en"},{"label":"BIS – IS 456 reinforced concrete code","url":"https://standards.bis.gov.in/website/standard-details"}]
+  },
+
+  "How do I calculate concrete quantity for a house?": {
+    answer: "Calculate concrete volume member by member from the approved dimensions: footing, pedestal, column, beam, slab, staircase and other concrete elements. For a simple rectangular element, volume is length × width × depth in metres, giving cubic metres; avoid double-counting intersections between beams, slabs and columns. Use the structural drawings and approved measurement rules, then add only the justified ordering allowance for site conditions and supplier practice. The mix grade and quantity should be checked by the engineer or quantity surveyor before ordering.",
+    sources: [{"label":"BIS – IS 456 reinforced concrete code","url":"https://standards.bis.gov.in/website/standard-details"},{"label":"BIS – IS 10262 mix proportioning","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "What is included in a semi-finished house construction package?": {
+    answer: "“Semi-finished” is not a standard scope definition, so ask the contractor to list exactly what is complete at handover. It may stop at structure and plaster, or include concealed services, flooring, doors, windows, basic electrical and plumbing, depending on the company. Specify whether painting, sanitary fixtures, switches, kitchen, wardrobes, railings, compound wall, external paving, utility connections, approvals and cleaning are included. Attach a room-wise finish schedule and a signed exclusion list to the agreement.",
+    sources: [{"label":"BuildNow – approval checklist","url":"https://buildnow.telangana.gov.in/checklist/"}]
+  },
+
+  "How do I check a construction BOQ before signing?": {
+    answer: "Check that every BOQ line has a clear description, unit, quantity, rate, amount and material or workmanship specification. Reconcile quantities with the drawings and confirm how hidden work, openings, wastage, transport, taxes, testing and provisional sums are treated. Look for missing items such as waterproofing, scaffolding, curing, debris removal, utility connections and external works. Ensure brand substitutions and quantity changes require written approval, and that the BOQ is attached to the contract with a clear variation process.",
+    sources: [{"label":"BuildNow – approval checklist","url":"https://buildnow.telangana.gov.in/checklist/"}]
+  },
+
+  "Should I pay a construction contractor by stage or monthly?": {
+    answer: "Milestone-based payments tied to measurable completed work and inspection sign-off generally give an owner clearer control than paying only by calendar month. A contract can also include periodic measured bills for labour or item-rate work. Define each milestone, evidence required, who certifies it, retention if agreed, treatment of materials stored on site and deductions for incomplete or defective work. Avoid large advances without security and do not pay for concealed work until it has been inspected and recorded.",
+    sources: [{"label":"BuildNow – official approval and document records","url":"https://buildnow.telangana.gov.in/checklist/"}]
+  },
+
+  "What is a quality checklist before roof slab concrete?": {
+    answer: "Before the slab pour, verify the latest drawings, reinforcement diameter and spacing, laps and anchorage, cover blocks, chairs, beam-column joints, slab openings, sleeves, conduits, formwork dimensions and tightness, props and access. Confirm concrete grade and approved mix, delivery and testing arrangements, vibrator and backup equipment, pour sequence, weather plan and curing method. The engineer or authorised supervisor should sign the pre-pour checklist and record photos. Correct defects before concrete arrives; they are difficult to fix after casting.",
+    sources: [{"label":"BIS – IS 456 reinforced concrete code","url":"https://standards.bis.gov.in/website/standard-details"}]
+  },
+
+  "How do I check waterproofing before bathroom tiling?": {
+    answer: "Inspect the waterproofing substrate, slope, drain flange, wall-floor junctions, corners, pipe penetrations and membrane continuity before tiles cover the work. Confirm the specified primer, number of coats or membrane thickness, upturn details and curing time against the manufacturer’s method statement. Carry out and record the specified pond or water test, check the ceiling or adjacent rooms below, and repair any loss before tiling. Photograph the completed system and keep product batch and installer details for future maintenance.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "What should I check in a house construction quotation in Hyderabad?": {
+    answer: "Check the plot and jurisdiction assumptions, sanctioned built-up area, floor count, drawings, BOQ quantities, concrete and steel grades, wall materials, waterproofing, electrical and plumbing scope, finish brands, taxes, approvals, site supervision, testing, debris removal, timeline and defect liability. Confirm local site costs such as access, soil, drainage, water and power arrangements. List exclusions such as compound wall, sump, borewell, lift, kitchen, wardrobes and external works. Compare quotations only after each contractor prices the same drawings and specifications.",
+    sources: [{"label":"BuildNow – approval checklist","url":"https://buildnow.telangana.gov.in/checklist/"},{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "What should I consider before building a house in Kokapet?": {
+    answer: "Start with a legal and technical check of the exact plot, not just the locality name. Verify title, survey boundaries, approved layout, land use, road access, reservations and any lake/nala or other buffer restrictions. Confirm the competent authority and current BuildNow route for the survey number. Arrange a site survey and soil investigation, check utilities and ground levels, and prepare a design that respects setbacks, parking, heat and ventilation. Locality-wide assumptions cannot replace plot-specific legal, planning and engineering review.",
+    sources: [{"label":"BuildNow – official approval portal","url":"https://buildnow.telangana.gov.in/"},{"label":"Bhu Bharati – land status","url":"https://bhubharati.telangana.gov.in/knowLandStatus"},{"label":"HMDA – planning","url":"https://www.hmda.gov.in/planning/"}]
+  },
+
+  "What should I check before constructing a house in Tellapur?": {
+    answer: "Verify the plot’s registered title, survey number, layout approval and land-use status, then confirm which authority handles the building proposal for that exact village and survey number. Check access road, road-widening reservations, drainage, water and power connections, ground levels and any water-body restrictions. Commission a measured survey and soil investigation before foundation design. Ask the architect to confirm the current BuildNow workflow and permitted building envelope rather than relying on a nearby property’s sanction.",
+    sources: [{"label":"BuildNow – official approval portal","url":"https://buildnow.telangana.gov.in/"},{"label":"Bhu Bharati – land status","url":"https://bhubharati.telangana.gov.in/knowLandStatus"},{"label":"HMDA – planning","url":"https://www.hmda.gov.in/planning/"}]
+  },
+
+  "What affects house construction cost in Miyapur?": {
+    answer: "The largest cost drivers are total permitted built-up area, number of floors, foundation and soil conditions, structural design, material specification, finish level, service requirements and site access. Existing structures, narrow approach roads, debris removal, utility connections and drainage can also affect the estimate. Ask contractors to inspect the actual site and price a common BOQ with the same exclusions and taxes. Avoid treating a locality label as a fixed rate; two plots in Miyapur can have very different conditions and scopes.",
+    sources: [{"label":"BuildNow – official approval portal","url":"https://buildnow.telangana.gov.in/"}]
+  },
+
+  "How do I plan a house construction project in Kondapur?": {
+    answer: "Begin with title and layout verification, a measured site survey, soil investigation and confirmation of the competent approval authority for the exact plot. Freeze the room brief and coordinated architectural/structural/service drawings before procurement. Confirm the BuildNow application route, approvals and utility dependencies, then select a contractor using a comparable BOQ and written milestones. Track procurement, site inspections, variations, safety and progress weekly. Check access, drainage and neighbouring conditions during the site visit rather than assuming all plots in the locality are alike.",
+    sources: [{"label":"BuildNow – official approval portal","url":"https://buildnow.telangana.gov.in/"},{"label":"Bhu Bharati – land status","url":"https://bhubharati.telangana.gov.in/knowLandStatus"}]
+  },
+
+  "How do I plan natural ventilation in a house?": {
+    answer: "Plan ventilation with the site orientation, prevailing wind, neighbouring buildings, room use, privacy and window locations in mind. Cross-ventilation works best when there are appropriately placed openings that allow air to enter and leave, rather than windows on one wall only. Provide exhaust ventilation for kitchens and bathrooms where needed, and coordinate window sizes with daylight, heat gain, noise, security and structure. An architect should assess the actual site; adding windows later may conflict with privacy, fire, structural or approval constraints.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "What is the difference between carpet area and built-up area?": {
+    answer: "Carpet area refers broadly to the usable floor area within the home, while built-up area generally includes the carpet area plus wall thickness and certain covered spaces. Plot area is the land area and is different again. Exact definitions can vary by the context, agreement and applicable regulation, so ask for a dimensioned area statement that identifies balconies, shafts, stairs and common areas separately. When a contractor quotes a per-square-foot rate, make sure the rate and measured area use the same stated basis.",
+    sources: [{"label":"RERA – Telangana official portal","url":"https://rera.telangana.gov.in/"}]
+  },
+
+  "What is the difference between M20 and M25 concrete?": {
+    answer: "M20 and M25 are concrete strength grades, with the number representing the specified characteristic compressive strength in MPa at the standard testing age under the applicable specification. A higher grade is not automatically the correct choice for every member: mix design, exposure, durability, workability, member design and structural drawings determine the required concrete. Use the grade specified by the structural engineer and approved mix design; do not upgrade or downgrade at site without approval. Keep batch, delivery and cube-test records.",
+    sources: [{"label":"BIS – IS 456 reinforced concrete code","url":"https://standards.bis.gov.in/website/standard-details"},{"label":"BIS – IS 10262 concrete mix proportioning","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "Can I use ready-mix concrete for an individual house?": {
+    answer: "Yes, ready-mix concrete can be used for an individual house when the mix is designed for the specified grade and exposure, the supplier is reliable, and delivery and placing can be managed properly. Confirm the approved mix design, delivery ticket, batch time, workability checks, sampling and cube testing plan, pump access and pour sequence. Do not add water at site without authorised direction because it can change the mix properties. Plan enough labour, vibration, finishing and curing before the truck arrives.",
+    sources: [{"label":"BIS – IS 4926 ready-mixed concrete","url":"https://www.bis.gov.in/know-your-standard/?lang=en"},{"label":"BIS – IS 456 reinforced concrete code","url":"https://standards.bis.gov.in/website/standard-details"}]
+  },
+
+  "How do I calculate cement bags for house construction?": {
+    answer: "Do not estimate cement bags for an entire house using a universal bags-per-square-foot thumb rule. Calculate concrete volumes from the structural drawings and use the approved mix design to determine cement content; calculate mortar and plaster separately using their specified proportions, thickness and measured areas. Add only a justified allowance for handling and wastage. For ready-mix concrete, cement is already included in the supplier’s designed mix. Ask the quantity surveyor or engineer to prepare a material take-off and reconcile purchases with actual work.",
+    sources: [{"label":"BIS – IS 10262 concrete mix proportioning","url":"https://www.bis.gov.in/know-your-standard/?lang=en"},{"label":"BIS – IS 456 reinforced concrete code","url":"https://standards.bis.gov.in/website/standard-details"}]
+  },
+
+  "What is a bar bending schedule and why is it important?": {
+    answer: "A bar bending schedule (BBS) is a reinforcement list prepared from the structural drawings. It identifies each bar mark, diameter, shape, cutting length, bends, quantity and location, helping the site team order, cut, bend and place steel correctly. It supports quantity checks and reduces avoidable waste, but it must match the latest approved drawings and detailing. Ask the engineer or authorised detailer to issue and revise the BBS when drawings change; never let a fabricator change bar lengths or laps independently.",
+    sources: [{"label":"BIS – IS 1786 reinforcement steel lookup","url":"https://www.bis.gov.in/know-your-standard/?lang=en"},{"label":"BIS – IS 456 reinforced concrete code","url":"https://standards.bis.gov.in/website/standard-details"}]
+  },
+
+  "When should anti-termite treatment be done during construction?": {
+    answer: "Anti-termite protection should be planned as part of the building design and construction specification, with treatment stages coordinated before they are concealed by flooring, backfill or other work. The exact method and timing depend on the approved product, site conditions, foundation details and manufacturer’s instructions. Use a qualified applicator, verify the product label and safety data, protect occupants and workers, and keep application records and warranty documents. Do not apply chemicals casually or assume one treatment eliminates all future termite risk.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How do I prevent cracks between brick walls and RCC columns?": {
+    answer: "Cracks at masonry-to-RCC junctions can result from different material movement, shrinkage, poor bonding, inadequate junction detailing or structural movement. Prevention starts with sound masonry workmanship, proper connection and detailing as specified by the designer, suitable curing and compatible plastering. Mesh or other reinforcement at junctions may be specified for some systems, but it is not a substitute for correcting movement or poor support. If a crack is wide, recurring, progressive or accompanied by distortion, have the structural engineer inspect it before cosmetic repair.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "What is the ideal column spacing for a residential house?": {
+    answer: "There is no universal ideal column spacing. The structural grid depends on room layout, spans, loads, number of floors, soil and foundation conditions, concrete and steel grades, architectural openings and seismic design requirements. Large spans can increase beam depth and cost; adding columns without coordination can obstruct rooms and parking. Have the architect and structural engineer coordinate the grid early and issue calculations and drawings. Never shift, remove or resize a column on site to solve a layout problem without a redesigned and approved structural solution.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"},{"label":"BIS – reinforced concrete standards","url":"https://standards.bis.gov.in/"}]
+  },
+
+  "What is the ideal ceiling height for a house in Hyderabad?": {
+    answer: "Choose ceiling height by balancing comfortable clear headroom, local approval rules, room proportions, ventilation, heat, false-ceiling services, fan clearance and construction cost. Distinguish floor-to-floor height from the finished clear height after slab, flooring and ceiling finishes. Check the applicable building rules and the architect’s coordinated sections before fixing the level. Do not copy a neighbour’s measurement without checking the building category, services and sanctioned drawings.",
+    sources: [{"label":"BuildNow – current rules and orders","url":"https://buildnow.telangana.gov.in/go-and-act/"},{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How much parking space is needed for a 30x40 house?": {
+    answer: "Parking must be planned around the actual vehicle dimensions, turning path, gate width, column locations, pedestrian access and whether a second vehicle or two-wheeler must fit. On a 30x40 plot, setbacks and the permitted building envelope may limit the usable parking footprint. Draw the vehicle swept path and check that doors can open without blocking the entrance or staircase. Confirm the parking requirement and layout through the current local approval rules before finalising the plan.",
+    sources: [{"label":"BuildNow – official approval portal","url":"https://buildnow.telangana.gov.in/"}]
+  },
+
+  "How many bathrooms should a 2BHK house have?": {
+    answer: "A 2BHK can work with one shared bathroom or with one shared plus one attached bathroom; the right choice depends on household size, guests, privacy, budget and available floor area. Plan bathroom access from bedrooms and common areas, ventilation or exhaust, waterproofing, floor slope, plumbing shafts and future maintenance. Avoid placing a bathroom door directly into a kitchen or dining space where possible. Ask the architect to coordinate fixture clearances and plumbing routes before fixing room dimensions.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How much does house painting cost in Hyderabad?": {
+    answer: "Painting cost depends on wall and ceiling area, surface condition, putty and primer requirements, number of coats, interior or exterior exposure, paint type, colour changes, scaffolding and labour. Ask for a measured area statement and a written brand/product schedule with preparation steps, coat count and finish. Clarify whether crack filling, damp treatment, sanding, masking and cleanup are included. Compare sample panels and inspect preparation before the final coats; a low rate may omit essential surface preparation.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How much does electrical wiring cost for a 2BHK house?": {
+    answer: "Electrical wiring cost depends on the number and type of points, circuit layout, load and appliance requirements, wire sizes, conduits, switchgear, distribution board, earthing, protection devices, labour and brand specification. Prepare a room-wise point schedule and single-line/circuit plan before requesting quotes. Confirm whether fans, lights, fixtures, data points, AC points, geysers, inverter/solar provisions and testing are included. Have a qualified electrician design and test the installation; do not select cable size by price or copy another home’s layout.",
+    sources: [{"label":"BIS – National Building Code and electrical services","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How much does plumbing work cost for a new house?": {
+    answer: "Plumbing cost depends on bathroom and kitchen count, hot-water lines, pipe material and diameter, tank and pump arrangement, drainage routes, shafts, fixtures, concealed versus exposed work and pressure testing. Ask for a fixture and point schedule, pipe brand/specification, valve and access details, drainage slope, testing procedure and inclusions. Clarify whether sanitaryware, taps, pumps, tanks, rainwater lines and external connections are included. Test concealed supply lines and drainage before closing walls and floors, and keep an as-built layout for maintenance.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "What is the cost of compound wall construction in Hyderabad?": {
+    answer: "Compound-wall cost depends on boundary length, wall height and thickness, foundation and soil, retaining requirements, columns, coping, plaster and paint, gate openings, security details and site access. First verify the legal plot boundaries with a surveyor and check any road-widening or setback restrictions before building. Ask for separate quantities for excavation, footing, columns, masonry, reinforcement, plaster, coping and gate work. A wall retaining higher ground needs an engineered retaining design, not an ordinary boundary-wall detail.",
+    sources: [{"label":"Bhu Bharati – land status","url":"https://bhubharati.telangana.gov.in/knowLandStatus"},{"label":"BuildNow – official approvals","url":"https://buildnow.telangana.gov.in/"}]
+  },
+
+  "How much does staircase construction cost for a house?": {
+    answer: "Staircase cost depends on floor height, width, number and shape of flights, landing size, RCC or steel construction, support arrangement, finish, railing, headroom and whether it is inside or outside. The structural engineer must design the stair and its supports as part of the building frame. Ask the BOQ to separate concrete, reinforcement, shuttering, steps/finish, railing and lighting. Check comfortable riser and tread proportions, handrail safety and clear headroom against the approved architectural drawings and applicable rules.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "What is the best flooring for a new house?": {
+    answer: "The best flooring depends on room use, budget, slip resistance, maintenance, wear, water exposure and the quality of installation. Vitrified tiles are common for living spaces; anti-skid finishes may be appropriate for wet areas; natural stone, engineered surfaces and wood-based products have different sealing and maintenance needs. Compare the full installed system, including substrate preparation, adhesive or mortar, joints, skirting and wastage. Ask for samples in the actual lighting and confirm slip performance for bathrooms, balconies and external areas.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How do I choose tiles for a small house?": {
+    answer: "For a small home, choose tiles by room function, slip resistance, finish, size, grout layout, light reflection and maintenance—not by size alone. Larger tiles can reduce grout lines but may need a flatter substrate and careful cutting; smaller tiles can suit slopes and compact wet areas. Use slip-resistant surfaces in bathrooms and balconies, check shade and calibre consistency across boxes, and plan tile joints and skirting before installation. Buy an adequate quantity from the same batch and retain spare tiles for future repairs.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
   }
 };
