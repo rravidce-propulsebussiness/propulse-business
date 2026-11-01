@@ -356,5 +356,60 @@ groups["Bathroom fittings, sanitaryware & fixture costs"] = [
 ["What bathroom accessories should be installed before tiling?","Plan fixing points for shelves, towel bars, hooks, mirrors, grab bars and shower partitions before tile completion."]
 ];
 
+
+groups["Kitchen chimney, hob & appliance planning"] = [
+["Which is better, ducted or ductless kitchen chimney?","Compare ventilation route, filters, maintenance, outlet location and exact appliance installation requirements."],
+["How do I choose the right chimney size for my kitchen hob?","Match chimney width and performance to hob dimensions, cooking pattern and manufacturer guidance."],
+["What is the ideal chimney and hob installation distance?","Use the selected appliance manuals and qualified installer’s requirements rather than a generic online measurement."],
+["How much does a kitchen chimney installation cost?","Include appliance, ducting, bends, core cutting where permitted, external outlet, electrical point and labour."],
+["What is the difference between filterless and baffle filter chimneys?","Compare operating principle, cleaning, maintenance, suitability and manufacturer instructions."],
+["Which kitchen hob is better, built-in gas or induction?","Compare fuel or electrical provision, cookware, ventilation, controls, installation and safety requirements."],
+["How do I plan a built-in oven cabinet?","Use exact appliance dimensions, ventilation clearances, heat management, door swing and service access."],
+["What are the dimensions required for a built-in microwave?","Check the model-specific niche, ventilation, power supply and access instructions before cabinet fabrication."],
+["Where should refrigerator electrical points be placed?","Coordinate plug access, ventilation, door swing, water connection if applicable and appliance removal."],
+["How do I plan a dishwasher in a modular kitchen?","Check model dimensions, water inlet, drain, power, door opening, cabinet support and service access."],
+["What electrical points are required for a modular kitchen?","Create an appliance load schedule and have a qualified electrician design circuits, protection, earthing and socket positions."],
+["Can a kitchen chimney duct pass through a false ceiling?","Review duct route, bends, access, fire and building restrictions with the appliance installer and relevant professionals."],
+["What should be included in a kitchen appliance quotation?","List exact brand and model, installation accessories, ducting, cut-outs, electrical or plumbing work, warranty and exclusions."],
+["How do I plan a kitchen water purifier location?","Check feed and drain, socket, filter replacement access, cabinet clearance and leak protection."],
+["When should kitchen appliances be finalised during interior work?","Freeze model numbers and installation manuals before final cabinet drawings and countertop fabrication."]
+];
+groups["Plywood, HDHMR, MDF & furniture board comparisons"] = [
+["What is the difference between plywood and HDHMR?","Compare construction, declared grade, moisture exposure, fixing performance, finish compatibility and product data."],
+["Is MDF good for wardrobe shutters?","Consider thickness, profile design, edge sealing, finish, hardware loads, moisture exposure and manufacturer limitations."],
+["Can particle board be used for modular kitchen cabinets?","Check exact grade, exposure, edge protection, hardware fixing and whether the product is approved for that application."],
+["Which board is suitable for a kitchen sink cabinet?","Assess leak risk, moisture exposure, edge sealing, ventilation and manufacturer-approved board and finish systems."],
+["What is the difference between commercial and BWR plywood?","Ask for exact product grade, standard, intended exposure, certification and technical documentation rather than relying on trade shorthand."],
+["How do I identify genuine plywood grade?","Verify manufacturer markings, product code, invoice, applicable standard and documentation; appearance alone cannot certify grade."],
+["What is the best thickness for wardrobe plywood?","Thickness depends on span, load, cabinet design, fixing and product specifications; follow the designer and manufacturer."],
+["Does HDHMR absorb water?","Moisture resistance is product-specific and does not mean waterproof; check test data, edges and application limitations."],
+["Which board is best for CNC-cut wardrobe shutters?","Check machining suitability, density, thickness, profile limits, finish system and hardware compatibility."],
+["How much does plywood interior work cost?","Separate board grade, thickness, finish, edge banding, hardware, wastage, labour, transport and installation."]
+];
+groups["Bathroom tile layouts, grout & shower screens"] = [
+["Which grout is best for bathroom tiles, epoxy or cement grout?","Compare chemical resistance, joint size, cleaning, application skill, compatibility and manufacturer guidance."],
+["How much does epoxy grouting cost for a bathroom?","Specify measured joint area, tile format, joint width, product, colour, preparation and labour."],
+["What is the difference between tile grout and silicone sealant?","Explain grout for suitable tile joints and flexible sealant for specified movement junctions and wet-area details."],
+["How do I plan a shower glass partition in a small bathroom?","Check door swing, circulation, panel fixing, drain position, glass safety specification and cleaning access."],
+["What thickness glass is used for a shower partition?","Use a competent supplier’s design based on panel size, support, hardware and applicable safety requirements."],
+["Should bathroom wall tiles go up to the ceiling?","Consider wet-zone exposure, ventilation, cleaning, budget and the complete waterproofing and finish specification."],
+["How do I choose bathroom tile colour and size?","Review actual samples, room dimensions, lighting, grout lines, slip information and cleaning needs."],
+["What is tile lippage and how can it be reduced?","Explain substrate flatness, tile calibration, layout, adhesive coverage, levelling and installer workmanship."],
+["When should bathroom waterproofing be tested?","Complete the specified inspection and water test after membrane application and before covering it with screed or tiles."],
+["How do I plan a bathroom niche in a shower wall?","Coordinate dimensions, slope, waterproofing continuity, tile module, edges and plumbing routes before construction."]
+];
+groups["Interior paint, textures & wall finish budgets"] = [
+["What is the difference between matte and satin wall paint?","Compare sheen, cleanability, glare and how each finish reveals surface imperfections."],
+["Which paint is best for a living room?","Choose by substrate, traffic, cleaning needs, light and the exact manufacturer performance data."],
+["How much does washable paint cost for a 2BHK?","Measure wall and ceiling area and specify preparation, primer, product range, coats, protection and labour."],
+["What is the correct putty, primer and paint sequence?","Follow a compatible system for the substrate and manufacturer’s application and drying instructions."],
+["How much does wall texture painting cost?","Define sample pattern, measured area, substrate preparation, product, colour, protection and application labour."],
+["Is texture paint suitable for a bedroom feature wall?","Consider cleaning, dust collection, lighting, repairability and a sample panel before approving."],
+["Which exterior paint is suitable for heavy rain exposure?","Match the coating system to substrate and exposure and fix cracks or water entry before repainting."],
+["Can waterproof paint stop wall dampness?","Explain why the moisture source must be diagnosed; paint alone cannot repair active leakage or rising damp."],
+["How do I choose paint colour for a small room?","Review large samples under daylight and artificial lighting and coordinate with flooring, furniture and window exposure."],
+["What should a painting contractor quote include?","List surface preparation, putty, primer, product code, coats, coverage, masking, furniture protection and warranty."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
