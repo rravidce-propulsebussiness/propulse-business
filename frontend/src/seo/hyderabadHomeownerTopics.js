@@ -109,7 +109,6 @@ const groups = {
     ["What maintenance should I do before monsoon?","Covers terrace drains, external cracks, plumbing, electrical safety and rainwater outlets."],
     ["How do I reduce construction delays?","Explains design freeze, procurement planning, approvals, decision turnaround and milestone tracking."],
     ["What warranty should a construction company provide?","Explains why warranty scope, exclusions, duration and defect reporting should be written into the contract."]
-  ]
   ],
   "Construction estimates & execution": [
     ["How much does foundation work cost for a house in Hyderabad?","Explains how soil, foundation type, excavation, concrete, reinforcement and site access affect a project estimate."],
