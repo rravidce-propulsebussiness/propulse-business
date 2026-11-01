@@ -170,5 +170,43 @@ groups["Types of interior design & execution styles"] = [
 ["How do I choose one interior theme for the whole house?","Build a palette across flooring, wall colour, wood tone, metal finish, fabrics and lighting while allowing room-specific function."]
 ];
 
+
+groups["Kitchen baskets, pantry & storage hardware"] = [
+["What are the different types of kitchen baskets?","Compare cutlery, thali, plate, cup-and-saucer, bottle, corner and tall-unit storage by cabinet dimensions and use."],
+["What is the difference between a pantry pull-out and a tall unit?","Explain cabinet format, internal fittings, access, usable capacity and clearance."],
+["Are magic corners worth installing in an L-shaped kitchen?","Compare access to blind-corner space, mechanism, load, cost, maintenance and alternatives."],
+["What is the difference between a carousel and a magic corner?","Compare rotating corner shelves with linked pull-out mechanisms and identify the cabinet geometry each requires."],
+["How do I choose a kitchen bottle pull-out size?","Measure clear cabinet width, depth, door opening, plumbing conflicts and the actual bottle sizes."],
+["What is the difference between soft-close and normal kitchen baskets?","Explain runner/damper features, closing behaviour, load ratings and product-specific warranty."],
+["How much space is needed for a tall pantry pull-out?","Use manufacturer installation drawings for cabinet width, depth, height, door fixing and service clearances."],
+["Which kitchen accessories are actually useful?","Prioritise daily-use storage and workflow before adding accessories that consume budget or cabinet volume."],
+["How do I compare kitchen basket brands?","Compare model, material, finish, wire/plate construction, runner, load rating, warranty and local service."],
+["What should I check before installing kitchen baskets?","Check cabinet squareness, dimensions, fixing points, alignment, load, smooth travel and access for adjustment."]
+];
+groups["Edge banding, adhesives & cabinet construction"] = [
+["What is edge banding in modular furniture?","Explain why exposed board edges are sealed and compare PVC, ABS, acrylic and other edge treatments by application."],
+["What is the difference between 0.8mm and 2mm edge banding?","Compare nominal edge thickness, impact protection, visual profile, machining and suitability; confirm product specification."],
+["What is PUR edge banding and how is it different from EVA?","Explain adhesive systems at a high level, moisture resistance claims, process control and why factory capability matters."],
+["What is the difference between PVC and ABS edge banding?","Compare material properties, finish matching, impact, processing and manufacturer guidance without assuming one is always superior."],
+["Why are cabinet edges peeling or opening?","Investigate bonding, surface preparation, heat, moisture, machining, storage and installation rather than blaming thickness alone."],
+["Which adhesive is used for laminate on plywood?","Explain that adhesive choice depends on laminate, substrate, process, manufacturer instructions and safe application."],
+["What is the difference between pre-laminated board and post-laminated plywood?","Compare factory-finished panels with site/factory bonded decorative laminate, edge details and repairability."],
+["Why is a cabinet back panel important?","Explain squareness, racking resistance, dust protection, fixing and how the back panel specification affects durability."],
+["What is the difference between a 6mm and 9mm wardrobe back panel?","Compare span, support, fixing, cabinet design and manufacturer/fabricator specification instead of assuming a universal rule."],
+["How do I inspect modular furniture before handover?","Use a room-wise checklist for gaps, edges, alignment, hardware, finish, stability, cleaning and warranty documents."]
+];
+groups["Room-wise material selection"] = [
+["Which plywood is suitable for a kitchen sink cabinet?","Assess likely leaks, edge sealing, plumbing access, ventilation, substrate grade and maintenance; no board makes a leak harmless."],
+["Which board is suitable for wardrobe shutters?","Compare shutter size, weight, finish, hinge fixing, flatness and fabrication method before selecting substrate."],
+["Which finish is practical for a kids room wardrobe?","Consider cleaning, scratches, fingerprints, repair, rounded details, hardware and household use."],
+["Which finish is suitable for a bathroom vanity?","Prioritise water management, sealed edges, ventilation, plumbing access and manufacturer suitability for humid locations."],
+["Which material is suitable for a TV unit?","Compare substrate, span, finish, cable routing, wall fixing and load from electronics."],
+["Which countertop finish is easiest to maintain?","Compare the selected stone or engineered surface by staining, heat, scratching, joints and manufacturer care guidance."],
+["What is the difference between matte, suede and glossy laminate?","Compare reflectivity, texture, fingerprints, cleaning and lighting effects using physical samples."],
+["Is acrylic or PET finish better for kitchen shutters?","Compare product-specific scratch, gloss, colour, edge, repair and cleaning properties; ask for technical data."],
+["Is veneer better than laminate for a bedroom?","Compare natural grain variation, finish maintenance, repair, cost and sunlight exposure rather than treating either as universally better."],
+["How do I select matching finishes for the whole house?","Coordinate wood tones, sheen, metal finishes, flooring, wall colours and light temperature with approved samples."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
