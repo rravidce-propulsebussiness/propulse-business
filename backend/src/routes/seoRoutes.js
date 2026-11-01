@@ -167,9 +167,11 @@ router.get('/sitemap.xml',async(req,res)=>{
   const origin=safeOrigin(req);
   let projects=[];
   let officialProfiles=[];
+  let independentProfiles=[];
   try{
     projects=await publicExpertService.listIndexableProjectPaths();
     officialProfiles=await publicExpertService.listIndexableOfficialProfiles();
+    independentProfiles=await publicExpertService.listIndexableIndependentProfiles();
   }catch(error){
     // A temporary database outage must not make the static site sitemap fail.
     console.error('Public project sitemap lookup failed:',error?.message||error);
@@ -180,6 +182,7 @@ router.get('/sitemap.xml',async(req,res)=>{
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     ...PUBLIC_PATHS.map(path=>'  <url><loc>'+xmlEscape(origin+(path==='/'?'/':path))+'</loc></url>'),
     ...officialProfiles.map(profile=>'  <url><loc>'+xmlEscape(origin+profile.path)+'</loc>'+ (profile.lastmod?'<lastmod>'+xmlEscape(profile.lastmod)+'</lastmod>':'')+'</url>'),
+    ...independentProfiles.map(profile=>'  <url><loc>'+xmlEscape(origin+profile.path)+'</loc>'+ (profile.lastmod?'<lastmod>'+xmlEscape(profile.lastmod)+'</lastmod>':'')+'</url>'),
     ...projects.map(project=>'  <url><loc>'+xmlEscape(origin+project.path)+'</loc>'+
       (project.lastmod?'<lastmod>'+xmlEscape(project.lastmod)+'</lastmod>':'')+'</url>'),
     '</urlset>',
