@@ -63,7 +63,7 @@ pool.query=async(sql,params=[])=>{queries.push({sql,params});return {rows}};
     assert.match(robotsText,/Sitemap: https:\/\/propulsetechnologies\.online\/sitemap\.xml/);
     assert.match(robotsText,/Sitemap: https:\/\/propulsetechnologies\.online\/video-sitemap\.xml/);
     for(const blockedPath of ['/admin/','/dashboard','/professionals','/professional-requests','/profile','/wallet','/membership','/notifications','/purchased-leads','/my-leads','/investment/','/lead-partner/']){
-      assert.equal((robotsText.match(new RegExp('Disallow: '+blockedPath.replace(/[.*+?^${}()|[\]\\]/g,'\\    assert.match(robotsText,/Sitemap: https:\/\/propulsetechnologies\.online\/video-sitemap\.xml/);'),'g'))||[]).length,3,'Every crawler group must block private path '+blockedPath);
+      assert.equal(robotsText.split('Disallow: '+blockedPath).length-1,3,'Every crawler group must block private path '+blockedPath);
     }
     for(const publicPath of ['/requirements/','/estimate/']){
       assert(!robotsText.includes('Disallow: '+publicPath),'Public redirect/requirement paths must remain crawlable: '+publicPath);
