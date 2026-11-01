@@ -156,9 +156,12 @@ function homeownerFaqContent(route){
 
 function businessIdentityContent(route){
   if(route.path==='/'){
-    return '<section style="padding:10px 0 42px"><h2>ProPulse construction, interiors, professional marketplace and technology</h2>'+
-      '<p>ProPulse directly undertakes construction and interior execution in Hyderabad. Customers can also compare independent professionals through the ProPulse marketplace. ProPulse develops Business OS software for project businesses.</p>'+
-      '<p><a href="/contact">Contact ProPulse directly</a> · <a href="/experts">Compare independent professionals</a> · <a href="/technology">Explore technology</a></p></section>'
+    return '<section style="padding:10px 0 42px"><h2>House construction company in Hyderabad</h2>'+
+      '<p>ProPulse helps homeowners plan independent-house and villa construction in Hyderabad. Prepare a project brief with your plot location, plot dimensions, built-up area, number of floors, drawings, material and finish preferences, budget and intended timeline before requesting an estimate.</p>'+
+      '<h2>Construction services</h2><ul><li><a href="/hyderabad/construction">House construction in Hyderabad</a></li><li><a href="/hyderabad/construction-cost">Construction cost planning guide</a></li><li><a href="/packages">Construction packages and scope options</a></li><li><a href="/guides/home-construction-checklist">Home construction checklist</a></li><li><a href="/guides/choose-construction-contractor-hyderabad">How to choose a construction contractor</a></li></ul>'+
+      '<h2>How to compare a construction estimate</h2><p>Compare quotations using the same built-up area, structural drawings, material specifications, inclusions, exclusions, taxes, milestone schedule, variation rules, quality checks and handover terms. Indicative estimates are not final quotations; the actual site and approved scope determine the price.</p>'+
+      '<h2>Explore construction and related services</h2><p>ProPulse also offers interior planning, a marketplace for independent professionals and technology for construction businesses. Marketplace professionals are independent businesses and are not automatically ProPulse employees.</p>'+
+      '<p><a href="/quote#construction">Request a construction estimate</a> · <a href="/contact">Talk to ProPulse</a> · <a href="/experts">Find independent professionals</a> · <a href="/technology">Explore technology</a></p></section>'
   }
   if(route.path==='/technology'){
     return '<section style="padding:10px 0 42px"><h2>Business OS for construction and interior companies</h2>'+
