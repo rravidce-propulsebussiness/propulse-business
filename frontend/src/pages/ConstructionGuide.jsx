@@ -67,6 +67,8 @@ export default function ConstructionGuide(){
       </div>
     </section>
 
+    {guide.sources?.length>0&&<section className="guide-search-intent"><div><span>PRICE REFERENCES</span><h2>Published sources used for this guide</h2><p>These third-party guides provide indicative market examples. Their scope and pricing methods differ; verify current rates and inclusions directly.</p></div><div className="guide-chips">{guide.sources.map(source=><a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.label} ↗</a>)}</div></section>}
+
     <section className="guide-search-intent">
       <div><span>RELATED SEARCHES</span><h2>Questions this guide helps answer</h2><p>These phrases represent closely related research intent. Use the guide to understand the decision, then move into a project-specific requirement where needed.</p></div>
       <div className="guide-chips">{guide.searchTerms.map(term=><span key={term}>{term}</span>)}</div>
