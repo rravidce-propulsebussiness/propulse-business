@@ -82,8 +82,8 @@ export const CORE_PUBLIC_SEO_ROUTES=[
 
 export const PUBLIC_SEO_ROUTES=[
   ...CORE_PUBLIC_SEO_ROUTES,
-  ...HYDERABAD_SEO_ROUTES,
   ...INTERIOR_SEO_ROUTES,
+  ...HYDERABAD_SEO_ROUTES.filter(route=>route.path!=='/hyderabad/interior-designers'),
   ...REGIONAL_SEO_ROUTES,
   CONSTRUCTION_GUIDE_HUB_ROUTE,
   ...CONSTRUCTION_GUIDE_ROUTES,
