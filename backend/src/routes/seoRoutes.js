@@ -1,4 +1,7 @@
 const express=require('express');
+const fs=require('fs');
+const path=require('path');
+const {renderProjectHtml}=require('../services/projectSeoPageService');
 
 const router=express.Router();
 const publicExpertService=require('../services/publicExpertService');
@@ -175,6 +178,49 @@ router.get('/sitemap.xml',async(req,res)=>{
   res.type('application/xml');
   if(!res.getHeader('Cache-Control'))res.setHeader('Cache-Control','public, max-age=3600');
   res.send(body);
+});
+
+// Initial project HTML contains the actual published case study and JSON-LD.
+// User-facing React navigation still hydrates the same page with photos/videos.
+router.get('/projects/:projectKey',async(req,res)=>{
+  if(!['GET','HEAD'].includes(req.method))return res.status(405).end();
+  const accept=String(req.get('accept')||'');
+  if(accept&&!accept.includes('text/html')&&!accept.includes('*/*'))
+    return res.status(406).end();
+  const key=String(req.params.projectKey||'').trim();
+  if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(key)||key.length>100){
+    res.setHeader('X-Robots-Tag','noindex');
+    return res.status(404).type('text/plain').send('Project not found');
+  }
+  const idMatch=/^project-([1-9]\d*)$/.exec(key);
+  try{
+    const project=await publicExpertService.getPublicProject(idMatch?idMatch[1]:key);
+    if(!project){
+      res.setHeader('X-Robots-Tag','noindex');
+      res.setHeader('Cache-Control','no-store');
+      return res.status(404).type('text/plain').send('Published project not found');
+    }
+    const builtIndex=[
+      path.resolve(__dirname,'../../hostinger-frontend/index.html'),
+      path.resolve(__dirname,'../../../frontend/dist/index.html'),
+    ].find(file=>fs.existsSync(file));
+    if(!builtIndex){
+      res.setHeader('Retry-After','10');
+      res.setHeader('Cache-Control','no-store');
+      res.setHeader('X-Robots-Tag','noindex');
+      return res.status(503).type('text/plain').send('Project page is temporarily unavailable');
+    }
+    const {html,path:canonicalPath}=renderProjectHtml(fs.readFileSync(builtIndex,'utf8'),project);
+    if(req.path!==canonicalPath)return res.redirect(301,canonicalPath);
+    res.setHeader('Cache-Control','no-cache, must-revalidate');
+    return res.status(200).type('html').send(html);
+  }catch(error){
+    console.error('Crawlable project page failed:',error?.message||error);
+    res.setHeader('Cache-Control','no-store');
+    res.setHeader('X-Robots-Tag','noindex');
+    res.setHeader('Retry-After','30');
+    return res.status(503).type('text/plain').send('Project page temporarily unavailable');
+  }
 });
 
 router.resolveSeoOrigin=safeOrigin;
