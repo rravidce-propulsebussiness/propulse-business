@@ -105,5 +105,29 @@ groups["More interior cost, layout & material questions"] = [
 ["What should I finalise before starting interior work?","A checklist for approved drawings, material codes, electrical points, appliance sizes, finishes, BOQ and payment milestones."]
 ];
 
+
+groups["Plywood tests, hinges & finish comparisons"] = [
+["How can I identify good-quality plywood for home interiors?","Explain grade markings, manufacturer traceability, sheet thickness, core gaps, bonding evidence and why visual checks cannot certify performance."],
+["What should I check on a plywood sheet before buying?","Provide a practical inspection list for labels, batch details, edges, flatness, thickness and storage condition."],
+["Is a water test enough to prove plywood is waterproof?","Clarify the limits of soaking or boiling demonstrations and explain why declared grade and test documentation matter."],
+["What is the difference between MR, BWR and BWP plywood?","Explain intended moisture exposure and the need to verify the exact manufacturer specification and applicable standard."],
+["What does IS 303 mean on a plywood sheet?","Explain how to read a standards claim and verify product documentation without treating a printed mark alone as proof."],
+["How do I check whether plywood thickness is correct?","Describe measuring at multiple points with a suitable gauge and comparing the result with the declared specification and tolerance."],
+["Which plywood is suitable for a kitchen sink cabinet?","Cover water exposure, leak access, edge sealing, substrate choice, ventilation and maintenance."],
+["What are the different types of concealed cabinet hinges?","Compare straight-arm, cranked, overlay, inset and application-specific hinge arrangements."],
+["What is the difference between full overlay and half overlay hinges?","Explain shutter coverage, shared cabinet partitions, mounting plates and consistent door gaps."],
+["Are soft-close hinges worth the extra cost?","Compare closing comfort, adjustment, mechanism quality, shutter weight and serviceability."],
+["How many hinges are required for a wardrobe shutter?","Explain why hinge count depends on shutter dimensions, weight, material and manufacturer load guidance."],
+["What is the difference between 90 degree, 110 degree and 165 degree hinges?","Explain opening clearance and access while advising users to check actual hardware geometry and nearby obstructions."],
+["Which is better for kitchen shutters: laminate or acrylic?","Compare cleaning, fingerprints, gloss, scratch visibility, edge finishing, substrate and replacement options."],
+["What is the difference between veneer and laminate?","Compare natural wood variation, maintenance, protective coating, repair, durability and budget."],
+["Is PU paint better than laminate for wardrobe shutters?","Compare seamless colour options, routed profiles, surface preparation, repair and maintenance."],
+["What is membrane finish and where can it be used?","Explain wrapped shutter profiles, film adhesion, substrate compatibility, heat and moisture exposure."],
+["Is 0.8mm or 1mm laminate better for wardrobes?","Compare product grade, application, substrate, adhesive, edge treatment and why thickness alone is not a durability guarantee."],
+["What is the difference between PVC and ABS edge banding?","Compare material properties, thickness options, appearance, adhesive process and suitability by application."],
+["What should I check in a modular kitchen hardware quotation?","List hinge model, drawer channel, lift-up mechanism, baskets, load ratings, finish, quantity and warranty."],
+["Which drawer channel is best for kitchen cabinets?","Compare roller, telescopic and concealed undermount systems by extension, load, adjustment, soft-close and service access."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
