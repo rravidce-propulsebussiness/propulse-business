@@ -1,6 +1,10 @@
 name: Daily Public Video SEO Health
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/daily-public-video-seo-audit.yml'
   schedule:
     # Approximately 8:00 AM India Standard Time (GitHub schedules may be delayed).
     - cron: '30 2 * * *'
