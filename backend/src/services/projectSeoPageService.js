@@ -119,9 +119,16 @@ function renderProjectHtml(template,project){
   // Built home HTML is pre-rendered for SEO. Replace only root fallback,
   // keeping the boot loader, fingerprinted scripts and styles untouched.
   const start=html.indexOf('<div id="root">');
-  const script=html.indexOf('<script type="module"',start);
-  const end=script<0?-1:html.lastIndexOf('</div>',script);
-  if(start<0||script<0||end<=start)throw new Error('Built frontend root boundary is invalid');
+  // Vite puts the hashed module script in <head> in production builds;
+  // the source index has it after #root. Neither position can locate
+  // the closing root element reliably. The published root is the last
+  // closing div before </body> in both layouts.
+  const bodyEnd=html.indexOf('</body>',start);
+  const end=bodyEnd<0?-1:html.lastIndexOf('</div>',bodyEnd);
+  if(start<0||bodyEnd<0||end<=start)throw new Error('Built frontend root boundary is invalid');
+  if(!/^\s*$/.test(html.slice(end+6,bodyEnd))&&!/^\s*(?:<script\b[^>]*>[\s\S]*?<\/script>\s*)+$/.test(html.slice(end+6,bodyEnd))){
+    throw new Error('Unexpected markup after project root; refusing unsafe HTML replacement');
+  }
   html=html.slice(0,start)+'<div id="root">'+fallback(project,path)+'</div>'+html.slice(end+6);
   return {html,path,canonical};
 }
