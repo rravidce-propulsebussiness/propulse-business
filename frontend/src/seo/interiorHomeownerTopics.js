@@ -80,6 +80,48 @@ const groups = {
 ["What is the difference between carpenter-made and factory-made modular interiors?","Compare customisation, tolerances, site dust, timelines, installation and quality control."],
 ["What warranty should I get for modular kitchen and wardrobes?","Separate board, finish, hardware, workmanship and service warranties."]
 ]
+
+,
+"Bathroom, utility & space planning":[
+["How much does a bathroom renovation cost in Hyderabad?","Break down demolition, plumbing, waterproofing, tiles, sanitaryware, fittings, electrical work and exclusions."],
+["Which tiles are best for bathroom floors?","Compare slip resistance, water absorption, texture, cleaning and product ratings."],
+["What is the ideal height for a bathroom wash basin?","Explain user comfort, counter thickness, tap type and plumbing coordination."],
+["How do I choose a shower glass partition for a small bathroom?","Compare fixed panels and doors, clearances, glass safety, hardware and cleaning."],
+["How do I prevent mould in bathroom ceilings?","Cover exhaust capacity, ventilation, leaks, surface preparation and suitable finishes."],
+["What is the best design for a small utility area?","Plan washing machine dimensions, sink, drying, storage, drainage and service access."],
+["How do I plan storage in a small 2BHK flat?","Use vertical storage, multifunctional furniture and circulation clearances without overcrowding."],
+["What is the minimum space needed around a bed and wardrobe?","Explain door swings, walking clearances, drawer access and site-specific furniture dimensions."]
+],
+"Furniture, curtains & decor":[
+["How much does a custom study table cost?","Explain size, storage, board, finish, cable management and installation factors."],
+["Which material is best for a study table?","Compare plywood, engineered boards and solid wood for load, span, finish and budget."],
+["How do I choose curtains for a living room?","Compare sheer, blackout and layered curtains by daylight, privacy, fabric and track."],
+["Which blinds are best for a bedroom?","Compare roller, Roman, vertical and blackout options by light control and maintenance."],
+["How do I choose wall art for a living room?","Explain scale, placement, colour balance and relationship to furniture."],
+["Are wallpapers suitable for Indian homes?","Discuss wall preparation, humidity, cleaning, seams and suitable room conditions."],
+["What is the cost of a pooja unit for a 2BHK flat?","Break down size, material, carving, lighting, storage, installation and electrical scope."],
+["How do I design a compact foyer with shoe storage?","Balance shoe capacity, ventilation, seating, mirror, door swing and circulation."]
+],
+"Materials, hardware & durability":[
+["Which brand of hinges is best for modular kitchen cabinets?","Explain hinge type, load rating, soft-close mechanism, corrosion resistance and service support."],
+["What is the difference between soft-close and normal drawer channels?","Compare mechanism, load capacity, extension, adjustment and maintenance."],
+["Which edge band thickness is suitable for modular furniture?","Explain edge protection, board thickness, application and machine bonding quality."],
+["Is particle board good for wardrobes?","Discuss dry-area use, load, screw holding, moisture risk, edge sealing and expected service."],
+["Which is better: plywood or MDF for wardrobe shutters?","Compare weight, routing, screw holding, moisture exposure, finish and hardware."],
+["How do I identify good quality modular furniture hardware?","A practical checklist for brand markings, smooth operation, load ratings and warranty."],
+["What is the difference between PU polish and laminate finish?","Compare appearance, maintenance, repairability, application and cost."],
+["How do I maintain laminate furniture so it lasts longer?","Explain cleaning methods, heat and moisture precautions, edge protection and repair limits."]
+],
+"Renovation & project management":[
+["How much does it cost to renovate a 2BHK flat in Hyderabad?","Separate cosmetic refresh, partial renovation and full renovation with itemised scope and exclusions."],
+["Can I renovate a flat while living in it?","Explain phasing, dust control, temporary utilities, safety and realistic disruption."],
+["What should I renovate first in an old apartment?","Prioritise leak diagnosis, electrical and plumbing safety, waterproofing and essential repairs before finishes."],
+["How do I plan an interior budget before meeting a designer?","Prepare room measurements, must-haves, finish preferences, appliance list and contingency."],
+["What is the correct sequence for interior work in a new flat?","Explain site measurement, design freeze, concealed services, ceiling, flooring protection, furniture and handover."],
+["How do I check measurements before modular furniture production?","Cover final site dimensions, wall squareness, service points, appliance sizes and signed drawings."],
+["What should be included in an interior handover checklist?","Inspect shutters, alignment, hardware, electrical points, finish, cleaning, warranties and snag closure."],
+["How do I avoid delays in a modular interior project?","Explain design approvals, material selection, site readiness, production lead times and decision deadlines."]
+]
 };
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
