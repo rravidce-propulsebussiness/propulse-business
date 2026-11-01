@@ -110,6 +110,48 @@ const groups = {
     ["How do I reduce construction delays?","Explains design freeze, procurement planning, approvals, decision turnaround and milestone tracking."],
     ["What warranty should a construction company provide?","Explains why warranty scope, exclusions, duration and defect reporting should be written into the contract."]
   ]
+
+  ,
+  "Foundation, soil & site preparation": [
+    ["Do I need a soil test before constructing an independent house?","Explains soil investigation, bearing capacity and why foundation type should follow a geotechnical report and structural design."],
+    ["What is the difference between isolated footing and raft foundation?","Compares typical use cases, soil conditions, load distribution and design responsibility."],
+    ["How deep should house foundations be in Hyderabad?","Explains why no single depth fits every site; soil report, loads, groundwater and adjacent structures govern design."],
+    ["Can I build a house on black cotton soil?","Discusses expansive soil behaviour, site investigation and engineered foundation options."],
+    ["What is plinth beam and why is it provided?","Explains its role in tying supports and managing wall loads according to the structural design."],
+    ["How do I prepare a plot before starting house construction?","A checklist for survey, soil study, utilities, access, levels, drainage and approved drawings."],
+    ["What is anti-termite treatment in house construction?","Explains where treatment is used, product labels, applicator records and safety precautions."],
+    ["How do I prevent water stagnation around house foundations?","Covers site grading, stormwater drainage, plinth levels and coordination with the civil engineer."]
+  ],
+  "Roof slab, staircase & masonry": [
+    ["How thick should an RCC roof slab be for a house?","Explains that slab thickness is designed from span, loads, deflection, reinforcement and structural drawings."],
+    ["When can I remove slab shuttering after concrete casting?","Explains formwork striking times depend on span, concrete strength, support sequence, temperature and engineer approval."],
+    ["How many days after slab casting can I build the next floor?","Explains strength gain, testing, curing, load staging and structural engineer clearance."],
+    ["What is the ideal staircase width for a residential house?","Covers comfort, headroom, landing, handrails and applicable local building requirements."],
+    ["How do I calculate the number of steps for a staircase?","Explains floor-to-floor height, riser, tread, landing and comfortable geometry."],
+    ["Which is better for house walls: 4 inch or 6 inch bricks?","Compares wall purpose, structural role, acoustic/thermal needs and approved drawings."],
+    ["Why are cracks appearing between brick wall and RCC column?","Explains differential movement, junction detailing, mesh and when professional inspection is needed."],
+    ["What is the purpose of lintel and sunshade above windows?","Explains load transfer, rain protection, projections and detailing."]
+  ],
+  "Flooring, plaster & paint quality": [
+    ["Which flooring is best for a new house in India?","Compares vitrified tile, ceramic, granite and other finishes by use, slip resistance and maintenance."],
+    ["What is the difference between double charge and full body vitrified tiles?","Explains manufacturing terminology, wear layer, through-body pattern and product specifications."],
+    ["How do I calculate tiles required for a house?","Shows area measurement, tile size, layout, wastage allowance and matching batch considerations."],
+    ["Why are floor tiles making a hollow sound?","Explains possible bedding voids, bond failure, movement and how to assess extent before repair."],
+    ["What is the ideal plaster thickness for internal walls?","Explains substrate condition, specification, alignment and why excessive thickness needs correction."],
+    ["How long should wall plaster cure before painting?","Covers curing, drying, moisture checks and paint-system manufacturer guidance."],
+    ["Why is paint peeling off newly plastered walls?","Explains moisture, alkalinity, surface preparation, primer and premature painting."],
+    ["Which paint is best for exterior walls in Hyderabad weather?","Compares weather-resistant systems, surface preparation, exposure and maintenance."]
+  ],
+  "Construction contracts, BOQ & payments": [
+    ["What is a BOQ in house construction?","Explains bill of quantities, measurement, specification and how it supports transparent comparisons."],
+    ["Should I choose labour contract or material contract for house construction?","Compares owner control, procurement responsibility, supervision, cash flow and risk."],
+    ["What is the usual payment schedule for house construction?","Explains milestone-linked payments and why terms should match measurable completed work."],
+    ["How do I avoid hidden charges in a construction contract?","Lists scope gaps, provisional items, escalation clauses, taxes and variation approval steps."],
+    ["How do I track daily progress at a house construction site?","A simple reporting approach for labour, materials, completed work, inspections and blockers."],
+    ["Who is responsible for construction material wastage?","Explains how responsibility and acceptable wastage should be defined in the agreement."],
+    ["What is a defect liability period in house construction?","Explains written defect reporting, exclusions, response timelines and applicable contract terms."],
+    ["How do I verify material brands and grades used at my site?","Covers approved material schedules, delivery challans, batch details, test certificates and site records."]
+  ]
 };
 
 const intentLabels = ["Google Trends / public search-informed question","Homeowner problem-solving query","Comparison or purchase-intent query","Local service-intent query"];
