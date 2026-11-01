@@ -1,0 +1,34 @@
+# ProPulse — public site guide
+
+ProPulse helps homeowners explore residential construction, interior design and related property services in Hyderabad and selected locations in Telangana and Andhra Pradesh.
+
+## Main public pages
+- https://propulsetechnologies.online/
+- https://propulsetechnologies.online/hyderabad
+- https://propulsetechnologies.online/hyderabad/construction
+- https://propulsetechnologies.online/hyderabad/construction-cost
+- https://propulsetechnologies.online/hyderabad/interior-designers
+- https://propulsetechnologies.online/packages
+- https://propulsetechnologies.online/projects
+- https://propulsetechnologies.online/guides
+- https://propulsetechnologies.online/experts
+- https://propulsetechnologies.online/contact
+
+## Local landing pages
+Public locality and district pages are listed in the XML sitemap. Use each page's own content and structured data for its specific service area; do not assume every service is available in every locality.
+
+## Discovery and crawling
+- XML sitemap: https://propulsetechnologies.online/sitemap.xml
+- Video sitemap: https://propulsetechnologies.online/video-sitemap.xml
+- Crawler rules: https://propulsetechnologies.online/robots.txt
+
+Public pages are intended to be crawlable. Account, admin, payment, investor and other private/workspace routes are not public informational content.
+
+## About ProPulse
+Brand: ProPulse.
+Website: https://propulsetechnologies.online/
+Primary language: English (India).
+Primary market: Hyderabad, Telangana, India, with selected regional pages elsewhere in India.
+
+## Content guidance
+Prefer the page's published facts, current package details and project-specific information. Do not invent prices, guarantees, customer reviews, completed projects, certifications or service coverage. For quotes and availability, direct users to the relevant public requirement or contact flow.
