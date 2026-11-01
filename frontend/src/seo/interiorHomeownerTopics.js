@@ -129,5 +129,19 @@ groups["Plywood tests, hinges & finish comparisons"] = [
 ["Which drawer channel is best for kitchen cabinets?","Compare roller, telescopic and concealed undermount systems by extension, load, adjustment, soft-close and service access."]
 ];
 
+
+groups["Vastu door, room & floor-plan questions"] = [
+["How many doors should a house have according to Vastu?","Explain that there is no universal required count and prioritise safe exits, circulation, privacy and approved plans."],
+["Does the main door direction matter in Vastu?","Summarise common traditional preferences and explain how to verify plot orientation and preserve a practical entrance."],
+["Which direction should the kitchen face according to Vastu?","Describe common beliefs while checking ventilation, exhaust, work triangle, gas or electrical safety and service routing."],
+["Where should the staircase be placed according to Vastu?","Explain differing traditional views and require structural, headroom, landing, handrail and escape-route checks."],
+["Can the pooja room be next to a staircase or toilet?","Discuss common household preferences alongside privacy, cleanliness, ventilation and safe electrical planning."],
+["Which direction is preferred for the master bedroom in Vastu?","Explain traditional preferences without overriding daylight, privacy, noise control and furniture clearances."],
+["Is a north-east toilet allowed in a Vastu house plan?","Describe differing beliefs and prioritise sanitation, plumbing, ventilation, waterproofing and code requirements."],
+["What Vastu points should I check in a west-facing house?","Offer a preference-based review of entrance and room arrangement while treating surveyed orientation and site constraints accurately."],
+["What should I do if the Vastu plan conflicts with structural design?","Set a clear priority order: engineering, regulations, safety and building performance first; accommodate beliefs only where feasible."],
+["Can I change an existing house plan to make it Vastu compliant?","Explain which non-structural layout choices may be reviewed and why structural changes need professional assessment and approval."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
