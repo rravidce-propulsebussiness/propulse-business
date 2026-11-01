@@ -111,5 +111,19 @@ groups["Hardware & accessories"]=[
 ["Which channel is best for kitchen drawers?","Compare roller, telescopic and tandem systems by load rating, extension and serviceability."],
 ["What is edge banding and why does it matter?","Explain edge protection, thickness, adhesive and finish quality."]
 ];
+\ngroups["Room dimensions & planning"]=[
+["What is the standard height of a kitchen countertop in India?","Explain user height, ergonomic testing, appliance levels and final site measurement."],
+["How much space is needed between kitchen counter and overhead cabinets?","Cover user reach, appliance clearance and ventilation."],
+["What is the ideal loft height above a wardrobe?","Explain ceiling height, access, storage needs and safe installation."],
+["How much clearance is needed for sliding wardrobe doors?","Cover track systems, door overlap, drawers and handles."],
+["How do I plan a kids bedroom that can grow with the child?","Cover flexible storage, study lighting, safe furniture and adaptable colours."]
+];
+groups["Interior materials & maintenance"]=[
+["How do I identify good-quality plywood before buying?","Explain grade stamps, traceability, core gaps, thickness tolerance and certificates."],
+["What is the difference between commercial plywood and BWR plywood?","Compare intended exposure, glue-line performance and product documentation."],
+["Can MDF be used in a kitchen?","Explain suitable dry zones, moisture limits, edge sealing and sink-area precautions."],
+["How do I clean matte laminate without leaving marks?","Provide safe cleaning guidance and warn against abrasive pads and harsh solvents."],
+["How do I maintain acrylic kitchen shutters?","Explain soft-cloth cleaning, suitable cleaners, scratch precautions and edge care."]
+];
 \nexport const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
