@@ -384,6 +384,7 @@ async function listRecentProjects({page=1,pageSize=18,materializeMedia=true}={})
        ${settings.showPlans?'bpp.plan_url':'NULL::text AS plan_url'},
        COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) AS published_at,
        bp.id AS business_profile_id,
+       COALESCE(bp.public_profile_enabled,TRUE) AS public_profile_enabled,
        bp.business_name,
        EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
        COALESCE(beds.is_official,FALSE) AS is_official,
