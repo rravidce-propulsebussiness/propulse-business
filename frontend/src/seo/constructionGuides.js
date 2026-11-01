@@ -448,6 +448,87 @@ export const CONSTRUCTION_GUIDES=[
     ]
   },
 
+
+  {
+    slug:'plywood-quality-tests-bis-303-710',
+    type:'construction-guide', category:'Interior Materials',
+    title:'How to Check Plywood Quality | BIS Tests, IS 303 & IS 710 | ProPulse',
+    description:'Learn how to check plywood quality before buying, understand IS 303:2024 and IS 710:2024, and review the key laboratory tests and site inspection checklist.',
+    heading:'How do you check plywood quality before buying for interiors?',
+    summary:'A good plywood purchase is verified through the current BIS standard and licence scope, declared grade and thickness, traceable supply and relevant test evidence. Visual inspection is useful, but it cannot certify internal bonding or water resistance.',
+    searchTerms:['how to check plywood quality','plywood quality test at site','IS 303 2024 plywood','IS 710 2024 marine plywood','BWR vs BWP plywood test','plywood glue shear test','plywood water resistance test'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Do not try to certify plywood by soaking, boiling, bending or burning a small offcut at home. Standard tests require controlled specimen preparation and laboratory methods. Ask for the manufacturer’s current BIS licence details and relevant test reports; verify the licence and scope independently.',
+    sections:[
+      section('Start by identifying the correct standard','BIS lists IS 303:2024 as Plywood for General Purposes (fourth revision) and IS 710:2024 as Marine Plywood (third revision). These are not interchangeable labels. Ask the supplier which standard, grade, type and intended application are declared for the actual product. Confirm the current BIS licence, manufacturer, factory and product scope rather than relying on a logo printed on a sheet.'),
+      section('Understand what the main plywood tests tell you','The BIS standards compendium and BIS laboratory listings identify several performance checks.',['Water-resistance test: evaluates performance under the standard’s specified water exposure','Glue-shear strength and adhesion of plies: assess bonding between veneers and risk of delamination','Moisture content: measures moisture in the panel at testing','Static bending strength and modulus of elasticity: assess strength and stiffness under bending','Workmanship and finish: checks surface and manufacturing quality','Dimensional checks: include thickness, squareness and edge straightness','Formaldehyde content or emission: relates to indoor exposure requirements in the applicable standard']),
+      section('What to inspect when sheets arrive at site','Visual inspection helps catch handling damage and obvious defects, but cannot reveal every internal core gap or bonding problem.',['Match the invoice, brand, standard, grade, thickness and sheet dimensions to the purchase order','Check printed markings and batch/manufacturer traceability','Inspect faces and edges for damage, open splits, blisters, severe patches or delamination','Measure representative sheets with a suitable thickness gauge and compare with declared tolerances','Count sheets and photograph labels before stacking','Keep delivery documents and supplier test declarations']),
+      section('MR, BWR and BWP are not simply marketing words','Ask the supplier to state the exact grade under the applicable standard and provide supporting compliance evidence. Do not assume every “waterproof” claim means the same test regime. Marine plywood under IS 710:2024 has its own specification; it should be selected for the intended service conditions, not as a universal upgrade for every wardrobe or dry-area cabinet.'),
+      section('Why a bucket or boiling-water test is not proof','A home soak test does not control sample size, exposure, temperature, conditioning, specimen selection or evaluation. A sheet that survives a quick soak may still fail a required standard test; a poorly performed test may also damage a good sheet. Use a competent laboratory for compliance testing and request the test report for the same product/grade.'),
+      section('Choose the board for its actual location','Wardrobe carcasses, dry shelves, kitchen cabinets and sink-base units have different exposure and loading. Specify board type, grade, thickness, finish, edge sealing and support spacing for each use. Even moisture-resistant plywood can be damaged by persistent leaks, unsealed edges or standing water. Waterproofing and plumbing leak control remain essential.'),
+      section('A plywood purchase checklist','Before approving a brand or material substitution, write the standard and edition, grade, thickness, manufacturer, BIS licence details, test evidence, sheet dimensions, quantity, rate, transport, storage and replacement terms into the purchase order.')
+    ],
+    sources:[
+      {label:'BIS — IS 303:2024, Plywood for General Purposes',url:'https://www.bis.gov.in/is-303-2024/?lang=en'},
+      {label:'BIS — IS 710:2024, Marine Plywood',url:'https://www.bis.gov.in/is-710-2024/?lang=en'},
+      {label:'BIS — Compendium of Indian Standards on Plywood (2025)',url:'https://www.services.bis.gov.in/tmp/compendium_2025-06-02-04-13-12.pdf'},
+      {label:'BIS Laboratory Information Management System — IS 303 tests',url:'https://lims.bis.gov.in/home/search_is_number/?is_number__doc_no=303'},
+      {label:'Institute of Wood Science and Technology — Specimen Testing',url:'https://iwst.icfre.gov.in/woodspecimentesting.html'}
+    ]
+  },
+  {
+    slug:'cabinet-hinge-types-overlay-inset-soft-close',
+    type:'construction-guide',category:'Interior Hardware',
+    title:'Types of Cabinet Hinges | Overlay, Inset, Half Overlay & Soft Close | ProPulse',
+    description:'Understand concealed cabinet hinge types, overlay and inset applications, soft-close mechanisms, opening angles and how to specify hinges for kitchens and wardrobes.',
+    heading:'What are the different types of cabinet hinges for modular interiors?',
+    summary:'The right hinge depends on cabinet construction, door position, door size and weight, opening angle, nearby obstructions and the required closing action. “Soft close” is a function, while overlay and inset describe how the door sits against the cabinet.',
+    searchTerms:['types of cabinet hinges','full overlay vs half overlay hinge','inset hinge vs overlay hinge','soft close hinge for kitchen cabinet','110 degree vs 165 degree hinge','best wardrobe hinges'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Hinge count, drilling dimensions, mounting plates and load limits must follow the exact manufacturer’s technical data for the door size, weight and material. Do not copy a generic hinge-count rule.',
+    sections:[
+      section('First understand the door application','Full overlay doors cover most of the cabinet side; half overlay doors share a central partition with another door; inset doors sit within the cabinet opening. These applications require different hinge geometry and mounting positions. Confirm the cabinet construction and reveal gaps before ordering.'),
+      section('Common hinge types used in interiors','Concealed cup hinges are common in modular kitchens and wardrobes because the mechanism is hidden when the door is closed. Butt hinges are visible and are used in some traditional furniture. Special hinges are available for corner cabinets, thick or profiled doors, glass/aluminium frames, angled cabinets and wide-opening applications.'),
+      section('Soft-close, self-close and push-to-open are different functions','Soft-close uses damping to slow the door near closing. Some hinge systems integrate the damper; others use a separate add-on. Self-closing refers to the spring action that pulls a door closed. Push-to-open systems are designed for handleless fronts and require compatible hardware and correct door gaps. Confirm the actual product mechanism rather than relying on sales terminology.'),
+      section('Choose the opening angle for the cabinet layout','Common catalogues include standard opening angles such as around 95°, 100°, 107° or 110°, while special wide-angle hinges can open further for corner or pull-out access. More opening is not always better: adjacent walls, handles, appliances and drawer fronts may obstruct movement. Check the manufacturer’s clearance diagrams.'),
+      section('How to select hinges for a wardrobe or kitchen','Check door height, width, thickness, weight, material, overlay/inset position, cabinet side thickness, opening angle, mounting plate and adjustment range. Tall or heavy shutters may need a different hinge or more hinges; use the maker’s door-weight and height guidance.'),
+      section('What to check in the hardware quotation','Ask for brand, exact series/model, hinge application, opening angle, integrated or add-on damping, mounting plate, screw/press-in fixing, corrosion suitability where relevant, warranty and service availability. “Premium soft-close hinge” is not a complete specification.'),
+      section('Installation and maintenance checks','During handover, check even gaps, flush alignment, smooth travel, full opening without collision, reliable closing and secure fixing. Re-adjust after the cabinet settles if the manufacturer permits. Keep hinges clean and avoid hanging loads on doors. Replace damaged screws or stripped substrate with an approved repair method.')
+    ],
+    sources:[
+      {label:'Blum India — Hinge Systems Overview',url:'https://www.blum.com/in/en/products/hingesystems/overview/'},
+      {label:'Blum — CLIP top BLUMOTION range',url:'https://www.blum.com/in/en/products/hingesystems/clip-top-blumotion/programme/'},
+      {label:'Hettich India — Furniture Hinges',url:'https://www.hettich.com/en-in/products/hinges'},
+      {label:'Hettich eShop — Hinge filters by overlay, inset and opening angle',url:'https://shop.hettich.com/in_EN/Hinges/c/group2264954678785'}
+    ]
+  },
+  {
+    slug:'interior-finishes-laminate-acrylic-veneer-pu-membrane',
+    type:'construction-guide',category:'Interior Materials',
+    title:'Interior Finish Types Compared | Laminate, Acrylic, Veneer, PU & Membrane | ProPulse',
+    description:'Compare laminate, acrylic, veneer, PU paint, membrane, PET and glass finishes for kitchens, wardrobes and TV units by appearance, maintenance and cost drivers.',
+    heading:'What is the difference between laminate, acrylic, veneer, PU and membrane finishes?',
+    summary:'A finish is the visible surface, while the board or plywood below is the substrate. Compare the complete panel system—including edge treatment, adhesive, fabrication and maintenance—not only the surface name.',
+    searchTerms:['types of interior finishes','laminate vs acrylic finish','PU vs duco finish','veneer vs laminate','membrane vs laminate shutters','best finish for kitchen cabinets'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Performance varies by manufacturer, product line, substrate and fabrication quality. Ask for physical samples, technical data and cleaning instructions; do not assume one finish is always more durable than another.',
+    sections:[
+      section('Separate the substrate from the finish','Plywood, MDF, HDHMR and particleboard are substrates. Laminate, acrylic, veneer, paint, membrane and PET are surface or finish systems. A premium finish cannot correct a weak, damp or poorly constructed carcass. Specify both layers independently.'),
+      section('Decorative laminate','Laminate is a factory-made decorative sheet bonded to a substrate. It is available in matte, gloss, textured, suede and wood-look designs. It offers many patterns and is commonly used for wardrobes, kitchens and TV units. Check sheet thickness, brand/code, surface texture, edge banding, joint placement and cleaning instructions.'),
+      section('Acrylic and PET surfaces','Acrylic and PET-faced panels can provide a smooth, contemporary surface in gloss or matte variants depending on the product. Ask about scratch resistance, fingerprints, colour consistency, edge finish, repair options and compatible cleaners. High gloss can show smudges and reflections more clearly.'),
+      section('Natural veneer','Veneer is a thin layer of real wood applied to a suitable substrate and finished with polish or coating. Grain and shade vary naturally, so approve the actual veneer sequence and sample. Veneer can be refinished in some systems but generally needs more careful maintenance than many standard laminate surfaces.'),
+      section('PU paint, lacquer and duco terminology','These terms are sometimes used loosely in the market. Ask the fabricator to state the exact coating system, primer, number of coats, sheen, colour code, curing process and repair method. Painted finishes can create seamless colours and routed profiles, but quality depends heavily on surface preparation, controlled application and curing.'),
+      section('Membrane and wrapped shutters','Membrane shutters use a film wrapped over a profiled substrate, often to cover routed edges and decorative profiles. Confirm film specification, substrate, adhesive/process, heat exposure limits and repair options. Poorly controlled heat or moisture can cause lifting or peeling in unsuitable applications.'),
+      section('Glass, metal and fluted details','Glass shutters and metal trims add contrast and can be used selectively in display units. Confirm safety glass type, frame details, edge protection and cleaning. Fluted panels add texture but collect dust in grooves; use them where maintenance is practical.'),
+      section('How to choose finishes room by room','For kitchens, prioritise cleaning, moisture detailing, edge protection and access to repair. For wardrobes, consider fingerprints, abrasion, sunlight and the visual scale of the room. For TV units, balance glare, dust, cable access and wall-panel maintenance. Approve samples under the actual room lighting.'),
+      section('What to include in the finish schedule','Record the substrate type/grade/thickness, surface finish, brand and code, colour, texture, sheen, edge band, adhesive/process, location, sample approval and maintenance instructions. Attach signed samples or product references to the BOQ to prevent substitutions.')
+    ],
+    sources:[
+      {label:'BIS — IS 303:2024, Plywood for General Purposes',url:'https://www.bis.gov.in/is-303-2024/?lang=en'},
+      {label:'Blum India — Hinge Systems Overview (hardware coordination)',url:'https://www.blum.com/in/en/products/hingesystems/overview/'}
+    ]
+  },
+
 ]
 
 export function guideBySlug(slug){
