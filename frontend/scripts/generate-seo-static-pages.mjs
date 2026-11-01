@@ -268,7 +268,8 @@ function fallback(route){
 
 function breadcrumbItems(route){
   const items=[{'@type':'ListItem',position:1,name:'Home',item:absolute('/')}]
-  if(route.type==='blog-hub')return [...items,{'@type':'ListItem',position:2,name:'Blog',item:absolute('/blog')}];\n  if(route.type==='guide-hub')return [...items,{'@type':'ListItem',position:2,name:'Guides',item:absolute('/guides')}]
+  if(route.type==='blog-hub')return [...items,{'@type':'ListItem',position:2,name:'Blog',item:absolute('/blog')}];
+  if(route.type==='guide-hub')return [...items,{'@type':'ListItem',position:2,name:'Guides',item:absolute('/guides')}]
   if(route.type==='construction-guide')return [...items,{'@type':'ListItem',position:2,name:'Guides',item:absolute('/guides')},{'@type':'ListItem',position:3,name:route.heading,item:absolute(route.path)}]
   if(route.type==='interior-state-hub')return [...items,{'@type':'ListItem',position:2,name:route.stateName,item:absolute(route.path)}]
   if(route.type==='interior-district')return [...items,{'@type':'ListItem',position:2,name:route.stateName,item:absolute('/'+route.stateSlug+'/interior-designers')},{'@type':'ListItem',position:3,name:route.districtName,item:absolute(route.path)}]
