@@ -248,6 +248,29 @@ groups["Planning, room sizes & building services"] = [
     ["What documents should an electrician provide at handover?","Request circuit schedule, as-built layout, test records, device details, warranties and maintenance instructions."],
     ["How do I maintain waterproofing in an old house?","Recommend periodic inspection of outlets, joints, cracks and plumbing leaks, with compatible repairs based on a proper diagnosis."]
   ]
+,
+  "Floor tiles, doors, windows & finish selection": [
+    ["Which is better for house flooring, ceramic or vitrified tiles?","Compare product specifications, water absorption, intended application, finish, maintenance and installation requirements."],
+    ["What are the different grades of vitrified tiles?","Explain that classifications and technical ratings depend on product and standard; check the exact technical sheet."],
+    ["Which tiles are best for bathroom floors?","Select by wet-area suitability and declared slip performance, not appearance alone; confirm drain slope and installation."],
+    ["What is the difference between glossy and matte floor tiles?","Compare cleaning, glare, visible marks, slip considerations and intended room application."],
+    ["How do I check tile quality before buying?","Inspect batch, shade, calibre, dimensions, flatness, surface defects and technical documentation across cartons."],
+    ["What tile size is suitable for a living room?","Choose based on room proportions, substrate flatness, joint layout, handling and installer capability."],
+    ["How many extra tiles should I buy for a house?","Calculate based on measured area, layout, cuts, pattern, breakage and future repair stock with the tile supplier."],
+    ["What is the difference between rectified and non-rectified tiles?","Compare edge finishing, dimensional consistency, joint requirements and installation tolerance."],
+    ["How do I choose anti-skid tiles for a bathroom?","Review the exact product's wet slip test information and suitability for the intended use; texture alone is not proof."],
+    ["What should be included in a floor tile installation quotation?","Include tile quantity, wastage, adhesive, substrate preparation, grout, skirting, movement joints, labour and debris."],
+    ["Which is better for a main door, solid wood or engineered door?","Compare construction, exposure, stability, security, finish, hardware and maintenance for the actual opening."],
+    ["What is the difference between flush door and panel door?","Compare core construction, weight, appearance, sound, hardware fixing and intended use."],
+    ["Which is better, uPVC or aluminium windows?","Compare profile system, glazing, seals, drainage, hardware, weather exposure, finish and service support."],
+    ["How much do aluminium windows cost for a house?","Separate opening dimensions, profile series, glass, mesh, hardware, finish, installation and sealing."],
+    ["What type of glass is suitable for home windows?","Select safety, acoustic, solar and privacy performance for the opening and applicable requirements with the supplier."],
+    ["What should I check before installing uPVC windows?","Verify dimensions, reinforcement where applicable, drainage, seals, hardware, glazing, fixing and perimeter waterproofing."],
+    ["How do I prevent water leakage around windows?","Coordinate sill slope, flashing, frame drainage, compatible sealants, fixing and installation inspection."],
+    ["Which door hinges and locks are best for a main door?","Check door weight, hinge capacity, corrosion suitability, lock security, compatibility and serviceable hardware."],
+    ["How do I compare door and window quotations?","Use identical opening sizes, profile or core specifications, glass, hardware, finish, installation, sealing and warranty."],
+    ["What should be checked during door and window handover?","Inspect operation, alignment, locks, seals, drainage, glass markings, finish, warranties and maintenance instructions."]
+  ]
 };
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
