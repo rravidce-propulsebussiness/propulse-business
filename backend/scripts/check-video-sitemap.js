@@ -62,6 +62,12 @@ pool.query=async(sql,params=[])=>{queries.push({sql,params});return {rows}};
     const robotsText=await robots.text();
     assert.match(robotsText,/Sitemap: https:\/\/propulsetechnologies\.online\/sitemap\.xml/);
     assert.match(robotsText,/Sitemap: https:\/\/propulsetechnologies\.online\/video-sitemap\.xml/);
+    for(const blockedPath of ['/admin/','/dashboard','/professionals','/professional-requests','/profile','/wallet','/membership','/notifications','/purchased-leads','/my-leads','/investment/','/lead-partner/']){
+      assert.equal(robotsText.split('Disallow: '+blockedPath).length-1,3,'Every crawler group must block private path '+blockedPath);
+    }
+    for(const publicPath of ['/requirements/','/estimate/']){
+      assert(!robotsText.includes('Disallow: '+publicPath),'Public redirect/requirement paths must remain crawlable: '+publicPath);
+    }
     assert.equal(indexSitemap.status,200,'Main sitemap must be publicly fetchable');
     assert.match(indexSitemap.headers.get('content-type'),/^application\/xml\s*;?\s*charset=utf-8/i,'Main sitemap must explicitly be served as XML, not HTML or plain text');
     const indexXml=await indexSitemap.text();
