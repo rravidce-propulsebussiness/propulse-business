@@ -306,5 +306,55 @@ groups["Room-wise renovation budgets & execution scope"] = [
 ["What is included in a turnkey home renovation?","List design, procurement, civil work, plumbing, electrical, cabinetry, painting, fixtures, taxes, installation and exclusions."]
 ];
 
+
+groups["Bedroom interior budgets & design planning"] = [
+["How much does master bedroom interior design cost in Hyderabad?","Separate wardrobe, bed, headboard, side tables, ceiling, lighting, curtains, finishes and installation."],
+["What is included in a master bedroom interior package?","Check drawings, wardrobe, bed-back, side tables, lighting coordination, finishes, installation and exclusions."],
+["How much does a bedroom wardrobe and bed-back cost?","Price the wardrobe by dimensions and materials, then list bed-back substrate, finish, lighting and installation separately."],
+["What is the best wardrobe layout for a small bedroom?","Plan hanging, shelves, drawers and loft storage while preserving door swing, circulation and access."],
+["How much does a bedroom false ceiling cost?","Include framing, board, levels, cove details, wiring, fixtures, access and paint."],
+["Which laminate is best for bedroom wardrobes?","Compare finish, texture, cleaning, scratch visibility, colour samples and manufacturer care guidance."],
+["Should a bedroom wardrobe have loft storage?","Evaluate ceiling height, access, luggage needs, shutter operation and safe retrieval."],
+["How do I plan bedside switches and charging points?","Coordinate bed width, side-table position, reading lights and electrical safety with a qualified electrician."],
+["What is the cost of a hydraulic storage bed?","Compare frame construction, mechanism specification, mattress size, storage access, warranty and installation."],
+["How can I make a small bedroom look spacious?","Use proportionate furniture, clear circulation, storage planning, lighting and restrained finishes."]
+];
+groups["Living room interior budgets & TV wall design"] = [
+["How much does hall interior design cost in Hyderabad?","Separate TV unit, wall finish, ceiling, lighting, foyer, curtains, flooring, loose furniture and installation."],
+["How much does a TV wall unit cost?","Define dimensions, storage, board, finish, hardware, cable management, ventilation and electrical scope."],
+["What is the cost of a fluted TV wall panel?","Include panel material, substrate, profile, measured area, edge finishing, lighting and installation."],
+["Which is better for a TV unit, laminate or veneer?","Compare appearance, maintenance, substrate, edge detailing, repair and product-specific care."],
+["How much does a living room false ceiling cost?","Specify area, ceiling levels, framing, board, cove, access panels, wiring and light fixtures."],
+["What lighting is best for a living room?","Layer general, task and accent lighting while considering glare, colour temperature and maintenance."],
+["How much does a foyer shoe cabinet cost?","List width, depth, ventilation, shelves, shutter type, hardware, finish and installation."],
+["What is the difference between wall panelling and wallpaper?","Compare substrate preparation, joints, durability, cleaning, repair and removal."],
+["How do I plan a TV unit for a large television?","Check screen dimensions, viewing distance, mounting height, bracket support, ventilation and cable access."],
+["What should a living room interior quotation include?","Request elevations, material codes, quantities, electrical scope, hardware, loose items, taxes and exclusions."]
+];
+groups["Modular kitchen baskets & hardware mechanisms"] = [
+["What are the different types of modular kitchen baskets?","Compare cutlery trays, tandem drawers, bottle pull-outs, corner units, pantry pull-outs and under-sink organisers."],
+["What is the difference between a tandem drawer and a wire basket?","Compare sides, extension, load rating, cleaning, organiser compatibility and usable storage."],
+["How much does a magic corner kitchen unit cost?","Check cabinet geometry, mechanism model, usable capacity, load rating, installation and warranty."],
+["Which is better, a bottle pull-out or a regular kitchen drawer?","Match stored items, cabinet width, access, cleaning and load requirements."],
+["What is a tall pantry pull-out in a modular kitchen?","Explain vertical storage, cabinet dimensions, load guidance, aisle clearance and service support."],
+["Are soft-close kitchen drawers worth the cost?","Compare mechanism quality, adjustment, full-extension behaviour, load rating and replacement availability."],
+["How do I choose a kitchen cutlery organiser?","Measure drawer internal dimensions and select compatible compartments and cleaning-friendly material."],
+["What should be checked before buying a kitchen corner unit?","Verify opening size, hinge clearance, door movement, plumbing conflicts and full mechanism dimensions."],
+["How much does a modular kitchen basket set cost?","Ask for model-wise quantity, cabinet compatibility, finish, installation and warranty rather than a vague package price."],
+["Which kitchen accessories should be avoided under the sink?","Avoid blocking valves, traps, filters and leak inspection; select moisture-suitable organisers with service clearance."]
+];
+groups["Bathroom fittings, sanitaryware & fixture costs"] = [
+["How much does a complete bathroom fittings package cost?","Separate WC, basin, faucet, shower, diverter, flush system, accessories, installation and plumbing changes."],
+["Which is better, wall-hung WC or floor-mounted WC?","Compare installation, cleaning, service access, dimensions, cistern compatibility and maintenance."],
+["What is the cost of a concealed flush tank?","Include cistern model, frame where required, flush plate, installation, access and compatible WC."],
+["How do I choose a bathroom basin and faucet?","Match basin type, faucet reach, spout height, waste fitting, countertop and splash control."],
+["What is the difference between an overhead shower and a hand shower?","Compare use, water pressure, spray pattern, cleaning, mounting and diverter compatibility."],
+["Which bathroom faucet finish is easiest to maintain?","Review water-mark visibility, cleaning instructions, coating warranty and spare-part availability."],
+["What should I check before buying a concealed diverter?","Verify valve compatibility, pressure range, outlet configuration, installation depth and service access."],
+["How much does a bathroom vanity unit cost?","Specify width, basin, countertop, board or substrate, moisture exposure, finish, hardware and mirror."],
+["How do I select sanitaryware for a small bathroom?","Measure clearances, door swing, fixture projection, circulation, cleaning access and plumbing positions."],
+["What bathroom accessories should be installed before tiling?","Plan fixing points for shelves, towel bars, hooks, mirrors, grab bars and shower partitions before tile completion."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
