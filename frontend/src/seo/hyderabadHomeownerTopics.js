@@ -109,7 +109,27 @@ const groups = {
     ["What maintenance should I do before monsoon?","Covers terrace drains, external cracks, plumbing, electrical safety and rainwater outlets."],
     ["How do I reduce construction delays?","Explains design freeze, procurement planning, approvals, decision turnaround and milestone tracking."],
     ["What warranty should a construction company provide?","Explains why warranty scope, exclusions, duration and defect reporting should be written into the contract."]
-  ]
+  ],
+  "Construction estimates & execution": [
+    ["How much does foundation work cost for a house in Hyderabad?","Explains how soil, foundation type, excavation, concrete, reinforcement and site access affect a project estimate."],
+    ["What is the cost of RCC slab construction?","Separates concrete, steel, shuttering, labour, pumping and structural design; a single rate can mislead."],
+    ["How much does plastering cost per square foot in Hyderabad?","Covers internal and external plaster, surface preparation, thickness, scaffolding, materials and finish."],
+    ["How much does brickwork cost for a house?","Explains wall thickness, brick or block type, mortar, openings, lintels, labour and measurement basis."],
+    ["How do I estimate steel quantity for house construction?","Explains why reinforcement quantities must come from structural drawings and a bar bending schedule, not generic thumb rules."],
+    ["How do I calculate concrete quantity for a house?","Shows the measurement approach for footings, columns and slabs using approved dimensions and mix specifications."],
+    ["What is included in a semi-finished house construction package?","Defines typical stage boundaries and asks homeowners to verify services, doors, windows, flooring, painting and handover exclusions."],
+    ["How do I check a construction BOQ before signing?","Explains quantities, units, brands, grades, specifications, provisional items, taxes and variation procedures."],
+    ["Should I pay a construction contractor by stage or monthly?","Compares milestone payments with measured progress, inspection sign-off, retention and written terms."],
+    ["What is a quality checklist before roof slab concrete?","A pre-pour review of drawings, reinforcement, cover, formwork, embedded services, concrete supply, access and engineer approval."],
+    ["How do I check waterproofing before bathroom tiling?","Covers substrate preparation, corners, pipe penetrations, membrane continuity and a documented water test."],
+    ["What should I check in a house construction quotation in Hyderabad?","A local checklist covering specifications, quantities, taxes, approvals, supervision, timelines, exclusions and defect liability."]
+  ],
+  "Hyderabad locality project planning": [
+    ["What should I consider before building a house in Kokapet?","A site-specific brief covering plot documents, road access, soil investigation, approvals, drainage and service availability."],
+    ["What should I check before constructing a house in Tellapur?","Covers plot boundaries, layout approvals, access, utilities, ground levels and local professional verification."],
+    ["What affects house construction cost in Miyapur?","Explains built-up area, specification, site logistics, soil, labour availability and quotation scope without claiming a fixed locality rate."],
+    ["How do I plan a house construction project in Kondapur?","A practical sequence for plot checks, design, approvals, contractor selection, procurement and site supervision."]
+  ],
 };
 
 const intentLabels = ["Google Trends / public search-informed question","Homeowner problem-solving query","Comparison or purchase-intent query","Local service-intent query"];
