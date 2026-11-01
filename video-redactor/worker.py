@@ -310,11 +310,11 @@ def main():
             with psycopg.connect(dsn,autocommit=True,connect_timeout=20) as connection:
                 job=claim_job(connection)
                 if not job:
+                    if backfill_existing_thumbnail(connection,client):
+                        LOG.info("Prepared one existing video thumbnail without reprocessing video")
+                    else:
+                        LOG.info("No pending project videos or missing thumbnails")
                     if run_once:
-                        if backfill_existing_thumbnail(connection,client):
-                         LOG.info("Prepared one existing video thumbnail without reprocessing video")
-                     else:
-                         LOG.info("No pending project videos or missing thumbnails")
                         return
                     time.sleep(poll)
                     continue
