@@ -140,6 +140,84 @@ def transcode(source_path, output_path):
                      "original re-encoded" if audio else "no source track"}
 
 
+def generate_thumbnail(playback_path, output_path):
+    """Extract a real image from the processed video without changing media streams."""
+    duration=float(probe_streams(playback_path).get("format",{}).get("duration") or 0)
+    if not 0 < duration <= MAX_SECONDS:
+        raise RuntimeError("Invalid playback video for thumbnail")
+    second=max(0.05,min(2.0,duration*0.25))
+    subprocess.run([
+        "ffmpeg","-hide_banner","-loglevel","error","-nostdin","-y",
+        "-ss",str(second),"-i",str(playback_path),
+        "-map","0:v:0","-frames:v","1",
+        "-vf","scale=1280:720:force_original_aspect_ratio=decrease:force_divisible_by=2",
+        "-q:v","3",str(output_path)
+    ],check=True,capture_output=True,timeout=60)
+    data=output_path.read_bytes()
+    if len(data)<1024 or len(data)>4*1024*1024 or not data.startswith(b"\\xff\\xd8\\xff"):
+        raise RuntimeError("Video thumbnail JPEG is missing or invalid")
+    return round(duration,2)
+
+
+def thumbnail_key(job):
+    return ("business-project-thumbnails/"
+        +str(job["owner"])+"-"+str(job["id"])+"-"+uuid.uuid4().hex+".jpg")
+
+
+def backfill_existing_thumbnail(connection, client):
+    """Produce one thumbnail for an already-ready video, without changing rewards or playback."""
+    with connection.transaction():
+        row=connection.execute("""
+            SELECT p.id,p.video_url,p.video_redacted_url,bp.user_id
+            FROM business_profile_projects p
+            JOIN business_profiles bp ON bp.id=p.business_profile_id
+            WHERE p.is_published=TRUE AND p.video_redaction_status='ready'
+              AND p.video_url=p.video_redaction_source_url
+              AND p.video_redacted_url LIKE 'private-object-s3:business-project-redacted/%'
+              AND (p.video_thumbnail_url IS NULL
+                OR p.video_thumbnail_source_url IS DISTINCT FROM p.video_url)
+            ORDER BY p.id LIMIT 1
+        """).fetchone()
+    if not row:
+        return False
+    project_id,source,derivative,owner=row
+    key=derivative[len(PREFIX):]
+    if not key.startswith("business-project-redacted/") or key.count("/")!=1:
+        raise RuntimeError("Invalid backfill playback derivative")
+    bucket=os.environ["PRIVATE_OBJECT_STORAGE_BUCKET"]
+    new_key=thumbnail_key({"owner":owner,"id":project_id})
+    with tempfile.TemporaryDirectory(prefix="propulse-thumb-") as folder:
+        mp4=Path(folder)/"playback.mp4"
+        jpeg=Path(folder)/"thumbnail.jpg"
+        client.download_file(bucket,key,str(mp4))
+        seconds=generate_thumbnail(mp4,jpeg)
+        client.upload_file(str(jpeg),bucket,new_key,
+            ExtraArgs={"ContentType":"image/jpeg","CacheControl":"private,no-store"})
+    reference=PREFIX+new_key
+    try:
+        with connection.transaction():
+            updated=connection.execute("""
+                UPDATE business_profile_projects
+                SET video_thumbnail_url=%s,video_thumbnail_source_url=%s,
+                    video_thumbnail_generated_at=now(),video_duration_seconds=%s
+                WHERE id=%s AND video_url=%s AND video_redacted_url=%s
+                  AND is_published=TRUE AND video_redaction_status='ready'
+                  AND video_redaction_source_url=video_url
+                  AND (video_thumbnail_url IS NULL
+                    OR video_thumbnail_source_url IS DISTINCT FROM video_url)
+                RETURNING id
+            """,(reference,source,seconds,project_id,source,derivative)).fetchone()
+        if not updated:
+            client.delete_object(Bucket=bucket,Key=new_key)
+            LOG.info("Thumbnail backfill skipped for changed project %s",project_id)
+        else:
+            LOG.info("Backfilled video thumbnail and duration for completed project %s",project_id)
+    except Exception:
+        client.delete_object(Bucket=bucket,Key=new_key)
+        raise
+    return True
+
+
 def process_one(connection, client, job):
     reference=job["source"]
     if not reference.startswith(PREFIX+"business-projects/"):
@@ -158,24 +236,39 @@ def process_one(connection, client, job):
     with tempfile.TemporaryDirectory(prefix="propulse-video-") as folder:
         original=Path(folder)/"input"
         processed=Path(folder)/"playback.mp4"
+        thumbnail=Path(folder)/"thumbnail.jpg"
         client.download_file(bucket,source_key,str(original))
         if original.stat().st_size != size:
             raise RuntimeError("Downloaded video changed during processing")
         stats=transcode(original,processed)
+        duration_seconds=generate_thumbnail(processed,thumbnail)
         if processed.stat().st_size<1024:
             raise RuntimeError("Empty processed video")
         if not active_job(connection,job):
             LOG.warning("Abandoned stale project %s; upload skipped", job["id"])
             return
+        thumbnail_key_value=thumbnail_key(job)
         client.upload_file(str(processed),bucket,derivative_key,
             ExtraArgs={"ContentType":"video/mp4","CacheControl":"private,no-store"})
+        try:
+            client.upload_file(str(thumbnail),bucket,thumbnail_key_value,
+                ExtraArgs={"ContentType":"image/jpeg","CacheControl":"private,no-store"})
+        except Exception:
+            client.delete_object(Bucket=bucket,Key=derivative_key)
+            raise
     reference_out=PREFIX+derivative_key
-    with connection.transaction():
+    thumbnail_reference=PREFIX+thumbnail_key_value
+    try:
+      with connection.transaction():
         updated=connection.execute("""
             UPDATE business_profile_projects
                SET video_redaction_status='ready',
                    video_redaction_source_url=%s,
                    video_redacted_url=%s,
+                   video_thumbnail_url=%s,
+                   video_thumbnail_source_url=%s,
+                   video_thumbnail_generated_at=now(),
+                   video_duration_seconds=%s,
                    video_redaction_error=NULL,
                    video_redaction_finished_at=now(),
                    video_redaction_token=NULL,
@@ -188,9 +281,15 @@ def process_one(connection, client, job):
              WHERE id=%s AND video_url=%s AND video_redaction_token=%s
                AND video_redaction_status='processing'
          RETURNING id
-        """,(reference,reference_out,job["id"],reference,job["token"])).fetchone()
+        """,(reference,reference_out,thumbnail_reference,reference,
+             duration_seconds,job["id"],reference,job["token"])).fetchone()
+    except Exception:
+      client.delete_object(Bucket=bucket,Key=derivative_key)
+      client.delete_object(Bucket=bucket,Key=thumbnail_key_value)
+      raise
     if not updated:
         client.delete_object(Bucket=bucket,Key=derivative_key)
+        client.delete_object(Bucket=bucket,Key=thumbnail_key_value)
         LOG.warning("Project %s changed before derivative commit; discarded",job["id"])
     else:
         LOG.info("Project %s prepared for public playback; original video %s, audio %s; reward review separate",
@@ -212,7 +311,10 @@ def main():
                 job=claim_job(connection)
                 if not job:
                     if run_once:
-                        LOG.info("No pending project videos to process")
+                        if backfill_existing_thumbnail(connection,client):
+                         LOG.info("Prepared one existing video thumbnail without reprocessing video")
+                     else:
+                         LOG.info("No pending project videos or missing thumbnails")
                         return
                     time.sleep(poll)
                     continue
