@@ -4,6 +4,7 @@
 const SITE_ORIGIN='https://propulsetechnologies.online';
 const {coverPathFor}=require('./projectCoverService');
 const videoSeo=require('./projectVideoSeoService');
+const {projectSeoTitle,projectSeoDescription}=require('./projectSeoDefaults');
 const PROJECT_PREFIX='/projects/';
 const META_DESCRIPTION_LENGTH=180;
 const safeText=(value,max=3000)=>String(value??'').trim().slice(0,max);
@@ -21,12 +22,7 @@ function canonicalProjectPath(project){
   return PROJECT_PREFIX+'project-'+id;
 }
 function descriptionFor(project){
-  const text=safeText(project.seo_description||project.description,3000)
-    .replace(/\s+/g,' ');
-  if(text)return text.slice(0,META_DESCRIPTION_LENGTH);
-  return 'Explore this completed '+safeText(project.project_type||'construction or interior',90)+
-    ' project'+(project.location_text?' in '+safeText(project.location_text,120):'')+
-    ', with project scope and published work by '+safeText(project.business_name||'ProPulse',90)+'.';
+  return projectSeoDescription(project);
 }
 function meta(html,attribute,key,value){
   const target='<meta '+attribute+'="'+key+'" content="'+escapeHtml(value)+'" />';
@@ -75,7 +71,7 @@ function fallback(project,path){
     '</article></main>';
 }
 function projectSchema(project,canonical,description,coverImageUrl=null){
-  const name=safeText(project.seo_title||project.title,180);
+  const name=projectSeoTitle(project);
   const publishedBy=safeText(project.business_name||'ProPulse',180);
   const location=safeText(project.location_text,180);
   const work={
@@ -107,7 +103,7 @@ function renderProjectHtml(template,project){
     throw new Error('Built frontend HTML template is not ready');
   const path=canonicalProjectPath(project);
   const canonical=SITE_ORIGIN+path;
-  const name=safeText(project.seo_title||project.title,180);
+  const name=projectSeoTitle(project);
   const title=name+' | ProPulse';
   const description=descriptionFor(project);
   const coverPath=coverPathFor(project);
