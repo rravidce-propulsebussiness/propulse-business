@@ -24,6 +24,22 @@ export const CORE_PUBLIC_SEO_ROUTES=[
     summary:'Research construction costs, approvals, materials, floor plans, home interiors, repairs and renovation with practical homeowner-focused guidance for Hyderabad.',
   },
   {
+    path:'/construction-blog',
+    type:'construction-blog',
+    title:'House Construction Blog Hyderabad | Costs, Materials & Plans | ProPulse',
+    description:'Practical house construction guides for Hyderabad homeowners: construction cost, 2BHK and 3BHK budgets, steel, cement, concrete defects, floor plans, permissions, waterproofing and contractor selection.',
+    heading:'House construction guides, costs and practical answers',
+    summary:'Understand house construction costs, materials, structural defects, floor plans, approvals, waterproofing and how to choose a contractor.',
+  },
+  {
+    path:'/interior-blog',
+    type:'interior-blog',
+    title:'Interior Design Blog Hyderabad | 2BHK Costs, TV Units, Laminates & Vastu | ProPulse',
+    description:'Interior design guides for Hyderabad homeowners covering 2BHK and 3BHK interior costs, TV unit prices, modular kitchens, wardrobes, laminates, false ceilings, lighting and Vastu planning questions.',
+    heading:'Interior design ideas, costs and material guides',
+    summary:'Find practical answers about interior budgets, TV units, laminates, kitchens, wardrobes, lighting, execution and Vastu preferences.',
+  },
+  {
     path:'/technology',
     title:'Construction Business Software & Technology | ProPulse',
     description:'Explore ProPulse technology for construction and interior companies, including Business OS for CRM, quotations, projects, operations and finance.',
