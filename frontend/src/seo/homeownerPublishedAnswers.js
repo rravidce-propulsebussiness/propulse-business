@@ -1,0 +1,62 @@
+// Published homeowner guidance for the construction topic directory.
+// Keep these answers separate from the editorial topic briefs: a question is only
+// presented as answered when a complete response and its references exist here.
+
+export const PUBLISHED_HOMEOWNER_ANSWERS = {
+  "What documents should I check before buying a plot in Hyderabad?": {
+    answer: "Before paying an advance, ask an independent property lawyer to examine the original registered sale deed and the link documents that establish the seller’s title. Match the seller, survey number, subdivision, plot number, extent and four boundaries across the documents and the physical site. Obtain an Encumbrance Certificate for an appropriate period and check registered-document details, but do not treat an EC as conclusive proof of clear title: it may not reveal every dispute, unregistered claim or boundary problem. Check the approved layout and its conditions with the competent authority, permitted land use in the applicable master plan, conversion status where relevant, legal road access, road-widening reservations, acquisition or prohibited-property issues, and any lake, nala or other buffer restrictions. Compare revenue/land records and survey maps with a licensed surveyor’s site measurement. Check tax dues, mortgages and release documents, seller identity and authority to sell. For a plotted development, verify TGRERA registration where the project is required to be registered. Do not rely on a broker’s brochure, a neighbour’s documents or a bank’s loan approval instead of independent legal and survey checks.",
+    sources: [
+      { label: "Bhu Bharati – land details", url: "https://bhubharati.telangana.gov.in/knowLandStatus" },
+      { label: "Bhu Bharati – registered document details", url: "https://bhubharati.telangana.gov.in/RegDocumentDetails" },
+      { label: "Telangana RERA – project search and citizen information", url: "https://rera.telangana.gov.in/" }
+    ]
+  },
+
+  "How do I get building permission in Hyderabad?": {
+    answer: "Start by confirming the exact survey number, village/local-body jurisdiction, land use and whether the plot is in an approved layout. As of November 2026, Telangana’s official BuildNow portal is the current unified online entry point for building and layout approvals; its notice says the older TG-bPASS portal was to close after 15 December 2025. Engage a licensed architect or other authorised technical professional to prepare the site information, drawings and required design documents. The BuildNow checklist identifies ownership documents (sale deed and link documents) and a front-side site photograph as core uploads; depending on the case, it can also require layout approval, property-tax or VLT receipts, a market-value certificate, earlier building approval or other supporting documents. Larger, taller, non-residential or otherwise sensitive proposals may need the single-window process and departmental NOCs. Follow the route shown for your actual plot and building category, pay the assessed fees, respond to scrutiny comments and download the final digitally issued proceedings and sanctioned plan. An application receipt or payment confirmation is not the building permit.",
+    sources: [
+      { label: "BuildNow – official Telangana approval portal", url: "https://buildnow.telangana.gov.in/" },
+      { label: "BuildNow – document checklist", url: "https://buildnow.telangana.gov.in/checklist/" },
+      { label: "BuildNow – government orders and amendments", url: "https://buildnow.telangana.gov.in/go-and-act/" }
+    ]
+  },
+
+  "What is the difference between GHMC and HMDA approval?": {
+    answer: "GHMC and HMDA have different roles; they are not interchangeable labels for the same approval. GHMC is a municipal corporation responsible for local civic administration and functions within its notified limits. HMDA is the metropolitan planning and development authority, dealing with the wider metropolitan planning framework and matters such as master-plan land use and layouts within its jurisdiction. A property may therefore need a planning/layout or land-use check as well as a building-plan sanction from the authority or local body that has the relevant power. The responsible authority can depend on the exact village, survey number, land type and the latest government delegation of powers. Hyderabad’s urban and municipal boundaries and delegations have changed, including government orders issued in 2026, so do not decide jurisdiction from a postal address or an old GHMC/HMDA label. Check the current BuildNow workflow and confirm the competent authority for the property. An HMDA layout approval by itself is not the same thing as approval of your individual house plan.",
+    sources: [
+      { label: "BuildNow – integrated approval portal and departments", url: "https://buildnow.telangana.gov.in/" },
+      { label: "BuildNow – current government orders and jurisdiction-related amendments", url: "https://buildnow.telangana.gov.in/go-and-act/" },
+      { label: "HMDA – planning department", url: "https://www.hmda.gov.in/planning/" }
+    ]
+  },
+
+  "How much setback is required for a house in Telangana?": {
+    answer: "There is no single setback distance that applies to every house in Telangana. The required open space depends on the plot’s dimensions and area, the width of the abutting road, the proposed building height and use, the number of floors, the plot shape and whether it is a corner site or faces more than one road. The calculation may also be affected by road-widening lines, master-plan reservations, lake/nala Full Tank Level or buffer restrictions and other site-specific conditions. The applicable Telangana Building Rules and later government amendments must be checked for the proposal being submitted; the rules and portal workflows can change. Ask a licensed architect to survey the plot, confirm the jurisdiction and run the current BuildNow scrutiny against the proposed drawings before you finalise a floor plan. Do not copy a neighbour’s setback or rely on a generic online table: even nearby plots can have different road widths, dimensions, reservations or approval conditions.",
+    sources: [
+      { label: "BuildNow – government orders and current rule amendments", url: "https://buildnow.telangana.gov.in/go-and-act/" },
+      { label: "BuildNow – official approval portal", url: "https://buildnow.telangana.gov.in/" }
+    ]
+  },
+
+  "Can I build a house without building permission in Hyderabad?": {
+    answer: "Do not start construction on the assumption that permission is unnecessary. Building without a required sanction or registration can lead to enforcement action, including demolition of unlawful work, and can create problems with utilities, sale, finance and future approvals. There are narrow category-based exceptions: BuildNow’s current FAQ says an individual residential plot up to 75 square yards with ground or ground-plus-one construction follows an online registration route rather than a normal building-permission approval. That is not a blanket exemption for larger plots, additional floors, other building uses or sites affected by special restrictions; the required online registration and all applicable conditions still matter. Check the current BuildNow FAQ and have a licensed technical professional verify your plot, proposed height, land use and jurisdiction before work begins. Do not treat an application number, fee receipt, unapproved layout, verbal assurance or a neighbour’s unauthorised building as permission. If construction has already started, get professional advice on the actual status and lawful next steps; regularisation should never be assumed.",
+    sources: [
+      { label: "BuildNow – official FAQs, including small-plot registration and enforcement", url: "https://buildnow.telangana.gov.in/faqs/" },
+      { label: "India Code – Telangana State Building Permission Approval and Self Certification System Act, 2020", url: "https://www.indiacode.nic.in/indiacode/handle/123456789/16241?view_type=browse" },
+      { label: "BuildNow – official approval portal", url: "https://buildnow.telangana.gov.in/" }
+    ]
+  },
+
+  "What is an occupancy certificate and is it required for a house?": {
+    answer: "An Occupancy Certificate (OC) is an official record issued after completion checks where required. It confirms that the completed building has met the applicable approval conditions sufficiently for occupation; it is different from the original building permission and from a private handover or possession letter. Whether an OC is required depends on the building category, plot area, height and current rules. BuildNow’s published FAQ says an individual residential building on a plot up to 200 square metres with a height up to 7 metres is exempt from applying for an OC; other categories may require an OC through the portal. Do not apply that threshold to every residential, apartment, high-rise or non-residential project. Check the current BuildNow rules for the specific sanctioned plan, complete any required inspections and retain the final OC or applicable exemption/registration records. When buying a completed property, compare the actual building with the sanctioned plan and verify the OC where the rules require one.",
+    sources: [
+      { label: "BuildNow – official FAQs on occupancy certificates", url: "https://buildnow.telangana.gov.in/faqs/" },
+      { label: "BuildNow – occupancy certificate process and timelines", url: "https://buildnow.telangana.gov.in/timelines/" }
+    ]
+  },
+
+  "Which direction is best for a house entrance?": {
+    answer: "There is no one entrance direction that is best for every plot or that guarantees a better home. First consider where the road and legal access are, the shape and slope of the site, room arrangement, privacy, daylight, heat gain, prevailing breezes and practical vehicle or pedestrian entry. A well-designed entrance should work with the overall circulation and should not force poor ventilation, awkward rooms or unsafe structural changes. Your architect can study the site orientation and sun path, then use window placement, shading, verandas and landscaping to manage daylight and heat. If Vastu is important to your family, share those preferences at the start so they can be considered alongside structural design, ventilation, safety and approval rules. Treat Vastu direction as a personal or traditional preference, not as a substitute for building regulations or technical planning.",
+    sources: []
+  }
+};
