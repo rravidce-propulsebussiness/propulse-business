@@ -50,7 +50,12 @@ function setCanonical(href){
 function siteOrigin(){
   const configured=String(import.meta.env.VITE_PUBLIC_SITE_URL||'').trim()
   if(/^https?:\/\//i.test(configured)){
-    try{return new URL(configured).origin}catch{}
+    try{
+      const parsed=new URL(configured)
+      // The public ProPulse site is HTTPS-only. Keep local and preview origins intact.
+      if(parsed.hostname==='propulsetechnologies.online')parsed.protocol='https:'
+      return parsed.origin
+    }catch{}
   }
   return window.location.origin
 }
