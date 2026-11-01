@@ -10,7 +10,7 @@ const FEATURED = CONSTRUCTION_GUIDES.slice(0, 3)
 export default function Blog() {
   const [topicQuery, setTopicQuery] = useState('')
   const [topicCategory, setTopicCategory] = useState('All topics')
-  const filteredTopics = useMemo(() => HYDERABAD_HOMEOWNER_TOPICS.filter(topic => (topicCategory === 'All topics' || topic.category === topicCategory) && (!topicQuery.trim() || (topic.title + ' ' + topic.subject + ' ' + topic.intent).toLowerCase().includes(topicQuery.trim().toLowerCase()))), [topicQuery, topicCategory])
+  const filteredTopics = useMemo(() => HYDERABAD_HOMEOWNER_TOPICS.filter(topic => (topicCategory === 'All topics' || topic.category === topicCategory) && (!topicQuery.trim() || (topic.title + ' ' + topic.subject + ' ' + topic.intent + ' ' + topic.description).toLowerCase().includes(topicQuery.trim().toLowerCase()))), [topicQuery, topicCategory])
   const categories = [...new Set(CONSTRUCTION_GUIDES.map(item => item.category))]
   return <main className="propulse-blog">
     <PublicHeader />
@@ -36,8 +36,8 @@ export default function Blog() {
     </section>
     <section className="blog-topic-directory" id="hyderabad-homeowner-topics">
       <div className="blog-shell">
-        <div className="blog-section-heading"><div><span>HYDERABAD HOMEOWNER SEARCH LIBRARY</span><h2>1,000 questions homeowners are researching</h2></div><p>A structured editorial roadmap covering the decisions people make before, during and after building or improving a home.</p></div>
-        <div className="blog-topic-intro"><b>Research note</b><p>This is a curated search-intent topic map, not a verified ranking by monthly search volume. Topics are grouped from recurring Hyderabad homeowner needs, local service searches and official approval/quality information. We publish full articles only after preparing useful, accurate answers.</p></div>
+        <div className="blog-section-heading"><div><span>HYDERABAD HOMEOWNER SEARCH LIBRARY</span><h2>Real questions homeowners search before building</h2></div><p>Question-led guides researched from Google search patterns, with practical explanations for homeowners in Hyderabad and across India.</p></div>
+        <div className="blog-topic-intro"><b>Research note</b><p>These are distinct homeowner-style search questions informed by Google Trends research guidance, public search-result patterns and common construction decisions. Google Trends shows relative interest, not exact monthly counts. Exact volume rankings require Keyword Planner data. Each question includes an explanation of what the article should answer.</p></div>
         <div className="blog-topic-controls">
           <label className="blog-topic-search"><span>⌕</span><input type="search" value={topicQuery} onChange={event => setTopicQuery(event.target.value)} placeholder="Search topics: 2BHK cost, waterproofing, BuildNow..." aria-label="Search Hyderabad homeowner topics" /></label>
           <select value={topicCategory} onChange={event => setTopicCategory(event.target.value)} aria-label="Filter topics by category"><option>All topics</option>{HYDERABAD_HOMEOWNER_TOPIC_GROUPS.map(group=><option key={group.category}>{group.category}</option>)}</select>
@@ -48,10 +48,10 @@ export default function Blog() {
           if (!topics.length) return null
           return <details className="blog-topic-group" key={group.category} open={Boolean(topicQuery) || topicCategory !== 'All topics'}>
             <summary><span>{group.category}</span><b>{topics.length} topics</b><i>+</i></summary>
-            <ol>{topics.map(topic=><li key={topic.id}><span>{topic.title}</span><small>{topic.intent}</small></li>)}</ol>
+            <ol>{topics.map(topic=><li key={topic.id}><span>{topic.title}</span><small>{topic.description}</small></li>)}</ol>
           </details>
         })}
-        <p className="blog-topic-footnote">Topic ideas are not a substitute for project-specific engineering, legal or regulatory advice. Approval rules and market prices can change; every article should cite current primary sources and show its last-reviewed date.</p>
+        <p className="blog-topic-footnote">Search topics are research-informed, not a verified Google search-volume ranking. Technical, safety, legal and approval guidance must be reviewed against current standards and official sources before publication.</p>
       </div>
     </section>
     <section className="blog-cta"><div className="blog-shell"><span>READY TO TAKE THE NEXT STEP?</span><h2>Turn what you’ve learned into a clear project brief.</h2><p>Share your location, scope, preferences and timeline with ProPulse to start planning your construction or interior project.</p><Link to="/quote">Start a project requirement <span>→</span></Link></div></section>
