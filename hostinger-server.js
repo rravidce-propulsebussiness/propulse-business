@@ -185,6 +185,16 @@ for(const [from,to] of [
 
 app.use((req,res,next)=>backendRoute(req.path)?proxyToBackend(req,res):next());
 
+// Published project detail pages must be crawled as project-specific HTML,
+// not as the generic React shell. Quote subroutes remain client-side.
+app.use((req,res,next)=>{
+  if(!['GET','HEAD'].includes(req.method))return next();
+  if(!/^\/projects\/[a-z0-9]+(?:-[a-z0-9]+)*\/?$/.test(req.path))return next();
+  const accept=String(req.get('accept')||'');
+  if(accept&&!accept.includes('text/html')&&!accept.includes('*/*'))return next();
+  return proxyToBackend(req,res);
+});
+
 // Browsers request /favicon.ico even though the app ships a favicon.svg.
 // Give it a deterministic public redirect instead of relying on webroot fallback.
 app.get('/favicon.ico',(req,res)=>res.redirect(308,'/favicon.svg'));
