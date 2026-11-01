@@ -179,7 +179,7 @@ function jsonLdFor(route,origin){
       areaServed:{'@type':'City',name:'Hyderabad',containedInPlace:{'@type':'State',name:'Telangana'}},
       provider:{'@type':'Organization',name:SITE_NAME,url:home},
       url:home,
-    },,
+    },
     {
       '@context':'https://schema.org',
       '@type':'FAQPage',
