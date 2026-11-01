@@ -340,6 +340,29 @@ groups["Planning, room sizes & building services"] = [
     ["How do I check masonry wall quality at site?","Inspect alignment, level, bond, joints, openings, lintels and approved service routes."],
     ["What construction quality documents should be maintained?","Keep drawings, material certificates, inspection records, test reports, dated photographs, site instructions and as-built plans."]
   ]
+,
+  "Waterproofing, concrete testing and construction estimates": [
+    ["What is the correct bathroom waterproofing sequence?","Review substrate preparation, corners, pipe collars, membrane coats, curing and testing according to the selected system."],
+    ["How is a bathroom pond test carried out?","Understand the purpose of a controlled water test and follow the project specification and applicator instructions."],
+    ["Why is water leaking from my bathroom ceiling?","Investigate supply pipes, drainage joints, waterproofing, floor junctions and external seepage before selecting a repair."],
+    ["How much does bathroom waterproofing cost in Hyderabad?","Compare measured area, surface preparation, product system, detailing, testing, warranty and tile removal or reinstatement."],
+    ["How do I waterproof a terrace before monsoon?","Inspect cracks, outlets, slopes, parapets and existing layers, then select a compatible system with a qualified applicator."],
+    ["What is the difference between M20 and M25 concrete?","Understand the specified grade notation and let the structural engineer define the required grade for each structural element."],
+    ["What is a concrete cube test report?","Read sample identification, pour location, test age, laboratory result and engineer's acceptance against project criteria."],
+    ["Why is a slump test done for concrete?","Understand workability checks and why slump is not a direct measurement of concrete strength."],
+    ["How long should concrete be cured in house construction?","Follow the approved specification, applicable standards, cement or mix type, weather and engineer's instructions."],
+    ["Can water be added to ready-mix concrete at site?","Uncontrolled water addition changes the mix; any adjustment must be approved and documented under the quality plan."],
+    ["What is included in a house construction cost per square foot?","Clarify area definition, structure, finishes, services, external works, taxes and exclusions before comparing rates."],
+    ["How do I calculate construction cost for a 2BHK house?","Start with measured built-up area, drawings, structural scope, specifications, service schedules and a quantity-based estimate."],
+    ["Does duplex house construction cost more than a single-floor house?","Compare structural design, staircases, floor access, service routing, façade and site logistics rather than assuming a fixed premium."],
+    ["What is the difference between built-up area and carpet area?","Define the measurement basis and inclusions consistently before applying any rate or comparing quotations."],
+    ["How do I compare construction contractors' quotations?","Normalize BOQ quantities, material grades, labour, tests, exclusions, taxes, payment stages and variation terms."],
+    ["What should be checked before foundation concrete?","Verify setting-out, founding level, approved reinforcement, cover, formwork and engineer inspection approval."],
+    ["How do I check slab reinforcement before concrete pouring?","Compare bar layout, spacing, cover, supports, openings and embedded services with approved structural drawings."],
+    ["What documents should a contractor provide during construction?","Request approved drawings, material records, pour records, test reports, inspection notes and as-built information."],
+    ["How do I plan a borewell, sump and overhead tank?","Coordinate water source reliability, demand, site levels, pump duty, tank support and cleaning access with professionals."],
+    ["Which water pump is suitable for a duplex house?","Select using flow, total head, source conditions and pump curves, with professional electrical and plumbing installation."]
+  ]
 };
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
