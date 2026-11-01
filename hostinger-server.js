@@ -189,6 +189,15 @@ for(const [from,to] of [
 
 app.use((req,res,next)=>backendRoute(req.path)?proxyToBackend(req,res):next());
 
+// The completed-project gallery must contain server-rendered real watch-page links.
+app.use((req,res,next)=>{
+  if(req.path==='/projects'&&['GET','HEAD'].includes(req.method)){
+    const accept=String(req.get('accept')||'');
+    if(!accept||accept.includes('text/html')||accept.includes('*/*'))return proxyToBackend(req,res);
+  }
+  return next();
+});
+
 // Published project detail pages must be crawled as project-specific HTML,
 // not as the generic React shell. Quote subroutes remain client-side.
 app.use((req,res,next)=>{
