@@ -114,16 +114,16 @@ export default function ProjectDetail(){
     named('googlebot','index,follow,max-image-preview:large')
     named('twitter:title',title)
     named('twitter:description',description)
+    named('twitter:card','summary_large_image')
     property('og:title',title)
     property('og:description',description)
     property('og:url',canonical)
     property('og:type','article')
-    if(project.videoThumbnail){
-      named('twitter:image',project.videoThumbnail)
-      named('twitter:card','summary_large_image')
-      property('og:image',project.videoThumbnail)
-      property('og:video:image',project.videoThumbnail)
-    }
+    const socialImage=project.videoThumbnail||'https://propulsetechnologies.online/brand/propulse-logo.png'
+    named('twitter:image',socialImage)
+    property('og:image',socialImage)
+    if(project.videoThumbnail)property('og:video:image',project.videoThumbnail)
+    else document.head.querySelector('meta[property="og:video:image"]')?.remove()
     let link=document.head.querySelector('link[rel="canonical"]')
     if(!link){link=document.createElement('link');link.rel='canonical';document.head.append(link)}
     link.href=canonical
