@@ -28,7 +28,10 @@ function projectCards(items){
       '<p style="font-size:12px;color:#b24c27;font-weight:700">'+label+'</p>'+
       '<h2 style="font-size:20px;margin:8px 0">'+escapeHtml(name)+'</h2>'+
       (location?'<p>Location: '+escapeHtml(location)+'</p>':'')+
-      '<p>Watch completed project video and explore the details.</p></a></article>'
+      '<p>Watch completed project video and explore the details.</p></a>'+
+      (isOfficial&&item.public_profile_enabled!==false&&Number.isSafeInteger(Number(item.business_profile_id))&&Number(item.business_profile_id)>0
+        ?'<p style="margin:0;padding:0 18px 18px"><a href="/experts/'+Number(item.business_profile_id)+'">View official ProPulse professional profile</a></p>':'')+
+      '</article>'
     );
     entries.push({'@type':'ListItem',position:entries.length+1,
       url:SITE+link,name});
