@@ -343,7 +343,7 @@ async function listRecentProjectVideos({page=1,pageSize=12}={}){
   };
 }
 
-async function listRecentProjects({page=1,pageSize=18}={}){
+async function listRecentProjects({page=1,pageSize=18,materializeMedia=true}={}){
   const settings=await expertDirectoryService.getSettings();
   const currentPage=toPositiveInt(page,1,100000);
   const currentPageSize=toPositiveInt(pageSize,18,48);
@@ -398,7 +398,7 @@ async function listRecentProjects({page=1,pageSize=18}={}){
      LIMIT ${currentPageSize} OFFSET ${offset}`,
     params
   );
-  const data=await materializeProjectMedia(result.rows);
+  const data=materializeMedia?await materializeProjectMedia(result.rows):result.rows;
   return {
     data,
     pagination:{

@@ -2,6 +2,7 @@ const express=require('express');
 const fs=require('fs');
 const path=require('path');
 const {renderProjectHtml}=require('../services/projectSeoPageService');
+const {renderProjectListingHtml}=require('../services/projectListingSeoService');
 const coverService=require('../services/projectCoverService');
 const videoSeo=require('../services/projectVideoSeoService');
 const s3Storage=require('../services/s3PrivateObjectStorageService');
@@ -316,6 +317,31 @@ router.get('/project-video-stream/:projectKey.mp4',async(req,res)=>{
     console.error('Public project video redirect failed:',error?.message||error);
     res.setHeader('Cache-Control','no-store');
     return res.status(503).end();
+  }
+});
+
+// The portfolio index must expose discoverable <a href> links to actual
+// published videos on the initial HTML response, without JavaScript execution.
+router.get('/projects',async(req,res)=>{
+  const accept=String(req.get('accept')||'');
+  if(accept&&!accept.includes('text/html')&&!accept.includes('*/*'))
+    return res.status(406).end();
+  try{
+    const items=await publicExpertService.listRecentProjects({page:1,pageSize:18,materializeMedia:false});
+    const builtIndex=[
+      path.resolve(__dirname,'../../hostinger-frontend/index.html'),
+      path.resolve(__dirname,'../../../frontend/dist/index.html'),
+    ].find(file=>fs.existsSync(file));
+    if(!builtIndex)throw new Error('Published project gallery HTML template missing');
+    const html=renderProjectListingHtml(fs.readFileSync(builtIndex,'utf8'),items.data);
+    res.setHeader('Cache-Control','no-cache,must-revalidate');
+    return res.status(200).type('html').send(html);
+  }catch(error){
+    console.error('Crawlable project gallery unavailable:',error?.message||error);
+    res.setHeader('X-Robots-Tag','noindex');
+    res.setHeader('Cache-Control','no-store');
+    res.setHeader('Retry-After','30');
+    return res.status(503).type('text/plain').send('Project gallery temporarily unavailable');
   }
 });
 

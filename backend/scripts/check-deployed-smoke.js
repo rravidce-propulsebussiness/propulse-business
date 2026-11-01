@@ -215,6 +215,23 @@ async function main() {
         return parsed.origin===base.origin&&/^\/projects\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(parsed.pathname);
       }catch{return false}
     });
+
+  const galleryPage=await request('/projects',{headers:{accept:'text/html','cache-control':'no-cache'}});
+  assert.equal(galleryPage.status,200,'Completed-project gallery must serve crawlable HTML');
+  const galleryHtml=await galleryPage.text();
+  assert(galleryHtml.includes('data-seo-project-gallery="true"'),
+    'Completed projects must be available as initial HTML, not only JavaScript');
+  assert(galleryHtml.includes('data-propulse-project-gallery-seo="server"'),
+    'Project gallery must expose server-authored ItemList metadata');
+  assert(galleryHtml.includes('href="'+base.origin+'/projects"'),
+    'Project gallery canonical must point to itself');
+  assert(!galleryHtml.includes('private-object-s3:'),
+    'Completed-project gallery must never expose private media object keys');
+  if(projectUrls.length){
+    const projectPath=new URL(projectUrls[0]).pathname;
+    assert(galleryHtml.includes('href="'+projectPath+'"'),
+      'The first sitemap project must be discoverable via a normal HTML gallery link');
+  }
   if(projectUrls.length){
     const url=projectUrls[0];
     const projectPage=await request(new URL(url).pathname,{headers:{accept:'text/html','cache-control':'no-cache'}});
