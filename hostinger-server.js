@@ -72,6 +72,7 @@ function backendRoute(requestPath){
     ||requestPath.startsWith('/project-cover/')
     ||requestPath==='/robots.txt'
     ||requestPath==='/sitemap.xml'
+    ||requestPath==='/video-sitemap.xml'
     ||requestPath==='/release.json'
     ||requestPath==='/health'
     ||requestPath.startsWith('/health/')

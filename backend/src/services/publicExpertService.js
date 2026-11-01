@@ -447,6 +447,45 @@ async function getPublicProject(projectId,{materializeMedia=true}={}){
   return projects[0]||null;
 }
 
+// Video sitemap shares the exact publication/membership rules of public videos.
+// Include only source-matched playback derivatives with real generated thumbnails.
+async function listIndexableVideoEntries(){
+  const settings=await expertDirectoryService.getSettings();
+  const params=[];
+  const conditions=[
+    "bpp.is_published=TRUE",
+    "bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)",
+    publicRedactedVideoReadySql('bpp'),
+    "bpp.video_thumbnail_source_url=bpp.video_url",
+    "bpp.video_thumbnail_url LIKE 'private-object-s3:business-project-thumbnails/%'",
+    "COALESCE(bpp.video_published_at,bpp.published_at) IS NOT NULL"
+  ];
+  addProjectEligibilityConditions(settings,params,conditions,{videosOnly:true});
+  const result=await pool.query(
+    `SELECT bpp.id AS project_id,bpp.seo_slug,bpp.title,bpp.seo_title,
+       bpp.description,bpp.seo_description,bpp.video_redacted_url AS video_url,
+       bpp.video_thumbnail_url,bpp.video_duration_seconds,
+       COALESCE(bpp.video_published_at,bpp.published_at) AS video_published_at,
+       bpp.updated_at,bp.business_name
+     FROM business_profile_projects bpp
+     JOIN business_profiles bp ON bp.id=bpp.business_profile_id
+     JOIN users u ON u.id=bp.user_id
+     LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id
+     WHERE ${conditions.join(' AND ')}
+     ORDER BY COALESCE(beds.is_official,FALSE) DESC,
+       COALESCE(bpp.video_published_at,bpp.published_at) DESC,bpp.id DESC
+     LIMIT 5000`,
+    params
+  );
+  return result.rows.map(row=>{
+    const video=videoSeo.videoObject(row);
+    if(!video)return null;
+    const page='/projects/'+videoSeo.projectKey(row);
+    const updated=row.updated_at?new Date(row.updated_at):null;
+    return {path:page,lastmod:updated&&!Number.isNaN(updated.getTime())?updated.toISOString().slice(0,10):null,video};
+  }).filter(Boolean);
+}
+
 // Sitemap should list only projects that meet the same public visibility rules
 // as their detail pages. No media references or customer information are returned.
 async function listIndexableProjectPaths(){
@@ -516,4 +555,4 @@ async function getPublicExpert(expertId){
   return {...base,services:services.rows,locations:locations.rows,projects:renderedProjects,brochures,service_plans:renderedPlans,directory_settings:{showProjects:settings.showProjects,showVideos:settings.showVideos,showPlans:settings.showPlans}};
 }
 
-module.exports={listPublicExperts,listRecentProjects,listRecentProjectVideos,getPublicExpert,getPublicProject,listIndexableProjectPaths};
+module.exports={listPublicExperts,listRecentProjects,listRecentProjectVideos,getPublicExpert,getPublicProject,listIndexableProjectPaths,listIndexableVideoEntries};
