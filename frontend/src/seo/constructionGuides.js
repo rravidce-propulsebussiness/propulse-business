@@ -345,6 +345,471 @@ export const CONSTRUCTION_GUIDES=[
       section('Ask for exact brand/grade/thickness in the quotation','Avoid generic words like “premium board.” Write substrate type, grade, thickness, finish, edge treatment and hardware range into the scope.')
     ],
   },
+
+  {
+    slug:'2bhk-interior-cost-hyderabad-2026',
+    type:'construction-guide', category:'Interior Costs',
+    title:'2BHK Interior Cost in Hyderabad (2026) | Room-wise Budget Guide | ProPulse',
+    description:'Plan a 2BHK interior budget in Hyderabad with indicative package ranges, room-wise costs, inclusions, exclusions and a quotation checklist.',
+    heading:'How much does a 2BHK interior cost in Hyderabad in 2026?',
+    summary:'A 2BHK interior budget depends on cabinet sizes, room scope, materials, hardware, finishes and civil or electrical changes. Published Hyderabad guides show wide variation, so compare the same itemised scope rather than one headline package price.',
+    searchTerms:['2BHK interior cost Hyderabad 2026','2BHK flat interior design price','2BHK modular kitchen and wardrobe cost','2BHK interior package Hyderabad','room wise interior cost 2BHK'],
+    ctaLabel:'Plan Your Interior Requirement', cta:'/quote?package=standard#interior',
+    note:'These are indicative market references from published Hyderabad vendor/platform guides, not ProPulse quotations or guaranteed rates. Confirm dimensions, quantities, brands, taxes, installation, civil work and exclusions in a current written BOQ before budgeting or paying an advance.',
+    sections:[
+      section('Start with a realistic budget range','Published 2026 Hyderabad guides vary materially. NoBroker reports a broad ₹5 lakh–₹18 lakh range, with standard packages around ₹8 lakh–₹12 lakh and premium around ₹13 lakh–₹18 lakh. Livvouge publishes essential packages around ₹4.5 lakh–₹6 lakh, premium around ₹7 lakh–₹10 lakh and luxe from ₹11 lakh. These are different providers’ package definitions, not a like-for-like market average. Use them as a first planning envelope only.'),
+      section('Understand what a 2BHK package may include','A typical core scope may include a modular kitchen, wardrobes for two bedrooms, a TV unit, selected storage, basic false ceiling and lighting. Some packages include painting or basic electrical work; others charge separately. Beds, sofas, dining tables, appliances, curtains, decor, bathroom renovations, extensive civil work, AC work and balcony furniture may be excluded. Ask for a room-by-room inclusion schedule.',['Kitchen: base and wall cabinets, shutters, countertop and accessories—confirm what is included','Bedrooms: wardrobe dimensions, lofts, drawers, internal accessories and dressing units','Living/dining: TV console, wall panelling, shoe storage, crockery or pooja units','Ceiling and lighting: covered area, gypsum design, wiring, fixtures and drivers','Site work: painting, electrical relocation, plumbing, dismantling and debris removal']),
+      section('Build a room-wise estimate before comparing vendors','For each room, record dimensions and quantities rather than relying on flat area alone. Kitchen cabinetry is often priced by running length or module; wardrobes by elevation area or specified unit; ceilings by covered area; and electrical changes by points and fittings. A small change in loft height, drawer count, shutter finish or hardware can shift the total.'),
+      section('Know the major cost drivers','The biggest drivers are total cabinetry, kitchen layout, wardrobe size, board/plywood grade, laminate/acrylic/veneer/PU finish, hardware brand and accessory count. Full-height wall panelling, fluted details, glass shutters, profile lighting, quartz counters and custom furniture add cost. A compact home can still be expensive if it has dense custom storage and premium finishes.'),
+      section('Compare quotations on the same specification','Ask every vendor to quote against the same approved drawings and BOQ.',['Exact width, height and depth of every cabinet','Board type, grade, thickness and internal finish','Laminate/veneer/acrylic/PU brand, code and thickness','Hinge, channel, lift-up and basket brand/model or allowance','Edge band thickness, back-panel thickness and installation method','Countertop, sink, hob, chimney, handles and accessories—supply or owner-supplied','GST, transport, installation, design fees and civil/electrical exclusions','Payment milestones, delivery schedule, warranty and snag rectification']),
+      section('Keep contingency and decisions in the right order','Finalise appliance sizes, kitchen layout, electrical points, plumbing, ceiling levels and wardrobe internals before factory production. Keep a separate contingency for site discoveries and approved variations. Do not treat a per-square-foot package rate as a complete quote unless its area basis and inclusions are explicit.'),
+      section('A practical 2BHK budget checklist','Before requesting a final estimate, prepare your floor plan, carpet area, room dimensions, family storage needs, appliance list, preferred finish level, move-in date and a list of must-have versus optional work. This turns a broad “2BHK interior cost” search into a comparable project brief.')
+    ],
+    sources:[
+      {label:'NoBroker — 2 BHK Interior Design Cost in Hyderabad (published 10 April 2026)',url:'https://www.nobroker.in/interiors/design-guides/2-bhk-interior-design-cost-in-hyderabad/'},
+      {label:'Livvouge — 2BHK & 3BHK Interior Design Cost in Hyderabad (published 5 September 2026)',url:'https://www.livvouge.com/blog/2bhk-3bhk-interior-design-cost-hyderabad'},
+      {label:'Member of Architecture — 2BHK Interior Design Cost in Hyderabad (published 29 October 2026)',url:'https://www.memberofarchitecture.com/blog/6ae353d359e3e1f78572-2bhk-interior-design-cost-hyderabad-2026'}
+    ]
+  },
+  {
+    slug:'3bhk-interior-cost-hyderabad-2026',
+    type:'construction-guide', category:'Interior Costs',
+    title:'3BHK Interior Cost in Hyderabad (2026) | Complete Budget Guide | ProPulse',
+    description:'Explore 3BHK interior cost references in Hyderabad, room-wise scope, kitchen and wardrobe budgets, finish choices and quotation checks.',
+    heading:'How much does a 3BHK interior cost in Hyderabad in 2026?',
+    summary:'A 3BHK needs more storage and often an additional bedroom workspace or wardrobe, but the final price is driven by scope and specification—not simply the number of bedrooms.',
+    searchTerms:['3BHK interior cost Hyderabad 2026','3BHK interior design price Hyderabad','3 bedroom flat interior budget','3BHK modular kitchen wardrobe cost','3BHK interior package comparison'],
+    ctaLabel:'Plan Your Interior Requirement', cta:'/quote?package=standard#interior',
+    note:'Published vendor ranges are indicative and not directly comparable because package inclusions, apartment size, taxes and finish levels differ. Get a site-measured BOQ with explicit inclusions and exclusions.',
+    sections:[
+      section('What published Hyderabad guides indicate','For 2026, Livvouge publishes essential 3BHK packages around ₹6.5 lakh–₹8.5 lakh, premium around ₹9.5 lakh–₹14 lakh and luxe from ₹16 lakh. Parthu Interiors publishes essential around ₹6.5 lakh–₹9.5 lakh, premium around ₹9.5 lakh–₹15 lakh and luxury around ₹16 lakh–₹25 lakh. These are provider-specific guide prices; they are not a guaranteed quote or a single citywide rate.'),
+      section('Why two 3BHK homes can have very different budgets','A 1,200 sq ft apartment with only essential wardrobes and a compact kitchen is not comparable with a larger home that includes three full wardrobes, a tall pantry, study units, crockery storage, a pooja unit, layered ceilings, decorative wall panels and loose furniture. Carpet area is only one input; actual cabinet dimensions and included work matter.'),
+      section('Room-wise scope to define','Write down the expected work for each space.',['Kitchen: layout, cabinet running length, tall units, countertop and accessories','Master bedroom: wardrobe, loft, dresser, bed-back panel and side tables','Bedroom two and three: wardrobes, study desks, bookshelves and storage','Living/dining: TV unit, foyer/shoe storage, crockery and pooja unit','Ceiling/lighting: rooms covered, cove details, profile lights and fixtures','Other: utility cabinets, balcony storage, painting, electrical and civil changes']),
+      section('Choose where to spend and where to simplify','Prioritise durable carcass construction, reliable hinges/channels, good edge sealing and functional storage. Save budget by limiting decorative panelling, using a consistent laminate palette, simplifying ceiling layers and phasing optional loose furniture. Premium surface finishes are visible, but concealed construction and hardware affect daily use.'),
+      section('How to compare 3BHK interior quotations','Use one drawing set and BOQ for every vendor. Check cabinet dimensions, board grade/thickness, finish codes, hardware models, accessories, countertop, electrical points, ceiling area, taxes, installation, transport, warranty and timeline. Ask vendors to identify provisional quantities and owner-supplied items.'),
+      section('Plan production and installation around site readiness','Complete measurements after critical civil changes. Confirm appliance and plumbing points before kitchen fabrication; confirm flooring and ceiling levels before tall storage and ceiling installation. Agree on access, lift booking, working hours, material storage, debris removal and a snag list before handover.'),
+      section('A useful 3BHK project brief','Share the floor plan, carpet area, room dimensions, number of occupants, storage needs, appliance list, preferred finish tier, budget ceiling and move-in deadline. Ask for a phased option—essential first, optional upgrades separately—so you can compare scope without losing control of cost.')
+    ],
+    sources:[
+      {label:'Livvouge — 2BHK & 3BHK Interior Design Cost in Hyderabad (5 September 2026)',url:'https://www.livvouge.com/blog/2bhk-3bhk-interior-design-cost-hyderabad'},
+      {label:'Parthu Interiors — Interior Design Cost in Hyderabad (2026)',url:'https://parthuinteriors.in/blog/how-much-does-interior-design-cost-in-hyderabad'},
+      {label:'Fleegl — 3BHK Interior Cost in Hyderabad (updated 24 August 2026)',url:'https://fleegl.in/blog/3bhk-interior-design-cost-hyderabad'}
+    ]
+  },
+  {
+    slug:'tv-unit-cost-hyderabad-2026',
+    type:'construction-guide', category:'Interior Costs',
+    title:'TV Unit Cost in Hyderabad (2026) | Design & Material Price Guide | ProPulse',
+    description:'Compare TV unit costs in Hyderabad by width, floating or full-wall design, laminate, fluted panels, storage, lighting and installation scope.',
+    heading:'How much does a TV unit cost in Hyderabad in 2026?',
+    summary:'TV unit pricing depends on the width and height, storage volume, substrate, finish, wall panelling, lighting, hardware and cable-management details. Compare a measured design—not only a style photo.',
+    searchTerms:['TV unit cost Hyderabad 2026','how much does TV unit cost','TV cabinet price Hyderabad','floating TV unit price','fluted TV panel cost'],
+    ctaLabel:'Discuss Your Interior Design', cta:'/quote?package=standard#interior',
+    note:'The price examples below are published vendor estimates and may exclude GST, stone cladding, electrical changes or site-specific work. Obtain a dimensioned drawing and itemised BOQ for your wall.',
+    sections:[
+      section('Indicative TV unit price bands','A Hyderabad 2026 guide from Hyderabad Listings places a basic TV unit around ₹25,000–₹60,000. AlcorOne publishes indicative examples around ₹45,000–₹65,000 for a low-profile floating laminate unit, ₹65,000–₹95,000 for a floor-standing cabinet and ₹1.2 lakh–₹2.2 lakh for a full-height wall panel. Fleegl lists broader tiers from ₹35,000–₹65,000 basic to ₹1.6 lakh–₹3.5 lakh+ premium. These are not equivalent designs; dimensions and inclusions differ.'),
+      section('Choose the design type before asking for a price','A floating console uses less floor space but needs suitable wall anchoring and concealed wiring. A floor-standing cabinet can provide more storage and easier access. A full-wall design may include panels, shelves, display niches and concealed doors, increasing material and installation work. Fluted backdrops, stone-look surfaces and glass display units add further cost.'),
+      section('Measure the wall and television together','Record wall width, ceiling height, TV size, viewing distance, sofa position, socket locations, internet/router needs and door/window positions. The TV centre and console height should be checked against actual seating comfort; do not copy a measurement blindly from an online image.'),
+      section('Materials and finishes affect both price and maintenance','Ask what the carcass and shutters are made from, including board/ply grade and thickness. Laminate is generally easier to specify and maintain; veneer or PU finishes require different care and finishing processes. Fluted profiles collect dust, while glass and glossy finishes show fingerprints. Confirm edge treatment and surface codes.'),
+      section('Do not forget cable management and ventilation','Plan power, HDMI, internet and speaker routes before panelling. Provide accessible service openings and ventilation for set-top boxes, consoles and routers. Avoid sealing heat-producing devices inside an unventilated compartment. Keep electrical work and extra sockets itemised.'),
+      section('What a proper TV unit quotation should include','Ask for wall and cabinet dimensions, carcass and shutter materials, board thickness, laminate/veneer/PU codes, edge banding, hardware, shelves, drawers, back panel, wall panelling, lighting drivers, wiring, anchoring, transport, installation, GST and warranty. Stone or tile cladding should be a separate line item.'),
+      section('Ways to control cost without making the unit look unfinished','Use one main finish and one accent, keep the console proportionate to the TV, avoid unnecessary full-wall cladding, use open shelves selectively and plan lighting only where it adds function. A clean cable route and aligned joints often matter more than adding multiple decorative materials.')
+    ],
+    sources:[
+      {label:'Hyderabad Listings — 2 BHK Interior Design Cost in Hyderabad (TV unit reference)',url:'https://hyderabadlistings.com/blog/2-bhk-interior-design-cost-hyderabad'},
+      {label:'AlcorOne — TV Unit Interior Design Hyderabad (2026)',url:'https://www.alcorone.com/blog/tv-unit-interior-guide-hyderabad/'},
+      {label:'Fleegl — Premium TV Unit Design Ideas Hyderabad (2026)',url:'https://fleegl.in/blog/tv-unit-design-ideas-hyderabad'}
+    ]
+  },
+  {
+    slug:'modular-kitchen-cost-hyderabad-2026',
+    type:'construction-guide', category:'Interior Costs',
+    title:'Modular Kitchen Cost in Hyderabad (2026) | Layout & Cabinet Budget | ProPulse',
+    description:'Understand modular kitchen cost in Hyderabad by layout, running length, cabinet materials, shutters, countertop, hardware and accessories.',
+    heading:'How much does a modular kitchen cost in Hyderabad in 2026?',
+    summary:'A modular kitchen quote depends on layout and measured cabinet length, not just the flat’s BHK label. Compare carcass, shutters, hardware, countertop, accessories and installation separately.',
+    searchTerms:['modular kitchen cost Hyderabad 2026','2BHK modular kitchen cost','L shaped kitchen cost Hyderabad','modular kitchen price per running foot','kitchen cabinet cost Hyderabad'],
+    ctaLabel:'Plan Your Interior Requirement', cta:'/quote?package=standard#interior',
+    note:'Published rates vary by kitchen dimensions and package scope. Appliance prices, plumbing/electrical relocation, civil work, countertop and GST may be excluded. Treat online prices as planning references only.',
+    sections:[
+      section('Why there is no single modular kitchen price','An 8-foot straight kitchen, a 12-foot L-shaped kitchen and a U-shaped kitchen with tall pantry storage have different cabinet quantities and hardware needs. Some quotes price base and wall units by running foot; others price individual modules or a complete package. Confirm exactly what the quoted running length includes.'),
+      section('Published Hyderabad reference points','Hyderabad Listings publishes an indicative ₹85,000–₹2.2 lakh range for an example L-shaped kitchen, depending on laminate or acrylic finish and hardware. Livvouge notes an L-shaped kitchen starting around ₹1.6 lakh. Member of Architecture’s 2BHK line-item estimate places kitchen cabinetry at ₹1.2 lakh–₹1.8 lakh budget, ₹2 lakh–₹3.5 lakh mid and ₹3.8 lakh–₹5.5 lakh premium for its stated example. These are provider-specific estimates with different dimensions and specifications.'),
+      section('Select the layout around workflow and available space','Common options include straight, L-shaped, parallel and U-shaped kitchens. Choose based on room dimensions, door/window positions, sink and hob locations, refrigerator clearance and safe aisle width. An island should only be considered when circulation remains comfortable after stools, appliance doors and drawers are accounted for.'),
+      section('Specify carcass, shutters and finish separately','The carcass is the cabinet structure; the shutter is the visible door. Ask for board or plywood type, grade, thickness, internal finish, edge sealing and moisture protection. Then specify laminate, acrylic, membrane, veneer or PU finish by brand and code. A premium-looking shutter does not compensate for poorly specified cabinet construction.'),
+      section('Hardware and accessories can change the total','List hinges, drawer channels, tandem boxes, lift-up systems, bottle pull-outs, corner units, cutlery trays, tall pantry baskets and bin systems. Confirm brand/model or a clear allowance, load rating and warranty. “Soft close” alone is not a sufficient hardware specification.'),
+      section('Countertop, sink and services must be clear','State whether granite or quartz is included, the thickness and edge profile, sink and hob cut-outs, backsplash, sink, faucet and installation. Plan chimney ducting, RO, gas, water purifier, dishwasher, refrigerator, sockets and under-cabinet lighting before fabrication.'),
+      section('Kitchen quotation checklist','Ask for a dimensioned layout and elevations, cabinet running lengths, module schedule, carcass and shutter specification, finish codes, hardware schedule, accessories, countertop, sink/faucet, installation, transport, taxes, civil/plumbing/electrical exclusions, warranty and completion timeline.'),
+      section('Where to save and where not to cut corners','Simplify decorative shutters and reduce rarely used accessories if budget is tight. Do not compromise on accurate measurement, safe wall fixing, appropriate moisture detailing near the sink, reliable hinges/channels, edge sealing or service access. Finalise appliance dimensions before production.')
+    ],
+    sources:[
+      {label:'Hyderabad Listings — 2 BHK Interior Design Cost in Hyderabad (kitchen examples)',url:'https://hyderabadlistings.com/blog/2-bhk-interior-design-cost-hyderabad'},
+      {label:'Livvouge — 2BHK & 3BHK Interior Design Cost in Hyderabad (2026)',url:'https://www.livvouge.com/blog/2bhk-3bhk-interior-design-cost-hyderabad'},
+      {label:'Member of Architecture — 2BHK Interior Design Cost in Hyderabad (2026)',url:'https://www.memberofarchitecture.com/blog/6ae353d359e3e1f78572-2bhk-interior-design-cost-hyderabad-2026'}
+    ]
+  },
+
+
+  {
+    slug:'plywood-quality-tests-bis-303-710',
+    type:'construction-guide', category:'Interior Materials',
+    title:'How to Check Plywood Quality | BIS Tests, IS 303 & IS 710 | ProPulse',
+    description:'Learn how to check plywood quality before buying, understand IS 303:2024 and IS 710:2024, and review the key laboratory tests and site inspection checklist.',
+    heading:'How do you check plywood quality before buying for interiors?',
+    summary:'A good plywood purchase is verified through the current BIS standard and licence scope, declared grade and thickness, traceable supply and relevant test evidence. Visual inspection is useful, but it cannot certify internal bonding or water resistance.',
+    searchTerms:['how to check plywood quality','plywood quality test at site','IS 303 2024 plywood','IS 710 2024 marine plywood','BWR vs BWP plywood test','plywood glue shear test','plywood water resistance test'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Do not try to certify plywood by soaking, boiling, bending or burning a small offcut at home. Standard tests require controlled specimen preparation and laboratory methods. Ask for the manufacturer’s current BIS licence details and relevant test reports; verify the licence and scope independently.',
+    sections:[
+      section('Start by identifying the correct standard','BIS lists IS 303:2024 as Plywood for General Purposes (fourth revision) and IS 710:2024 as Marine Plywood (third revision). These are not interchangeable labels. Ask the supplier which standard, grade, type and intended application are declared for the actual product. Confirm the current BIS licence, manufacturer, factory and product scope rather than relying on a logo printed on a sheet.'),
+      section('Understand what the main plywood tests tell you','The BIS standards compendium and BIS laboratory listings identify several performance checks.',['Water-resistance test: evaluates performance under the standard’s specified water exposure','Glue-shear strength and adhesion of plies: assess bonding between veneers and risk of delamination','Moisture content: measures moisture in the panel at testing','Static bending strength and modulus of elasticity: assess strength and stiffness under bending','Workmanship and finish: checks surface and manufacturing quality','Dimensional checks: include thickness, squareness and edge straightness','Formaldehyde content or emission: relates to indoor exposure requirements in the applicable standard']),
+      section('What to inspect when sheets arrive at site','Visual inspection helps catch handling damage and obvious defects, but cannot reveal every internal core gap or bonding problem.',['Match the invoice, brand, standard, grade, thickness and sheet dimensions to the purchase order','Check printed markings and batch/manufacturer traceability','Inspect faces and edges for damage, open splits, blisters, severe patches or delamination','Measure representative sheets with a suitable thickness gauge and compare with declared tolerances','Count sheets and photograph labels before stacking','Keep delivery documents and supplier test declarations']),
+      section('MR, BWR and BWP are not simply marketing words','Ask the supplier to state the exact grade under the applicable standard and provide supporting compliance evidence. Do not assume every “waterproof” claim means the same test regime. Marine plywood under IS 710:2024 has its own specification; it should be selected for the intended service conditions, not as a universal upgrade for every wardrobe or dry-area cabinet.'),
+      section('Why a bucket or boiling-water test is not proof','A home soak test does not control sample size, exposure, temperature, conditioning, specimen selection or evaluation. A sheet that survives a quick soak may still fail a required standard test; a poorly performed test may also damage a good sheet. Use a competent laboratory for compliance testing and request the test report for the same product/grade.'),
+      section('Choose the board for its actual location','Wardrobe carcasses, dry shelves, kitchen cabinets and sink-base units have different exposure and loading. Specify board type, grade, thickness, finish, edge sealing and support spacing for each use. Even moisture-resistant plywood can be damaged by persistent leaks, unsealed edges or standing water. Waterproofing and plumbing leak control remain essential.'),
+      section('A plywood purchase checklist','Before approving a brand or material substitution, write the standard and edition, grade, thickness, manufacturer, BIS licence details, test evidence, sheet dimensions, quantity, rate, transport, storage and replacement terms into the purchase order.')
+    ],
+    sources:[
+      {label:'BIS — IS 303:2024, Plywood for General Purposes',url:'https://www.bis.gov.in/is-303-2024/?lang=en'},
+      {label:'BIS — IS 710:2024, Marine Plywood',url:'https://www.bis.gov.in/is-710-2024/?lang=en'},
+      {label:'BIS — Compendium of Indian Standards on Plywood (2025)',url:'https://www.services.bis.gov.in/tmp/compendium_2025-06-02-04-13-12.pdf'},
+      {label:'BIS Laboratory Information Management System — IS 303 tests',url:'https://lims.bis.gov.in/home/search_is_number/?is_number__doc_no=303'},
+      {label:'Institute of Wood Science and Technology — Specimen Testing',url:'https://iwst.icfre.gov.in/woodspecimentesting.html'}
+    ]
+  },
+  {
+    slug:'cabinet-hinge-types-overlay-inset-soft-close',
+    type:'construction-guide',category:'Interior Hardware',
+    title:'Types of Cabinet Hinges | Overlay, Inset, Half Overlay & Soft Close | ProPulse',
+    description:'Understand concealed cabinet hinge types, overlay and inset applications, soft-close mechanisms, opening angles and how to specify hinges for kitchens and wardrobes.',
+    heading:'What are the different types of cabinet hinges for modular interiors?',
+    summary:'The right hinge depends on cabinet construction, door position, door size and weight, opening angle, nearby obstructions and the required closing action. “Soft close” is a function, while overlay and inset describe how the door sits against the cabinet.',
+    searchTerms:['types of cabinet hinges','full overlay vs half overlay hinge','inset hinge vs overlay hinge','soft close hinge for kitchen cabinet','110 degree vs 165 degree hinge','best wardrobe hinges'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Hinge count, drilling dimensions, mounting plates and load limits must follow the exact manufacturer’s technical data for the door size, weight and material. Do not copy a generic hinge-count rule.',
+    sections:[
+      section('First understand the door application','Full overlay doors cover most of the cabinet side; half overlay doors share a central partition with another door; inset doors sit within the cabinet opening. These applications require different hinge geometry and mounting positions. Confirm the cabinet construction and reveal gaps before ordering.'),
+      section('Common hinge types used in interiors','Concealed cup hinges are common in modular kitchens and wardrobes because the mechanism is hidden when the door is closed. Butt hinges are visible and are used in some traditional furniture. Special hinges are available for corner cabinets, thick or profiled doors, glass/aluminium frames, angled cabinets and wide-opening applications.'),
+      section('Soft-close, self-close and push-to-open are different functions','Soft-close uses damping to slow the door near closing. Some hinge systems integrate the damper; others use a separate add-on. Self-closing refers to the spring action that pulls a door closed. Push-to-open systems are designed for handleless fronts and require compatible hardware and correct door gaps. Confirm the actual product mechanism rather than relying on sales terminology.'),
+      section('Choose the opening angle for the cabinet layout','Common catalogues include standard opening angles such as around 95°, 100°, 107° or 110°, while special wide-angle hinges can open further for corner or pull-out access. More opening is not always better: adjacent walls, handles, appliances and drawer fronts may obstruct movement. Check the manufacturer’s clearance diagrams.'),
+      section('How to select hinges for a wardrobe or kitchen','Check door height, width, thickness, weight, material, overlay/inset position, cabinet side thickness, opening angle, mounting plate and adjustment range. Tall or heavy shutters may need a different hinge or more hinges; use the maker’s door-weight and height guidance.'),
+      section('What to check in the hardware quotation','Ask for brand, exact series/model, hinge application, opening angle, integrated or add-on damping, mounting plate, screw/press-in fixing, corrosion suitability where relevant, warranty and service availability. “Premium soft-close hinge” is not a complete specification.'),
+      section('Installation and maintenance checks','During handover, check even gaps, flush alignment, smooth travel, full opening without collision, reliable closing and secure fixing. Re-adjust after the cabinet settles if the manufacturer permits. Keep hinges clean and avoid hanging loads on doors. Replace damaged screws or stripped substrate with an approved repair method.')
+    ],
+    sources:[
+      {label:'Blum India — Hinge Systems Overview',url:'https://www.blum.com/in/en/products/hingesystems/overview/'},
+      {label:'Blum — CLIP top BLUMOTION range',url:'https://www.blum.com/in/en/products/hingesystems/clip-top-blumotion/programme/'},
+      {label:'Hettich India — Furniture Hinges',url:'https://www.hettich.com/en-in/products/hinges'},
+      {label:'Hettich eShop — Hinge filters by overlay, inset and opening angle',url:'https://shop.hettich.com/in_EN/Hinges/c/group2264954678785'}
+    ]
+  },
+  {
+    slug:'interior-finishes-laminate-acrylic-veneer-pu-membrane',
+    type:'construction-guide',category:'Interior Materials',
+    title:'Interior Finish Types Compared | Laminate, Acrylic, Veneer, PU & Membrane | ProPulse',
+    description:'Compare laminate, acrylic, veneer, PU paint, membrane, PET and glass finishes for kitchens, wardrobes and TV units by appearance, maintenance and cost drivers.',
+    heading:'What is the difference between laminate, acrylic, veneer, PU and membrane finishes?',
+    summary:'A finish is the visible surface, while the board or plywood below is the substrate. Compare the complete panel system—including edge treatment, adhesive, fabrication and maintenance—not only the surface name.',
+    searchTerms:['types of interior finishes','laminate vs acrylic finish','PU vs duco finish','veneer vs laminate','membrane vs laminate shutters','best finish for kitchen cabinets'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Performance varies by manufacturer, product line, substrate and fabrication quality. Ask for physical samples, technical data and cleaning instructions; do not assume one finish is always more durable than another.',
+    sections:[
+      section('Separate the substrate from the finish','Plywood, MDF, HDHMR and particleboard are substrates. Laminate, acrylic, veneer, paint, membrane and PET are surface or finish systems. A premium finish cannot correct a weak, damp or poorly constructed carcass. Specify both layers independently.'),
+      section('Decorative laminate','Laminate is a factory-made decorative sheet bonded to a substrate. It is available in matte, gloss, textured, suede and wood-look designs. It offers many patterns and is commonly used for wardrobes, kitchens and TV units. Check sheet thickness, brand/code, surface texture, edge banding, joint placement and cleaning instructions.'),
+      section('Acrylic and PET surfaces','Acrylic and PET-faced panels can provide a smooth, contemporary surface in gloss or matte variants depending on the product. Ask about scratch resistance, fingerprints, colour consistency, edge finish, repair options and compatible cleaners. High gloss can show smudges and reflections more clearly.'),
+      section('Natural veneer','Veneer is a thin layer of real wood applied to a suitable substrate and finished with polish or coating. Grain and shade vary naturally, so approve the actual veneer sequence and sample. Veneer can be refinished in some systems but generally needs more careful maintenance than many standard laminate surfaces.'),
+      section('PU paint, lacquer and duco terminology','These terms are sometimes used loosely in the market. Ask the fabricator to state the exact coating system, primer, number of coats, sheen, colour code, curing process and repair method. Painted finishes can create seamless colours and routed profiles, but quality depends heavily on surface preparation, controlled application and curing.'),
+      section('Membrane and wrapped shutters','Membrane shutters use a film wrapped over a profiled substrate, often to cover routed edges and decorative profiles. Confirm film specification, substrate, adhesive/process, heat exposure limits and repair options. Poorly controlled heat or moisture can cause lifting or peeling in unsuitable applications.'),
+      section('Glass, metal and fluted details','Glass shutters and metal trims add contrast and can be used selectively in display units. Confirm safety glass type, frame details, edge protection and cleaning. Fluted panels add texture but collect dust in grooves; use them where maintenance is practical.'),
+      section('How to choose finishes room by room','For kitchens, prioritise cleaning, moisture detailing, edge protection and access to repair. For wardrobes, consider fingerprints, abrasion, sunlight and the visual scale of the room. For TV units, balance glare, dust, cable access and wall-panel maintenance. Approve samples under the actual room lighting.'),
+      section('What to include in the finish schedule','Record the substrate type/grade/thickness, surface finish, brand and code, colour, texture, sheen, edge band, adhesive/process, location, sample approval and maintenance instructions. Attach signed samples or product references to the BOQ to prevent substitutions.')
+    ],
+    sources:[
+      {label:'BIS — IS 303:2024, Plywood for General Purposes',url:'https://www.bis.gov.in/is-303-2024/?lang=en'},
+      {label:'Blum India — Hinge Systems Overview (hardware coordination)',url:'https://www.blum.com/in/en/products/hingesystems/overview/'}
+    ]
+  },
+
+
+  {
+    slug:'plywood-vs-mdf-vs-hdhmr-interiors',
+    type:'construction-guide',category:'Interior Materials',
+    title:'Plywood vs MDF vs HDHMR | Which Board Is Best for Interiors? | ProPulse',
+    description:'Compare plywood, MDF and HDHMR for wardrobes, kitchen cabinets and furniture by moisture exposure, strength, screw holding, finish and cost.',
+    heading:'Plywood vs MDF vs HDHMR: which board should you choose?',
+    summary:'There is no single best board for every interior. Choose the substrate based on the location, expected load, moisture exposure, shutter design, finish system, hardware and documented product specification.',
+    searchTerms:['plywood vs MDF vs HDHMR','which board is best for kitchen cabinets','HDHMR vs plywood wardrobe','MDF vs plywood for furniture','best board for modular interiors'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Board names alone do not establish quality or suitability. Ask for manufacturer, product grade, thickness, technical data, applicable standard or test report, and confirm the actual use with the designer/fabricator.',
+    sections:[
+      section('Understand what each board is','Plywood is made by bonding layers of veneer, typically with alternating grain directions. MDF is a wood-fibre panel made by pressing fibres with resin under heat and pressure. HDHMR is a high-density, moisture-resistant engineered fibreboard category sold by different manufacturers. Product properties vary by manufacturer and grade.'),
+      section('Compare the practical trade-offs','Plywood is often selected where panel strength, screw fixing and certain moisture-exposure requirements matter. MDF provides a smooth, consistent surface that can suit painted or routed profiles, but edge fixing and prolonged wetting need care. HDHMR products are marketed for higher density and moisture resistance than standard MDF, but the exact performance must be checked in the manufacturer’s technical data.'),
+      section('Choose by room and exposure','Dry wardrobe shelves, bedroom shutters, kitchen carcasses and sink-base cabinets are not identical applications. Near sinks, plumbing joints and wet utility areas, prevent leaks, seal edges and provide ventilation regardless of board type. Do not treat a “moisture resistant” label as permission for continuous water exposure.'),
+      section('Consider shutter design and finish','Flat laminate shutters, routed painted shutters, membrane profiles and veneer finishes can favour different substrates and fabrication methods. Ask the fabricator to confirm compatibility of the board, adhesive, primer, coating and edge treatment as one tested system.'),
+      section('Check hardware fixing and shelf spans','Heavy shutters, wide shelves, pull-outs and frequently used drawers impose different loads. Ask for the board thickness, support spacing, fixing method and manufacturer guidance for hinges, channels and accessories. A stronger board cannot compensate for an undersized fixing or unsupported span.'),
+      section('Compare cost on a complete panel specification','A fair comparison includes board price, thickness, wastage, machining, edge banding, finish, hardware fixing, installation and expected maintenance. A low sheet price may not be the lowest finished-cabinet cost if it needs additional reinforcement or finishing work.'),
+      section('What to write in the BOQ','Specify board manufacturer and product, grade, thickness, intended location, finish, edge treatment, back-panel details, shelf supports, hardware and warranty. Ask to approve a sample and retain product labels or invoices for traceability.')
+    ],
+    sources:[
+      {label:'BIS — IS 303:2024, Plywood for General Purposes',url:'https://www.bis.gov.in/is-303-2024/?lang=en'},
+      {label:'BIS — IS 710:2024, Marine Plywood',url:'https://www.bis.gov.in/is-710-2024/?lang=en'},
+      {label:'BIS — Compendium of Indian Standards on Plywood',url:'https://www.services.bis.gov.in/tmp/compendium_2025-06-02-04-13-12.pdf'}
+    ]
+  },
+  {
+    slug:'laminate-thickness-08mm-vs-1mm-interiors',
+    type:'construction-guide',category:'Interior Materials',
+    title:'0.8mm vs 1mm Laminate | Thickness, Uses & Selection Guide | ProPulse',
+    description:'Understand 0.8mm and 1mm decorative laminate choices for wardrobes, kitchen shutters and furniture, including substrate, balancing, edge details and maintenance.',
+    heading:'Is 0.8mm or 1mm laminate better for home interiors?',
+    summary:'A thicker laminate is not automatically the right choice for every panel. Selection depends on the manufacturer’s product range, application, substrate, bonding method, panel size, edge detailing and finish.',
+    searchTerms:['0.8mm vs 1mm laminate','which laminate thickness is best','1mm laminate for kitchen shutters','0.8mm laminate for wardrobe','laminate thickness for furniture'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Confirm the actual nominal thickness and tolerance from the selected manufacturer’s datasheet. Decorative laminate thickness is only one part of the finished panel system.',
+    sections:[
+      section('What the thickness number tells you','The 0.8mm and 1mm labels refer to the nominal thickness of a decorative laminate sheet, not the total thickness or strength of the finished shutter. The substrate, adhesive, pressing process, panel size and support all influence the final result.'),
+      section('Where 0.8mm and 1mm may be considered','Both thicknesses are used in interior applications depending on the product line and fabricator specification. A thicker sheet may provide a different feel or handling characteristics, but it does not automatically make a cabinet waterproof, impact-proof or structurally stronger. Follow the laminate maker’s recommended application.'),
+      section('Do not ignore balancing on the reverse side','Panels can warp when the face and back are not balanced appropriately. Ask whether the reverse side uses a balancing laminate or another specified backing system compatible with the face material and substrate.'),
+      section('Check edge finishing and joints','Inspect edge banding, corner quality, seams, adhesive marks, alignment and exposed edges. A well-specified face laminate with poor edge execution can still fail visually and in service.'),
+      section('Approve the actual colour and texture sample','Laminate shade, gloss and texture can look different under showroom, daylight and warm indoor lighting. Approve a physical sample with the product code and batch/lot reference; check it beside flooring, wall paint and other finishes.'),
+      section('How to compare two laminate quotations','Compare brand and series, product code, nominal thickness, finish/texture, substrate, adhesive/process, backing, edge band, area/quantity, wastage, installation and warranty. Do not compare only “1mm premium” against “0.8mm standard.”'),
+      section('Care and maintenance','Use the manufacturer’s cleaning guidance. Avoid abrasive pads, harsh solvents and prolonged standing water at joints or edges. Repair chips and water ingress early, because the substrate below the decorative surface can be affected.')
+    ],
+    sources:[
+      {label:'Greenlam — Decorative laminates product information',url:'https://www.greenlam.com/'},
+      {label:'Merino — Decorative laminates product information',url:'https://www.merinolaminates.com/'}
+    ]
+  },
+  {
+    slug:'modular-kitchen-drawer-channels-tandem-box-systems',
+    type:'construction-guide',category:'Interior Hardware',
+    title:'Kitchen Drawer Channels vs Tandem Box Systems | Hardware Guide | ProPulse',
+    description:'Compare telescopic drawer slides, concealed runners and tandem box systems for modular kitchens by extension, load, adjustment, accessories and maintenance.',
+    heading:'What is the difference between drawer channels and tandem box systems?',
+    summary:'Drawer hardware affects usable storage, smooth movement and serviceability. Compare the complete drawer system—including runner, box sides, front adjustment and rated load—not only whether it has soft close.',
+    searchTerms:['drawer channels vs tandem box','tandem box system kitchen','telescopic channel vs concealed runner','soft close drawer channel','best kitchen drawer hardware'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Load capacity and installation dimensions are product-specific. Use the hardware manufacturer’s technical catalogue for the exact model and drawer width.',
+    sections:[
+      section('Understand a basic telescopic channel','A telescopic slide is commonly mounted to the drawer and cabinet sides and may use multiple sliding members to provide partial or full extension. Quality, load rating, length, fixing and alignment vary by model.'),
+      section('Understand concealed runners and tandem boxes','Concealed runners are mounted beneath or alongside a drawer so the mechanism is less visible. Tandem box systems use a coordinated metal drawer-side and runner system, often with integrated adjustment and accessory options. Product names and features differ by manufacturer.'),
+      section('Compare extension and usable access','Check whether the drawer is partial, full or over extension, and whether the back of the drawer is accessible when open. Confirm clearance with adjacent doors, handles, appliances and internal partitions.'),
+      section('Compare load rating properly','Check the stated dynamic load capacity and the conditions under which it applies. Drawer width, depth, contents, mounting and cycle use can affect performance. Do not assume every runner in a brand family has the same rating.'),
+      section('Soft close and push-to-open options','Soft-close damping slows the drawer near closure. Push-to-open hardware is designed for handleless fronts and requires correct gaps and alignment. Some systems combine functions; others require separate compatible components. Confirm the exact model and accessories.'),
+      section('Choose accessories for the actual storage','Cutlery trays, plate holders, bottle dividers, inner drawers and waste bins should match drawer dimensions and the user’s routine. Accessories reduce usable internal space and may affect the required load rating.'),
+      section('What to check at installation and handover','Check smooth travel, equal gaps, front adjustment, full extension, soft-close action, stability under the intended load and access to adjustment screws. Ask for brand/model, warranty, spare-part availability and care instructions.')
+    ],
+    sources:[
+      {label:'Blum India — Drawer Systems',url:'https://www.blum.com/in/en/products/boxsystems/overview/'},
+      {label:'Hettich India — Drawer Systems',url:'https://www.hettich.com/en-in/products/drawer-systems'}
+    ]
+  },
+  {
+    slug:'wardrobe-interior-layout-accessories-guide',
+    type:'construction-guide',category:'Interior Planning',
+    title:'Wardrobe Interior Layout & Accessories | Drawers, Lofts & Hanging Space | ProPulse',
+    description:'Plan wardrobe internals with hanging sections, shelves, drawers, lofts, shoe storage, pull-outs and accessories based on clothing, room space and daily use.',
+    heading:'How should you plan the inside of a wardrobe?',
+    summary:'A useful wardrobe is designed around what the household stores and how often it is accessed. Plan clear internal dimensions, hanging lengths, shelf spacing, drawer access and door swing before choosing accessories.',
+    searchTerms:['wardrobe internal design ideas','wardrobe accessories list','wardrobe hanging space dimensions','wardrobe drawers and shelves layout','wardrobe loft design'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Dimensions below should be site-measured and coordinated with the selected hardware and clothing needs. Avoid treating generic online dimensions as mandatory standards.',
+    sections:[
+      section('List what the wardrobe must store','Separate long garments, shirts, trousers, folded clothes, sarees, bags, footwear, jewellery, bedding and seasonal storage. Count users and decide which items need daily access versus high-level storage.'),
+      section('Plan hanging zones and clear heights','Provide hanging sections based on actual garment lengths and hanger type. Check rod strength, fixing into the cabinet sides or supports and clear space below. Long garments need a different arrangement from shirts or folded trousers.'),
+      section('Design shelves and drawers around access','Frequently used items are easier to reach in drawers or mid-height shelves. Very deep shelves can hide items at the back; use pull-outs or divide the storage where appropriate. Check drawer opening against bed, door and walking clearance.'),
+      section('Use lofts for occasional storage','Lofts can store luggage, blankets and seasonal items, but require safe access and suitable shutter hardware. Check ceiling level, access height, ventilation and whether the loft doors can open without obstruction.'),
+      section('Select accessories only where they solve a problem','Trouser pull-outs, tie racks, jewellery trays, laundry baskets, pull-down hanging rails and shoe pull-outs can improve organisation but add cost and reduce usable cabinet space. Confirm exact dimensions and rated load.'),
+      section('Coordinate lighting and electrical safety','Wardrobe lights should not obstruct drawers or hinges. Plan sensor location, driver access, wiring routes and safe electrical installation before the wardrobe is closed. Avoid inaccessible drivers that cannot be serviced.'),
+      section('Check the final drawing and BOQ','Approve internal elevations with dimensions, shelf count, drawer sizes, rod locations, hardware model, board thickness, finish code, edge treatment, loft details and accessory schedule. Keep one signed drawing as the production reference.')
+    ],
+    sources:[
+      {label:'Blum India — Storage and cabinet solutions',url:'https://www.blum.com/in/en/products/'},
+      {label:'Hettich India — Furniture fittings and storage solutions',url:'https://www.hettich.com/en-in/products'}
+    ]
+  },
+
+
+  {
+    slug:'kitchen-baskets-pantry-pullouts-magic-corner-guide',
+    type:'construction-guide',category:'Interior Hardware',
+    title:'Kitchen Baskets, Pantry Pull-outs & Magic Corners | Selection Guide | ProPulse',
+    description:'Compare kitchen baskets, tall pantry pull-outs, magic corners and carousel units by cabinet dimensions, access, load ratings and daily use.',
+    heading:'Which kitchen baskets and pull-out accessories should you choose?',
+    summary:'Kitchen accessories should solve a real storage or access problem. Start with cabinet dimensions and the items you store, then compare the complete mechanism, load rating, adjustment and service support.',
+    searchTerms:['types of kitchen baskets','pantry pull out vs tall unit','magic corner vs carousel','kitchen bottle pull out size','which kitchen accessories are useful'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Do not select accessories from catalogue pictures alone. Verify the exact model’s installation dimensions, rated load, cabinet compatibility and warranty with the manufacturer.',
+    sections:[
+      section('List the storage problem before selecting hardware','Identify what needs to be stored: plates, thalis, cups, cutlery, bottles, groceries, cleaning products or heavy cookware. Consider who uses the kitchen and whether the items need daily access.'),
+      section('Understand common basket types','Common options include cutlery trays, plate and thali baskets, cup-and-saucer baskets, bottle pull-outs, plain storage baskets and tall pantry systems. Names and layouts vary by brand. Match the basket to the cabinet width, depth, height and door arrangement.'),
+      section('Tall pantry pull-outs and internal drawers','A tall pantry can use pull-out frames, internal drawers or shelves. Compare visibility, full access, usable capacity, door fixing, loading and the ability to remove or clean components. Check the exact installation drawing before finalising cabinet dimensions.'),
+      section('Magic corner versus carousel','Corner pull-out mechanisms and rotating carousel shelves solve different cabinet geometries. A magic-corner style mechanism can bring stored items outward from a blind corner; a carousel rotates shelves within a corner cabinet. Neither automatically makes every corner fully usable.'),
+      section('Check load ratings and runner quality','Ask for the dynamic load rating for the complete fitted system, not just a generic statement about metal thickness. Confirm whether the rating applies per basket or to the whole mechanism, and whether it changes with cabinet width or extension.'),
+      section('Check finish, cleaning and corrosion exposure','Compare the specified surface finish, weld quality, edges, removable trays and cleaning instructions. Keep water and cleaning chemicals from accumulating in cabinet bases; no hardware finish should be treated as maintenance-free in a wet or corrosive environment.'),
+      section('Measure before ordering','Record clear internal cabinet width, depth and height after accounting for hinges, door thickness, plumbing, skirting, wall irregularities and adjacent appliances. Use the selected manufacturer’s installation drawing for minimum clearances.'),
+      section('Write the hardware schedule into the BOQ','Record brand, series, model code, dimensions, finish, load rating, accessories, quantity, warranty and service contact. Inspect smooth travel, alignment, fixing and stability at handover.')
+    ],
+    sources:[
+      {label:'Blum India — Cabinet applications and storage systems',url:'https://www.blum.com/in/en/products/'},
+      {label:'Hettich India — Furniture fittings and storage solutions',url:'https://www.hettich.com/en-in/products'}
+    ]
+  },
+  {
+    slug:'edge-banding-pvc-abs-pur-eva-guide',
+    type:'construction-guide',category:'Interior Materials',
+    title:'PVC vs ABS Edge Banding, PUR vs EVA | Modular Furniture Guide | ProPulse',
+    description:'Understand edge banding materials, thickness, PUR and EVA adhesive systems, peeling causes and what to specify for modular furniture.',
+    heading:'What is the difference between PVC and ABS edge banding?',
+    summary:'Edge quality depends on the board edge, band material, adhesive, machine setup, trimming and site conditions. A thicker band or a premium adhesive name alone cannot guarantee a durable joint.',
+    searchTerms:['PVC vs ABS edge banding','0.8mm vs 2mm edge banding','PUR vs EVA edge banding','why is edge banding peeling','edge banding for modular kitchen'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Adhesive selection and processing are manufacturer- and machine-specific. Follow the adhesive and edge-band supplier’s technical data and safety instructions.',
+    sections:[
+      section('What edge banding does','Edge banding covers exposed panel edges, improves appearance and helps protect the substrate edge from everyday knocks and moisture ingress. It does not make a cabinet waterproof.'),
+      section('PVC and ABS edge bands','PVC and ABS are common thermoplastic edge-band materials. Compare the actual product’s thickness, colour match, texture, impact behaviour, processing guidance and environmental/product declarations where available. Do not assume all products within one material category perform identically.'),
+      section('0.8mm versus 2mm edge banding','Thickness changes the visible edge profile and may affect impact protection and machining requirements. The appropriate choice depends on panel location, corner exposure, design and the fabricator’s equipment. Confirm nominal thickness and tolerance in the BOQ.'),
+      section('EVA and PUR adhesive systems','EVA hot-melt adhesives are widely used in edge-banding processes. PUR reactive hot-melt systems cure through moisture reaction and may offer different joint properties. Performance depends on the exact adhesive formulation, machine settings, substrate, edge band and process control.'),
+      section('Why edges peel or open','Potential causes include poor panel preparation, dust, unsuitable adhesive, incorrect temperature or feed settings, inadequate pressure, incompatible materials, poor trimming, moisture exposure or damage during transport. Identify the failure mode before deciding on repair.'),
+      section('Inspect a finished sample','Look for continuous bonding, clean trimming, consistent flushness, tight corners, no glue lines or gaps, and colour/texture match. Inspect both visible and less visible edges on a sample cabinet before production.'),
+      section('What to specify in the BOQ','Record edge-band material, brand/series, colour code, nominal thickness, application location, adhesive/process where contractually relevant, corner treatment and workmanship acceptance criteria.'),
+      section('Care and repair','Wipe spills promptly and avoid soaking exposed joints. For peeling or chipped edges, have the fabricator assess the substrate and rebond or replace the band using a compatible process rather than masking the defect with sealant.')
+    ],
+    sources:[
+      {label:'Hettich India — Furniture fittings and furniture solutions',url:'https://www.hettich.com/en-in/products'},
+      {label:'BIS — Know Your Standard portal',url:'https://www.bis.gov.in/know-your-standard/?lang=en'}
+    ]
+  },
+  {
+    slug:'cement-opc-ppc-house-construction-guide',
+    type:'construction-guide',category:'Construction Materials',
+    title:'OPC vs PPC Cement for House Construction | Selection & Quality Checks | ProPulse',
+    description:'Compare OPC and PPC cement, Indian Standards, storage, bag checks and why cement choice must follow structural and project specifications.',
+    heading:'Which cement is better for house construction: OPC or PPC?',
+    summary:'Neither OPC nor PPC is universally best for every building element. Select cement according to the project specification, structural requirements, exposure conditions, construction sequence and approved mix design.',
+    searchTerms:['OPC vs PPC cement for house construction','which cement is best for slab','how to check cement quality','IS 269 OPC cement','IS 1489 PPC cement'],
+    ctaLabel:'Get Construction Quote',cta:'/quote?package=standard#construction',
+    note:'Do not change cement type or concrete mix on site without approval from the structural engineer or concrete technologist. Follow the current applicable BIS standard and project specification.',
+    sections:[
+      section('Understand the cement categories','Ordinary Portland Cement is covered by IS 269. Portland Pozzolana Cement is covered by IS 1489, with separate parts for fly-ash-based and calcined-clay-based PPC. The standard and product grade should be checked on the actual bag and supporting documentation.'),
+      section('OPC and PPC are not a simple good-versus-bad choice','Different cement compositions can influence early strength development, heat evolution, workability and longer-term performance. Actual behaviour depends on the product, mix proportions, curing, temperature and construction conditions. Do not select solely from a general online rule.'),
+      section('Match cement to the approved work specification','The engineer’s specification and approved concrete mix govern the material choice for footings, columns, beams, slabs, masonry and plaster. A cement used for one task should not automatically be substituted in another.'),
+      section('Check the bag and traceability','Check manufacturer, cement type, applicable IS number, grade where relevant, BIS Standard Mark and licence details, batch/date information, net quantity and intact packaging. Keep invoices and batch records. Verify certification through BIS resources rather than relying on a logo alone.'),
+      section('Store cement correctly on site','Keep bags in a dry, weather-protected store, off the floor on a raised platform and away from damp walls. Follow FIFO stock rotation and the manufacturer/project storage instructions. Reject bags that are wet, torn or visibly affected by moisture.'),
+      section('Do not rely on informal field tests','Feel, colour, hand-squeeze or floating tests cannot certify cement compliance or strength. Laboratory tests under the relevant standard and traceable manufacturer documentation are the appropriate evidence.'),
+      section('Curing and workmanship matter','Correct batching, water control, mixing, placing, compaction and curing are essential. A premium brand cannot compensate for excess water, poor workmanship or inadequate curing.'),
+      section('What to record in the material approval','Record cement type, manufacturer, applicable IS number, grade if applicable, batch, delivery date, approved use, test/certification documents and storage inspection.')
+    ],
+    sources:[
+      {label:'BIS — Compendium of Cement Standards (2025)',url:'https://www.bis.gov.in/wp-content/uploads/2025/05/COMPENDIUM-OF-CEMENT-STANDARDS.pdf'},
+      {label:'BIS — IS 269:2015 Ordinary Portland Cement',url:'https://www.bis.gov.in/is-269-2015/?lang=en'},
+      {label:'BIS — Know Your Standard portal',url:'https://www.bis.gov.in/know-your-standard/?lang=en'},
+      {label:'BIS — Scheme I mandatory certification listing',url:'https://www.bis.gov.in/product-certification/products-under-compulsory-certification/scheme-i-mark-scheme/?lang=en'}
+    ]
+  },
+
+
+  {
+    slug:'false-ceiling-gypsum-pvc-metal-materials-guide',
+    type:'construction-guide',category:'Interior Materials',
+    title:'Gypsum vs PVC vs Metal False Ceiling | Material & Cost Guide | ProPulse',
+    description:'Compare gypsum, PVC and metal false ceiling systems for homes by appearance, moisture exposure, access, maintenance, framing and installation details.',
+    heading:'Which false ceiling material is best: gypsum, PVC or metal?',
+    summary:'Choose a ceiling system based on the room environment, service access, fire and acoustic requirements, lighting plan, framing and manufacturer system details—not only the surface appearance.',
+    searchTerms:['gypsum vs PVC false ceiling','which false ceiling is best for home','metal false ceiling for house','false ceiling for bathroom','false ceiling material comparison'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Use a complete tested ceiling system with suitable framing, suspension, fasteners and board/panel. Never conceal electrical junctions, leaks or unsafe services above a ceiling without proper access and inspection.',
+    sections:[
+      section('Understand the complete ceiling system','A false ceiling is more than its visible board or panel. It includes the supporting structure, hangers, perimeter channels, fasteners, joints, access panels, insulation if specified, lighting cut-outs and service coordination.'),
+      section('Gypsum board ceilings','Gypsum boards create a smooth surface suitable for paint, coves and layered ceiling designs. Choose board type and thickness for the manufacturer’s specified application. Moisture-resistant boards are designed for damp-prone conditions but should not be treated as waterproof boards or used to hide persistent leaks.'),
+      section('PVC ceiling panels','PVC panels are lightweight and available in different finishes and profiles. Check product quality, fire performance documentation, heat exposure, joint detailing, support spacing and suitability for the exact room. Avoid assuming all PVC panels share the same fire or durability properties.'),
+      section('Metal ceiling systems','Metal ceiling systems can provide durable, demountable or modular access depending on the product. Compare panel material and coating, corrosion exposure, suspension system, acoustic backing, edge details and access requirements.'),
+      section('Select by room conditions','Bedrooms and living rooms often prioritise appearance and lighting integration. Kitchens require attention to heat, grease and cleaning. Bathrooms and damp areas require suitable moisture-resistant systems, ventilation and leak control. Outdoor or semi-exposed ceilings need products specifically rated for that exposure.'),
+      section('Plan lighting and electrical access','Coordinate downlights, profiles, fans, AC grilles, detectors, speakers and access panels before framing. Drivers, junctions and valves that require service should remain accessible. Electrical work must be performed and tested by qualified personnel.'),
+      section('Check height, framing and installation','Measure the actual slab level and available ceiling drop. Confirm hanger spacing, framing gauge/type, fixing into the structural substrate, level, board joints, screw treatment and perimeter detailing from the system manufacturer. Do not fix heavy fixtures to the board alone.'),
+      section('What to specify in the BOQ','List manufacturer/system, board or panel type, thickness, framing, suspension, fasteners, jointing, finish, access panels, cut-outs, insulation, fixture supports, room locations and warranty. Approve a sample detail before full installation.')
+    ],
+    sources:[
+      {label:'Saint-Gobain Gyproc India — Damp-resistant ceiling board',url:'https://www.gyproc.in/products-plasterboards/gyproc_dampline'},
+      {label:'BIS — IS 2095 Part 1, gypsum plaster boards (search standard)',url:'https://www.bis.gov.in/know-your-standard/?lang=en'}
+    ]
+  },
+  {
+    slug:'granite-vs-quartz-kitchen-countertop-guide',
+    type:'construction-guide',category:'Interior Materials',
+    title:'Granite vs Quartz Kitchen Countertops | Selection & Care Guide | ProPulse',
+    description:'Compare natural granite and engineered quartz countertops by appearance, porosity, heat, staining, joints, maintenance and installation.',
+    heading:'Granite vs quartz: which kitchen countertop should you choose?',
+    summary:'Both surfaces have different strengths and care requirements. Compare the specific slab or brand, fabrication quality, support, joints, sink cut-outs and maintenance guidance before deciding.',
+    searchTerms:['granite vs quartz kitchen countertop','which countertop is best for Indian kitchen','quartz vs granite price Hyderabad','granite kitchen slab maintenance','quartz countertop heat resistance'],
+    ctaLabel:'Plan Your Interior Requirement',cta:'/quote?package=standard#interior',
+    note:'Natural stone varies slab to slab, and engineered surfaces vary by manufacturer and product series. Follow the selected supplier’s written care, heat and installation instructions.',
+    sections:[
+      section('Understand natural granite','Granite is a natural stone with variation in pattern, colour and mineral composition. Inspect the actual slab for shade, fissures, repairs, thickness and finish; a small sample may not represent the full slab.'),
+      section('Understand engineered quartz','Engineered quartz surfaces are manufactured from mineral aggregates and binders. Colour and pattern may be more consistent within a product series, but performance and heat limitations are manufacturer-specific.'),
+      section('Compare heat, stains and chemicals','Do not place hot cookware directly on any countertop unless the manufacturer explicitly permits it. Use trivets and chopping boards. Ask for the supplier’s guidance on oils, acids, cleaners, solvents and stain removal.'),
+      section('Check porosity and sealing requirements','Natural stone may require a suitable sealer depending on the stone and finish. Engineered quartz has its own care requirements. Ask whether sealing is needed, what product is used and how often it should be renewed.'),
+      section('Plan slab thickness, support and overhang','Countertop thickness and support must suit the slab, cabinet construction, cut-outs and overhang. Unsupported projections and sink/cooktop openings need proper fabrication and reinforcement details.'),
+      section('Inspect joints, edges and cut-outs','Review joint position, colour-matched adhesive, edge profile, corner radius, sink cut-out polish, hob clearance and wall upstand. Fabrication quality often affects the final result as much as material selection.'),
+      section('Approve the actual slab and layout','Mark the selected slab and agree on vein direction, visible areas, joint placement and wastage. For natural granite, record the slab identification and photograph the approved piece before cutting.'),
+      section('Compare complete installed cost','Include slab grade/series, thickness, fabrication, edge profile, sink and hob cut-outs, transport, installation, supports, backsplash and taxes. Compare quotations on the same scope.')
+    ],
+    sources:[
+      {label:'Natural Stone Institute — Care and cleaning resources',url:'https://www.naturalstoneinstitute.org/consumers/care/'},
+      {label:'Caesarstone — Care and maintenance',url:'https://www.caesarstone.com/care-and-maintenance/'}
+    ]
+  },
+  {
+    slug:'cpvc-upvc-ppr-plumbing-pipes-home-guide',
+    type:'construction-guide',category:'Construction Materials',
+    title:'CPVC vs UPVC vs PPR Pipes for Homes | Plumbing Guide | ProPulse',
+    description:'Understand CPVC, UPVC and PPR pipe applications for home water supply, temperature, fittings, jointing, standards and installation checks.',
+    heading:'What is the difference between CPVC, UPVC and PPR pipes?',
+    summary:'Pipe material must match the service, water temperature, pressure, local regulations and manufacturer system. Do not choose a pipe from its colour or price alone.',
+    searchTerms:['CPVC vs UPVC vs PPR pipes','which pipe is best for house plumbing','CPVC pipe for hot water','UPVC pipe for cold water','PPR pipe plumbing advantages'],
+    ctaLabel:'Get Construction Quote',cta:'/quote?package=standard#construction',
+    note:'Plumbing design and installation should follow applicable standards, manufacturer instructions and local requirements. Pressure testing must be performed by a qualified plumber using the specified test procedure.',
+    sections:[
+      section('Understand the common materials','CPVC means chlorinated polyvinyl chloride and is used in hot- and cold-water distribution systems when the selected product is rated for the service. UPVC means unplasticised PVC and is used in applications such as cold-water systems and drainage depending on the product. PPR is polypropylene random copolymer used in hot- and cold-water systems with a compatible fusion-jointed fitting system.'),
+      section('Check temperature and pressure ratings','Every product series has a pressure class/rating and temperature limits. Confirm the operating conditions, expected pressure, water heater temperature and installation environment against the manufacturer’s technical data.'),
+      section('Do not mix incompatible systems casually','Pipe, fittings, valves, transition pieces and jointing methods should form a compatible system. Use the manufacturer-approved solvent cement, fusion tools or mechanical transition fittings for the selected material.'),
+      section('Check applicable Indian Standards','BIS lists IS 15778 for CPVC pipes for potable hot and cold water distribution, with amendments. Other pipe types and applications have their own standards. Verify the current edition, amendments and product certification scope through BIS rather than relying on a generic claim.'),
+      section('Plan routes and service access','Coordinate pipe routes with beams, electrical conduits, waterproofing, fixtures and access panels. Avoid inaccessible joints where possible and provide access to valves, filters and serviceable connections.'),
+      section('Support, expansion and protection','Follow manufacturer requirements for pipe supports, spacing, thermal expansion, sleeves, wall/floor crossings and protection from impact or sunlight. Hot-water lines need particular attention to expansion and insulation where specified.'),
+      section('Pressure test before concealment','Inspect alignment, supports, joints and isolation. Conduct the specified pressure/leak test before closing chases, screeding or boxing. Record the test procedure, pressure, duration and result; do not conceal leaking joints.'),
+      section('What to record in the plumbing BOQ','Specify pipe material, standard, manufacturer, series, pressure class, nominal size, fittings, valves, jointing system, insulation, supports, testing and warranty. Record product labels and invoices for future repairs.')
+    ],
+    sources:[
+      {label:'BIS — IS 15778:2007 CPVC pipes and amendments',url:'https://standards.bis.gov.in/website/standard-details?encryptedId=eyJpdiI6InlBYU1kMnV6K1k3bDBmUDlXR3JkOVE9PSIsInZhbHVlIjoibEhmV1Aydnc2bVYvTDYrWUN6b3FBUT09IiwibWFjIjoiMzBiZmI1YzZlNTVhODEyZWU1OWViOTg5M2M1YWY1YjQ5NmNiMzdkNzlhZTFiMDAzNjIyOWMxYiIsInRhZyI6IiJ9'},
+      {label:'Indian Plumbing Association — Guide to Good Plumbing Practices',url:'https://indianplumbing.org/IPA_Old_site/img/activities/IPPL/2021/AGGP_Book.pdf'}
+    ]
+  },
+  {
+    slug:'house-wiring-cables-mcb-rcbo-earthing-guide',
+    type:'construction-guide',category:'Electrical Planning',
+    title:'House Wiring, Cable Selection, MCB, RCCB & Earthing | Home Guide | ProPulse',
+    description:'Learn what homeowners should verify in electrical wiring plans, cable specifications, circuit protection, RCCB/RCBO and earthing before closing walls.',
+    heading:'What should you check in house electrical wiring?',
+    summary:'Electrical safety depends on circuit design, conductor sizing, protective devices, earthing, installation workmanship and testing. This is not a DIY wiring guide; use a licensed/qualified electrical professional.',
+    searchTerms:['house wiring cable size guide India','MCB vs RCCB vs RCBO','how to check house electrical wiring','earthing in house wiring','IS 732 electrical wiring installation'],
+    ctaLabel:'Get Construction Quote',cta:'/quote?package=standard#construction',
+    note:'Never size cables, select protective devices or modify live wiring using an online chart. The installation designer/electrician must calculate loads, fault conditions, voltage drop and protective coordination for the actual site.',
+    sections:[
+      section('Start with a load and circuit schedule','List lighting, sockets, kitchen appliances, air conditioners, water heaters, pumps and other fixed loads. The electrical designer should divide circuits appropriately and document ratings, routes and distribution-board schedules.'),
+      section('Understand cable specification','Cable selection depends on conductor material and cross-section, installation method, ambient temperature, grouping, insulation type, voltage drop and fault protection. A printed square-millimetre size alone does not prove suitability.'),
+      section('Verify standards and product traceability','BIS lists IS 732:2019 as the code of practice for electrical wiring installations and IS 694 for PVC insulated cables within its scope. Verify current editions, amendments and licence scope through BIS.'),
+      section('Understand MCB, RCCB and RCBO','An MCB provides overcurrent protection against overload and short circuit. An RCCB detects residual current and provides earth-leakage protection but does not by itself provide overcurrent protection. An RCBO combines residual-current and overcurrent protection. Device selection and coordination must be designed for the installation.'),
+      section('Earthing and bonding are essential','The earthing arrangement, protective conductor continuity, bonding and electrode system must follow the applicable design and regulations. A green wire or a visible earth pit alone does not prove an effective protective system.'),
+      section('Keep wiring away from avoidable risks','Coordinate electrical routes with plumbing, wet areas, structural members and service zones. Use suitable enclosures, junction boxes and accessories, and maintain access to connections that require inspection or maintenance.'),
+      section('Ask for electrical test records','Before energising and handover, qualified personnel should perform applicable continuity, insulation resistance, polarity, earth-fault loop/earthing and protective-device tests using suitable instruments. Keep test results and circuit labels.'),
+      section('What to include in the electrical BOQ','Record cable brand and specification, conductor size by circuit as designed, conduit, boxes, switchgear, MCB/RCCB/RCBO ratings, earthing, accessories, labour, testing, drawings and warranties.')
+    ],
+    sources:[
+      {label:'BIS — IS 732:2019 electrical wiring installations',url:'https://standards.bis.gov.in/website/standard-details?encryptedId=eyJpdiI6ImpvbGo4cVFET2VSWTgwVnlBU3JkY1E9PSIsInZhbHVlIjoiQytmWjVqR3I5VXJZaTRwY2R0d0Fhdz09IiwibWFjIjoiYzg5NzdhMWE0MWQ5NzBiZDMyYmEzYzRjNjNmMzU0NGU3MDU3YWEzOWJhMDY4N2FkZTUwOWFhNjcyZGRjNTAyZCIsInRhZyI6IiJ9'},
+      {label:'BIS — IS 694 cable testing and standard listing',url:'https://lims.bis.gov.in/home/search_is_number/?is_number__doc_no=694'},
+      {label:'BIS — Mandatory certification list',url:'https://www.bis.gov.in/product-certification/products-under-compulsory-certification/scheme-i-mark-scheme/?lang=en'}
+    ]
+  },
+
 ]
 
 export function guideBySlug(slug){

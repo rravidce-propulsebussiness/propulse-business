@@ -137,6 +137,72 @@ groups["Planning, room sizes & building services"] = [
 ["What should I inspect before taking handover of a new house?","Provides a snag checklist for structure, waterproofing, plumbing, electrical, doors, windows, finishes and documents."]
 ];
 
+
+groups["Woodwork, plywood & site quality checks"] = [
+["How do I check plywood quality at a construction or interior site?","A procurement checklist covering declared standard, valid BIS licence, grade, thickness, batch, invoice, visual defects and laboratory evidence."],
+["What is the difference between MR, BWR and BWP plywood?","Explain intended moisture resistance classes and the need to match the current applicable BIS standard and actual exposure."],
+["What is the current BIS standard for general-purpose plywood?","Direct readers to verify the current edition and licence scope; IS 303:2024 is the fourth revision for general-purpose plywood."],
+["What is the current BIS standard for marine plywood?","Explain that IS 710:2024 is the third revision and why buyers should verify the manufacturer's current BIS licence and product scope."],
+["What plywood tests should I ask the supplier for?","Explain water resistance, glue shear, adhesion of plies, moisture content, bending strength, workmanship and formaldehyde test reports."],
+["Can I identify genuine plywood by its colour or smell?","Explain why visual appearance and smell cannot prove grade, adhesive performance, standard compliance or emission class."],
+["How do I check plywood thickness and sheet size?","Explain representative measurements, tolerances, edge condition and matching the delivery to the purchase order."],
+["What is the difference between commercial plywood and marine plywood?","Compare standard, intended service conditions and test requirements without assuming marine grade is automatically best for every use."],
+["What should be checked before accepting plywood delivery?","Checklist for brand/marking, licence, grade, thickness, sheet count, damage, moisture exposure, invoice and batch traceability."],
+["How do I store plywood at a construction site?","Explain flat, level, dry, ventilated storage, protection from standing water and avoiding distortion before fabrication."]
+];
+
+
+groups["Building material checks & specifications"] = [
+["What is the difference between OPC and PPC cement for house construction?","Compare intended applications, curing and project specification; selection should follow structural design and current product standards."],
+["How do I check cement quality before buying?","Check sealed fresh bags, manufacturer, batch/date, applicable BIS marking/licence, storage and invoice; simple field checks cannot certify strength."],
+["How do I check TMT steel grade at a construction site?","Verify mill test certificate, grade, diameter, batch traceability and current BIS licence; do not identify grade by colour or feel."],
+["What is the difference between Fe500 and Fe500D steel?","Explain grade designation and ductility significance while requiring structural designer approval and product test documentation."],
+["How do I check sand quality for concrete and plaster?","Discuss cleanliness, grading, silt/organic contamination and testing; use mix/design specifications rather than appearance alone."],
+["What is the difference between M20 and M25 concrete?","Explain characteristic compressive strength notation and why the structural engineer specifies the grade for each element."],
+["How long should concrete be cured?","Explain that curing duration depends on cement type, exposure, element and applicable code/specification; follow the engineer's method statement."],
+["What is the difference between a cube test and a rebound hammer test?","Compare destructive strength testing of sampled concrete with non-destructive surface assessment and their limitations."],
+["Why are cracks appearing in newly plastered walls?","Discuss shrinkage, curing, substrate preparation, movement, thickness and when an engineer should assess structural cracks."],
+["What should be included in a house construction material BOQ?","List item descriptions, grade, dimensions, approved brands/equivalents, quantity, wastage, testing, delivery and exclusions."]
+];
+groups["Waterproofing, windows & building envelope"] = [
+["What is the difference between terrace waterproofing and bathroom waterproofing?","Compare exposure, substrate, detailing, slope, drain interfaces, upturns and system-specific application."],
+["How do I test bathroom waterproofing before tiling?","Explain a documented ponding test only under the contractor/engineer's approved method, with safe isolation and inspection below."],
+["Why does a terrace leak even after waterproofing?","Investigate cracks, parapet junctions, outlets, slope, penetrations, detailing and workmanship; identify the water path before re-treatment."],
+["What is the difference between UPVC and aluminium windows?","Compare frame construction, thermal performance, hardware, finish, spans, maintenance and tested system specifications."],
+["What should I check before installing aluminium windows?","Check opening dimensions, sill slope, frame anchoring, sealant compatibility, drainage paths, glass and hardware."],
+["What is the difference between toughened and laminated glass?","Compare breakage behaviour, post-breakage retention, safety location and relevant glass specifications."],
+["How do I stop water entering through window frames?","Inspect external sealant, frame drainage, sill slope, weep holes, perimeter joints and installation before applying surface fixes."],
+["What is the correct slope for a bathroom floor?","Explain that slope must direct water to the drain without ponding and be coordinated with tile size, drain location and project specification."],
+["Why does a bathroom floor have standing water after use?","Check floor levels, drain position, tile workmanship, trap blockage and slope using site measurements."],
+["What should I check before accepting waterproofing work?","Request product system details, surface preparation, application records, junction photos, test records and written warranty scope."]
+];
+
+
+groups["Electrical planning & home safety"] = [
+["What is the difference between MCB, RCCB and RCBO?","Explain overcurrent versus residual-current protection and why device selection must be designed by a qualified electrician."],
+["What is an earthing wire and why is it important?","Explain protective earthing and bonding, continuity testing and the limits of visual checks."],
+["How do I plan electrical points in a 2BHK house?","Build a room-wise appliance and usage schedule before the electrician prepares circuit layouts and load calculations."],
+["What should I check before closing electrical conduits in walls?","Inspect routes, bends, box alignment, separation from plumbing, draw wires and photographic records before plaster."],
+["How do I check house wiring quality before handover?","Request circuit schedules, continuity, insulation resistance, polarity, earthing and protective-device test records from qualified personnel."],
+["What is the difference between FR, FRLS and FRLSH wires?","Explain cable marking categories only as defined by the applicable standard and product datasheet; do not infer performance from marketing shorthand."],
+["Can AC, geyser and kitchen appliances share one circuit?","Explain that circuit allocation and conductor/protection sizing require load calculations and electrical design."],
+["What is a distribution board and how should it be labelled?","Explain circuit identification, isolation, protective devices, spare capacity and clear handover schedules."],
+["How many electrical points are needed in a bedroom?","Plan from furniture layout, bed sides, study, TV, charging, lighting, AC and likely future use rather than a fixed count."],
+["Why is RCCB tripping in a house?","List possible leakage, appliance faults, wiring issues or neutral/earth problems and advise safe isolation and qualified diagnosis."]
+];
+groups["Plumbing systems & water management"] = [
+["CPVC vs UPVC vs PPR: which pipe is suitable for a house?","Compare service temperature, pressure, application, jointing and product standards."],
+["What is the difference between CPVC and PVC pipes?","Explain material modification and typical service uses without relying on colour coding."],
+["How do I check plumbing pressure before tiling?","Explain documented pressure testing of the specified system before concealment by a qualified plumber."],
+["What is the difference between a soil pipe and a waste pipe?","Explain fixture discharge, pipe sizing, venting and drainage design at a homeowner level."],
+["Why does a bathroom drain smell?","Investigate trap water seal, venting, dry traps, leaks and cleaning access rather than masking odour."],
+["What is a P-trap vs an S-trap?","Explain outlet direction and fixture compatibility; selection depends on the actual drainage connection and code."],
+["How do I prevent leakage below a kitchen sink?","Check trap joints, flexible hoses, tap connections, cabinet base protection, access and periodic inspection."],
+["What is the purpose of a plumbing vent pipe?","Explain pressure balance, trap seal protection and safe termination according to plumbing design."],
+["What should be included in a plumbing BOQ?","Specify material, standard, size, pressure class, fittings, valves, supports, jointing, testing and warranty."],
+["How do I plan hot-water lines for multiple bathrooms?","Coordinate heater capacity, route length, pipe rating, insulation, valves, pressure and maintenance access."]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
