@@ -386,6 +386,29 @@ groups["Planning, room sizes & building services"] = [
     ["What should I check before accepting a modular kitchen installation?","Inspect dimensions, cabinet alignment, edge banding, hardware movement, countertop joints, plumbing and appliance clearances."],
     ["How do I plan a kitchen appliance layout before carpentry?","Confirm exact models, installation clearances, utility points, ventilation and service access before cabinet fabrication."]
   ]
+,
+  "Bathroom tiles, waterproofing and stage-wise budgets": [
+    ["How many tiles are required for a 5 by 7 bathroom?","Measure finished floor and wall areas, tile height, openings, layout and coverage per box before calculating quantities."],
+    ["How do I calculate bathroom wall tile quantity?","Measure each wall separately, total the tiled height and width, then account for niches, returns and cuts."],
+    ["How much extra tile should I order for wastage?","Agree an allowance with the installer based on tile size, pattern, room shape, cuts and breakage; retain spare tiles from the same batch."],
+    ["Which tile size is suitable for a small bathroom?","Choose by room proportions, slope, slip resistance, drain layout, grout joints and installer capability."],
+    ["What is the difference between vitrified and ceramic bathroom tiles?","Compare intended floor or wall use, absorption, surface, slip characteristics, maintenance and manufacturer specifications."],
+    ["How do I choose anti-skid tiles for a bathroom?","Review the product's wet-area suitability and tested slip performance rather than relying only on a rough-looking surface."],
+    ["How much does bathroom waterproofing cost in Hyderabad?","Compare area, substrate repairs, system type, detailing, number of coats, testing and finish reinstatement."],
+    ["Which waterproofing is best for a terrace in Hyderabad?","Assess existing substrate, exposure, slope, cracks, outlets and movement before choosing a compatible approved system."],
+    ["What is the difference between cementitious and liquid waterproofing?","Compare application, flexibility, substrate, detailing, protection and product-specific suitability."],
+    ["How do I check bathroom waterproofing before tiles?","Review surface preparation, corners, pipe collars, coverage, curing and the specified water test with the applicator."],
+    ["How do I divide a house construction budget by stages?","Separate design, approvals, site work, foundation, frame, masonry, services, finishes and external works."],
+    ["What is included in foundation stage construction cost?","Check excavation, disposal, dewatering if needed, reinforcement, concrete, formwork, testing and approved structural quantities."],
+    ["How much should I budget for house finishing work?","List flooring, doors, windows, plaster, paint, electrical fixtures, plumbing fixtures, ceiling and final joinery by specification."],
+    ["How do I plan monthly cash flow for house construction?","Link forecast payments to measurable work stages, procurement, inspection and contractor agreement terms."],
+    ["What contingency should I keep for house construction?","Set an allowance based on design maturity, site uncertainty and scope exclusions with professional cost advice."],
+    ["How do I compare construction stage-wise payment schedules?","Check milestone definitions, measured completion, inspection evidence, invoice and retention or defect terms."],
+    ["What should be checked before ordering bathroom tiles?","Confirm dimensions, shade, calibre, batch, surface suitability, quantity, trims and spare stock."],
+    ["What is the best grout for bathroom floor tiles?","Choose a grout compatible with tile, joint width, wet exposure, cleaning and manufacturer guidance."],
+    ["How do I prevent tile hollow sounds and debonding?","Use suitable substrate preparation, adhesive, coverage, movement joints and professional installation checks."],
+    ["What should be included in a waterproofing warranty?","Clarify system scope, surface preparation, testing, exclusions, maintenance, applicator responsibility and claim procedure."]
+  ]
 };
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
