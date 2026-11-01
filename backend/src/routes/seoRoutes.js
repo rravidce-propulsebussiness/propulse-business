@@ -4,6 +4,7 @@ const path=require('path');
 const {renderProjectHtml}=require('../services/projectSeoPageService');
 const {renderProjectListingHtml}=require('../services/projectListingSeoService');
 const {renderPublicExpertHtml}=require('../services/publicExpertSeoPageService');
+const {renderProfessionalDirectoryHtml}=require('../services/professionalDirectorySeoPageService');
 const coverService=require('../services/projectCoverService');
 const videoSeo=require('../services/projectVideoSeoService');
 const s3Storage=require('../services/s3PrivateObjectStorageService');
@@ -392,6 +393,30 @@ router.get('/projects/:projectKey',async(req,res)=>{
   }
 });
 
+
+// Directory crawlers receive real public profile links without executing React.
+router.get('/experts',async(req,res)=>{
+  const accept=String(req.get('accept')||'');
+  if(accept&&!accept.includes('text/html')&&!accept.includes('*/*'))
+    return res.status(406).end();
+  try{
+    const profiles=await publicExpertService.listPublicExperts({page:1,pageSize:48});
+    const builtIndex=[
+      path.resolve(__dirname,'../../hostinger-frontend/index.html'),
+      path.resolve(__dirname,'../../../frontend/dist/index.html'),
+    ].find(file=>fs.existsSync(file));
+    if(!builtIndex)throw new Error('Public professional directory HTML template missing');
+    const html=renderProfessionalDirectoryHtml(fs.readFileSync(builtIndex,'utf8'),profiles.data);
+    res.setHeader('Cache-Control','no-cache,must-revalidate');
+    return res.status(200).type('html').send(html);
+  }catch(error){
+    console.error('Public professional directory crawl failed:',error?.message||error);
+    res.setHeader('Cache-Control','no-store');
+    res.setHeader('X-Robots-Tag','noindex');
+    res.setHeader('Retry-After','30');
+    return res.status(503).type('text/plain').send('Professional directory temporarily unavailable');
+  }
+});
 
 // Public professional profiles must be returned as business-specific initial
 // HTML, not the generic React shell. Exclude private/hidden or ineligible ones.
