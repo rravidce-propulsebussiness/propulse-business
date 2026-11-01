@@ -225,6 +225,29 @@ groups["Planning, room sizes & building services"] = [
     ["How do I waterproof a terrace before monsoon?","Recommend inspection of cracks, outlets, slopes, joints and existing system, followed by a compatible repair specification and testing."],
     ["What should I check before closing a plumbing shaft?","Verify pipe joints, supports, access panels, cleanouts, vents, leak tests, photographs and as-built records."]
   ]
+,
+  "Waterproofing systems, electrical safety & home services": [
+    ["What are the different types of waterproofing for a house?","Compare cementitious, liquid-applied, sheet and specialist systems by substrate, exposure, detailing and product data."],
+    ["Which waterproofing is best for a terrace?","Explain diagnosis, drainage, movement joints, membrane compatibility, protection and specified testing."],
+    ["What is the difference between cementitious and liquid waterproofing?","Compare application, flexibility, substrate preparation, detailing, thickness control and intended use."],
+    ["How do I choose a waterproofing chemical for a bathroom?","Recommend selecting a complete compatible system for substrate and wet-area use, following manufacturer instructions and qualified application."],
+    ["How much does terrace waterproofing cost in Hyderabad?","Break down measured area, preparation, crack repair, outlets, membrane system, protection, labour and testing."],
+    ["How much does bathroom waterproofing cost per square foot?","Explain why rates need defined system, area, junction treatment, coats, curing, testing and warranty."],
+    ["Can waterproofing be done over existing tiles?","Explain that adhesion, trapped moisture, drain levels and product compatibility require site assessment before overlaying."],
+    ["Why does a terrace leak after waterproofing?","Discuss failed details, outlets, cracks, movement, poor preparation, membrane damage and the need for leak-source diagnosis."],
+    ["What is the difference between MCB and RCCB?","Explain overcurrent versus residual-current protection and why circuit design requires both appropriate protections."],
+    ["What is an RCBO and where is it used?","Describe combined residual-current and overcurrent protection and leave selection to a qualified electrical designer."],
+    ["Which electrical wire is suitable for house wiring?","Explain conductor, insulation, rating, applicable standard, installation conditions and load calculations; avoid universal size advice."],
+    ["How do I check electrical wire quality?","Check manufacturer markings, declared size, product standard, batch and invoice; use approved inspection or testing rather than visual guesswork."],
+    ["What is the difference between copper and aluminium house wiring?","Discuss conductor properties, termination compatibility, application and design constraints; follow the qualified designer's specification."],
+    ["How many MCBs are required for a 2BHK house?","Explain that circuit count depends on load schedule, segregation, protection design and applicable rules—not a fixed bedroom count."],
+    ["What should be checked in a home distribution board?","Review circuit labels, protective-device suitability, enclosure, access, earthing and test records with a qualified electrician."],
+    ["Why does an MCB trip frequently at home?","List possible overload, short circuit, earth leakage, faulty appliance or device issues and advise professional diagnosis; never bypass protection."],
+    ["What is the purpose of earthing in a house?","Explain fault-current safety, bonding and the need for proper design and verified test records."],
+    ["How do I plan electrical points for an AC and geyser?","Coordinate appliance ratings, dedicated supply needs, protection, location and manufacturer requirements with a qualified electrician."],
+    ["What documents should an electrician provide at handover?","Request circuit schedule, as-built layout, test records, device details, warranties and maintenance instructions."],
+    ["How do I maintain waterproofing in an old house?","Recommend periodic inspection of outlets, joints, cracks and plumbing leaks, with compatible repairs based on a proper diagnosis."]
+  ]
 };
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
