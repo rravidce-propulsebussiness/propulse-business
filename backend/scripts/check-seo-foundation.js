@@ -70,7 +70,10 @@ assert(index.includes('name="description"'),'Base HTML must include a meta descr
 assert(index.includes('name="robots"'),'Base HTML must include robots metadata');
 assert(!index.includes('rel="canonical" href="/"'),'Source HTML must not expose a root canonical that Vite treats as an asset');
 assert(index.includes('property="og:title"')&&index.includes('name="twitter:card"'),'Base HTML must include social metadata');
-assert(index.includes('Construction Company, Interiors &amp; Technology in Hyderabad | ProPulse'),'Homepage title must describe current ProPulse services');
+assert(index.includes('House Construction Company in Hyderabad | ProPulse'),'Homepage title must match the current canonical ProPulse SEO title');
+assert(index.includes('rel="canonical" href="https://propulsetechnologies.online/"'),'Homepage fallback HTML must expose the absolute production canonical URL');
+assert(index.includes('property="og:url" content="https://propulsetechnologies.online/"'),'Homepage Open Graph URL must use the absolute production origin');
+assert(buildScript.includes(":'https://propulsetechnologies.online'"),'Static SEO generation must fall back to the production origin when no public URL is configured');
 
 for(const route of ['/quote','/experts','/packages','/projects','/technology','/how-it-works','/about','/contact','/faq']){
   assert(config.includes("path:'"+route+"'"),'SEO config missing public route '+route);

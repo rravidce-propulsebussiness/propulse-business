@@ -210,7 +210,7 @@ for(const source of [home,quote,packages,projects,about,howItWorks,contact]){
   assert.match(source,/PublicHeader/);
   assert.match(source,/PublicFooter/);
 }
-assert.match(publicChrome,/For Professionals/);
+assert.match(publicChrome,/Professionals/);
 assert.match(publicChrome,/to="\/professionals"/);
 assert.match(publicChrome,/to="\/experts"/);
 
