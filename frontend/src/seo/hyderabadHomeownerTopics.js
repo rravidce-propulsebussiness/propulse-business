@@ -455,6 +455,41 @@ groups["Planning, room sizes & building services"] = [
     ["What plumbing tests should be completed before handover?","Check specified pressure tests, leak inspections, drainage flow, flushing and fixture operation."],
     ["How do I calculate material wastage in a construction estimate?","State separate allowances by material and explain the effects of cutting, handling, storage and site conditions."]
   ]
+,
+  "House floor plan, Vastu and site planning": [
+    ["How do I plan a 2BHK house on a small plot in Hyderabad?","Start with measured plot dimensions, road access, local setbacks, family needs, furniture and professional approval checks."],
+    ["What room sizes are practical for a 2BHK house?","Size rooms around actual furniture, circulation, openings, storage and applicable local requirements rather than using one universal standard."],
+    ["How do I plan a west-facing house?","Verify the site's true orientation and coordinate entry, shading, daylight, ventilation, privacy and local rules with the architect."],
+    ["How do I plan a north-facing house?","Use a measured site plan and evaluate entry, room relationships, daylight, ventilation, parking and statutory constraints."],
+    ["What should I check before finalizing a house floor plan?","Review room dimensions, furniture, door swings, circulation, structure, services, daylight, ventilation and approvals."],
+    ["How do I get cross ventilation in a small house?","Coordinate openings on suitable sides, internal air paths, privacy and neighbouring obstructions with the designer."],
+    ["What is the importance of setbacks in house planning?","Confirm the applicable authority, plot context and current rules before fixing the buildable footprint."],
+    ["How do I include Vastu preferences in a Hyderabad house plan?","Document preferences early and balance them with plot orientation, local approvals, structure, ventilation and usability."],
+    ["Where should kitchen and bedrooms be placed according to Vastu?","Interpretations vary; have the architect present feasible options without compromising services, safety or practical circulation."],
+    ["Can a staircase be changed after the house plan is approved?","Any change needs architectural, structural and approval review before site execution."],
+    ["How do I plan parking in a small independent house?","Check vehicle dimensions, gate opening, turning, pedestrian entry, columns, ramp slope and local requirements."],
+    ["How do I plan a utility area in a compact house?","Reserve space for washing machine, sink, drying, storage, drainage, ventilation and service access."],
+    ["What is a good room layout for a narrow plot?","Use furniture-based layouts and efficient circulation while protecting daylight, privacy and ventilation."],
+    ["How do I estimate house construction cost from a floor plan?","Measure scope and specifications from coordinated drawings; built-up area alone cannot capture structural and finish differences."],
+    ["Should I get structural drawings before starting construction?","Yes, construction should follow coordinated structural documents prepared by qualified professionals and applicable approvals."]
+  ],
+  "Flooring wall finishes and construction quality checks": [
+    ["Which floor tiles are suitable for a Hyderabad home?","Compare intended room use, slip resistance, finish, maintenance, tile size and available product specifications."],
+    ["What is the cost of vitrified tile flooring in Hyderabad?","Estimate tile, adhesive, grout, skirting, labour, substrate preparation, wastage and removal or disposal if applicable."],
+    ["How do I calculate floor tiles for a 2BHK?","Measure each room separately, include skirting and account for layout-dependent cuts and a stated wastage allowance."],
+    ["What is the difference between tile adhesive and cement mortar?","Compare compatibility with tile and substrate, installation method, coverage and manufacturer requirements."],
+    ["How do I check tile laying quality at a construction site?","Inspect setting-out, joint consistency, levels, lippage, edge cuts, grout and specified movement joints."],
+    ["Why are tiles becoming hollow after flooring work?","Possible causes include bedding or substrate issues; request an experienced inspection before selecting a repair."],
+    ["Which grout is better for bathroom tiles?","Select grout and sealant based on joint, exposure, chemical and cleaning requirements and product guidance."],
+    ["What wall finish is best for a living room in Hyderabad?","Compare washable paint, wallpaper, texture and panels by dust, cleaning, heat, moisture and repair needs."],
+    ["How much does wallpaper installation cost in Hyderabad?","Check wallpaper grade, wall preparation, pattern repeat, area, wastage, adhesive and installation labour."],
+    ["What is the cost of decorative wall panels for a TV unit?","Measure panel area and specify substrate, finish, edge profiles, framing, electrical access and installation."],
+    ["How do I repair damp walls before painting?","Identify and fix the moisture source, allow the substrate to dry and use a suitable repair system before repainting."],
+    ["How do I identify construction cracks in a new house?","Record location, width, direction and changes over time; have significant or changing cracks assessed by a qualified engineer."],
+    ["What should I inspect before plastering a house?","Check masonry stability, service chases, openings, mesh or junction treatment as specified and substrate preparation."],
+    ["What should I check before waterproofing a bathroom?","Inspect slope, substrate, corners, pipe penetrations, floor trap details, specified membrane and test procedure."],
+    ["What should I inspect before taking handover of a new house?","Use a room-wise snag list for finishes, doors, windows, plumbing, electrical, waterproofing records and documents."]
+  ]
 };
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
