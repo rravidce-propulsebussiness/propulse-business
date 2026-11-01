@@ -588,5 +588,115 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   "How do I choose tiles for a small house?": {
     answer: "For a small home, choose tiles by room function, slip resistance, finish, size, grout layout, light reflection and maintenance—not by size alone. Larger tiles can reduce grout lines but may need a flatter substrate and careful cutting; smaller tiles can suit slopes and compact wet areas. Use slip-resistant surfaces in bathrooms and balconies, check shade and calibre consistency across boxes, and plan tile joints and skirting before installation. Buy an adequate quantity from the same batch and retain spare tiles for future repairs.",
     sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "What are the top 10 construction companies in Hyderabad?": {
+    answer: "A ranked “top 10” list would be misleading unless the ranking method, project evidence and date are published. Instead, shortlist companies whose completed work matches your building type, budget and location. Verify the legal entity, visit active and completed sites, speak with recent clients, inspect workmanship after monsoon, compare itemised BOQs and confirm who supervises the work. Check approval responsibilities, written specifications, milestone payments, defect response and dispute terms. Treat paid listings and social-media popularity as advertising, not proof of quality.",
+    sources: [{"label":"MCA – company/LLP master data","url":"https://www.mca.gov.in/"},{"label":"BuildNow – Telangana approval portal","url":"https://buildnow.telangana.gov.in/"}]
+  },
+
+  "Which is the best house construction company in Hyderabad?": {
+    answer: "There is no single best company for every project. The right contractor is one with verifiable experience in a similar house, transparent scope and pricing, qualified design and site supervision, documented quality checks and a reliable defect-response process. Visit completed projects, contact owners independently, compare the same drawings and BOQ across bidders, and verify the contracting legal entity. Ask who is accountable for approvals, structural design, materials, safety, delays and handover. Choose on evidence and contract clarity rather than a generic ranking.",
+    sources: [{"label":"MCA – company/LLP master data","url":"https://www.mca.gov.in/"},{"label":"BuildNow – Telangana approval portal","url":"https://buildnow.telangana.gov.in/"}]
+  },
+
+  "Which wire is best for house wiring in India?": {
+    answer: "Select wires by conductor material and cross-section, insulation type and temperature rating, circuit load, installation method and applicable Indian standards—not by brand name alone. A qualified electrical designer should calculate loads and circuit sizes for lighting, sockets, ACs, geysers, kitchen appliances and other high-demand equipment. Check manufacturer traceability, relevant BIS marking/licence where applicable, genuine sealed packaging and compatible conduits and accessories. Provide proper earthing, circuit protection and testing. Never increase a breaker rating to stop tripping without checking the cable and circuit design.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"},{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How many electrical points are needed in a 2BHK house?": {
+    answer: "There is no fixed point count for every 2BHK. Prepare a room-wise schedule based on furniture, appliance locations and how the family uses each space. Include general sockets, dedicated circuits for ACs, geysers and kitchen appliances, refrigerator, washing machine, exhaust fans, internet/router, TV, lighting, outdoor points and future provisions. Coordinate switch heights and socket positions with wardrobes, beds and kitchen modules before conduit work. Have a qualified electrician size circuits, protection and earthing, then test and label the distribution board.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"},{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "What is the best location for a water tank in a house?": {
+    answer: "Tank location must be coordinated with structural capacity, plumbing head, access for cleaning, overflow and drain routing, hygiene and visual impact. An overhead tank adds a significant concentrated load, so the structural engineer must design the supporting slab, beams or platform for the filled tank and maintenance access. A ground-level or underground tank needs safe access, protection from contamination and suitable pump arrangements. Keep tanks away from sewage contamination risks and provide screened vents, covers and overflow discharge to a safe drain.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How do I calculate overhead water tank capacity for a house?": {
+    answer: "Estimate daily demand from the number of occupants, usage pattern, local supply reliability and any applicable water-supply design criteria. Separate drinking and domestic use if different sources are used, and consider whether the tank is intended for one day or a shorter backup period. Size the tank with the plumber/engineer, check the supporting structure for the full water load, and provide a float valve, overflow, drain, access cover and cleaning access. Do not choose capacity only from a neighbour’s tank size.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "What is the difference between CPVC and UPVC pipes?": {
+    answer: "CPVC is commonly used for hot and cold pressurised water distribution within its rated temperature and pressure range. uPVC is commonly used for cold-water, soil, waste and drainage applications depending on the product series and standard. The correct choice depends on the service, operating temperature, pressure, jointing system and manufacturer’s rating. Do not mix incompatible fittings or adhesives. Ask the plumber to specify the pipe standard, pressure class, diameter and intended use, and pressure-test concealed lines before closing walls.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"},{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "Why is water pressure low on the top floor?": {
+    answer: "Low pressure at the top floor can result from insufficient tank head, undersized or long pipe runs, partially closed valves, clogged filters, air locks, leaks or a pump/pressure-system fault. Check whether the problem affects every tap or only one fixture and whether it occurs at particular times. Have a plumber inspect valves, filters, pipe sizing and pump controls. If a booster pump is needed, size it for the building and provide suitable pressure control and dry-run protection; do not install an oversized pump without checking the system.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How do I plan electrical wiring before plastering?": {
+    answer: "Freeze the furniture and appliance layout first, then prepare a room-wise point schedule, circuit plan and distribution-board schedule. Mark switchboards, sockets, AC and geyser points, kitchen loads, data/TV points, lighting, outdoor fittings and future provisions on the drawings. Coordinate conduit routes with beams, columns, plumbing and false ceilings; avoid cutting structural members. Check conduit continuity, box alignment, wire draw paths and earthing before plastering. Photograph concealed routes and have a qualified electrician inspect and test the installation before energising.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"},{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "Is solar power worth installing for an independent house?": {
+    answer: "Solar can be worthwhile when roof area, shade, household consumption, daytime usage, grid connection and available incentives align. Review at least 12 months of electricity bills, check usable unshaded roof area and structural condition, and ask an authorised installer to size the system against actual consumption. Compare equipment warranties, inverter replacement assumptions, generation estimates, net-metering/export rules and maintenance. Confirm the current Telangana DISCOM and national scheme process before paying an installer; incentives and approvals can change. Keep access to drains and roof waterproofing in the design.",
+    sources: [{"label":"PM Surya Ghar – official rooftop solar scheme","url":"https://pmsuryaghar.gov.in/"},{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "What is rainwater harvesting and is it compulsory in Hyderabad?": {
+    answer: "Rainwater harvesting collects roof or site runoff and directs it through filters to storage or recharge structures. Whether a particular system is mandatory, and what design applies, depends on the property type, plot and current local rules. Check the sanctioned plan and the competent authority’s current conditions rather than relying on a generic claim. A good system includes clean roof catchments, first-flush diversion where specified, suitable filtration, safe overflow, access for maintenance and protection against contamination. Do not direct runoff into a neighbour’s property or a sewer connection without approval.",
+    sources: [{"label":"BuildNow – official Telangana approval portal","url":"https://buildnow.telangana.gov.in/"},{"label":"HMDA – planning information","url":"https://www.hmda.gov.in/planning/"}]
+  },
+
+  "How do I prevent plumbing leakage inside walls?": {
+    answer: "Use a coordinated plumbing layout with accessible valves, correctly rated pipes and fittings, compatible jointing materials and minimal concealed joints. Have the installer follow the manufacturer’s method, support pipes properly and protect them from damage during later trades. Pressure-test supply lines and test drainage before plastering or tiling; record the test results and photograph pipe routes. Avoid burying service joints where access is impossible. If leakage occurs, isolate the line and locate the source before opening walls or applying surface sealants.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"},{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "How much does 2BHK interior design cost in Hyderabad?": {
+    answer: "A 2BHK interior budget depends on room count and scope, kitchen layout, wardrobe length, TV/storage units, ceiling and lighting, hardware, board and finish specification, civil/electrical changes, appliances and installation. Ask for a room-wise design and BOQ that states board grade, finish, edge banding, hardware make/model, internal accessories, countertop, backsplash, lighting, taxes and exclusions. Compare the same drawings and material schedule across designers. Avoid a single package total without quantities, finish samples and a written warranty/service policy.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How much does 3BHK interior design cost in Hyderabad?": {
+    answer: "A 3BHK interior estimate is driven by the number and size of wardrobes, kitchen configuration, storage, TV and foyer units, ceiling and lighting, bathroom vanities, finishes, hardware and any civil or electrical modifications. Prepare a room-wise scope and finish schedule before asking for prices. Separate modular furniture from loose furniture, appliances, curtains, decor and civil work so the budget is transparent. Check board type, finish, hardware, installation, taxes, delivery, warranty and exclusions in the quotation; compare equivalent quantities rather than headline package prices.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "Which plywood is best for kitchen cabinets?": {
+    answer: "Choose the board based on moisture exposure, cabinet location, load, finish and budget. Kitchen sink-base units face a higher risk of leaks than dry overhead cabinets, so the specification should address moisture resistance, edge sealing, hardware and protection of cut-outs. Ask for the exact plywood grade and applicable standard, manufacturer traceability, thickness, warranty and test documentation; do not rely only on terms such as “waterproof” or “marine” in a sales pitch. Alternatives such as suitable MDF or particleboard may be appropriate in some dry applications when specified correctly.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "Which is better: acrylic or laminate for a modular kitchen?": {
+    answer: "Acrylic generally offers a glossy, reflective appearance and can show fingerprints or scratches depending on the product; laminate is available in many textures and finishes and is often easier to match across budgets. Performance depends on the specific product, substrate, edge treatment, adhesive and installation quality. Compare samples in your kitchen lighting, ask about scratch and heat behaviour, cleaning instructions, edge details and warranty, and specify the exact finish code in the BOQ. Use durable, moisture-appropriate construction for the cabinet carcass regardless of the shutter finish.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "What is the difference between modular and carpenter-made interiors?": {
+    answer: "Modular interiors are typically manufactured as standardised or customised units off-site and assembled at the home, which can improve production consistency and installation speed when measurements are accurate. Carpenter-made work is fabricated more directly on site and can adapt to unusual dimensions, but quality depends heavily on workmanship, supervision and material control. Compare the same design, board grade, finish, hardware, edge treatment, installation, site protection, warranty and service access. Neither method guarantees quality by itself; the detailed specification and execution matter most.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How much does a modular kitchen cost in Hyderabad?": {
+    answer: "A modular kitchen quote depends on layout (straight, L, U or parallel), total cabinet length, base and wall units, tall units, board material, shutter finish, hardware, accessories, countertop, sink, backsplash, lighting and appliance integration. Ask for a dimensioned layout and separate quantities for carcass, shutters, drawers, fittings and installation. Confirm brand/model of hinges and channels, edge banding, moisture protection, taxes, delivery and exclusions. Compare equivalent storage and hardware specifications rather than a per-foot rate without a drawing.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "Which is better: sliding wardrobe or hinged wardrobe?": {
+    answer: "Sliding wardrobes save door-swing clearance and can suit narrow rooms, but the track and overlapping panels may limit access to part of the cabinet at one time and require good hardware alignment. Hinged wardrobes provide full opening access and simpler internal visibility, but need clear floor space for doors. Choose based on room dimensions, bed position, access, door width, hardware quality and maintenance. Check the carcass depth, drawer clearance, ventilation and service access before finalising the design.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "How do I choose the right wardrobe material?": {
+    answer: "Select wardrobe material by room moisture, expected load, finish, budget, installation conditions and hardware. Plywood, MDF and particleboard have different strength, moisture and screw-holding characteristics; the exact grade and quality vary by manufacturer. Specify the board type and thickness for carcass and shutters separately, edge sealing, back panel, hanging-rail support, hinges/channels and finish. Keep wardrobes away from persistent damp walls, seal cut edges and ensure the floor and wall are dry before installation. Ask for product data and warranty, not just a generic board name.",
+    sources: [{"label":"BIS – Know Your Standard","url":"https://www.bis.gov.in/know-your-standard/?lang=en"}]
+  },
+
+  "How much does false ceiling cost per square foot?": {
+    answer: "False-ceiling cost depends on material, framing system, ceiling height, room geometry, number of levels, access panels, coves, lighting cut-outs, insulation, painting and electrical modifications. Ask for a reflected ceiling plan and BOQ that states board type and thickness, framing gauge/spacing, suspension details, perimeter treatment, access panels and finish. Confirm whether lights, drivers, wiring and painting are included. Avoid comparing rates that use different framing systems or omit service access and finishing.",
+    sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"}]
+  },
+
+  "What should I check before hiring an interior designer?": {
+    answer: "Review completed projects that match your home size and style, and ask to see detailed working drawings rather than only 3D renders. Confirm who measures the site, coordinates electrical and plumbing changes, specifies materials, supervises installation and handles defects. Request a room-wise BOQ with board grades, finish codes, hardware brands, quantities, taxes, timeline, payment stages, exclusions and warranty. Check how design revisions are charged and who owns the drawings. Speak with previous clients and inspect at least one installed project before signing.",
+    sources: [{"label":"MCA – company/LLP master data","url":"https://www.mca.gov.in/"}]
   }
 };
