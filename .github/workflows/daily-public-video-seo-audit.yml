@@ -1,0 +1,48 @@
+name: Daily Public Video SEO Health
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/daily-public-video-seo-audit.yml'
+  schedule:
+    # Approximately 8:00 AM India Standard Time (GitHub schedules may be delayed).
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Maximum published videos to audit (1-25)'
+        required: false
+        default: '25'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-public-video-seo-audit
+  cancel-in-progress: false
+
+jobs:
+  video-index-readiness:
+    name: Verify public videos, watch pages and thumbnail bytes
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run public video SEO health audit
+        env:
+          AUDIT_BASE_URL: https://propulsetechnologies.online
+          AUDIT_VIDEO_LIMIT: ${{ inputs.limit || '25' }}
+          AUDIT_REPORT_PATH: ${{ runner.temp }}/video-seo-audit.json
+        run: node backend/scripts/audit-live-video-seo.js
+      - name: Attach JSON audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: propulse-public-video-seo-report
+          path: ${{ runner.temp }}/video-seo-audit.json
+          retention-days: 30
+          if-no-files-found: warn
