@@ -133,14 +133,36 @@ async function checkEntry(entry){
   }
   return {watch:entry.watch,thumbnail:poster.pathname,video:'public playback accessible',status:'pass'};
 }
+
+async function checkGalleryLinks(base,limit=25){
+  const gallery=await fetchAudit(new URL('/projects',base),{headers:{accept:'text/html'}});
+  assert.equal(gallery.status,200,'Public project gallery must return HTTP 200');
+  const html=await gallery.text();
+  assert(html.includes('data-seo-project-gallery="true"'),'Public gallery must include real server-rendered project links');
+  const paths=[...new Set([...html.matchAll(/<a\\s+href="(\\/projects\\/[a-z0-9]+(?:-[a-z0-9]+)*)"/gi)]
+    .map(match=>match[1]))].slice(0,limit);
+  for(const path of paths){
+    const url=new URL(path,base).toString();
+    const response=await fetchAudit(url,{headers:{accept:'text/html'}});
+    assert.equal(response.status,200,'Gallery-linked project page must return HTTP 200: '+url);
+    const detail=await response.text();
+    assert(detail.includes('data-seo-project-fallback="true"'),'Project page missing server-rendered content: '+url);
+    assert(detail.includes('rel="canonical" href="'+url+'"'),'Project page canonical does not match gallery link: '+url);
+    assert(detail.includes('data-propulse-project-seo="server"'),'Project page missing structured data: '+url);
+  }
+  return paths.length;
+}
+
 async function audit({origin=DEFAULT_BASE,limit=MAX_VIDEO_CHECKS}={}){
   const base=new URL(origin);
   assert(base.protocol==='https:'||base.hostname==='localhost','Audit requires HTTPS except localhost');
   const hardLimit=Math.min(MAX_VIDEO_CHECKS,Math.max(1,Number(limit)||MAX_VIDEO_CHECKS));
   const date=new Date().toISOString();
-  const report={date,site:base.origin,status:'pass',totalVideos:0,checked:0,
+  const report={date,site:base.origin,status:'pass',totalVideos:0,checked:0,projectsChecked:0,
     sampleLimit:hardLimit,entries:[],warnings:[],errors:[]};
   try{
+    report.projectsChecked=await checkGalleryLinks(base,hardLimit);
+    if(!report.projectsChecked)report.warnings.push('Project gallery has no eligible public watch links');
     const robots=await fetchAudit(new URL('/robots.txt',base));
     assert.equal(robots.status,200,'robots.txt must be publicly accessible');
     assert((await robots.text()).includes('Sitemap: '+base.origin+'/video-sitemap.xml'),
@@ -201,4 +223,4 @@ async function main(){
   if(report.errors.length)process.exitCode=1;
 }
 if(require.main===module)main().catch(error=>{console.error(error);process.exitCode=1});
-module.exports={parseVideoEntries,extractVideoObject,audit};
+module.exports={parseVideoEntries,extractVideoObject,checkGalleryLinks,audit};
