@@ -44,10 +44,10 @@ export const CORE_PUBLIC_SEO_ROUTES=[
   },
   {
     path:'/projects',
-    title:'Construction & Interior Projects | ProPulse',
-    description:'Explore completed construction, interior and property projects shared by eligible ProPulse businesses, including project images, videos and plans where available.',
+    title:'Completed Construction & Interior Project Videos in Hyderabad | ProPulse',
+    description:'Watch completed home construction and interior design project videos by ProPulse and eligible independent professionals in Hyderabad. Explore actual execution, locations and project details.',
     heading:'Explore completed construction and interior projects',
-    summary:'Browse recent public project work from businesses on ProPulse and use it as inspiration for your own requirement.',
+    summary:'Watch published completed work from ProPulse and eligible independent professionals. Review project locations, execution details and videos before planning your own project.',
   },
   {
     path:'/how-it-works',
