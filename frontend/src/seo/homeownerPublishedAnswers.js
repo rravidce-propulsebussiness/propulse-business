@@ -736,7 +736,7 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   "Which channel is best for kitchen drawers?": {
     answer: "Choose a drawer runner based on the drawer’s load, width, depth, opening frequency and the space available inside the cabinet. Common options include side-mounted telescopic channels and concealed undermount runners; some models offer soft-close or push-to-open functions. Compare the manufacturer’s rated load, extension type, adjustment range, corrosion protection and installation requirements. A heavy pot drawer needs a different specification from a shallow cutlery drawer. Ask the interior contractor to name the channel brand and model, state the load rating and include the quantity in the BOQ.",
     sources: []
-  },,
+  },
 
   "How many doors should a house have according to Vastu?": {
     answer: "Vastu traditions do not provide one universally agreed door count that suits every house. Recommendations can vary by text, practitioner and the way openings are counted. From a practical design perspective, plan doors around safe access, privacy, room function, furniture movement, ventilation and clear circulation. Avoid reducing essential exits or creating narrow passages just to meet a preferred number. If your family follows Vastu, agree on the interpretation with the consultant before the floor plan is frozen, then have the architect check that the layout remains functional and compliant with applicable building and fire-safety requirements.",
@@ -768,6 +768,39 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   },
   "What Vastu precautions should I take before building a house?": {
     answer: "If Vastu is important to your family, discuss it before the floor plan and structural grid are finalised; late changes can create expensive plumbing, beam, stair and room-layout conflicts. Give the consultant a correctly oriented survey with north direction, road side, dimensions and levels. Ask for written recommendations on entrance, kitchen, bedrooms, pooja space, toilets and staircase, and mark which are essential preferences versus optional suggestions. Then have the architect and structural engineer check daylight, ventilation, circulation, setbacks, drainage, safety and structural feasibility. Vastu guidance is a traditional design preference and does not replace local building rules or engineering advice.",
+    sources: []
+  },
+
+  "How much does a wardrobe cost in Hyderabad?": {
+    answer: "Wardrobe pricing depends on the total width and height, internal layout, number of shutters, lofts, board grade, finish, hardware, drawer accessories and installation. A basic hinged wardrobe with shelves and hanging space is not comparable to a full-height design with drawers, mirror, pull-outs, loft storage and premium shutters. Ask for a measured elevation and internal layout, then compare quotes using the same board thickness, finish, hinge/channel models, edge treatment and accessories. Request separate rates for carcass, shutters, lofts, hardware and installation instead of accepting only a per-square-foot figure.",
+    sources: []
+  },
+  "Which is better: sliding or hinged wardrobe shutters?": {
+    answer: "Hinged shutters give full access to the cabinet interior and are usually simpler to adjust and maintain, but they need clear swing space in front of the wardrobe. Sliding shutters save that swing space and can suit compact bedrooms, but the tracks, rollers and overlap mean you may not be able to access the full wardrobe width at once. Sliding systems also need accurate installation and regular track cleaning. Choose after checking bed-to-wardrobe clearance, opening access, shutter width and weight, track quality and the usable internal layout.",
+    sources: []
+  },
+  "Which board is best for wardrobe carcass?": {
+    answer: "The right wardrobe carcass board depends on room moisture, expected load, fixing method, finish and budget. Plywood is often selected where screw holding and robust fixing are priorities; engineered boards may be suitable in dry, controlled interiors when their grade, density and manufacturer limits are specified. Avoid choosing by a generic label alone. Ask the contractor to state the exact board type, grade, thickness and brand for vertical panels, shelves, shutters and lofts separately. Check that the board is stored dry, edges are sealed appropriately and heavy shelves are supported for their span and load.",
+    sources: [{ label: "BIS – standards and product conformity information", url: "https://www.bis.gov.in/" }]
+  },
+  "What is edge banding and why does it matter?": {
+    answer: "Edge banding is the strip applied to the exposed edges of a board or cabinet panel. It covers the core, improves appearance and helps reduce moisture and impact damage at the edge when correctly specified and bonded. The result depends on banding material and thickness, adhesive, machine settings, trimming and corner finishing. Ask whether visible edges use matching PVC, ABS or another specified material, and inspect sample corners for gaps, glue lines, rough trimming and peeling. Edge banding does not make an unsuitable board waterproof; plumbing leaks and standing water still need to be prevented.",
+    sources: []
+  },
+  "What is the ideal wardrobe depth for a bedroom?": {
+    answer: "For a conventional front-facing hanging wardrobe, designers commonly plan around 600 mm overall depth so clothes can hang without being crushed, but the usable internal depth is less after the back panel and shutter or sliding system are accounted for. Compact rooms may need a different solution, such as shallower shelves or a carefully selected hanging arrangement. Confirm the depth against the actual garment type, shutter system, skirting, wall irregularities and room circulation. Measure the finished clear depth—not just the outside cabinet dimension—before approving the drawing.",
+    sources: []
+  },
+  "What is the ideal loft height above a wardrobe?": {
+    answer: "There is no universal loft height because it depends on ceiling height, wardrobe height, access, storage needs and the room’s proportions. A loft is useful for luggage and seasonal items, but it should not make everyday storage difficult or create unsafe access. Have the designer show the wardrobe and loft together in a full-height elevation, include the finished ceiling and false-ceiling levels, and check door opening and bed clearance. Keep frequently used items at reachable levels and use the loft for occasional storage.",
+    sources: []
+  },
+  "How much clearance is needed for sliding wardrobe doors?": {
+    answer: "Sliding wardrobes need enough depth for the chosen track and shutter system, plus allowance for the overlap between panels. The exact requirement varies by hardware brand, shutter thickness and number of tracks, so do not use one generic clearance figure for every system. Ask the supplier for the installation drawing and required carcass depth, track setback, panel overlap and adjustment space. Check that drawers and internal pull-outs do not collide with the doors and that the finished opening provides access to the intended storage compartments.",
+    sources: []
+  },
+  "How do I clean matte laminate without leaving marks?": {
+    answer: "Start with a soft, clean microfibre cloth and a small amount of water or a mild cleaner approved by the laminate manufacturer. Wipe gently in the direction recommended for the surface texture, then dry with a clean cloth so water does not remain around joints and edges. Avoid abrasive pads, harsh solvents, bleach, strong acids or aggressive scrubbing, which can dull or damage the finish. Test any cleaner on a hidden area first and follow the product care sheet, especially for anti-fingerprint or textured laminates.",
     sources: []
   }
 };
