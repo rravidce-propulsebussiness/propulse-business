@@ -345,6 +345,83 @@ export const CONSTRUCTION_GUIDES=[
       section('Ask for exact brand/grade/thickness in the quotation','Avoid generic words like “premium board.” Write substrate type, grade, thickness, finish, edge treatment and hardware range into the scope.')
     ],
   },
+  {
+    slug:'construction-stage-inspection-checklists',
+    type:'construction-guide',
+    category:'Site Inspection',
+    title:'Printable House Construction Site Inspection Checklists | ProPulse',
+    description:'Practical printable checklists for homeowners to review construction stages from plot setting-out and excavation to RCC, waterproofing, services and handover.',
+    heading:'House construction: stage-wise site inspection checklists',
+    summary:'Use these field checklists to prepare for site visits, record observations and ask the right questions before work is concealed. Tick items on your phone or print a copy for each inspection.',
+    searchTerms:['house construction site inspection checklist','foundation inspection checklist','RCC slab pre pour checklist','waterproofing inspection checklist','new house handover checklist'],
+    ctaLabel:'Create Construction Requirement',
+    cta:'/quote?package=standard#construction',
+    note:'These checklists are homeowner observation aids, not engineering approvals. Structural dimensions, reinforcement, concrete acceptance, electrical safety and waterproofing systems must be verified against approved drawings, specifications and qualified professionals.',
+    sections:[
+      section('01 · Before work starts','Confirm that the project has the right information and approvals before physical work begins.',[
+        'Latest approved architectural and structural drawings are available on site',
+        'Plot boundaries, setbacks, levels and building lines are verified by the responsible surveyor',
+        'Soil investigation and structural design are available and refer to this site',
+        'BOQ, material specifications, exclusions and payment milestones are written down',
+        'Underground utilities, neighbouring structures and access constraints are identified',
+        'Site safety arrangements, access, barriers and material storage areas are in place'
+      ]),
+      section('02 · Excavation and foundation','Record what is visible and request the engineer’s inspection before foundation work is covered.',[
+        'Excavation location, dimensions and founding level match approved drawings',
+        'Actual soil and groundwater conditions are reviewed by the responsible engineer',
+        'Loose soil, standing water and unsuitable material are addressed as directed',
+        'Shoring, edge protection and safe access are provided where required',
+        'Footing reinforcement size, spacing, laps, anchorage and cover are checked against drawings',
+        'Column starters, sleeves and embedded items are in the approved locations',
+        'Engineer inspection and pre-pour approval are recorded before concrete placement'
+      ]),
+      section('03 · RCC columns, beams and slabs','Use this as a pre-pour hold-point record; never approve structural changes yourself.',[
+        'Latest structural drawings and bar-bending details are being followed',
+        'Rebar grade, diameter, quantity, spacing, laps and anchorage are verified',
+        'Cover blocks and reinforcement supports are suitable and stable',
+        'Formwork dimensions, levels, props, bracing and joints are inspected',
+        'Conduits, sleeves, openings and embedded services are coordinated and approved',
+        'Concrete grade, approved mix or RMC order and delivery/testing plan are confirmed',
+        'Concrete placement, compaction, curing and sampling are supervised and recorded',
+        'Any honeycombing, exposed bars, significant cracks or unusual deflection is reported to the structural engineer'
+      ]),
+      section('04 · Masonry, plaster and finishes','Check alignment and coordination before finishes hide service routes or substrate defects.',[
+        'Wall locations, openings, levels and alignment match approved plans',
+        'Door/window frames, lintels and service openings are coordinated',
+        'Electrical and plumbing chases are completed and inspected before plaster',
+        'Wall surfaces are sound and prepared before plaster or tile application',
+        'Tile batches, shade, calibre, layout, grout and movement details are approved',
+        'Floor levels and falls lead water to the intended drains without ponding',
+        'Samples/mock-ups and finish codes are signed off before bulk installation'
+      ]),
+      section('05 · Waterproofing and wet areas','Ask for system details and a recorded water test before tiles or protective layers cover the work.',[
+        'Substrate is clean, sound and prepared to the product instructions',
+        'Corners, pipe penetrations, drains, thresholds and wall-floor junctions are detailed',
+        'Specified primer, coats, coverage/thickness and curing are documented',
+        'Waterproofing is protected from damage by following trades',
+        'Ponding or specified water test is completed for the required project duration',
+        'Test results and adjoining-area observations are recorded before tiling'
+      ]),
+      section('06 · Electrical, plumbing and ventilation','Have qualified trades test installations before ceilings, walls and floors are closed.',[
+        'Electrical point layout and circuit schedule match the approved drawings',
+        'Cable sizing, earthing and protective devices are verified by a qualified electrician',
+        'Conduits, junction boxes and distribution-board access remain serviceable',
+        'Plumbing pipe routes, joints, supports and isolation valves are inspected',
+        'Concealed plumbing pressure/leak tests are documented before closure',
+        'Drainage flow, traps, cleanouts and floor falls are checked',
+        'Bathroom/kitchen exhaust and natural ventilation paths are unobstructed'
+      ]),
+      section('07 · Final handover and snagging','Close every defect with evidence and collect the documents needed to operate and maintain the home.',[
+        'Doors, windows, locks, railings and safety items operate correctly',
+        'Tiles, grout, paint, counters, cabinets and sealants are checked room by room',
+        'All taps, flushes, drains, pumps, lights, switches and sockets are tested',
+        'Terrace, balcony and external rainwater drainage are checked',
+        'Approved as-built drawings and relevant test/inspection records are handed over',
+        'Warranties, manuals, invoices, keys, access codes and spare materials are received',
+        'Every snag has an owner and due date; closure is re-inspected and recorded'
+      ])
+    ],
+  },
 ]
 
 export function guideBySlug(slug){
