@@ -1635,4 +1635,787 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
     answer: "Create one snag-list line per defect and include room, exact location, description, dated photo, severity, responsible trade, target completion date and closure evidence. Cover walls and ceilings, paint, tile alignment and grout, skirting, counters, sealants, doors, windows, locks, wardrobes, hinges and drawer operation. Test every tap, flush, floor trap, water heater, pump, drain and visible pipe connection. Test lights, switches, sockets and protective devices with a qualified electrician. Check balcony and terrace drainage, waterproofing test records, external rainwater pipes, access panels and safety items such as railings. Record missing documents, warranties, manuals, keys and spare materials separately. Re-inspect repairs and mark an item closed only when the result is verified. Attach the final signed snag list to the handover record.",
     sources: []
   },
+,
+  "What are the different types of foundations used for house construction?": {
+    answer: "The foundation type is selected from the soil investigation, structural loads, groundwater conditions, site constraints and nearby building conditions. Common systems include isolated or combined footings, strip footings, raft foundations and piles, but they are not interchangeable options to choose by cost or habit. Ask for the soil report, structural design basis, foundation layout, founding level, reinforcement details and concrete specification. The structural engineer should confirm the system for the actual plot and building; a neighbour's foundation depth or a generic online rule is not a safe design reference.",
+    sources: []
+  },
+
+  "How much steel is required for house construction?": {
+    answer: "There is no dependable single steel quantity per square foot for every house. Reinforcement depends on the structural grid, spans, number of floors, soil and foundation design, seismic requirements, member sizes and detailing. Use the structural drawings and a bar bending schedule (BBS) to estimate each diameter and length, including laps, hooks, bends and wastage allowances stated by the estimator. Compare the supplier's invoices and site issue records with the BBS, and have the structural engineer approve substitutions. Do not reduce reinforcement or change bar diameters to meet a budget without a revised design.",
+    sources: []
+  },
+
+  "Which concrete grade is used for house construction?": {
+    answer: "Concrete grade must follow the structural drawings and approved mix design for each element; it should not be selected from a generic house-construction chart. The engineer specifies the grade and exposure requirements for footings, columns, beams, slabs and other members based on design and site conditions. Confirm whether the work uses design-mix or permitted nominal-mix concrete, the approved supplier or batching method, workability, delivery records, sampling and cube-test frequency. Never add water at site without the responsible engineer's approval, and do not assume a higher grade automatically fixes poor batching, placement, compaction or curing.",
+    sources: [
+      { label: "BIS – IS 456: Plain and reinforced concrete", url: "https://standards.bis.gov.in/website/standard-details" },
+      { label: "BIS – Know Your Standard", url: "https://www.bis.gov.in/know-your-standard/?lang=en" }
+    ]
+  },
+
+  "What is the standard thickness of an RCC roof slab?": {
+    answer: "An RCC slab does not have one safe standard thickness for every house. The required depth is designed from the span, support conditions, loading, deflection and vibration limits, reinforcement arrangement, concrete grade, fire and durability requirements, and the overall structural system. Check the structural drawing for slab thickness, beam levels, reinforcement, openings, drops and service sleeves before shuttering. Do not increase or reduce slab depth at site to resolve a level mismatch; refer the issue to the structural designer and obtain revised details where needed.",
+    sources: [
+      { label: "BIS – IS 456: Plain and reinforced concrete", url: "https://standards.bis.gov.in/website/standard-details" }
+    ]
+  },
+
+  "How do I check waterproofing before laying tiles?": {
+    answer: "Before tiles cover a wet area, confirm that the substrate is sound and correctly sloped to the drain, corners and pipe penetrations are treated, and the specified waterproofing system has been applied at the required coverage and thickness. Check that the membrane has cured according to the product instructions and that the applicator has completed the specified ponding or water-retention test with the agreed duration and water level. Inspect the ceiling or adjoining walls below for leakage, record the test result and repair failures before tiling. Follow the system manufacturer's method statement and the project consultant's acceptance criteria rather than relying on a quick visual check.",
+    sources: []
+  },
+
+  "What should I inspect before an RCC footing concrete pour?": {
+    answer: "Before a footing pour, verify the excavation dimensions and founding level against the approved drawings and soil report, and obtain the engineer's acceptance of the exposed founding stratum. Check that any required dewatering and blinding or levelling concrete are complete, reinforcement diameter and spacing match the bar schedule, cover blocks are suitable and stable, starter bars and column locations are correct, and formwork is clean and secure. Confirm the approved concrete grade, delivery and sampling plan, access for placing and vibration, and curing arrangements. Photograph and record the inspection; do not pour over soft, disturbed or waterlogged founding material without the engineer's direction.",
+    sources: [
+      { label: "BIS – IS 456: Plain and reinforced concrete", url: "https://standards.bis.gov.in/website/standard-details" }
+    ]
+  },
+
+  "What should I check in TMT steel delivered to a construction site?": {
+    answer: "Match the delivered steel to the structural specification and purchase order: manufacturer, grade, nominal diameter, quantity, batch or heat identification and applicable standard marking. Check invoices and mill test certificates, retain traceability records, and inspect bars for severe corrosion, oil, mud, damage or obvious defects. Verify that the specified grade and ductility requirements are met; a brand name or rib pattern alone does not prove compliance. Store bars off the ground, separated by diameter and protected from contamination. Ask the structural engineer to approve any proposed brand, grade or diameter substitution before use.",
+    sources: [
+      { label: "BIS – Know Your Standard", url: "https://www.bis.gov.in/know-your-standard/?lang=en" }
+    ]
+  },
+
+  "How should construction-stage payments be linked to work progress?": {
+    answer: "Use a written stage-payment schedule tied to measurable, inspected work rather than calendar dates or verbal milestones. Define each stage clearly—for example, approved foundation completion, plinth, each structural floor, masonry and services, waterproofing tests, finishes and handover—and state the evidence needed before an invoice becomes due. The agreement should identify material and labour scope, taxes, variation approval, retention if agreed, defect rectification, delay handling and the process for measuring completed quantities. Keep dated site records, approved drawings, test reports, bills and payment receipts. Have the contract reviewed for the project's jurisdiction and never pay for concealed work before the agreed inspection and documentation.",
+    sources: []
+  },
+
+  "How much does house construction cost per square foot in Hyderabad?": {
+    answer: "There is no reliable single per-square-foot rate for every Hyderabad house. A quote changes with the location and site access, soil and foundation requirements, number of floors, structural design, built-up area measurement, material brands, finish level, labour scope, services, approvals and contractor overheads. Ask for a dated, itemised BOQ that states what is included and excluded, the specifications for each material and the basis used to calculate area. Compare at least two quotes on the same drawings and scope. Check whether GST, architect and structural fees, compound wall, borewell, sump, lift, solar, modular kitchen, wardrobes, external works and utility charges are included. Treat online rates as preliminary budgeting indicators, not a binding project estimate.",
+    sources: []
+  },
+
+  "How do I estimate the construction cost of a 200-square-yard plot?": {
+    answer: "A 200-square-yard plot is a land area, not the built-up area or a construction quotation. First confirm the measured plot dimensions and the legally permissible footprint, setbacks, floor count and built-up area for the site. Then prepare floor-wise plans and calculate the actual areas included in the estimate, clarifying how balconies, staircases, parking, terrace rooms and common areas are measured. Build the estimate from quantities and specifications for excavation, concrete, reinforcement, masonry, plaster, waterproofing, flooring, doors, windows, electrical, plumbing, painting and external works. Ask the architect or quantity surveyor to identify provisional sums, exclusions, taxes and contingency separately; do not multiply the plot area by a generic rate and treat it as the final cost.",
+    sources: []
+  },
+
+  "Is ground-floor construction cheaper than a G+1 house?": {
+    answer: "A single-storey house may avoid some upper-floor elements, but it is not automatically cheaper for the same total usable area. A G+1 design can use the plot more efficiently, while adding staircases, upper-floor structure, slab work, vertical services and access requirements. Foundation and column design must be checked for the intended final building from the start; adding another floor later without a verified structural design is unsafe. Compare alternatives using the same total usable area, room schedule, finish specification, services and external scope, and include the cost of stairs, terrace treatment and future expansion provisions.",
+    sources: []
+  },
+
+  "How many cement bags are required to build a house?": {
+    answer: "The cement requirement cannot be calculated accurately from plot area or built-up area alone. It depends on the structural design, concrete grades and mix designs, masonry and plaster specifications, floor finishes, mortar use, wastage control and the quantities of each activity. Ask for an item-wise quantity estimate based on drawings and approved mix proportions, and keep separate records for concrete, masonry, plaster and other cement-based work. Reconcile purchase invoices, delivery challans, stock and daily consumption against measured progress. Do not use a fixed bags-per-square-foot rule as a procurement instruction or change a mix by adding cement without the engineer's approval.",
+    sources: []
+  },
+
+  "How do I calculate brickwork quantity for a house?": {
+    answer: "Start with the wall lengths and heights from the latest approved architectural drawings, then calculate each wall's gross volume or area using the specified wall thickness. Deduct openings such as doors and windows according to the measurement rules in the contract or BOQ, and separate different wall thicknesses and materials. Convert the measured quantity using the actual block or brick dimensions and the specified mortar joint, allowing for the agreed breakage and wastage factor. Check lintels, chases, ducts and partial-height walls separately. Have the estimator state whether the BOQ is measured in cubic metres or square metres and use one consistent method when comparing contractor quotes.",
+    sources: []
+  },
+
+  "Are AAC blocks better than red bricks for house construction?": {
+    answer: "AAC blocks and fired-clay bricks have different weight, thermal, acoustic, strength, water-absorption and installation characteristics. AAC can reduce wall dead load and may improve thermal performance, but it requires compatible mortar or adhesive, correct jointing, suitable fixings and detailing at openings and service chases. Red bricks also vary widely by source and quality, so inspect dimensions, consistency and test information rather than relying on colour alone. Compare the specified product's test data, wall thickness, structural role, plaster system, local availability, labour familiarity and total installed cost. The structural designer should confirm the wall type and any load-bearing role.",
+    sources: []
+  },
+
+  "How can I identify poor-quality construction work at my site?": {
+    answer: "Look for work that differs from approved drawings or specifications, missing inspection records, unexplained material substitutions, poor alignment, leaking wet areas, visible cracks, honeycombing, exposed reinforcement, inadequate curing and unfinished safety provisions. These signs do not all have the same severity, and appearance alone cannot establish structural safety. Photograph and date each observation, record the location and stage, compare it with the approved drawing and BOQ, and raise a written inspection request with the site engineer or project consultant. Do not conceal suspected defects with plaster or paint before they are assessed. Structural cracks, significant concrete defects or exposed reinforcement need prompt review by the structural engineer.",
+    sources: []
+  },
+
+  "What should I check before an RCC roof slab is cast?": {
+    answer: "Before slab casting, compare shuttering levels, dimensions, supports and openings with the approved structural and services drawings. Check reinforcement diameter, spacing, laps, anchorage, cover blocks, extra bars at supports and around openings, beam reinforcement, embedded conduits and sleeves, and that no services cut or displace structural bars. Confirm formwork stability, cleanliness, access for concrete placement and vibration, approved concrete grade and mix, delivery and cube-sampling arrangements, pour sequence and curing plan. Record the engineer's pre-pour inspection and resolve discrepancies before concrete arrives. Never cut, bend or remove reinforcement or change slab thickness at site without written structural approval.",
+    sources: []
+  },
+
+  "How do I choose a trustworthy construction company in Hyderabad?": {
+    answer: "Shortlist companies by checking their registered business identity, named project team, relevant experience, completed projects you can independently visit, client references you can contact, and the clarity of their written scope. Ask who will supervise the site, who prepares and approves structural drawings, how quality inspections are recorded, and which subcontractors are involved. Verify that the agreement names the contracting party and payment recipient, describes the project and specifications, and explains variations, delays, defects and handover. Do not rely only on advertisements, social-media photos, verbal promises or claims such as 'No. 1' without verifiable evidence.",
+    sources: []
+  },
+
+  "What questions should I ask a builder before signing a construction agreement?": {
+    answer: "Ask for the detailed BOQ and specifications, approved drawing responsibility, project schedule, stage-payment triggers, material brands and permitted substitutions, site supervision arrangements, inspection and testing process, insurance and safety responsibilities, taxes, exclusions, variation procedure, delay provisions, defect-liability terms and handover documents. Confirm the legal name of the contractor, authorised signatory, bank account beneficiary and who is responsible for subcontractors. Ensure the agreement identifies how disputes and termination are handled. Have an independent lawyer review the final agreement before paying a substantial advance or allowing work to begin.",
+    sources: []
+  },
+
+  "What can I do if a construction contractor delays my house project?": {
+    answer: "Start by checking the signed agreement for the completion date, milestone definitions, extension-of-time clauses, notice requirements and delay consequences. Maintain a dated record of site progress, labour presence, material deliveries, approved changes, payments and written communications. Ask the contractor for a recovery schedule that identifies the cause of delay, remaining work, resources and revised milestones. Avoid making undocumented deductions or stopping payments without checking the contract. If the delay remains unresolved, obtain advice from an independent construction professional and a lawyer about the contractual notice and dispute-resolution process.",
+    sources: []
+  },
+
+  "Who is responsible for material wastage during house construction?": {
+    answer: "Responsibility depends on the contract, procurement arrangement, BOQ measurement rules and who controls storage, handling and installation. The agreement should state whether materials are supplied by the owner or contractor, how quantities are measured, what reasonable wastage allowances apply, who bears damage or theft, and how unused materials and scrap are accounted for. Keep delivery challans, stock registers, issue records and dated site measurements. Do not accept an unexplained extra-material bill without checking actual consumption, returns, breakage and the agreed terms.",
+    sources: []
+  },
+
+  "How do I verify cement and steel bills at a construction site?": {
+    answer: "Match each invoice to the purchase order, supplier identity, delivery challan, date, product description, quantity, unit and applicable tax details. For cement, record the manufacturer, product type, batch details and bag count, and check that bags are dry and properly stored. For steel, reconcile diameter-wise quantities and grade with the structural specification, markings and mill test certificates. Compare delivered quantities with site stock and issue records, and keep weighbridge slips where relevant. A bill alone does not prove material quality or that the full quantity reached the site; retain traceability from purchase through use.",
+    sources: []
+  },
+
+  "What is included in turnkey house construction?": {
+    answer: "Turnkey construction generally means the contractor coordinates an agreed package of design, procurement, construction and handover, but the phrase has no universal scope by itself. The agreement must list included drawings, approvals support, civil and structural work, materials, electrical and plumbing, finishes, fixtures, external development, testing, cleaning and handover records. It should also list exclusions such as land, statutory fees, utility connections, borewell, compound wall, lift, solar, modular interiors or loose furniture where applicable. Ask for a room-wise and activity-wise BOQ, named specifications, taxes, milestones and a written variation process before comparing turnkey offers.",
+    sources: []
+  },
+
+  "How can I avoid hidden charges in house construction?": {
+    answer: "Ask for a detailed BOQ and a written inclusions-and-exclusions schedule before signing. Identify items often left outside a headline quote, such as soil testing, excavation in hard strata, dewatering, extra foundation work, approval fees, utility connections, compound walls, gates, sump, septic or sewer connections, external paving, rainwater systems, GST, transport and premium finish upgrades. Clarify how quantities are measured, how site-condition changes are priced, who approves variations and whether rates are fixed or adjustable. Require written approval and a revised cost impact before extra work begins, and keep copies of every approved change.",
+    sources: []
+  },
+
+  "What warranty should a house construction company provide?": {
+    answer: "There is no single warranty period that should be assumed for every component or contractor. Ask the company to state, in writing, the defect-liability or workmanship commitment, start date, exclusions, response time, inspection process and remedy for each relevant category. Clarify separate manufacturer warranties for pumps, electrical equipment, sanitaryware, waterproofing products, doors, windows and other supplied items, and confirm who helps make a claim. The contract should explain how defects are reported and rectified, including after handover. Have the agreement reviewed so the wording is consistent with applicable law and does not replace statutory rights.",
+    sources: []
+  },
+
+  "What documents should I receive at house construction handover?": {
+    answer: "Request the final approved drawings and documented revisions, structural and services drawings as applicable, completion or occupancy records required for the project, test and inspection reports, waterproofing test records, material and equipment warranties, invoices for owner-purchased items, operation manuals, keys and access credentials, and contact details for service providers. Ask for a snag list with each item marked as completed or outstanding and signed by both parties. Record meter readings, utility connections, equipment demonstrations and any retained materials. The exact statutory documents depend on the building and local approval requirements, so verify them with the project professional and competent authority.",
+    sources: []
+  },
+
+  "What is the difference between a labour contract and a material contract?": {
+    answer: "In a labour-only contract, the owner generally purchases and supplies the main construction materials while the contractor provides labour and agreed tools or supervision. In a material-and-labour contract, the contractor supplies materials as well as the workforce within the agreed scope. The agreement must state who buys, transports, stores, protects and accounts for each material, who bears wastage or theft, and how quality and substitutions are approved. Compare the total expected owner cost, including procurement time, delivery, storage, taxes and site coordination, rather than comparing only the contractor's quoted amount. Put the scope, brands, specifications, measurement rules and payment milestones in writing.",
+    sources: []
+  },
+
+  "Is a labour-only construction contract cheaper?": {
+    answer: "A labour-only quote can look lower because the owner separately pays for cement, steel, blocks, sand, aggregates, fixtures, transport and other materials. It may suit an owner who can verify quantities, negotiate with suppliers, arrange timely deliveries and maintain secure storage. It can become more expensive if procurement is delayed, material prices rise, excess quantities are ordered or site coordination is weak. Compare both contract types using the same drawings and BOQ, adding every owner-supplied item, delivery cost, taxes, wastage allowance, supervision and time cost. Decide in advance who is accountable when material shortages stop work or workmanship damages supplied materials.",
+    sources: []
+  },
+
+  "What should a construction BOQ include?": {
+    answer: "A useful Bill of Quantities (BOQ) separates the project into measurable work items and states each item's description, specification, unit, estimated quantity, rate and amount. It should cover the relevant civil, structural, masonry, plaster, waterproofing, flooring, doors and windows, electrical, plumbing, painting and external works, with material grades or brands where they matter. It should also identify provisional sums, taxes, transport, testing, approvals, exclusions, wastage assumptions and the method for measuring completed work. Check that the BOQ follows the same drawing revision and scope as the quotation. A total price without item descriptions and measurement rules is difficult to verify or compare.",
+    sources: []
+  },
+
+  "How much advance should I pay a house construction contractor?": {
+    answer: "There is no universal safe advance percentage for every construction project. The amount should be justified by the agreement, the contractor's mobilisation needs, any materials being purchased and the security or evidence provided for that payment. Avoid paying a large amount solely on a verbal promise or a discounted headline quote. Identify the legal contracting party and payment beneficiary, obtain a signed agreement and receipt, and link later payments to measurable work or materials delivered to site. If an advance is intended for specific materials, define the brand, quantity, delivery date, ownership and proof of purchase. Have an independent lawyer review the payment and recovery terms before transferring a substantial amount.",
+    sources: []
+  },
+
+  "How do I verify soil testing before house construction?": {
+    answer: "Ask for the geotechnical investigation report prepared for your actual plot, not a report copied from a nearby site. Check that it identifies the site location, investigation points, ground levels, borehole or test depths, soil and groundwater observations, test results, design parameters and the engineer's foundation recommendations. Confirm that the structural designer has reviewed the report and used its recommendations in the foundation design. If the plot has been filled, has variable ground conditions or differs from the tested locations, ask whether additional investigation is needed. Do not select footing type or depth from a neighbour's building or a contractor's rule of thumb.",
+    sources: []
+  },
+
+  "What is a construction contingency and how should I budget for it?": {
+    answer: "A contingency is a separately identified budget allowance for uncertain or unforeseen project costs; it is not a substitute for an accurate BOQ or permission to spend without approval. Possible causes include concealed site conditions, design development, measured quantity changes and owner-approved scope changes. Ask the architect or quantity surveyor to explain the basis of the allowance and keep it separate from the base contract sum, taxes and known exclusions. Every use should be supported by a written reason, cost estimate and owner approval before the extra work proceeds. The appropriate allowance depends on design maturity, site uncertainty and contract scope, so it should be set with the project professional rather than copied as a fixed percentage.",
+    sources: []
+  },
+
+  "How do I check whether waterproofing work is done properly?": {
+    answer: "Check the approved waterproofing system and method statement before work begins. The substrate should be prepared as specified, cracks and pipe penetrations treated, corners and junctions detailed, and the product applied at the stated coverage and thickness. Keep product batch details, application records and photographs of each layer before it is covered. After the required curing period, complete the specified ponding or water-retention test with the agreed water level and duration, and inspect the area below and adjoining walls for signs of leakage. Record the result and repair any failure before tiles, screed or finishes conceal the membrane. A product label or applicator's verbal assurance is not proof of a successful installation.",
+    sources: []
+  },
+
+  "Who should supervise house construction at the site?": {
+    answer: "Site supervision should be assigned clearly in the project agreement. The contractor's site engineer or supervisor usually coordinates daily labour, materials and workmanship, while the architect, structural engineer or project management consultant may carry out periodic inspections within their agreed scope. These roles are not interchangeable: the structural designer must review structural changes, and an owner's independent consultant should not be assumed to provide full-time supervision unless contracted to do so. Ask who will be present each day, who can approve work, how inspection requests are raised, what tests and records are maintained, and who signs off before concrete pours or concealed services. Keep decisions and drawing changes in writing.",
+    sources: []
+  },
+
+  "How long does it take to construct an independent house in Hyderabad?": {
+    answer: "There is no dependable fixed timeline for every independent house in Hyderabad. Duration depends on plot access, approvals, soil and foundation conditions, number of floors, design completeness, contractor resources, weather, material availability, inspection stages and the finish level. Ask the contractor for a baseline programme that shows design and approval activities, procurement lead times, foundation and structural stages, masonry, services, waterproofing, finishes, testing and handover. Each milestone should have a planned date, responsible person and evidence of completion. Keep owner decisions and material selections ahead of the date they are needed. Treat any promised completion date as a contractual commitment only when the agreement defines extensions, delays and the process for updating the schedule.",
+    sources: []
+  },
+
+  "What are the common reasons house construction gets delayed?": {
+    answer: "Common causes include incomplete drawings, late building approvals, changes made after work starts, slow owner decisions, delayed material deliveries, labour shortages, unexpected soil or site conditions, poor coordination between trades, failed inspections and weather interruptions. A realistic schedule should include design freeze dates, approval dependencies, procurement lead times and inspection hold points. When a delay occurs, record the cause and affected activities, ask for a revised programme and identify what resources or decisions are needed to recover time. Avoid accepting an unexplained revised completion date; document agreed changes and their effect on cost and handover.",
+    sources: []
+  },
+
+  "What is the difference between plot area, built-up area and carpet area?": {
+    answer: "Plot area is the land area within the plot boundaries. Built-up area generally refers to the constructed floor area measured using the method stated in the project documents; it may include wall thickness and certain covered spaces depending on the applicable definition. Carpet area refers broadly to the usable floor area within the internal walls, with inclusions and exclusions governed by the relevant context and rules. These figures are not interchangeable. For a construction quotation, ask the contractor to state the exact measurement method, floor-wise areas, treatment of balconies, staircases, shafts, parking and terraces, and the drawing revision used. Compare quotations only after the same area basis is applied.",
+    sources: []
+  },
+
+  "How do I choose cement for house construction?": {
+    answer: "Choose cement by the type and specification required in the approved structural drawings, mix design and project specification, not by advertising or colour alone. Check the product type and applicable Indian Standard, valid BIS Standard Mark and licence details where required, manufacturer, batch information, manufacturing date and intact packaging. Buy through an authorised supplier and retain invoices and delivery records. Bags should be stored in a dry, covered place, raised off the floor and protected from moisture; use stock in a controlled first-in, first-out sequence. Do not switch cement type or manufacturer where the specification restricts it without the engineer's written approval.",
+    sources: [
+      { label: "BIS – Know Your Standard", url: "https://www.bis.gov.in/know-your-standard/?lang=en" },
+      { label: "BIS – Standards portal", url: "https://standards.bis.gov.in/" }
+    ]
+  },
+
+  "Is manufactured sand suitable for house construction?": {
+    answer: "Manufactured sand (M-sand) can be suitable when it is produced, graded and tested to meet the requirements for its intended use. Suitability depends on particle-size distribution, fines and clay content, particle shape, cleanliness, moisture and the relevant concrete or mortar specification. Do not approve it based only on appearance or a supplier's claim. Ask for source details and test results, and have the engineer or materials consultant confirm that the material meets the applicable standard and mix requirements. Sand for concrete, plaster and masonry may have different acceptance requirements, so do not assume one delivered material is appropriate for every activity.",
+    sources: [
+      { label: "BIS – Know Your Standard", url: "https://www.bis.gov.in/know-your-standard/?lang=en" },
+      { label: "BIS – Standards portal", url: "https://standards.bis.gov.in/" }
+    ]
+  },
+
+  "How can I check brick quality at a construction site?": {
+    answer: "Begin by checking that the bricks match the specified type, size, intended use and supplier documentation. Look for reasonably consistent dimensions and shape, sound edges, uniform firing and absence of visible cracks, severe warping or contamination. A simple visual or sound check is only a preliminary screening; it cannot establish compressive strength, water absorption or compliance with the applicable standard. Ask for test certificates or independent tests when specified, and have the site engineer approve the delivered batch before large-scale use. Store bricks safely and follow the specified soaking or preparation method for the brick type and mortar system.",
+    sources: [
+      { label: "BIS – Know Your Standard", url: "https://www.bis.gov.in/know-your-standard/?lang=en" },
+      { label: "BIS – Standards portal", url: "https://standards.bis.gov.in/" }
+    ]
+  },
+
+  "How do I prevent dampness in house walls?": {
+    answer: "Preventing dampness starts by identifying the source of moisture rather than applying paint over the stain. Common causes include leaking plumbing, failed terrace or toilet waterproofing, rainwater entering through cracks, poor site drainage, water splashing at the plinth, and missing or defective damp-proof detailing. Inspect the roof, parapets, external wall joints, window sills, plumbing lines, wet-area membranes, ground levels and rainwater outlets. Repair the source, allow affected materials to dry as appropriate and use a compatible repair and finish system. Ask the designer to confirm the damp-proof course and ground-level details for the building; do not cover persistent damp patches until the cause has been corrected.",
+    sources: []
+  },
+
+  "What should be included in a house construction schedule?": {
+    answer: "A useful construction schedule should show the sequence, duration, dependencies and responsible person for design finalisation, approvals, procurement, site setup, excavation, foundations, plinth, each structural floor, masonry, concealed electrical and plumbing, waterproofing, plaster, flooring, doors and windows, painting, fixtures, testing, snagging and handover. Add inspection hold points before concrete pours and before services or membranes are concealed. Include long-lead items such as windows, lifts or special finishes, and identify owner decisions required by specific dates. Update actual progress against the baseline and record approved scope changes; a list of approximate month names without dependencies is not a project-control schedule.",
+    sources: []
+  },
+
+  "What should I check before allowing construction materials to be substituted?": {
+    answer: "Do not accept a material substitution based only on a contractor's assurance that it is equivalent or cheaper. Compare the proposed product's standard, grade, performance data, dimensions, finish, durability, compatibility, warranty and installed cost with the specified item. For structural materials, obtain the structural designer's written approval before use; for waterproofing, electrical, plumbing and finish systems, obtain approval from the responsible designer or consultant. Record the reason, product data sheet, test certificates where relevant, cost or time impact and revised drawings or specifications. Keep the approval with the project records so the substituted material can be identified during maintenance or future repairs.",
+    sources: []
+  },
+
+  "How do I check construction progress before releasing a stage payment?": {
+    answer: "Compare the claimed milestone with the signed agreement, approved drawings, BOQ and actual site measurements. Inspect the work that is visible and complete, check required test and inspection records, and confirm that materials billed as delivered are physically present or supported by agreed ownership and delivery evidence. List incomplete or defective items and agree how they affect the milestone under the contract. Ask for a dated progress statement, measurement sheet, invoice and photographs before releasing payment. Do not pay for work that has not been completed merely because the next calendar date has arrived, and do not withhold an amount arbitrarily without following the agreement.",
+    sources: []
+  },
+
+  "What should I check before building a compound wall?": {
+    answer: "Before building a compound wall, confirm the legal plot boundary and obtain a survey or demarcation where needed. Check local approval requirements, wall height and any restrictions near roads, drains or neighbouring properties. The design should account for soil conditions, wall height, wind exposure, gates and nearby level differences; a qualified engineer should design the foundation and reinforcement where required. Agree on the finish, coping, drainage openings, gate supports and responsibility for damage to adjoining property. Do not copy a neighbour's wall dimensions without checking whether the site conditions are the same.",
+    sources: []
+  },
+
+  "What should I consider when planning a staircase for a house?": {
+    answer: "Plan the staircase early, alongside the floor plan and structural design. Check the available floor-to-floor height, stair location, clear width, headroom, landing space, door swings, handrail, lighting and safe access for children and older occupants. The number and dimensions of risers and treads must comply with applicable local building rules and be coordinated with the structural drawings; they should not be guessed from a typical online dimension. Confirm the final stair opening and levels before slab work so late changes do not affect beams, rooms or circulation.",
+    sources: []
+  },
+
+  "How do I plan an underground sump for a house?": {
+    answer: "Estimate household water demand, supply frequency, tanker access and space available before deciding sump capacity. The tank should be designed for the site conditions, groundwater exposure, soil pressure and vehicle loads if it is below a driveway. Specify an accessible inspection cover, safe cleaning access, screened inlet, overflow routed to an approved drain, washout arrangement and a reliable pump connection. Keep sewage and stormwater lines separate, and have the tank structure and waterproofing details reviewed by qualified professionals. Test for leakage and clean the sump before first use.",
+    sources: []
+  },
+
+  "How do I choose the capacity and location of an overhead water tank?": {
+    answer: "Choose tank capacity from the number of occupants, expected daily use, water-supply pattern and any backup storage already available. Locate it where the structural design can safely support the full tank weight, including its supporting platform and maintenance loads. Provide a stable, accessible base, secure connections, overflow and washout pipes, a screened vent and a safe route for maintenance. The structural engineer should approve the tank position and support details before construction; moving a full tank to a different slab area can change the load path.",
+    sources: []
+  },
+
+  "What should I check before drilling a borewell on my plot?": {
+    answer: "First check local permissions and restrictions, nearby borewell locations, underground utilities, access for the drilling rig and the likely impact on neighbours. Groundwater availability is uncertain, so do not treat a driller's depth estimate or a nearby successful borewell as a guarantee. Use a qualified local hydrogeology professional where appropriate, obtain required permissions, and agree in writing on drilling charges, casing, depth measurement, yield testing and what happens if water is not found. Test the water quality before using it for drinking, and provide a hygienic sealed head and drainage around the borewell.",
+    sources: []
+  },
+
+  "Why does a newly built house roof leak during rain?": {
+    answer: "Roof leakage can result from poor slope or drainage, cracks, weak construction joints, badly sealed pipe penetrations, parapet details, blocked outlets or an incompatible waterproofing system. Identify the entry point and inspect the terrace, outlets, upstands and service penetrations rather than simply painting the ceiling below. Ask the contractor to document the repair method and product system, prepare the substrate correctly and complete the specified curing or application steps. Carry out a controlled water test only under an agreed method and after confirming that ponding will not overload the roof. Persistent or structural cracking needs professional assessment.",
+    sources: []
+  },
+
+  "Are hairline cracks in new house plaster normal?": {
+    answer: "Fine plaster shrinkage cracks can occur as materials dry, but not every crack should be dismissed as normal. Record the crack's location, width, direction, length and whether it is changing; photograph it with a date and scale. Cracks around beams, columns, lintels, openings or structural joints, recurring cracks, water seepage, displacement or cracks that widen should be inspected by a qualified engineer. The repair depends on the cause: filling and repainting without addressing movement, moisture or poor bonding may only hide the symptom temporarily.",
+    sources: []
+  },
+
+  "How long should concrete be cured after casting?": {
+    answer: "Concrete needs adequate moisture and temperature control after placement so it can develop the intended properties. The required curing method and duration depend on the concrete, cementitious materials, weather, member, construction specification and applicable standards. Follow the project specification and the engineer's instructions rather than relying on one universal number of days. Protect fresh concrete from rapid drying, rain impact, vibration and early loading, and keep records of the casting date and curing method. Do not remove formwork or load a member simply because its surface looks hard.",
+    sources: []
+  },
+
+  "How should electrical and plumbing work be coordinated before plastering?": {
+    answer: "Before plastering, compare the latest architectural, electrical and plumbing drawings with the actual site. Confirm switch and socket positions, appliance points, conduit routes, pipe slopes, water points, drain locations, sleeves, access panels and service clearances. Pressure-test plumbing as specified, check electrical conduits and boxes, and photograph concealed routes with measurements from fixed reference points. Obtain the relevant supervisor's inspection and approval before covering the work. Late changes after plastering can cause rework, leaks, damaged wiring and unnecessary wall cutting.",
+    sources: []
+  },
+
+  "What approvals should I check before starting house construction in Hyderabad?": {
+    answer: "Before work begins, verify the plot's title and land-use position, applicable layout and building permissions, sanctioned plan, permitted use, setbacks, height and floor limits, and any conditions attached to the approval. The exact process and authority depend on the property's location and jurisdiction, so confirm current requirements with the relevant local planning or municipal authority and a qualified architect. Keep approved drawings and receipts at the site, and do not assume that a neighbouring building or a broker's statement proves your plot has the same permissions. Changes from the sanctioned plan may require formal approval.",
+    sources: []
+  },
+
+  "What is the difference between a building permit and an occupancy certificate?": {
+    answer: "A building permit or sanctioned building approval authorises construction subject to the approved plan and conditions. An occupancy certificate, where required, is issued after the authority verifies completion against applicable requirements and permits occupation. They are not interchangeable. Keep the sanctioned plan, permit, approved revisions, completion documents and occupancy certificate together. The exact process and terminology depend on the property's jurisdiction and project type, so confirm current requirements with the relevant local authority and your architect.",
+    sources: []
+  },
+
+  "What is a plinth beam and why is it provided?": {
+    answer: "A plinth beam is a structural member commonly provided near the building's plinth level to tie supporting elements and help manage loads and differential movement according to the structural design. Whether it is required, its dimensions and reinforcement depend on the building system, soil conditions, foundation arrangement and engineering calculations. Do not add, omit or alter a plinth beam based on a generic online recommendation; follow the approved structural drawings and obtain the structural engineer's written approval for changes.",
+    sources: []
+  },
+
+  "How do I check the quality of a construction site's sand?": {
+    answer: "Start by checking that the sand type and source match the project specification and intended use. Look for visible organic matter, rubbish, clay lumps or other contamination, but understand that appearance and a simple hand test cannot establish compliance. Ask for source details and relevant test results for grading, silt or fines, and other specified properties. Store sand separately from soil and debris, and do not mix different sources without approval. The engineer or quality-control team should decide acceptance against the applicable specification.",
+    sources: []
+  },
+
+  "What is a concrete cube test and what does it tell a homeowner?": {
+    answer: "A concrete cube test measures the compressive strength of sampled concrete at specified testing ages using a recognised procedure. The result helps the engineer assess whether the supplied concrete meets the specified strength requirement; it does not by itself prove that every part of the member was placed, compacted and cured correctly. Confirm the sampling method, batch or pour identification, test age, laboratory details and acceptance criteria. Ask the engineer to interpret any low or inconsistent result and decide whether further investigation is needed.",
+    sources: []
+  },
+
+  "What should I check when ready-mix concrete arrives at my site?": {
+    answer: "Match the delivery ticket to the approved concrete order, including grade or mix designation, quantity, batch time and intended pour location. Check that the load has not exceeded the permitted delivery or placement time and that any required workability test and sampling are carried out by the responsible site team. Do not allow unapproved water addition or changes to the mix at site. Record rejected loads, test samples, pour start and finish times, and the location where each batch was placed. Follow the project's quality plan and engineer's instructions.",
+    sources: []
+  },
+
+  "How do I prevent water leakage in bathrooms during house construction?": {
+    answer: "Bathroom waterproofing depends on correct substrate preparation, floor falls, wall-floor junction treatment, pipe-penetration sealing, door thresholds and compatible drainage details. Confirm the specified waterproofing system and application steps before tiling, protect the treated surface from damage and conduct the agreed ponding or water test before covering it. Check that floor water flows to the drain without persistent pooling and that plumbing joints have been tested. Keep product details, application records and test photographs; a tile finish alone does not prove the waterproofing is sound.",
+    sources: []
+  },
+
+  "What is the difference between a construction estimate and a BOQ?": {
+    answer: "A construction estimate is the projected cost of a project based on its scope, quantities, rates, specifications, location and assumptions. A bill of quantities (BOQ) breaks the work into measurable items with descriptions, units and quantities, and may include rates and amounts for pricing or payment control. A useful estimate explains inclusions, exclusions, taxes, provisional items and assumptions; a useful BOQ makes scope and measurement easier to compare. Neither document is reliable if drawings, specifications or site conditions are incomplete.",
+    sources: []
+  },
+
+  "How should I record changes made during house construction?": {
+    answer: "Use a written variation process. Describe the requested change, why it is needed, the affected drawing or specification, additional or reduced quantities, cost impact, schedule impact and any approval needed from the architect or engineer. Obtain the agreed price and written authorisation before the changed work begins, except where an urgent safety issue requires immediate action. Update the drawings, BOQ and payment records, and retain dated photographs and correspondence. Verbal instructions are easy to misunderstand and can lead to disputes at handover.",
+    sources: []
+  },
+
+  "What should I inspect before accepting a newly constructed house?": {
+    answer: "Inspect the completed work against the agreement, approved drawings, specifications and snag list. Check doors and windows, visible finishes, floor slopes, drainage, taps, sanitary fittings, electrical points, switches, distribution-board labelling, water pressure, leaks, roof and balcony drainage, access covers and safety items. Ask for relevant test and commissioning records, warranties, product manuals, approved as-built drawings and keys. Record each defect with its location and a photograph, agree a written rectification deadline, and arrange a qualified professional inspection for structural or concealed-system concerns.",
+    sources: []
+  },
+
+  "What documents should a contractor provide during house construction?": {
+    answer: "The project file should include the signed agreement, approved architectural and structural drawings, BOQ and specifications, approved revisions, work schedule, invoices and payment receipts, material delivery records, relevant test reports, inspection approvals, variation approvals and dated progress records. At completion, collect applicable completion or occupancy documents, as-built service drawings, warranties, manuals, test and commissioning records, and handover acknowledgements. The exact list depends on the contract, project scope and local rules. Keep digital copies as well as originals where issued.",
+    sources: []
+  },
+
+  "How do I estimate house construction cost for a 100-square-yard plot?": {
+    answer: "A 100-square-yard plot is 900 square feet of land, but the construction budget is based on the proposed built-up area and scope, not simply the plot size. First confirm the permitted footprint, setbacks, number of floors and room layout with an architect. Then prepare a drawing-based BOQ covering structure, masonry, plaster, flooring, doors and windows, electrical, plumbing, waterproofing, finishes and external works. Add approval fees, professional fees, site logistics, taxes where applicable and a contingency. Ask contractors to state exclusions and specifications so the estimate can be compared fairly.",
+    sources: []
+  },
+
+  "How do I estimate house construction cost for a 150-square-yard plot?": {
+    answer: "A 150-square-yard plot is 1,350 square feet of land; it does not mean the house will have that much built-up area on every floor. The permitted footprint and total floor area depend on setbacks, road width, local rules, design and approvals. Get a measured floor plan, calculate the built-up area for each level and prepare a BOQ with item descriptions, quantities and specifications. Separate structural work, finishes, services, compound wall, water storage, site development and approval-related costs. Treat any per-square-foot figure as an early planning benchmark only, not a quotation.",
+    sources: []
+  },
+
+  "How do I estimate house construction cost for a 200-square-yard plot?": {
+    answer: "A 200-square-yard plot contains 1,800 square feet of land, but the buildable and built-up areas depend on the sanctioned plan, setbacks, floor count and design. Estimate the project from the actual drawings: measure each floor, list the work items and specify the material and workmanship standards. Include foundations and structure, masonry, finishes, doors and windows, electrical and plumbing, waterproofing, external development and professional or approval costs. Request a written BOQ and exclusions from each contractor; do not multiply the plot area by a generic rate and treat it as the final project cost.",
+    sources: []
+  },
+
+  "What is included in a per-square-foot house construction rate?": {
+    answer: "A per-square-foot rate is meaningful only when the contractor defines the area measurement and included scope. Ask whether it covers excavation, foundations, RCC structure, masonry, plaster, flooring, painting, doors and windows, electrical, plumbing, waterproofing, sanitary fittings, kitchen work, compound wall, sump, overhead tank, approvals, taxes and debris removal. Confirm brands, grades, thicknesses or finish specifications where relevant, and identify provisional allowances and exclusions. Compare two offers only after aligning these details and the built-up-area calculation.",
+    sources: []
+  },
+
+  "How do I calculate built-up area for a multi-floor house?": {
+    answer: "Use the approved or proposed floor plans and measure each floor according to the measurement convention stated in the estimate or contract. Add the areas included by that convention and show balconies, staircases, utility spaces, shafts, parking and open-to-sky portions separately where their treatment differs. Do not assume every covered or uncovered space is counted identically by every contractor or authority. Ask the architect and contractor to provide a floor-wise area statement with dimensions and a clearly defined inclusion rule before applying a rate.",
+    sources: []
+  },
+
+  "Is the foundation cost the same for every house on the same plot size?": {
+    answer: "No. Foundation cost depends on soil profile and bearing characteristics, groundwater, building loads, number of floors, structural system, neighbouring foundations, excavation access and the foundation solution designed for the site. Two houses on plots of identical size can therefore have very different foundation requirements. Use a site-specific geotechnical investigation where advised and obtain a structural design based on the actual building. Compare foundation quotations against the same drawings, specifications and measured quantities rather than choosing the lowest lump-sum figure.",
+    sources: []
+  },
+
+  "What costs are commonly excluded from a basic house construction package?": {
+    answer: "Common exclusions can include plan approval and statutory fees, architect and engineering fees, soil investigation, borewell, sump, septic or sewer connection, compound wall and gate, paving and landscaping, utility deposits, transformer or service upgrades, solar systems, air-conditioning, wardrobes, modular kitchen, loose furniture, appliances, premium lighting, boundary-level changes and taxes. The exact exclusions vary by contractor and package. Request a signed inclusion-and-exclusion schedule with allowances, owner-supplied items and rates for extra work before paying an advance.",
+    sources: []
+  },
+
+  "How much contingency should I keep in a house construction budget?": {
+    answer: "Keep a separate contingency allowance for uncertainties such as concealed site conditions, approved design changes, price movement, utility connections and owner-selected upgrades. The suitable amount depends on how complete the drawings and BOQ are, site uncertainty, procurement timing and contract terms; there is no single percentage that suits every project. Do not use contingency to cover vague or missing scope. Track each use with a written reason, approved variation, cost and remaining balance, and review the allowance with your architect or project manager.",
+    sources: []
+  },
+
+  "How do I compare construction quotations with different per-square-foot rates?": {
+    answer: "Do not compare the headline rate alone. First align the built-up-area measurement, drawings, structural scope, material brands and specifications, finish level, electrical and plumbing points, waterproofing system, external works, taxes, payment milestones, project duration and warranty terms. Convert lump-sum items into comparable BOQ lines where possible and list every exclusion or provisional allowance. Ask each contractor to price the same scope and identify assumptions in writing. A lower rate may simply leave more items outside the package.",
+    sources: []
+  },
+
+  "How should I budget for price changes during a long construction project?": {
+    answer: "Identify which materials and services are fixed-price, which are subject to a price-adjustment clause and which will be purchased directly by the owner. The agreement should explain the reference date, evidence required for a change, calculation method, notice period and approval process. Plan procurement for long-lead items without buying materials too early or storing them unsafely. Keep a dated cost tracker for committed amounts, paid amounts, approved variations and forecast balance. Avoid accepting an unexplained verbal increase; request supporting supplier quotations and follow the signed contract.",
+    sources: []
+  },
+
+  "How do I estimate construction cost for a G+1 house?": {
+    answer: "Start with the proposed ground-floor and first-floor plans and calculate each level's built-up area separately using one agreed measurement method. The estimate must reflect the structural design, foundation, staircase, roof, walls, finishes, electrical and plumbing scope, external works and site conditions. A G+1 house is not always the cost of a ground-floor house multiplied by two: foundations, columns, beams, stairs, roof treatment and service arrangements may change. Ask for a drawing-based BOQ and a clear list of inclusions, exclusions and provisional items.",
+    sources: []
+  },
+
+  "Is constructing the first floor cheaper than constructing the ground floor?": {
+    answer: "The first floor may have different costs from the ground floor, but it is not automatically cheaper. The ground floor may include excavation, foundations, plinth work and ground-level services, while an upper floor may need additional structural capacity, stair access, balcony protection and different material handling. The actual comparison depends on the design, existing structure, access, finishes and whether the foundation was originally designed for the extra floor. Have a structural engineer verify the existing building before adding a floor; never assume it can carry the additional load.",
+    sources: []
+  },
+
+  "How much does a compound wall cost for a residential plot?": {
+    answer: "Compound-wall cost depends on the measured wall length and height, foundation and soil conditions, wall type, columns or supports, plaster or cladding, coping, gate size, site levels and access. A plot's square-yard area alone is not enough to calculate it because different plot shapes have different perimeters. Measure each boundary side, confirm the legal boundary and prepare a BOQ for excavation, foundation, masonry or other wall system, finishes and gate work. Check local height and approval requirements before construction.",
+    sources: []
+  },
+
+  "How do I estimate staircase construction cost?": {
+    answer: "A staircase estimate needs the floor-to-floor height, stair configuration, clear width, number and size of landings, structural system, finish, railing and lighting details. Concrete stairs, steel stairs and other systems have different material, fabrication and installation costs. Include the stair opening and supporting structure in the main building design rather than pricing the visible steps alone. Ask for drawings and a separate BOQ covering structure, shuttering, reinforcement where designed, finishes, handrail and edge protection.",
+    sources: []
+  },
+
+  "What factors affect borewell drilling cost on a residential plot?": {
+    answer: "Borewell costs can depend on drilling depth, ground formation, rig access, casing requirements, diameter, site location, transport, yield testing and any additional pump or electrical work. Water availability and depth are uncertain, and a nearby borewell does not guarantee the same result on your plot. Obtain written rates that define what is included, how depth is measured, casing charges, testing and payment if water is not found. Check applicable permissions and test water quality before drinking use.",
+    sources: []
+  },
+
+  "What affects the cost of an underground water sump?": {
+    answer: "Sump cost depends on the required storage volume, dimensions, excavation, soil and groundwater conditions, structural design, concrete or tank system, waterproofing, access cover, inlet and outlet details, pump arrangement and site access. A sump below a driveway may need design for additional imposed loads. Ask for a drawing and itemised estimate that includes excavation disposal, structure, waterproofing, pipe connections, testing and cleaning access. Capacity should be based on household demand and supply reliability, not a guess based only on plot size.",
+    sources: []
+  },
+
+  "How do I budget for a house construction project in stages?": {
+    answer: "Divide the budget into defined work packages such as site preparation and foundation, structure, masonry and plaster, waterproofing, electrical and plumbing, doors and windows, flooring, painting, fixtures and external works. For each package, record the BOQ value, planned period, procurement lead time, payment milestone, amount paid and forecast balance. Keep taxes, professional and approval fees, owner-supplied items and contingency visible as separate lines. Release contractor payments against verified progress and the signed agreement, not simply against a calendar date.",
+    sources: []
+  },
+
+  "What is the difference between shell construction and turnkey construction?": {
+    answer: "Shell construction generally covers the building's core structure and basic enclosure, while turnkey construction usually aims to deliver a more complete, usable house. However, these labels are not standardised and contractors define them differently. One shell package may include plastering or basic services while another may exclude them; a turnkey package may still exclude approvals, wardrobes, appliances, compound walls or utility connections. Compare the actual BOQ, drawings, material specifications, fixtures, exclusions, handover documents and warranty terms rather than relying on the package name.",
+    sources: []
+  },
+
+  "Should I buy construction materials myself or let the contractor supply them?": {
+    answer: "Owner procurement can improve visibility over brands and invoices, but it also makes the owner responsible for ordering quantities, delivery timing, storage, wastage and coordination. Contractor procurement may simplify scheduling and accountability, but the contract should define approved brands, specifications, rates, bill access, quality checks and treatment of unused materials. Decide item by item based on your time, technical support and the contract structure. Keep delivery notes and invoices, and obtain written approval before substitutions.",
+    sources: []
+  },
+
+  "How do I check whether a builder's construction package has hidden costs?": {
+    answer: "Ask for a complete scope matrix and BOQ before signing. Check whether excavation, soil disposal, foundation changes, steel and concrete specifications, waterproofing, electrical points, plumbing fixtures, doors and windows, flooring, painting, staircase railing, compound wall, sump, tank, approvals, taxes and debris removal are included. Look for quantity limits, brand allowances, provisional sums, escalation clauses and extra-work rates. Ask the builder to confirm in writing what triggers an additional charge and require approval of variations before the work is carried out.",
+    sources: []
+  },
+
+  "How do I check current cement prices before buying for house construction?": {
+    answer: "Ask at least two or three local authorised dealers for a dated quotation for the exact cement type, grade and bag size specified for your work. Confirm whether the price includes GST, transport, unloading and any minimum-order charge, and check the manufacturing date and bag condition at delivery. Compare the same product and terms rather than comparing different cement types or brands. Prices change by location, supplier and date, so use the quotations valid for your purchase period and keep the invoice with the site records.",
+    sources: []
+  },
+
+  "How should I purchase and store TMT steel for house construction?": {
+    answer: "Purchase steel to the approved structural specifications and bar schedule, not from a generic online quantity estimate. Confirm the manufacturer, grade, diameter markings, batch or test documentation and invoice, and ask the engineer or quality team to verify compliance. Store bars off the ground on supports, separated by size and protected from soil, standing water and contamination. Track receipts, issued quantities, cut-and-bend records and unused returns. Do not substitute a different grade or diameter without written structural approval.",
+    sources: []
+  },
+
+  "How do I compare labour charges for house construction in Hyderabad?": {
+    answer: "Labour quotations should be compared against the same drawings, scope, measurement method, workmanship expectations and work programme. Clarify whether the price covers excavation, shuttering, steel fixing, concreting, masonry, plastering, tiling, painting, scaffolding, curing, debris handling and rework. Confirm who supplies tools, safety equipment, water and power, and how attendance, measurement, overtime and extra work are recorded. Local labour rates vary with season, skill availability, site access and project complexity, so obtain current written quotations rather than relying on a single generic rate.",
+    sources: []
+  },
+
+  "What payment schedule should I agree with a house construction contractor?": {
+    answer: "Tie payments to clearly described and verifiable milestones in the signed agreement, such as completion and inspection of specified work packages. State the evidence required for each claim, who measures and approves the work, how material advances are accounted for, and how defects or incomplete items are treated. Keep a record of invoices, receipts, measurements and approved variations. Avoid large advances without contractual protection, and do not release a milestone payment solely because a date has arrived. The schedule should be reviewed against the project's cash flow and procurement plan.",
+    sources: []
+  },
+
+  "How long does each stage of independent house construction take?": {
+    answer: "The duration of each stage depends on the design, approvals, plot conditions, number of floors, crew size, material availability, weather, inspection requirements and curing or testing periods. Break the programme into approvals and mobilisation, excavation and foundations, structural work, masonry, services, plaster, waterproofing, finishes, testing and handover. Ask the contractor for a project-specific baseline schedule with start and finish dates, dependencies, procurement lead times and inspection hold points. Update actual progress weekly and record the reason and impact of each delay instead of relying on a generic total-duration promise.",
+    sources: []
+  },
+
+  "What should I check during a weekly house construction site inspection?": {
+    answer: "Use a dated checklist based on the current drawings and work stage. Check whether work matches approved drawings, whether the site is safe and organised, whether delivered materials match approved specifications, and whether required inspections and tests are recorded. Review workmanship, protection of completed work, water management, housekeeping, progress against the schedule and any open defects. Photograph key areas and note the location, responsible person and target date for each action. A homeowner checklist is a monitoring aid, not a replacement for inspection by the architect, engineer or qualified supervisor.",
+    sources: []
+  },
+
+  "How do I verify the quantity of cement and steel used at my construction site?": {
+    answer: "Maintain a simple material reconciliation: opening stock plus deliveries, minus documented issues, returns and closing stock. Match supplier invoices and delivery notes to physical counts and record where materials were used. For steel, compare cutting and bending records and bar schedules with the approved structural drawings; for cement, track bags issued to each work activity and investigate unusual differences. Allow for legitimate handling losses and site conditions, but ask the engineer or quantity surveyor to review unexplained variances. Stock totals alone cannot prove that the installed work meets design requirements.",
+    sources: []
+  },
+
+  "What should I do if the contractor asks for extra payment during construction?": {
+    answer: "Ask for a written variation describing the changed scope, reason, affected drawing or specification, quantity, rate, total cost and schedule impact. Check whether the work was already included in the signed BOQ or contract and whether the change was requested or approved by you. Obtain the required architect or engineer approval before structural or service changes proceed. Agree the price and authorisation in writing before the extra work starts, except where immediate action is needed to address a safety risk. Keep the variation with the payment records.",
+    sources: []
+  },
+
+  "How do I check whether construction work is progressing according to schedule?": {
+    answer: "Compare actual completed quantities and inspection milestones with the approved baseline schedule, not just the percentage claimed by the contractor. Check whether predecessor work is complete, materials and labour are available for the next activity, and required tests or approvals have been obtained. Record delayed activities, their causes, the responsible party and the effect on later work. Ask for a recovery plan with realistic sequencing and resource commitments. Do not accelerate structural work by skipping specified curing, testing or inspection requirements.",
+    sources: []
+  },
+
+  "What should be included in a house construction handover checklist?": {
+    answer: "The handover checklist should record room-by-room defects, operation of doors and windows, plumbing leaks and drainage, electrical points and distribution-board labels, water pumps and tanks, waterproofed areas, roof and balcony outlets, fixtures, access covers and safety items. Collect applicable completion or occupancy documents, approved as-built drawings, test and commissioning reports, warranties, manuals, keys, meter details and contact information for service providers. Record outstanding defects, agreed rectification dates and final meter readings in a signed handover note. Arrange qualified inspection for structural or concealed-system concerns.",
+    sources: []
+  },
+
+  "What safety precautions should be followed during house construction?": {
+    answer: "A residential construction site should have controlled access, clear walkways, safe material storage, adequate lighting, first-aid arrangements and a site-specific safety plan. Workers should receive task-appropriate training and protective equipment, and hazards such as open edges, electrical cables, falling objects and moving equipment should be controlled. The contractor or site supervisor should inspect safety arrangements regularly and correct unsafe conditions promptly. Homeowners should not enter active work zones without permission and suitable protection.",
+    sources: []
+  },
+
+  "What should I check before excavation starts on my plot?": {
+    answer: "Before excavation, confirm the plot boundary, approved setting-out, excavation dimensions and levels against the drawings. Identify underground water, sewer, electrical and communication services, and check nearby buildings, roads and boundary walls for possible effects. The excavation support, access, barricading, spoil placement and water management should be planned by the responsible contractor and engineer based on depth and ground conditions. Stop work and seek professional assessment if unexpected services, unstable soil, water ingress or movement in nearby structures is observed.",
+    sources: []
+  },
+
+  "Why is scaffolding inspection important during house construction?": {
+    answer: "Scaffolding provides temporary access and working platforms, so it must be erected, altered and inspected by competent personnel. Check that it stands on stable foundations, is properly braced and tied where required, has suitable platforms and edge protection, and provides safe access. Do not overload it, remove braces or use makeshift supports. The inspection frequency and requirements should follow the applicable safety rules and site plan, especially after alteration, impact or severe weather. Homeowners should report visible instability and keep away from unsafe platforms.",
+    sources: []
+  },
+
+  "How do I check electrical earthing in a newly constructed house?": {
+    answer: "Ask a qualified electrician to install and test the earthing system according to the approved electrical design and applicable electrical standards. Request test results and confirmation that the earth conductor, electrodes, main earthing terminal, bonding and protective devices are correctly connected. Do not rely on a visual check or a simple indicator screwdriver to establish safety. The electrician should verify continuity and the relevant earth resistance or loop measurements using suitable calibrated instruments, and document the results before energising the installation.",
+    sources: []
+  },
+
+  "What should I check in a house electrical distribution board before handover?": {
+    answer: "A qualified electrician should verify that the distribution board is correctly rated, securely mounted, accessible and labelled, with circuits identified and protective devices selected and tested for the installation. Check that covers and blanking plates are fitted, cables are properly terminated, circuits are balanced as designed and the board schedule matches the actual rooms and loads. Ask for test and commissioning records, including the relevant protective-device and earthing checks. Do not open or work inside an energised board yourself.",
+    sources: []
+  },
+
+  "How should plumbing pipes be pressure-tested before walls and floors are closed?": {
+    answer: "The plumbing contractor should test each relevant water-supply circuit using the method, test pressure and duration specified for the pipe system and project. Isolate the test section, use suitable gauges, inspect joints and fittings, and record the result before pipes are concealed. Do not apply an arbitrary pressure that could damage the system or exceed the manufacturer's limit. Photograph pipe routes and joints, label shut-off valves and obtain the supervisor's approval before plastering, screeding or tiling hides the installation.",
+    sources: []
+  },
+
+  "How do I check drainage slope in bathroom and balcony floors?": {
+    answer: "Check that the finished floor levels and drain locations follow the approved detail and that water flows to the intended outlet without persistent ponding. A level or controlled water test can help identify obvious low spots, but the required falls depend on the floor layout, drain type, waterproofing build-up and applicable design requirements. Confirm that thresholds, doorways and adjacent rooms are protected from water migration. Correct levels before tiling is complete; adding sealant around a drain will not fix an incorrectly formed floor slope.",
+    sources: []
+  },
+
+  "What ventilation should I plan for bathrooms and kitchens?": {
+    answer: "Provide ventilation that removes moisture, odours and cooking fumes without discharging them into roof voids, corridors or neighbouring spaces. Plan windows or mechanical exhaust according to room layout, external openings, duct routes, appliance requirements and local building rules. Kitchen chimneys and exhaust fans need suitable duct paths and make-up air, while bathrooms need an effective route for moist air to leave. Coordinate openings and ducts with beams, slabs, waterproofing and electrical work before construction so they do not require unsafe structural cutting later.",
+    sources: []
+  },
+
+  "What should I check in roof and balcony rainwater drainage?": {
+    answer: "Confirm that roof and balcony surfaces fall toward correctly located outlets, that outlets and downpipes are sized and routed as designed, and that leaves or construction debris cannot easily block them. Inspect parapet junctions, outlet collars, overflow provisions and access for cleaning. Rainwater should discharge to an approved location without wetting external walls, foundations or neighbouring property. Test drainage using an agreed method after waterproofing and before handover, and record any ponding or leakage for correction.",
+    sources: []
+  },
+
+  "When should a wall crack be checked by a structural engineer?": {
+    answer: "Seek prompt professional assessment if a crack is widening, recurring, diagonal or stepped through masonry, appears near a beam-column joint or foundation, passes through structural concrete, or is accompanied by sagging, displacement, water ingress or doors and windows suddenly sticking. Record its location, length, width and date, and photograph it with a scale; avoid covering it before inspection. Fine surface cracks may have non-structural causes, but appearance alone cannot confirm safety. A qualified engineer should identify the cause and specify any monitoring or repair.",
+    sources: []
+  },
+
+  "Should I appoint an independent engineer to supervise my house construction?": {
+    answer: "An independent architect, civil engineer or project-management professional can review drawings, inspect critical stages, verify quantities and specifications, document defects and assess contractor payment claims on the owner's behalf. Agree the scope, visit frequency, reporting format, independence and fees in writing before work starts. The professional should coordinate with the project’s structural designer and other specialists rather than replacing their design responsibilities. Independent supervision is particularly useful when the owner cannot regularly attend the site.",
+    sources: []
+  },
+
+  "What should a house construction agreement say about material brands?": {
+    answer: "The agreement should identify material categories, approved brands or an objective equivalent specification, grades, sizes, finish standards and the process for approving substitutions. It should state who purchases each item, who checks deliveries, how invoices and test certificates are shared, and who bears the cost if supplied material fails the agreed specification. Avoid vague wording such as 'standard quality' without measurable details. Any change should be approved in writing before procurement or installation.",
+    sources: []
+  },
+
+  "How should defects found during house construction be recorded?": {
+    answer: "Create a dated defect register with a unique reference, room or location, description, photograph, drawing or specification reference, responsible contractor, agreed corrective action and target closure date. Record whether the issue affects safety, waterproofing, function or appearance, and arrange a qualified review for structural or concealed-system concerns. Reinspect after rectification and keep evidence of closure. Do not treat a verbal promise or a coat of paint as proof that the underlying cause has been corrected.",
+    sources: []
+  },
+
+  "How do I prepare a pre-handover snagging checklist for a new house?": {
+    answer: "Inspect each room and external area against the drawings, specifications and agreed finish samples. Record incomplete or damaged tiles, paint, joinery, doors, windows, sealants, fixtures, plumbing leaks, drainage, electrical points and access covers. Test systems using qualified tradespeople and collect relevant commissioning records. Give each item a location, photograph, responsible party and closure date. Separate cosmetic items from safety, structural, waterproofing and service defects, which may need specialist assessment.",
+    sources: []
+  },
+
+  "What documents should a contractor provide before starting house construction?": {
+    answer: "Before mobilisation, collect the signed agreement, approved architectural and structural drawings, applicable permissions, BOQ and specifications, project schedule, payment milestones, insurance details where applicable, site safety arrangements and contact details for the responsible supervisor. Confirm who is authorised to approve changes and who will inspect work. Keep a controlled set of current drawings at the site and make sure superseded versions are withdrawn so crews do not build from outdated information.",
+    sources: []
+  },
+
+  "How do I protect neighbouring properties during house construction?": {
+    answer: "Before excavation or demolition, document the visible condition of adjoining buildings, compound walls, pavements and services with dated photographs and notes. Review excavation depth, soil conditions, drainage and proximity to neighbouring foundations with qualified professionals, and plan temporary support or monitoring where necessary. Control dust, debris, vibration, water discharge and access, and follow local permissions and safety requirements. If new movement, settlement or cracking appears, stop the affected work and obtain prompt professional assessment.",
+    sources: []
+  },
+
+  "What should I check before waterproofing a bathroom?": {
+    answer: "Confirm that the substrate is sound, clean and properly prepared, pipe penetrations and floor-wall junctions are detailed, and the specified waterproofing system is compatible with the substrate and tile adhesive. Check that the installer follows the manufacturer's application instructions, including coats, reinforcement and curing. Conduct the specified ponding or water test for the required period and record the result before screed or tiles conceal the membrane. Repair leaks and repeat the test before proceeding.",
+    sources: []
+  },
+
+  "Why should plumbing and electrical drawings be coordinated before slab casting?": {
+    answer: "Conduits, sleeves, openings, drainage routes and service penetrations can conflict with reinforcement, beams and other structural elements if they are planned late. Coordinate architectural, structural, electrical and plumbing drawings before casting, and obtain the structural engineer's approval for any opening or embedded item that affects the structure. Do not cut reinforcement or drill structural members to accommodate a missed service route without a designed and approved repair or modification.",
+    sources: []
+  },
+
+  "What should I do if I notice water seepage after moving into a new house?": {
+    answer: "Identify when and where seepage occurs, whether it follows rain or plumbing use, and whether it appears near a roof, balcony, bathroom, external wall, tank or concealed pipe. Photograph the affected area and check accessible valves and outlets without opening walls or electrical fittings. Notify the contractor in writing under the agreement's defect or warranty process and request a cause investigation, not just surface repainting. Electrical contact with wet areas, ceiling bulging or rapidly spreading water needs urgent professional attention.",
+    sources: []
+  },
+
+  "How can I check whether a construction contractor has completed all agreed work?": {
+    answer: "Use the signed BOQ, drawings, specifications and approved variation register as the completion checklist. Inspect each room and external area, verify quantities and operation of installed systems, collect test and commissioning records, and list incomplete or defective items with closure dates. Confirm that excluded or owner-supplied items are clearly accounted for and reconcile the final bill against measured work and prior payments. Sign final completion or handover documents only after the agreed conditions and outstanding-item arrangements are recorded.",
+    sources: []
+  },
+
+  "What should I check before approving a house foundation layout on site?": {
+    answer: "Compare the setting-out with the latest approved architectural and structural drawings. Verify plot boundaries, building offsets, grid lines, diagonal measurements, column or wall positions, excavation limits and reference levels with the surveyor or site engineer. Confirm that underground services and neighbouring foundations have been considered. Resolve any mismatch with the architect and structural engineer before excavation or concrete work proceeds; do not shift a footing or column to suit a site convenience without approved revised drawings.",
+    sources: []
+  },
+
+  "What is a construction method statement and should a homeowner ask for one?": {
+    answer: "A method statement describes how a particular activity will be carried out, including sequence, materials, equipment, workforce, inspections, safety controls and quality checks. It is useful for higher-risk or technically sensitive work such as excavation, waterproofing, concrete placement and repairs. Ask the contractor or supervising engineer for a method statement when the work needs coordinated steps or hold points. It should match the approved drawings, product instructions and project specification rather than being a generic template.",
+    sources: []
+  },
+
+  "What are inspection hold points in house construction?": {
+    answer: "A hold point is a stage where work must pause until a specified inspection or approval is completed. Examples may include checking reinforcement and embedded services before a concrete pour, inspecting waterproofing before it is covered, and testing concealed plumbing before closing walls or floors. The project quality plan should identify who inspects, what records are required and who can release the work. Agree these points in advance so they do not become last-minute disputes or get skipped under schedule pressure.",
+    sources: []
+  },
+
+  "How do I check concrete cover blocks before an RCC pour?": {
+    answer: "Cover blocks help maintain the specified distance between reinforcement and the formwork. Before a pour, the responsible site engineer should check that the cover material, size, spacing and placement match the approved structural drawings and project specification, and that bars remain stable during concreting. Cover requirements vary by member, exposure and design, so do not use a single generic dimension throughout the house. Do not replace proper cover blocks with loose bricks, wood or random stone pieces.",
+    sources: []
+  },
+
+  "Why should reinforcement be checked before concrete is poured?": {
+    answer: "Once concrete is placed, much of the reinforcement becomes concealed and difficult to inspect. Before the pour, the engineer or authorised inspector should verify bar sizes and spacing against drawings, laps and anchorage, bends, support and cover, cleanliness, congestion, openings, sleeves and embedded services. Any deviation should be resolved and documented before concrete placement. A homeowner can request dated inspection photographs and approval records, but should not independently alter reinforcement or approve structural changes.",
+    sources: []
+  },
+
+  "What should I check in formwork before an RCC concrete pour?": {
+    answer: "The site team should confirm that formwork matches the required dimensions and levels, is adequately supported and braced, has tight joints to limit grout loss, and can safely carry the wet-concrete and construction loads. Check access for placing and compacting concrete, cleanliness inside the forms, release-agent use and safe removal arrangements. The design and inspection should be handled by competent personnel, especially for large or complex pours. Do not allow concreting if the formwork is visibly unstable, leaking or out of alignment.",
+    sources: []
+  },
+
+  "How should concrete be compacted during house construction?": {
+    answer: "Concrete should be placed and compacted using a method suitable for the mix, member shape, reinforcement congestion and placement conditions. Mechanical vibration is commonly used for many reinforced-concrete elements, but the equipment, technique and duration must be controlled by trained workers to avoid honeycombing, segregation or displacement of reinforcement. Follow the approved method statement and concrete specification. Do not add water to make a stiff mix easier to place; raise workability concerns with the engineer and supplier before placement.",
+    sources: []
+  },
+
+  "What causes honeycombing in concrete and how should it be repaired?": {
+    answer: "Honeycombing is a rough or voided area where mortar has not adequately filled around aggregate and reinforcement. It can result from poor placement or compaction, leaking formwork, congested reinforcement or an unsuitable mix. Do not hide it with plaster or patch it without assessment. Photograph and record the location, expose only as directed, and ask the structural engineer to assess its depth, extent and effect on reinforcement or durability. The repair method should be specified for the actual defect and documented before finishing.",
+    sources: []
+  },
+
+  "What should I check after removing RCC formwork?": {
+    answer: "After formwork removal, inspect the member for visible cracks, honeycombing, exposed reinforcement, surface voids, dimensional irregularities, deflection concerns and damage from stripping. Record defects with location and photographs and have the site engineer or structural engineer assess anything beyond minor surface imperfections. Do not chip, cut, drill or patch structural concrete without approval. Formwork removal timing and any subsequent loading must follow the project specification and engineer's instructions, not simply the appearance of the concrete.",
+    sources: []
+  },
+
+  "How do I maintain a construction quality register for my house?": {
+    answer: "Keep one organised record of approved drawings and revisions, material approvals, delivery notes, test reports, inspection requests, hold-point releases, concrete pour records, waterproofing tests, defect logs, variation approvals and dated site photographs. Give each record a date, location, activity and responsible person so it can be traced later. Store digital copies with clear file names and retain originals where required. A quality register helps resolve questions at handover, but it is only useful if entries are made at the time the work occurs.",
+    sources: []
+  },
+
+  "How do I protect a construction site from rain during the monsoon?": {
+    answer: "Plan temporary drainage before the monsoon and keep excavations, material storage and access routes protected from runoff. Cover cement and moisture-sensitive materials without trapping condensation, store steel off the ground, and prevent water from collecting around foundations or neighbouring properties. Protect fresh concrete and unfinished masonry using the method approved for the work. Inspect roof openings, temporary covers, pumps and discharge routes after heavy rain. If excavation sides soften, water accumulates near foundations or adjacent ground moves, stop affected work and obtain professional advice.",
+    sources: []
+  },
+
+  "What should I record in a daily construction site report?": {
+    answer: "A useful daily report records the date, weather, workers and trades present, activities and locations worked on, materials delivered, equipment used, inspections and tests completed, instructions received, safety observations, delays, visitors and photographs. Note quantities or measurable progress where possible and identify issues requiring decisions. The site supervisor should review and share the report regularly with the owner or project manager. Consistent records help verify progress, investigate delays and reconcile material use and contractor bills.",
+    sources: []
+  },
+
+  "How should I manage revisions to house construction drawings?": {
+    answer: "Maintain one controlled set of current drawings with revision numbers and dates. When a change is proposed, record the reason, affected plans or details, cost and schedule implications, and approvals required from the architect, structural engineer or services designer. Distribute the approved revision to the contractor and site supervisor, withdraw superseded copies and record when the change was implemented. Do not rely on marked-up screenshots or verbal instructions for structural, electrical or plumbing changes.",
+    sources: []
+  },
+
+  "What should I check before accepting bricks or blocks delivered to my site?": {
+    answer: "Check that the delivered unit type, dimensions, strength class and manufacturer match the approved specification. Inspect representative units for excessive breakage, visible defects, contamination and inconsistent dimensions, and compare delivery quantities with the invoice. Ask for product data or test documentation where specified. Store units on a stable, drained surface and protect them from contamination. Appearance alone cannot establish strength or suitability; the engineer or quality team should decide acceptance against the project requirements.",
+    sources: []
+  },
+
+  "How do I check whether a construction site is safe for children and visitors?": {
+    answer: "Restrict access to active work areas with secure barriers and clear warning signs. Cover or guard openings, excavations, stairwells and exposed services, keep tools and hazardous materials secured, and maintain safe pedestrian routes away from vehicles and lifting operations. Visitors should be accompanied by the site supervisor and provided with appropriate protective equipment. Do not allow children to enter the site, climb scaffolding or play near stored materials, even when workers are not present.",
+    sources: []
+  },
+
+  "What is a site instruction register and why is it useful?": {
+    answer: "A site instruction register records formal directions issued during construction, including the date, instruction number, description, drawing or specification reference, issuing professional, recipient and required response. It helps distinguish authorised instructions from informal conversations and makes it easier to trace changes, approvals, delays and cost effects. Instructions that change scope, price or time should also follow the contract's variation procedure and receive the required written approvals.",
+    sources: []
+  },
+
+  "How should construction materials be protected from theft and damage?": {
+    answer: "Use a delivery and stock register, secure storage areas, controlled site access and clear responsibility for receiving and issuing materials. Store cement in a dry, ventilated location off the floor, protect steel from contamination and standing water, and keep electrical and plumbing products in their recommended storage conditions. Record damaged or missing items promptly with photographs and delivery references. The contract should clarify who bears responsibility for storage, wastage, theft and insurance during each stage.",
+    sources: []
+  },
+
+  "What should I check before approving a contractor's running bill?": {
+    answer: "Compare the bill with the contract, BOQ, agreed measurement rules, completed work and previous certified payments. Check quantities on site, approved material advances, retention or deductions, taxes, variation approvals and supporting invoices where required. Exclude incomplete or rejected work unless the contract specifically allows payment for it. Ask the architect, engineer or quantity surveyor to verify measurements for substantial claims, and keep a signed measurement sheet and payment record.",
+    sources: []
+  },
+
+  "How do I plan construction work around Hyderabad's summer heat?": {
+    answer: "Schedule heat-sensitive work with the contractor and engineer, provide safe drinking water, shaded rest areas and suitable work-rest arrangements for labourers, and follow occupational safety guidance during hot periods. Protect fresh concrete and masonry from rapid moisture loss using the specified curing and protection method. Store materials according to manufacturer instructions and avoid placing concrete outside the approved temperature and placement controls. The site engineer should decide whether conditions require rescheduling or additional precautions.",
+    sources: []
+  },
+
+  "What should I do if the construction site has standing water after rain?": {
+    answer: "Keep people away from flooded excavations, electrical equipment and unstable ground. Arrange safe removal of water without discharging it onto neighbouring properties or undermining foundations. Before restarting work, have the site supervisor inspect excavation stability, soil softening, erosion, foundation exposure, temporary supports and electrical safety. Document the affected areas and obtain engineering advice if water has entered foundation excavations or caused movement. Do not simply pump out the water and continue without checking the ground and temporary works.",
+    sources: []
+  },
+
+  "Why should I get a boundary survey before starting house construction?": {
+    answer: "A boundary survey helps establish the plot limits, dimensions and corner positions before excavation, compound-wall work or setting out the building. Compare the survey with the registered property documents and approved layout plan, and resolve discrepancies with a qualified surveyor and property professional before construction. Do not rely only on an old fence, neighbouring wall or informal measurements. Accurate boundary information helps reduce the risk of encroachment disputes and costly changes after work begins.",
+    sources: []
+  },
+
+  "What should I do if my building permission may expire before construction is completed?": {
+    answer: "Check the validity period and conditions stated in the permission issued by the competent authority. Ask your architect or licensed professional to confirm the applicable renewal or extension procedure and submit any required application before the permission lapses. Keep acknowledgement and approval records, and do not assume that paying a fee automatically extends validity. The rules and process depend on the authority and permission type, so verify the current requirements for your property.",
+    sources: []
+  },
+
+  "Should I ask the contractor for construction site insurance?": {
+    answer: "Ask which insurance policies cover the project, who is insured, the policy period, exclusions, deductibles and the activities or third parties covered. Depending on the contract and site risks, relevant cover may include contractor's all-risk, worker compensation or employee-related cover, and third-party liability. Request copies of current policy schedules and proof of premium where appropriate, and confirm responsibilities with an insurance professional. A verbal statement that the site is insured is not enough.",
+    sources: []
+  },
+
+  "What is retention money in a house construction contract?": {
+    answer: "Retention is an agreed portion of payments withheld until specified milestones or defect obligations are met. The contract should state the percentage or amount, the bills it applies to, release conditions, release dates and how disputed defects are handled. Make sure the arrangement is commercially reasonable and consistent with local law and the contract. Do not deduct or withhold money arbitrarily; document agreed retention and every release in the payment ledger.",
+    sources: []
+  },
+
+  "What is a defects liability period in house construction?": {
+    answer: "A defects liability period is a contract-defined period after completion or handover during which the contractor must address specified workmanship defects, subject to the contract terms. The agreement should define when the period starts, how defects are reported, response and repair timelines, exclusions for misuse or normal wear, and how unresolved defects are escalated. Record issues in writing with dated photographs and keep proof of notification. Have the contract reviewed so the clause is clear and enforceable.",
+    sources: []
+  },
+
+  "When should I get construction materials tested by an independent laboratory?": {
+    answer: "Use independent testing when the project specification, engineer or applicable standard requires it, or when there is a reasonable concern about a material's identity, quality or compliance. Examples may include soil, concrete, reinforcement steel, blocks, aggregates and water, depending on the design and work stage. Agree the sampling method, test standard, laboratory competence and acceptance criteria before testing. Keep reports traceable to the supplier, batch, delivery and exact location where the material was used.",
+    sources: []
+  },
+
+  "What records should I keep for concrete pours in my house construction project?": {
+    answer: "For each pour, record the date, location and structural element, approved drawing revision, concrete grade and mix reference, supplier and delivery-ticket details, arrival and placement times, workability checks, sample identification, test results, weather, placing and compaction observations, curing arrangements and engineer's inspection. Photograph key stages before and during the pour. These records help trace test results to the actual work and investigate defects or disputes later.",
+    sources: []
+  },
+
+  "Why should I get a plumbing pressure-test report before pipes are concealed?": {
+    answer: "A pressure test, carried out using the method and limits specified for the plumbing system, can help identify leaks before pipes are covered by plaster, flooring or other finishes. Ask the plumbing contractor or site engineer to record the tested circuit, test medium, pressure, duration, gauge details, result, date and responsible person. The correct test method varies by pipe material and system; follow manufacturer instructions and the project specification rather than applying one pressure value to every installation.",
+    sources: []
+  },
+
+  "What electrical test reports should I ask for before occupying a new house?": {
+    answer: "Ask the qualified electrical contractor to provide test records appropriate to the installation, which may include insulation resistance, continuity of protective conductors, earthing and protective-device checks. The report should identify the circuits tested, test method, instrument details, results, date and responsible competent person. Also obtain the final circuit schedule and distribution-board labelling. Do not perform live electrical tests yourself; have testing and any corrective work handled by qualified personnel under applicable safety requirements.",
+    sources: []
+  },
+
+  "How do I confirm that the final house construction drawings match what was built?": {
+    answer: "Request as-built drawings that reflect approved changes and the final locations of structural elements and concealed electrical, plumbing and drainage services, where these records are part of the project scope. Compare them with the approved drawing revisions and site records, and ask the relevant architect or engineer to verify important deviations. Keep photographs of concealed services taken before covering. Accurate as-built information makes future maintenance, repairs and renovation safer and easier.",
+    sources: []
+  },
+
+  "How should I test rainwater pipes before house handover?": {
+    answer: "Ask the plumbing contractor to check that roof outlets, rainwater pipes, joints, bends and discharge points are complete and free of construction debris. A controlled water-flow test can help reveal leaks, blockages or poor connections. Confirm that rainwater is discharged to the approved collection, recharge or drainage arrangement and does not flow onto neighbouring land or weaken foundations. Record the test and correct defects before ceilings or access points are closed.",
+    sources: []
+  },
+
+  "What should I check before using a new underground water sump?": {
+    answer: "Before first use, confirm that the sump is structurally complete, cleaned of construction debris and tested for leakage using a method approved by the project team. Check the inlet, outlet, overflow, drain, access cover, ventilation and pump arrangement, and ensure the cover prevents accidental entry and contamination. Ask the contractor to demonstrate cleaning and maintenance access. Use a suitable water-quality test before drinking the stored water, especially if the source or cleaning process is uncertain.",
+    sources: []
+  },
+
+  "Should I arrange anti-termite treatment during house construction?": {
+    answer: "Discuss termite risk and the appropriate treatment with a qualified pest-management provider and the project team before relevant construction stages are covered. The method should suit the site conditions, foundation details and applicable product instructions and safety requirements. Obtain the product name, application record, treated areas, date and warranty terms. Do not apply chemicals independently or assume that one treatment guarantees permanent protection; control moisture, wood-to-soil contact and entry paths as part of ongoing prevention.",
+    sources: []
+  },
+
+  "How do I prevent water from collecting around my house foundation?": {
+    answer: "Plan the finished ground levels and surface drainage so rainwater flows away from the building toward an approved collection or discharge point. Check that paving, driveways, garden beds and downpipes do not direct water toward the plinth or neighbouring property. Keep inspection chambers and drains accessible for cleaning. The architect or civil engineer should review levels and drainage details for the actual plot, particularly where the site is low-lying or adjoining roads sit at a different level.",
+    sources: []
+  },
+
+  "What should I check around windows to prevent rainwater leakage?": {
+    answer: "Inspect the window frame installation, perimeter sealant, sill or threshold detailing, external plaster junctions and the route for draining water from frame tracks. Confirm that the product is installed according to the manufacturer's instructions and the approved detail. A controlled water-spray test by the contractor may help identify leakage before interior finishes are completed. Sealant alone cannot correct a poorly designed sill or drainage path; record and rectify the source of any water entry.",
+    sources: []
+  },
+
+  "How can I check whether a roof water tank installation is safe?": {
+    answer: "Have the structural engineer verify that the supporting slab, beams or dedicated platform were designed for the tank's full operating load and location. Check that the tank is securely supported on a suitable level base, the plumbing includes accessible isolation and overflow arrangements, and maintenance access is safe. Do not place a large tank on an existing roof or change its position without engineering review. Follow the tank manufacturer's installation and anchoring instructions.",
+    sources: []
+  },
+
+  "What should I check before closing a false ceiling below a bathroom or terrace?": {
+    answer: "Before closing the ceiling, inspect concealed pipes, joints, traps, valves and drainage connections, and complete the specified pressure or flow tests. Check that waterproofing tests have been recorded where relevant and that access panels are provided for components requiring maintenance. Photograph the concealed services and retain drawings showing their routes. Do not close the ceiling while leaks, unexplained dampness or incomplete testing remain unresolved.",
+    sources: []
+  },
+
+  "How do I choose a suitable septic tank or sewage treatment arrangement for a house?": {
+    answer: "First confirm whether a public sewer connection is available and what the local authority permits for the property. If an on-site system is allowed, its capacity, location, access, ventilation, setbacks and disposal arrangement must be designed for the expected occupants, soil conditions and applicable public-health rules. Use a qualified designer and obtain required approvals. Do not select a tank by a generic online size chart or discharge untreated sewage into stormwater drains or open ground.",
+    sources: []
+  },
+
+  "What should I check in external wall joints to reduce rainwater seepage?": {
+    answer: "Review the approved details at wall-to-window junctions, parapets, balconies, service penetrations, expansion or movement joints and interfaces between different materials. Confirm that compatible sealants, flashings, waterproofing layers and drainage paths are installed continuously and according to the manufacturer's instructions. Inspect these details before painting or cladding hides them. If leakage appears, identify and repair the entry path rather than simply applying another coat of exterior paint.",
+    sources: []
+  },
+
+  "How should I prepare my house for its first monsoon after construction?": {
+    answer: "Before the rainy season, clear terrace outlets, rainwater pipes and external drains; inspect parapets, roof penetrations, window seals, balcony outlets and visible waterproofing details. Check that ground levels direct water away from the building and that sump and pump systems work. Arrange repairs to cracks or damp patches before heavy rain, and keep photographs of any new leakage. For recurring seepage or signs of structural movement, obtain a qualified inspection instead of relying only on surface coatings.",
+    sources: []
+  }
 };
