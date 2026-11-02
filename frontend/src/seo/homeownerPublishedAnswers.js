@@ -1188,5 +1188,34 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   "What is included in a complete 2BHK interior package?": {
     answer: "A complete 2BHK interior package should be defined room by room rather than by its name. It may cover a modular kitchen, wardrobes, TV/storage units, beds, ceiling, lighting and selected furniture, but appliances, loose furniture, curtains, decor, civil changes, painting and electrical upgrades may be excluded. Ask for dimensioned drawings, board and finish specifications, hardware brands, quantities, taxes, installation timeline, warranty and a signed exclusions list. Compare packages only after matching the same scope.",
     sources: []
-  }
+  },
+
+  "Which is better for kitchen cabinets: laminate or acrylic?": {
+    answer: "Laminate and acrylic are both used as exterior shutter finishes, but they look and perform differently. Laminate is available in many textures, colours and price grades and is generally easier to specify across a range of budgets. Acrylic gives a smooth, glossy reflective surface and can create a more uniform high-gloss look, but fingerprints, scratches, edge finishing and product quality should be considered. Neither finish makes the cabinet waterproof. Compare the exact brand, thickness, substrate, edge treatment, cleaning instructions and warranty, and inspect a full-size sample in your kitchen lighting before choosing.",
+    sources: []
+  },
+  "Which is better: veneer or laminate for wardrobes?": {
+    answer: "Veneer is a thin layer of natural wood, so it offers real wood grain and natural variation; it usually needs the finish and maintenance recommended by the supplier. Laminate is a manufactured decorative surface with more predictable colour and pattern, and is commonly selected for easier routine care and a wider range of designs. The better choice depends on the look, budget, exposure to sunlight, maintenance expectations and the quality of the substrate and edge detailing. Ask for a physical sample, confirm whether the veneer is natural or reconstituted, and get the finish and care instructions in writing.",
+    sources: []
+  },
+  "Which plywood thickness is suitable for kitchen cabinets?": {
+    answer: "There is no one thickness for every kitchen component. Carcass sides, shelves, shutters, drawer bottoms and back panels have different spans and loads, so the designer should specify thickness by component and hardware system. A shelf carrying heavy utensils may need a different thickness or support arrangement from a narrow divider. Ask for a component-wise board schedule showing thickness, grade, brand and intended use, and check that hinge screws, drawer runners and wall fixings are compatible with the selected board. Do not accept a quotation that says only ‘plywood’ without a grade and thickness.",
+    sources: [{ label: "BIS – standards and product conformity information", url: "https://www.bis.gov.in/" }]
+  },
+  "Is HDHMR board good for kitchen cabinets?": {
+    answer: "HDHMR is a high-density engineered fibreboard product category used in some furniture and cabinet applications, but the name alone does not establish its moisture resistance, load capacity or suitability near a sink. Performance varies by manufacturer, product specification, thickness, edge sealing and installation. Ask for the exact product datasheet, declared properties, applicable standard or test evidence, and the manufacturer's permitted exposure conditions. For sink units and other moisture-prone areas, detail plumbing access, leak protection and edge sealing carefully, and compare the product against the alternatives specified for that component.",
+    sources: [{ label: "BIS – standards and product conformity information", url: "https://www.bis.gov.in/" }]
+  },
+  "How do I choose kitchen cabinet colours?": {
+    answer: "Choose kitchen colours after considering natural light, room size, countertop, flooring, wall colour and how much cleaning the surface will need. Light colours can make a compact or poorly lit kitchen feel brighter, while darker finishes can add contrast but may show dust, water spots or fingerprints depending on the texture. Use a limited palette: one main cabinet colour, one complementary colour or wood tone, and a coordinated countertop and backsplash. View large samples vertically in the actual kitchen at morning and evening light; small catalogue chips can look very different at full scale.",
+    sources: []
+  },
+  "What warranty should I get for modular kitchen and wardrobes?": {
+    answer: "Ask for separate written warranty terms for the cabinet boards, shutters and finish, hinges, drawer channels, accessories, countertop, electrical items and installation workmanship. The document should identify the manufacturer and model, warranty duration, start date, what defects are covered, exclusions, service contact, claim process and whether labour or replacement is included. Confirm how water damage, misuse, normal wear, adjustment and consumables are treated. A verbal promise such as ‘lifetime warranty’ is not enough unless the covered component, conditions and remedy are clearly documented.",
+    sources: []
+  },
+  "How do I identify good-quality plywood before buying?": {
+    answer: "Check the board's manufacturer, grade and standard marking, thickness, batch details and invoice rather than relying only on colour, smell or a salesperson's claim. Ask for the product datasheet and applicable conformity or test documents, and verify that the grade matches the cabinet's expected moisture exposure and load. Inspect sheets for delamination, damaged edges, uneven thickness, warping and visible core gaps. Buy traceable material from a reliable dealer and retain batch details. Visual inspection cannot prove every performance property; formal verification requires appropriate testing.",
+    sources: [{ label: "BIS – standards and product conformity information", url: "https://www.bis.gov.in/" }]
+  },
 };
