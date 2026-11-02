@@ -186,7 +186,6 @@ groups["Foundation, services & homeowner project controls"] = [
     ["What is a comfortable staircase riser and tread for a house?", "Explains that dimensions must comply with applicable building rules and be coordinated for consistent, safe steps."],
     ["What clauses should a house construction agreement include?", "Lists scope, drawings, specifications, exclusions, milestones, payment terms, variations, quality checks, safety, delay and defect obligations."],
     ["How can I verify a contractor's stage-wise construction bill?", "Explains measurement records, completed milestones, BOQ rates, approved variations, tax treatment and retention before payment."]
-  ]
 ];
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
