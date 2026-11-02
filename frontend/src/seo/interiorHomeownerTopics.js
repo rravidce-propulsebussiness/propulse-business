@@ -109,7 +109,17 @@ groups["More interior cost, layout & material questions"] = [
 ["Which countertop is best for an Indian kitchen?","Compare countertop materials by heat, stains, porosity, scratches, maintenance, joints and repairability."],
 ["How do I choose a backsplash for a kitchen?","Choose a cleanable splash-resistant surface and coordinate it with the hob, sink, countertop, cabinets and electrical outlets."],
 ["How should I plan storage below the kitchen sink?","Plan the sink cabinet around plumbing, filters, valves, waste segregation, leak inspection and future service access."],
-["What should I check before approving a modular kitchen drawing?","Review dimensions, appliances, clearances, service points, materials, hardware, scope, exclusions and signed drawing revisions."]
+["What should I check before approving a modular kitchen drawing?","Review dimensions, appliances, clearances, service points, materials, hardware, scope, exclusions and signed drawing revisions."],
+["How much does 2BHK interior design cost in Hyderabad?","Compare a room-wise 2BHK scope, finish levels, storage, kitchen work, lighting, taxes and exclusions before using a dated estimate."],
+["How much does 3BHK interior design cost in Hyderabad?","Explain how extra rooms, wardrobe lengths, storage, ceiling work, material choices and site conditions affect a 3BHK budget."],
+["Which plywood is best for kitchen cabinets?","Compare certified plywood grades and exposure suitability, thickness, core quality, edge sealing and manufacturer documentation."],
+["Which is better: acrylic or laminate for a modular kitchen?","Compare appearance, fingerprints, scratch behaviour, cleaning, edge finish, repairability and total cost."],
+["What is the difference between modular and carpenter-made interiors?","Compare factory precision, customisation, site fabrication, timelines, installation quality, dust and serviceability."],
+["How much does a modular kitchen cost in Hyderabad?","Break down layout, running length, carcass grade, shutter finish, countertop, hardware, accessories, installation and taxes."],
+["Which is better: sliding wardrobe or hinged wardrobe?","Compare room clearance, full access, track maintenance, internal drawers, hardware and user preference."],
+["How do I choose the right wardrobe material?","Choose carcass and shutter materials by load, moisture exposure, hardware fixing, finish, certification and maintenance."],
+["How much does false ceiling cost per square foot?","Explain how ceiling type, framing, height, cut-outs, lighting, access panels and site conditions affect a dated per-area estimate."],
+["What should I check before hiring an interior designer?","Review relevant completed work, drawings, scope, BOQ, supervision, revisions, payment milestones, exclusions and handover support."]
 ];
 
 groups["Hardware & accessories"]=[
