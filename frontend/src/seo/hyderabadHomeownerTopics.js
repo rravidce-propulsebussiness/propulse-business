@@ -221,6 +221,30 @@ groups["Ventilation, quality checks & handover"] = [
 
 
 
+groups["Weekly site supervision & pre-construction"] = [
+  ["What should I check at a house construction site every week?", "A repeatable weekly walkthrough for progress, safety, materials, workmanship, records and decisions."],
+  ["What should be checked before foundation excavation starts?", "A pre-excavation checklist for setting out, benchmarks, utilities, access, soil conditions, safety and approved drawings."]
+];
+
+groups["RCC inspection & workmanship"] = [
+  ["What should I inspect before footing reinforcement is covered with concrete?", "A footing reinforcement hold-point checklist covering dimensions, bars, cover, starter bars, cleanliness and engineer sign-off."],
+  ["What should I check in formwork before an RCC beam or slab pour?", "A practical shuttering checklist for dimensions, levels, props, bracing, joints, cleanliness and safe access."],
+  ["What should I check after removing slab and beam formwork?", "A post-stripping review of concrete surface, cracks, deflection, honeycombing, edges, curing and escalation of defects."]
+];
+
+groups["Materials, finishes & homeowner selection"] = [
+  ["How do I compare AAC blocks and red clay bricks for a house?", "A decision guide comparing weight, thermal performance, sound, fixing, mortar, workmanship, availability and total wall-system cost."],
+  ["How do I compare cement brands and grades for house construction?", "Explains how to verify product type, applicable standard, batch, freshness, storage and engineer-approved specifications rather than relying on brand claims."],
+  ["How do I choose a kitchen countertop material for daily use?", "Compares granite, quartz and other surfaces by heat, stain, scratch, seam, maintenance, support and cost considerations."],
+  ["How do I choose bathroom tiles that are safe and easy to maintain?", "A room-specific selection checklist for wet-floor grip, wall finish, cleaning, grout, drainage and sample approval."]
+];
+
+groups["MEP, waterproofing & handover"] = [
+  ["What should a homeowner check before approving electrical wiring?", "A sign-off checklist for circuit schedule, cable sizing, conduits, earthing, protective devices, point locations and test records."],
+  ["What should I check before approving a waterproofing contractor's work?", "A checklist for substrate preparation, system compatibility, coverage, detailing, curing, water testing and written warranty scope."],
+  ["What should a house construction handover snag list include?", "A room-by-room defect list for finishes, doors, windows, plumbing, electrical, drainage, safety, documents and closure evidence."]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
