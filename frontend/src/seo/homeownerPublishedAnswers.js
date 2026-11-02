@@ -1547,5 +1547,54 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
     answer: "Before work begins, verify the plot's title and land-use position, applicable layout and building permissions, sanctioned plan, permitted use, setbacks, height and floor limits, and any conditions attached to the approval. The exact process and authority depend on the property's location and jurisdiction, so confirm current requirements with the relevant local planning or municipal authority and a qualified architect. Keep approved drawings and receipts at the site, and do not assume that a neighbouring building or a broker's statement proves your plot has the same permissions. Changes from the sanctioned plan may require formal approval.",
     sources: []
   }
+  "What is the difference between a building permit and an occupancy certificate?": {
+    answer: "A building permit or sanctioned building approval authorises construction subject to the approved plan and conditions. An occupancy certificate, where required, is issued after the authority verifies completion against applicable requirements and permits occupation. They are not interchangeable. Keep the sanctioned plan, permit, approved revisions, completion documents and occupancy certificate together. The exact process and terminology depend on the property's jurisdiction and project type, so confirm current requirements with the relevant local authority and your architect.",
+    sources: []
+  },
+
+  "What is a plinth beam and why is it provided?": {
+    answer: "A plinth beam is a structural member commonly provided near the building's plinth level to tie supporting elements and help manage loads and differential movement according to the structural design. Whether it is required, its dimensions and reinforcement depend on the building system, soil conditions, foundation arrangement and engineering calculations. Do not add, omit or alter a plinth beam based on a generic online recommendation; follow the approved structural drawings and obtain the structural engineer's written approval for changes.",
+    sources: []
+  },
+
+  "How do I check the quality of a construction site's sand?": {
+    answer: "Start by checking that the sand type and source match the project specification and intended use. Look for visible organic matter, rubbish, clay lumps or other contamination, but understand that appearance and a simple hand test cannot establish compliance. Ask for source details and relevant test results for grading, silt or fines, and other specified properties. Store sand separately from soil and debris, and do not mix different sources without approval. The engineer or quality-control team should decide acceptance against the applicable specification.",
+    sources: []
+  },
+
+  "What is a concrete cube test and what does it tell a homeowner?": {
+    answer: "A concrete cube test measures the compressive strength of sampled concrete at specified testing ages using a recognised procedure. The result helps the engineer assess whether the supplied concrete meets the specified strength requirement; it does not by itself prove that every part of the member was placed, compacted and cured correctly. Confirm the sampling method, batch or pour identification, test age, laboratory details and acceptance criteria. Ask the engineer to interpret any low or inconsistent result and decide whether further investigation is needed.",
+    sources: []
+  },
+
+  "What should I check when ready-mix concrete arrives at my site?": {
+    answer: "Match the delivery ticket to the approved concrete order, including grade or mix designation, quantity, batch time and intended pour location. Check that the load has not exceeded the permitted delivery or placement time and that any required workability test and sampling are carried out by the responsible site team. Do not allow unapproved water addition or changes to the mix at site. Record rejected loads, test samples, pour start and finish times, and the location where each batch was placed. Follow the project's quality plan and engineer's instructions.",
+    sources: []
+  },
+
+  "How do I prevent water leakage in bathrooms during house construction?": {
+    answer: "Bathroom waterproofing depends on correct substrate preparation, floor falls, wall-floor junction treatment, pipe-penetration sealing, door thresholds and compatible drainage details. Confirm the specified waterproofing system and application steps before tiling, protect the treated surface from damage and conduct the agreed ponding or water test before covering it. Check that floor water flows to the drain without persistent pooling and that plumbing joints have been tested. Keep product details, application records and test photographs; a tile finish alone does not prove the waterproofing is sound.",
+    sources: []
+  },
+
+  "What is the difference between a construction estimate and a BOQ?": {
+    answer: "A construction estimate is the projected cost of a project based on its scope, quantities, rates, specifications, location and assumptions. A bill of quantities (BOQ) breaks the work into measurable items with descriptions, units and quantities, and may include rates and amounts for pricing or payment control. A useful estimate explains inclusions, exclusions, taxes, provisional items and assumptions; a useful BOQ makes scope and measurement easier to compare. Neither document is reliable if drawings, specifications or site conditions are incomplete.",
+    sources: []
+  },
+
+  "How should I record changes made during house construction?": {
+    answer: "Use a written variation process. Describe the requested change, why it is needed, the affected drawing or specification, additional or reduced quantities, cost impact, schedule impact and any approval needed from the architect or engineer. Obtain the agreed price and written authorisation before the changed work begins, except where an urgent safety issue requires immediate action. Update the drawings, BOQ and payment records, and retain dated photographs and correspondence. Verbal instructions are easy to misunderstand and can lead to disputes at handover.",
+    sources: []
+  },
+
+  "What should I inspect before accepting a newly constructed house?": {
+    answer: "Inspect the completed work against the agreement, approved drawings, specifications and snag list. Check doors and windows, visible finishes, floor slopes, drainage, taps, sanitary fittings, electrical points, switches, distribution-board labelling, water pressure, leaks, roof and balcony drainage, access covers and safety items. Ask for relevant test and commissioning records, warranties, product manuals, approved as-built drawings and keys. Record each defect with its location and a photograph, agree a written rectification deadline, and arrange a qualified professional inspection for structural or concealed-system concerns.",
+    sources: []
+  },
+
+  "What documents should a contractor provide during house construction?": {
+    answer: "The project file should include the signed agreement, approved architectural and structural drawings, BOQ and specifications, approved revisions, work schedule, invoices and payment receipts, material delivery records, relevant test reports, inspection approvals, variation approvals and dated progress records. At completion, collect applicable completion or occupancy documents, as-built service drawings, warranties, manuals, test and commissioning records, and handover acknowledgements. The exact list depends on the contract, project scope and local rules. Keep digital copies as well as originals where issued.",
+    sources: []
+  }
 
 };
