@@ -1439,4 +1439,64 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
     sources: []
   }
 
+
+  "How long does it take to construct an independent house in Hyderabad?": {
+    answer: "There is no dependable fixed timeline for every independent house in Hyderabad. Duration depends on plot access, approvals, soil and foundation conditions, number of floors, design completeness, contractor resources, weather, material availability, inspection stages and the finish level. Ask the contractor for a baseline programme that shows design and approval activities, procurement lead times, foundation and structural stages, masonry, services, waterproofing, finishes, testing and handover. Each milestone should have a planned date, responsible person and evidence of completion. Keep owner decisions and material selections ahead of the date they are needed. Treat any promised completion date as a contractual commitment only when the agreement defines extensions, delays and the process for updating the schedule.",
+    sources: []
+  },
+
+  "What are the common reasons house construction gets delayed?": {
+    answer: "Common causes include incomplete drawings, late building approvals, changes made after work starts, slow owner decisions, delayed material deliveries, labour shortages, unexpected soil or site conditions, poor coordination between trades, failed inspections and weather interruptions. A realistic schedule should include design freeze dates, approval dependencies, procurement lead times and inspection hold points. When a delay occurs, record the cause and affected activities, ask for a revised programme and identify what resources or decisions are needed to recover time. Avoid accepting an unexplained revised completion date; document agreed changes and their effect on cost and handover.",
+    sources: []
+  },
+
+  "What is the difference between plot area, built-up area and carpet area?": {
+    answer: "Plot area is the land area within the plot boundaries. Built-up area generally refers to the constructed floor area measured using the method stated in the project documents; it may include wall thickness and certain covered spaces depending on the applicable definition. Carpet area refers broadly to the usable floor area within the internal walls, with inclusions and exclusions governed by the relevant context and rules. These figures are not interchangeable. For a construction quotation, ask the contractor to state the exact measurement method, floor-wise areas, treatment of balconies, staircases, shafts, parking and terraces, and the drawing revision used. Compare quotations only after the same area basis is applied.",
+    sources: []
+  },
+
+  "How do I choose cement for house construction?": {
+    answer: "Choose cement by the type and specification required in the approved structural drawings, mix design and project specification, not by advertising or colour alone. Check the product type and applicable Indian Standard, valid BIS Standard Mark and licence details where required, manufacturer, batch information, manufacturing date and intact packaging. Buy through an authorised supplier and retain invoices and delivery records. Bags should be stored in a dry, covered place, raised off the floor and protected from moisture; use stock in a controlled first-in, first-out sequence. Do not switch cement type or manufacturer where the specification restricts it without the engineer's written approval.",
+    sources: [
+      { label: "BIS – Know Your Standard", url: "https://www.bis.gov.in/know-your-standard/?lang=en" },
+      { label: "BIS – Standards portal", url: "https://standards.bis.gov.in/" }
+    ]
+  },
+
+  "Is manufactured sand suitable for house construction?": {
+    answer: "Manufactured sand (M-sand) can be suitable when it is produced, graded and tested to meet the requirements for its intended use. Suitability depends on particle-size distribution, fines and clay content, particle shape, cleanliness, moisture and the relevant concrete or mortar specification. Do not approve it based only on appearance or a supplier's claim. Ask for source details and test results, and have the engineer or materials consultant confirm that the material meets the applicable standard and mix requirements. Sand for concrete, plaster and masonry may have different acceptance requirements, so do not assume one delivered material is appropriate for every activity.",
+    sources: [
+      { label: "BIS – Know Your Standard", url: "https://www.bis.gov.in/know-your-standard/?lang=en" },
+      { label: "BIS – Standards portal", url: "https://standards.bis.gov.in/" }
+    ]
+  },
+
+  "How can I check brick quality at a construction site?": {
+    answer: "Begin by checking that the bricks match the specified type, size, intended use and supplier documentation. Look for reasonably consistent dimensions and shape, sound edges, uniform firing and absence of visible cracks, severe warping or contamination. A simple visual or sound check is only a preliminary screening; it cannot establish compressive strength, water absorption or compliance with the applicable standard. Ask for test certificates or independent tests when specified, and have the site engineer approve the delivered batch before large-scale use. Store bricks safely and follow the specified soaking or preparation method for the brick type and mortar system.",
+    sources: [
+      { label: "BIS – Know Your Standard", url: "https://www.bis.gov.in/know-your-standard/?lang=en" },
+      { label: "BIS – Standards portal", url: "https://standards.bis.gov.in/" }
+    ]
+  },
+
+  "How do I prevent dampness in house walls?": {
+    answer: "Preventing dampness starts by identifying the source of moisture rather than applying paint over the stain. Common causes include leaking plumbing, failed terrace or toilet waterproofing, rainwater entering through cracks, poor site drainage, water splashing at the plinth, and missing or defective damp-proof detailing. Inspect the roof, parapets, external wall joints, window sills, plumbing lines, wet-area membranes, ground levels and rainwater outlets. Repair the source, allow affected materials to dry as appropriate and use a compatible repair and finish system. Ask the designer to confirm the damp-proof course and ground-level details for the building; do not cover persistent damp patches until the cause has been corrected.",
+    sources: []
+  },
+
+  "What should be included in a house construction schedule?": {
+    answer: "A useful construction schedule should show the sequence, duration, dependencies and responsible person for design finalisation, approvals, procurement, site setup, excavation, foundations, plinth, each structural floor, masonry, concealed electrical and plumbing, waterproofing, plaster, flooring, doors and windows, painting, fixtures, testing, snagging and handover. Add inspection hold points before concrete pours and before services or membranes are concealed. Include long-lead items such as windows, lifts or special finishes, and identify owner decisions required by specific dates. Update actual progress against the baseline and record approved scope changes; a list of approximate month names without dependencies is not a project-control schedule.",
+    sources: []
+  },
+
+  "What should I check before allowing construction materials to be substituted?": {
+    answer: "Do not accept a material substitution based only on a contractor's assurance that it is equivalent or cheaper. Compare the proposed product's standard, grade, performance data, dimensions, finish, durability, compatibility, warranty and installed cost with the specified item. For structural materials, obtain the structural designer's written approval before use; for waterproofing, electrical, plumbing and finish systems, obtain approval from the responsible designer or consultant. Record the reason, product data sheet, test certificates where relevant, cost or time impact and revised drawings or specifications. Keep the approval with the project records so the substituted material can be identified during maintenance or future repairs.",
+    sources: []
+  },
+
+  "How do I check construction progress before releasing a stage payment?": {
+    answer: "Compare the claimed milestone with the signed agreement, approved drawings, BOQ and actual site measurements. Inspect the work that is visible and complete, check required test and inspection records, and confirm that materials billed as delivered are physically present or supported by agreed ownership and delivery evidence. List incomplete or defective items and agree how they affect the milestone under the contract. Ask for a dated progress statement, measurement sheet, invoice and photographs before releasing payment. Do not pay for work that has not been completed merely because the next calendar date has arrived, and do not withhold an amount arbitrarily without following the agreement.",
+    sources: []
+  }
+
 };
