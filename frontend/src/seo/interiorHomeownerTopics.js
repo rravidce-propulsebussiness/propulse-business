@@ -195,8 +195,7 @@ groups["Premium materials, finishes & coordination"] = [
 ["How do I select flooring colour to match my interior theme?","Choose flooring after considering fixed cabinetry, wall undertones, room size, daylight, grout, maintenance and transitions between rooms."],
 ["How can I make every room look coordinated without using the same colours everywhere?","Create a whole-home palette with shared undertones and repeat materials, then vary accent colours and intensity by room function."],
 ["What should I include in an interior colour and material selection board?","List paint codes, laminate or veneer references, countertop, tile, flooring, metal finish, fabric, lighting temperature and dated approval samples."]
-]
-};
+];
 
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
