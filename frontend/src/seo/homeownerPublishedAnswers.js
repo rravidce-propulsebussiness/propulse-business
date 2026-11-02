@@ -1925,5 +1925,55 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
     answer: "Seek prompt professional assessment if a crack is widening, recurring, diagonal or stepped through masonry, appears near a beam-column joint or foundation, passes through structural concrete, or is accompanied by sagging, displacement, water ingress or doors and windows suddenly sticking. Record its location, length, width and date, and photograph it with a scale; avoid covering it before inspection. Fine surface cracks may have non-structural causes, but appearance alone cannot confirm safety. A qualified engineer should identify the cause and specify any monitoring or repair.",
     sources: []
   }
+,
+  "Should I appoint an independent engineer to supervise my house construction?": {
+    answer: "An independent architect, civil engineer or project-management professional can review drawings, inspect critical stages, verify quantities and specifications, document defects and assess contractor payment claims on the owner's behalf. Agree the scope, visit frequency, reporting format, independence and fees in writing before work starts. The professional should coordinate with the project’s structural designer and other specialists rather than replacing their design responsibilities. Independent supervision is particularly useful when the owner cannot regularly attend the site.",
+    sources: []
+  },
+
+  "What should a house construction agreement say about material brands?": {
+    answer: "The agreement should identify material categories, approved brands or an objective equivalent specification, grades, sizes, finish standards and the process for approving substitutions. It should state who purchases each item, who checks deliveries, how invoices and test certificates are shared, and who bears the cost if supplied material fails the agreed specification. Avoid vague wording such as 'standard quality' without measurable details. Any change should be approved in writing before procurement or installation.",
+    sources: []
+  },
+
+  "How should defects found during house construction be recorded?": {
+    answer: "Create a dated defect register with a unique reference, room or location, description, photograph, drawing or specification reference, responsible contractor, agreed corrective action and target closure date. Record whether the issue affects safety, waterproofing, function or appearance, and arrange a qualified review for structural or concealed-system concerns. Reinspect after rectification and keep evidence of closure. Do not treat a verbal promise or a coat of paint as proof that the underlying cause has been corrected.",
+    sources: []
+  },
+
+  "How do I prepare a pre-handover snagging checklist for a new house?": {
+    answer: "Inspect each room and external area against the drawings, specifications and agreed finish samples. Record incomplete or damaged tiles, paint, joinery, doors, windows, sealants, fixtures, plumbing leaks, drainage, electrical points and access covers. Test systems using qualified tradespeople and collect relevant commissioning records. Give each item a location, photograph, responsible party and closure date. Separate cosmetic items from safety, structural, waterproofing and service defects, which may need specialist assessment.",
+    sources: []
+  },
+
+  "What documents should a contractor provide before starting house construction?": {
+    answer: "Before mobilisation, collect the signed agreement, approved architectural and structural drawings, applicable permissions, BOQ and specifications, project schedule, payment milestones, insurance details where applicable, site safety arrangements and contact details for the responsible supervisor. Confirm who is authorised to approve changes and who will inspect work. Keep a controlled set of current drawings at the site and make sure superseded versions are withdrawn so crews do not build from outdated information.",
+    sources: []
+  },
+
+  "How do I protect neighbouring properties during house construction?": {
+    answer: "Before excavation or demolition, document the visible condition of adjoining buildings, compound walls, pavements and services with dated photographs and notes. Review excavation depth, soil conditions, drainage and proximity to neighbouring foundations with qualified professionals, and plan temporary support or monitoring where necessary. Control dust, debris, vibration, water discharge and access, and follow local permissions and safety requirements. If new movement, settlement or cracking appears, stop the affected work and obtain prompt professional assessment.",
+    sources: []
+  },
+
+  "What should I check before waterproofing a bathroom?": {
+    answer: "Confirm that the substrate is sound, clean and properly prepared, pipe penetrations and floor-wall junctions are detailed, and the specified waterproofing system is compatible with the substrate and tile adhesive. Check that the installer follows the manufacturer's application instructions, including coats, reinforcement and curing. Conduct the specified ponding or water test for the required period and record the result before screed or tiles conceal the membrane. Repair leaks and repeat the test before proceeding.",
+    sources: []
+  },
+
+  "Why should plumbing and electrical drawings be coordinated before slab casting?": {
+    answer: "Conduits, sleeves, openings, drainage routes and service penetrations can conflict with reinforcement, beams and other structural elements if they are planned late. Coordinate architectural, structural, electrical and plumbing drawings before casting, and obtain the structural engineer's approval for any opening or embedded item that affects the structure. Do not cut reinforcement or drill structural members to accommodate a missed service route without a designed and approved repair or modification.",
+    sources: []
+  },
+
+  "What should I do if I notice water seepage after moving into a new house?": {
+    answer: "Identify when and where seepage occurs, whether it follows rain or plumbing use, and whether it appears near a roof, balcony, bathroom, external wall, tank or concealed pipe. Photograph the affected area and check accessible valves and outlets without opening walls or electrical fittings. Notify the contractor in writing under the agreement's defect or warranty process and request a cause investigation, not just surface repainting. Electrical contact with wet areas, ceiling bulging or rapidly spreading water needs urgent professional attention.",
+    sources: []
+  },
+
+  "How can I check whether a construction contractor has completed all agreed work?": {
+    answer: "Use the signed BOQ, drawings, specifications and approved variation register as the completion checklist. Inspect each room and external area, verify quantities and operation of installed systems, collect test and commissioning records, and list incomplete or defective items with closure dates. Confirm that excluded or owner-supplied items are clearly accounted for and reconcile the final bill against measured work and prior payments. Sign final completion or handover documents only after the agreed conditions and outstanding-item arrangements are recorded.",
+    sources: []
+  }
 
 };
