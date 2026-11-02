@@ -142,6 +142,7 @@ groups["Interior planning & room-by-room design"]=[
 ["Which interior materials are easiest to maintain with pets?","Choose cleanable, scratch-tolerant surfaces and washable fabrics based on the pet, product care instructions and room use."],
 ["How do I reduce noise between bedrooms and living areas?","Use layout zoning, solid door seals, suitable wall/ceiling assemblies, soft furnishings and properly specified acoustic products."],
 ["Is a smart home system worth installing during interior work?","Plan requirements, wiring, network coverage, device compatibility, manual controls, privacy, power backup and future service access before closing walls."],
+ ];
 groups["Modular kitchen planning & installation"]=[
     ["What is the kitchen work triangle and does every kitchen need it?","Understand the relationship between sink, hob and refrigerator, and when workflow and clearances matter more than a rigid triangle."],
     ["What is the ideal height for a kitchen countertop?","Learn how user height, floor finish, cabinet construction and appliance positions determine a comfortable finished counter height."],
