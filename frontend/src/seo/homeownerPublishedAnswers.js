@@ -1263,8 +1263,7 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   "Is a smart home system worth installing during interior work?": {
     answer: "A smart-home system is useful when it solves clear needs such as lighting scenes, climate control, security or energy monitoring. Decide which devices must work together, whether they need neutral wires or dedicated cabling, how network coverage will reach each room, and how the home works if internet or cloud services fail. Preserve manual controls, plan secure account access and updates, and leave service access to hubs and drivers. Confirm compatibility and support before committing to a proprietary ecosystem.",
     sources: []
-  }
-
+  },
 
   "What are the different types of foundations used for house construction?": {
     answer: "The foundation type is selected from the soil investigation, structural loads, groundwater conditions, site constraints and nearby building conditions. Common systems include isolated or combined footings, strip footings, raft foundations and piles, but they are not interchangeable options to choose by cost or habit. Ask for the soil report, structural design basis, foundation layout, founding level, reinforcement details and concrete specification. The structural engineer should confirm the system for the actual plot and building; a neighbour's foundation depth or a generic online rule is not a safe design reference.",
@@ -1313,9 +1312,7 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   "How should construction-stage payments be linked to work progress?": {
     answer: "Use a written stage-payment schedule tied to measurable, inspected work rather than calendar dates or verbal milestones. Define each stage clearly—for example, approved foundation completion, plinth, each structural floor, masonry and services, waterproofing tests, finishes and handover—and state the evidence needed before an invoice becomes due. The agreement should identify material and labour scope, taxes, variation approval, retention if agreed, defect rectification, delay handling and the process for measuring completed quantities. Keep dated site records, approved drawings, test reports, bills and payment receipts. Have the contract reviewed for the project's jurisdiction and never pay for concealed work before the agreed inspection and documentation.",
     sources: []
-  }
-
-
+  },
 
   "How much does house construction cost per square foot in Hyderabad?": {
     answer: "There is no reliable single per-square-foot rate for every Hyderabad house. A quote changes with the location and site access, soil and foundation requirements, number of floors, structural design, built-up area measurement, material brands, finish level, labour scope, services, approvals and contractor overheads. Ask for a dated, itemised BOQ that states what is included and excluded, the specifications for each material and the basis used to calculate area. Compare at least two quotes on the same drawings and scope. Check whether GST, architect and structural fees, compound wall, borewell, sump, lift, solar, modular kitchen, wardrobes, external works and utility charges are included. Treat online rates as preliminary budgeting indicators, not a binding project estimate.",
@@ -1355,9 +1352,7 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   "What should I check before an RCC roof slab is cast?": {
     answer: "Before slab casting, compare shuttering levels, dimensions, supports and openings with the approved structural and services drawings. Check reinforcement diameter, spacing, laps, anchorage, cover blocks, extra bars at supports and around openings, beam reinforcement, embedded conduits and sleeves, and that no services cut or displace structural bars. Confirm formwork stability, cleanliness, access for concrete placement and vibration, approved concrete grade and mix, delivery and cube-sampling arrangements, pour sequence and curing plan. Record the engineer's pre-pour inspection and resolve discrepancies before concrete arrives. Never cut, bend or remove reinforcement or change slab thickness at site without written structural approval.",
     sources: []
-  }
-
-
+  },
 
   "How do I choose a trustworthy construction company in Hyderabad?": {
     answer: "Shortlist companies by checking their registered business identity, named project team, relevant experience, completed projects you can independently visit, client references you can contact, and the clarity of their written scope. Ask who will supervise the site, who prepares and approves structural drawings, how quality inspections are recorded, and which subcontractors are involved. Verify that the agreement names the contracting party and payment recipient, describes the project and specifications, and explains variations, delays, defects and handover. Do not rely only on advertisements, social-media photos, verbal promises or claims such as 'No. 1' without verifiable evidence.",
@@ -1366,11 +1361,6 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
 
   "What questions should I ask a builder before signing a construction agreement?": {
     answer: "Ask for the detailed BOQ and specifications, approved drawing responsibility, project schedule, stage-payment triggers, material brands and permitted substitutions, site supervision arrangements, inspection and testing process, insurance and safety responsibilities, taxes, exclusions, variation procedure, delay provisions, defect-liability terms and handover documents. Confirm the legal name of the contractor, authorised signatory, bank account beneficiary and who is responsible for subcontractors. Ensure the agreement identifies how disputes and termination are handled. Have an independent lawyer review the final agreement before paying a substantial advance or allowing work to begin.",
-    sources: []
-  },
-
-  "How do I compare two house construction quotations?": {
-    answer: "Compare quotations against the same approved drawings, built-up-area measurement method, BOQ and finish specification. Check quantities and rates separately, and compare concrete grades, steel specification, masonry type, plaster, waterproofing, flooring, doors, windows, electrical points, plumbing fixtures, painting and external works. Mark every exclusion, provisional amount, tax, transport charge, wastage assumption and variation rate. A lower total may simply omit items or use different specifications. Ask each contractor to clarify gaps in writing and prepare a like-for-like comparison before selecting on price.",
     sources: []
   },
 
@@ -1406,6 +1396,46 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
 
   "What documents should I receive at house construction handover?": {
     answer: "Request the final approved drawings and documented revisions, structural and services drawings as applicable, completion or occupancy records required for the project, test and inspection reports, waterproofing test records, material and equipment warranties, invoices for owner-purchased items, operation manuals, keys and access credentials, and contact details for service providers. Ask for a snag list with each item marked as completed or outstanding and signed by both parties. Record meter readings, utility connections, equipment demonstrations and any retained materials. The exact statutory documents depend on the building and local approval requirements, so verify them with the project professional and competent authority.",
+    sources: []
+  },
+
+  "What is the difference between a labour contract and a material contract?": {
+    answer: "In a labour-only contract, the owner generally purchases and supplies the main construction materials while the contractor provides labour and agreed tools or supervision. In a material-and-labour contract, the contractor supplies materials as well as the workforce within the agreed scope. The agreement must state who buys, transports, stores, protects and accounts for each material, who bears wastage or theft, and how quality and substitutions are approved. Compare the total expected owner cost, including procurement time, delivery, storage, taxes and site coordination, rather than comparing only the contractor's quoted amount. Put the scope, brands, specifications, measurement rules and payment milestones in writing.",
+    sources: []
+  },
+
+  "Is a labour-only construction contract cheaper?": {
+    answer: "A labour-only quote can look lower because the owner separately pays for cement, steel, blocks, sand, aggregates, fixtures, transport and other materials. It may suit an owner who can verify quantities, negotiate with suppliers, arrange timely deliveries and maintain secure storage. It can become more expensive if procurement is delayed, material prices rise, excess quantities are ordered or site coordination is weak. Compare both contract types using the same drawings and BOQ, adding every owner-supplied item, delivery cost, taxes, wastage allowance, supervision and time cost. Decide in advance who is accountable when material shortages stop work or workmanship damages supplied materials.",
+    sources: []
+  },
+
+  "What should a construction BOQ include?": {
+    answer: "A useful Bill of Quantities (BOQ) separates the project into measurable work items and states each item's description, specification, unit, estimated quantity, rate and amount. It should cover the relevant civil, structural, masonry, plaster, waterproofing, flooring, doors and windows, electrical, plumbing, painting and external works, with material grades or brands where they matter. It should also identify provisional sums, taxes, transport, testing, approvals, exclusions, wastage assumptions and the method for measuring completed work. Check that the BOQ follows the same drawing revision and scope as the quotation. A total price without item descriptions and measurement rules is difficult to verify or compare.",
+    sources: []
+  },
+
+  "How much advance should I pay a house construction contractor?": {
+    answer: "There is no universal safe advance percentage for every construction project. The amount should be justified by the agreement, the contractor's mobilisation needs, any materials being purchased and the security or evidence provided for that payment. Avoid paying a large amount solely on a verbal promise or a discounted headline quote. Identify the legal contracting party and payment beneficiary, obtain a signed agreement and receipt, and link later payments to measurable work or materials delivered to site. If an advance is intended for specific materials, define the brand, quantity, delivery date, ownership and proof of purchase. Have an independent lawyer review the payment and recovery terms before transferring a substantial amount.",
+    sources: []
+  },
+
+  "How do I verify soil testing before house construction?": {
+    answer: "Ask for the geotechnical investigation report prepared for your actual plot, not a report copied from a nearby site. Check that it identifies the site location, investigation points, ground levels, borehole or test depths, soil and groundwater observations, test results, design parameters and the engineer's foundation recommendations. Confirm that the structural designer has reviewed the report and used its recommendations in the foundation design. If the plot has been filled, has variable ground conditions or differs from the tested locations, ask whether additional investigation is needed. Do not select footing type or depth from a neighbour's building or a contractor's rule of thumb.",
+    sources: []
+  },
+
+  "What is a construction contingency and how should I budget for it?": {
+    answer: "A contingency is a separately identified budget allowance for uncertain or unforeseen project costs; it is not a substitute for an accurate BOQ or permission to spend without approval. Possible causes include concealed site conditions, design development, measured quantity changes and owner-approved scope changes. Ask the architect or quantity surveyor to explain the basis of the allowance and keep it separate from the base contract sum, taxes and known exclusions. Every use should be supported by a written reason, cost estimate and owner approval before the extra work proceeds. The appropriate allowance depends on design maturity, site uncertainty and contract scope, so it should be set with the project professional rather than copied as a fixed percentage.",
+    sources: []
+  },
+
+  "How do I check whether waterproofing work is done properly?": {
+    answer: "Check the approved waterproofing system and method statement before work begins. The substrate should be prepared as specified, cracks and pipe penetrations treated, corners and junctions detailed, and the product applied at the stated coverage and thickness. Keep product batch details, application records and photographs of each layer before it is covered. After the required curing period, complete the specified ponding or water-retention test with the agreed water level and duration, and inspect the area below and adjoining walls for signs of leakage. Record the result and repair any failure before tiles, screed or finishes conceal the membrane. A product label or applicator's verbal assurance is not proof of a successful installation.",
+    sources: []
+  },
+
+  "Who should supervise house construction at the site?": {
+    answer: "Site supervision should be assigned clearly in the project agreement. The contractor's site engineer or supervisor usually coordinates daily labour, materials and workmanship, while the architect, structural engineer or project management consultant may carry out periodic inspections within their agreed scope. These roles are not interchangeable: the structural designer must review structural changes, and an owner's independent consultant should not be assumed to provide full-time supervision unless contracted to do so. Ask who will be present each day, who can approve work, how inspection requests are raised, what tests and records are maintained, and who signs off before concrete pours or concealed services. Keep decisions and drawing changes in writing.",
     sources: []
   }
 
