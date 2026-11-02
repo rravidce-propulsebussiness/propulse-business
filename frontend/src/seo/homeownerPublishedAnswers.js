@@ -1373,5 +1373,119 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   "What should I check before approving a modular kitchen drawing?": {
     answer: "Before approval, check the measured room dimensions, appliance models, sink and hob positions, refrigerator opening, countertop height, overhead-cabinet clearance, chimney duct route, electrical points, plumbing, drawer access and door swings. Review a dimensioned plan and elevations, not only a 3D render. The quotation should match the drawing and list board grade and thickness, finish, hardware brands and models, accessories, countertop scope, installation, exclusions and warranty. Sign off the final revision and keep a copy before production begins.",
     sources: []
-  }
+  },
+
+  "What are the most popular interior design styles for Indian homes?": {
+    answer: "Start with how the household lives, the architecture, daylight, storage needs and the level of maintenance you can manage. Contemporary interiors often use clean lines and current materials; modern design refers more specifically to the modernist movement and its functional forms; minimalism edits objects and visual detail; Scandinavian design favours light, practical spaces and natural textures; Japandi combines Japanese restraint with Scandinavian warmth; industrial design exposes or references structural materials; traditional design uses established regional or historical details; transitional design balances classic and modern elements; and eclectic design combines references deliberately. These labels overlap in real homes. Collect photographs you genuinely like, identify repeated shapes, colours and materials, then create a room-by-room brief. Do not choose a style from a label alone: test whether its furniture, finishes and maintenance fit your climate, budget and routine.",
+    sources: []
+  },
+  "What is the difference between modern and contemporary interior design?": {
+    answer: "Modern interior design generally refers to a design movement associated with functional planning, simple forms, honest materials and limited ornament. Contemporary design describes what is current and can borrow from several periods, so it changes over time. A modern room might use recognisable modernist furniture proportions and restrained detailing; a contemporary room may combine current lighting, curved furniture, natural stone, warm timber and newer technology. The terms are often used loosely by suppliers. When briefing a designer, share reference images and specify the actual elements you want—cabinet profiles, furniture shapes, materials, colours and lighting—rather than relying only on the word modern.",
+    sources: []
+  },
+  "What is a minimalist interior design style and how do I achieve it?": {
+    answer: "Begin by deciding what the room must store and support, then plan closed storage before removing useful furniture. Use a limited material and colour palette, simple furniture silhouettes, clear circulation and layered lighting. Keep frequently used objects accessible and give everyday items a defined storage location; minimalism is not the absence of storage. Repeat a small number of finishes and avoid adding decorative features that compete with the architecture. A completely white, empty room is not required: texture, art, plants and a few meaningful objects can add warmth. Choose durable, easy-to-clean surfaces appropriate to the household.",
+    sources: []
+  },
+  "What is Japandi interior design and is it suitable for Indian homes?": {
+    answer: "Japandi combines the calm, edited approach often associated with Japanese interiors and the practical warmth of Scandinavian design. Common elements include simple forms, natural wood, tactile fabrics, muted earth colours, considered storage and soft lighting. It can work in Indian homes when materials are selected for local heat, humidity, dust and cleaning needs. Use locally serviceable timber-look finishes, washable fabrics and ventilation-aware materials; do not copy low furniture or delicate surfaces if they do not suit the household. Start with a restrained palette, one or two natural textures and functional storage rather than buying a complete themed furniture set.",
+    sources: []
+  },
+  "How can I create a luxury interior look on a practical budget?": {
+    answer: "A premium appearance usually comes from coherent decisions rather than the highest-priced material in every room. First finalise the layout and proportions. Select a restrained palette, coordinate floor and wall undertones, and repeat a small number of finishes. Spend carefully on high-touch items such as hinges, drawer channels, handles and frequently used surfaces. Use layered lighting and one or two well-designed focal details instead of many competing feature walls. Keep junctions, edge bands, silicone lines, alignment and installation quality in the scope. Ask for physical samples, an itemised BOQ and clear exclusions. Do not compromise structural safety, ventilation or electrical work to fund decoration.",
+    sources: []
+  },
+  "How do I choose an interior design style for my home?": {
+    answer: "Start with a short list of reference images and identify what they share: furniture shapes, colour temperature, wood tone, metal finish, pattern and amount of ornament. Check the home's architecture, room dimensions, natural light, existing flooring and furniture. Then assess practical needs such as children, pets, cleaning, storage and accessibility. Make a whole-home palette and select materials that are available within the budget and can be replaced or serviced locally. A designer can translate the references into drawings and a material schedule. Approve samples and a room-wise scope before ordering; avoid choosing each room independently without checking how the home connects.",
+    sources: []
+  },
+  "Can I mix two interior design styles in one home?": {
+    answer: "Yes. Mixing styles can make a home personal, but it needs a visual link. Choose one dominant style and let the second appear through selected furniture, lighting or accessories. Repeat a shared undertone, wood colour, metal finish or shape so the elements relate. Keep furniture scale and circulation consistent, and avoid giving every room a different unrelated theme. Put contrasting styles together intentionally—for example, a simple contemporary room with a traditional timber piece—then use quieter surrounding finishes to let the focal item stand out. Review the combination using physical samples and a full-room layout before purchase.",
+    sources: []
+  },
+  "What is a transitional interior design style?": {
+    answer: "Transitional design sits between traditional and contemporary approaches. It may pair classic furniture proportions or restrained mouldings with simpler cabinetry, uncluttered layouts and current lighting. A practical way to use it is to choose one or two classic details, then keep the rest of the room clean and consistent. Neutral colours, warm timber and tactile fabrics can connect the elements, but the palette need not be beige. Avoid combining too many ornate profiles, contrasting metals and decorative patterns. Agree the exact door, skirting, panel and furniture profiles in drawings so the intended balance is maintained during execution.",
+    sources: []
+  },
+  "How do I choose the right colour palette for my home interiors?": {
+    answer: "Begin with fixed elements that are expensive to change: flooring, countertop, existing woodwork, large furniture and window orientation. Note whether these materials read warm, cool or neutral in daylight. Choose a dominant wall or cabinet neutral, a secondary colour for larger furniture or joinery, and a smaller accent for textiles or accessories. Check the palette in each connected room and under the actual lighting. Use paint and finish samples on large boards rather than selecting from a tiny screen swatch. Record product names, shade codes, finish and supplier in one approved schedule so site teams do not substitute similar-looking colours.",
+    sources: []
+  },
+  "What are the best colour combinations for a premium-looking living room?": {
+    answer: "Premium-looking living rooms often use a limited palette with controlled contrast. Warm white or ivory can pair with oak or walnut tones; greige and taupe can work with textured fabrics and dark metal; muted sage can sit beside warm wood; and charcoal can provide a small accent against lighter walls. These are starting points, not fixed rules. Choose the palette around the sofa, floor and daylight, then test paint and fabric samples together. Use one dominant neutral, one supporting tone and a smaller accent, and avoid repeating strong patterns on every surface. Good lighting and neat detailing matter as much as the colour combination.",
+    sources: []
+  },
+  "Which wall colours make a small room look bigger?": {
+    answer: "Light colours can help a room feel more open because they often reflect more light, but the result depends on daylight, ceiling height, contrast, furniture and the paint's undertone. A continuous light wall and ceiling palette can reduce visual breaks; a slightly deeper accent can add depth when used carefully. In a narrow room, keep circulation clear and avoid oversized furniture. Test samples on more than one wall because the same shade can look different near a window and in a dark corner. Do not assume pure white is best: a soft warm or neutral shade may feel more comfortable with the room's flooring and lighting.",
+    sources: []
+  },
+  "How do I choose warm or cool colours for my home?": {
+    answer: "Warm colours tend to have yellow, red or orange undertones; cool colours tend toward blue, green or violet; neutral shades can lean either way. Compare paint cards beside the actual floor, countertop, wood and fabrics in natural and artificial light. A north-facing or shaded room may make some colours appear cooler, while strong afternoon sun can shift their appearance. Choose lighting after considering the palette, and avoid mixing several unrelated whites. Warm and cool colours can be combined, but repeat undertones deliberately so adjacent rooms do not feel disconnected. The final choice should be made from large samples in the actual room.",
+    sources: []
+  },
+  "What is the 60-30-10 colour rule in interior design?": {
+    answer: "The 60-30-10 rule is a simple composition guideline: roughly 60 percent of the visual palette is a dominant colour, 30 percent a supporting colour and 10 percent an accent. For example, walls and large surfaces might form the dominant layer, furniture or curtains the secondary layer, and cushions or art the accent. It is not a measurement requirement and does not mean every item must be counted by area. Adjust it for patterned rooms, open-plan spaces, existing flooring and personal taste. The useful principle is to establish hierarchy and avoid giving every colour equal visual weight.",
+    sources: []
+  },
+  "How do I select an accent wall colour without making the room look busy?": {
+    answer: "Choose an accent wall only after identifying the room's focal point, such as a bed headboard, sofa wall or architectural niche. Check the wall from the main entry and seating positions, and avoid highlighting a wall with distracting doors, wiring or uneven surfaces. Use the accent colour in a smaller detail elsewhere—such as a cushion or artwork—to create a connection. Keep other large surfaces quieter, especially in compact rooms. Test a large sample beside the flooring, curtains and furniture at different times of day. A textured finish or wallpaper also needs a maintenance and cleaning review.",
+    sources: []
+  },
+  "Which colours go well with wooden furniture and flooring?": {
+    answer: "Look at the wood sample in the room where it will be installed; wood can read red, yellow, orange, grey or neutral depending on species, stain and lighting. Warm woods often pair comfortably with warm whites, sand, terracotta and muted greens. Cooler or grey-toned wood may work with soft grey, blue or neutral whites. Charcoal can create contrast but may make a small or dim room feel heavier. Avoid choosing wall paint from a photograph of the wood. Compare physical samples side by side and repeat the wood tone or undertone in one or two other elements for continuity.",
+    sources: []
+  },
+  "How do I coordinate wall paint, curtains and sofa colours?": {
+    answer: "Start with the largest or most expensive fixed item—often the sofa, flooring or kitchen cabinetry—and build the palette around it. Identify its undertone, then choose wall paint and curtains that complement rather than compete. Use a fabric sample at the window because daylight changes how colour appears. Repeat one or two colours in cushions, rugs or artwork to connect the room. Consider texture and pattern scale as well as colour: a large patterned curtain and patterned sofa can compete even when their colours match. Record fabric codes, lining, finish and cleaning instructions before ordering.",
+    sources: []
+  },
+  "What colour combination is suitable for a master bedroom?": {
+    answer: "For a restful master bedroom, consider warm whites, muted greens, dusty blues, soft taupes or earthy neutrals, depending on daylight and preference. Use stronger colour in a headboard, bedding or one controlled feature rather than making every surface high contrast. Check how the wall shade works with wardrobe shutters, flooring, curtains and warm or neutral lighting. If the room receives strong sun, test the colour in afternoon light; if it is shaded, avoid choosing a shade that becomes dull in low light. Comfort, sleep routine and personal preference matter more than claims that a particular colour guarantees better sleep.",
+    sources: []
+  },
+  "Which colours are suitable for a modern modular kitchen?": {
+    answer: "Warm white, greige, muted green, navy and wood-look finishes are common kitchen palette starting points. A two-tone kitchen can use a lighter upper cabinet and a deeper lower cabinet, or a restrained colour on one bank of units. Consider fingerprints, grease visibility, cleaning, edge finish and how the colour works with the countertop and backsplash. Gloss can reflect light but may show smudges; textured or very dark finishes may need more frequent cleaning depending on the product. Review full-size shutter samples beside the actual countertop and floor, and check the manufacturer's care instructions before approving.",
+    sources: []
+  },
+  "How do I choose colours for a north-facing or low-light room?": {
+    answer: "Low-light rooms can make cool or highly saturated shades look dull or unexpectedly dark. Consider warm or balanced neutrals, muted colours and finishes with an appropriate light reflectance, but test before committing. Place large sample boards on different walls and view them in daytime and at night with the intended lamps switched on. Use layered ambient, task and accent lighting rather than expecting paint to solve poor illumination. Check whether the room has enough daylight and ventilation, and avoid a strong contrast between a very dark wall and a small bright window unless that is the intended effect.",
+    sources: []
+  },
+  "How should I test paint colours before painting the whole house?": {
+    answer: "Paint a large sample patch or use a movable sample board rather than judging a small colour chip. Test it on at least two walls, including the wall that receives the least daylight. View it in morning, afternoon and evening, with the final artificial lights switched on. Keep it beside flooring, tile, cabinetry and curtain samples. Check the manufacturer's recommended primer and number of coats, since substrate and application can change the finish. Once approved, record the exact brand, shade code, product range and sheen in writing; a colour name alone may not identify the correct product.",
+    sources: []
+  },
+  "What is the difference between matte, satin and gloss paint finishes?": {
+    answer: "Matte finishes have low sheen and can soften the appearance of wall imperfections, but their washability varies by product. Satin or similar mid-sheen finishes reflect more light and may be easier to wipe, though they can reveal surface preparation marks. Gloss finishes reflect strongly and can be useful on selected trim or joinery, but highlight unevenness and may show glare. The names and performance vary by manufacturer, so compare the technical data sheet for scrub resistance, stain cleaning, coverage and recommended use. Prepare the surface properly and approve a sample panel before painting the full room.",
+    sources: []
+  },
+  "Which interior finishes make a home look premium?": {
+    answer: "A premium result usually comes from proportion, consistency and execution. Choose a limited palette of durable materials, align cabinet and tile joints, specify neat edge treatment, use suitable hardware and plan concealed wiring before installation. Natural wood veneer, stone, metal, textured paint and quality laminates can all look refined when used appropriately; none is automatically premium without good detailing. Concentrate distinctive finishes in a few focal locations and use simpler materials elsewhere. Ask for physical samples, product specifications, maintenance instructions and installation details, and inspect a completed sample or mock-up for critical junctions.",
+    sources: []
+  },
+  "How do I choose between laminate, acrylic, veneer and PU finishes?": {
+    answer: "Laminate is generally a factory-applied decorative surface available in many colours and textures; acrylic is commonly selected for a smooth reflective appearance; veneer uses a real wood layer and has natural variation; and PU is a coating system whose appearance depends on preparation and application. Compare scratch and stain behaviour, fingerprints, UV exposure, repairability, edge treatment, substrate compatibility and the manufacturer's warranty. The best choice depends on the location and household use. Ask for the exact product range and technical sheet, not just a generic finish name, and inspect a large sample under the room's lighting.",
+    sources: []
+  },
+  "How do I combine marble-look surfaces, wood and metal without clashing?": {
+    answer: "Choose one dominant surface and let the others support it. For example, a patterned marble-look surface can be balanced with plain wood tones and a restrained metal finish. Compare undertones—warm beige stone with warm timber, or cooler grey stone with a compatible neutral wood—using physical samples. Limit the number of competing grains and patterns, and repeat the metal finish consistently across handles, lights or taps. Confirm how large-format patterns align at joints and corners. A sample board or small mock-up helps reveal clashes that may not be obvious in separate product photographs.",
+    sources: []
+  },
+  "What lighting colour temperature is best for home interiors?": {
+    answer: "Colour temperature is measured in kelvin (K). Lower values generally appear warmer and more yellow; higher values appear cooler or bluer. Warm white is often chosen for relaxed living and bedroom settings, while neutral white may suit kitchens, study areas and task lighting where clear colour perception is useful. These are starting points, not rules: the activity, daylight, surface colours and personal comfort matter. Keep connected spaces reasonably consistent and check the lamp's colour-rendering information as well as its kelvin rating. Use dimming or separate lighting layers when a room serves several purposes.",
+    sources: []
+  },
+  "How do I select flooring colour to match my interior theme?": {
+    answer: "Choose flooring after considering the largest fixed surfaces, daylight, room dimensions, furniture and cleaning needs. A light floor may help a dim room feel brighter, while a mid-tone can be practical for everyday dust and marks; the actual result depends on texture, pattern and product. Compare samples vertically and horizontally beside cabinet and paint samples, because lighting changes their appearance. Check slip resistance for wet areas, water exposure, wear rating, grout maintenance and transition details. Avoid selecting a floor from a small online image alone, and confirm batch consistency before installation.",
+    sources: []
+  },
+  "How can I make every room look coordinated without using the same colours everywhere?": {
+    answer: "Create a whole-home palette with a few shared undertones, such as warm neutrals and one consistent wood tone, then vary accent colours by room. Keep flooring, skirting, internal doors and major metal finishes coordinated where they meet. Use stronger colours in selected rooms or removable elements such as textiles and art. In open-plan homes, check the living, dining and kitchen palette together from multiple sightlines. A simple schedule listing room, wall shade, sheen, cabinetry finish, countertop, flooring and hardware helps painters and installers follow the same decisions.",
+    sources: []
+  },
+  "What should I include in an interior colour and material selection board?": {
+    answer: "Include actual manufacturer and product details rather than generic labels. A useful board records paint brand, shade code and sheen; laminate, veneer or acrylic range and code; board substrate and thickness; countertop and tile references; flooring and grout; metal finish; fabric and curtain references; lighting type and kelvin; and relevant edge, handle and hardware details. Add clear photographs, sample dates, room location, approval status and any substitutions. Keep one signed or digitally approved master schedule and attach it to the BOQ and drawings. This reduces site confusion when a product is reordered or a similar shade is proposed.",
+    sources: []
+  },
+
 };
