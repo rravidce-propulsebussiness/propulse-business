@@ -2147,5 +2147,155 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   "How do I maintain a construction quality register for my house?": {
     answer: "Keep one organised record of approved drawings and revisions, material approvals, delivery notes, test reports, inspection requests, hold-point releases, concrete pour records, waterproofing tests, defect logs, variation approvals and dated site photographs. Give each record a date, location, activity and responsible person so it can be traced later. Store digital copies with clear file names and retain originals where required. A quality register helps resolve questions at handover, but it is only useful if entries are made at the time the work occurs.",
     sources: []
+  }
+,
+  "How do I protect a construction site from rain during the monsoon?": {
+    answer: "Plan temporary drainage before the monsoon and keep excavations, material storage and access routes protected from runoff. Cover cement and moisture-sensitive materials without trapping condensation, store steel off the ground, and prevent water from collecting around foundations or neighbouring properties. Protect fresh concrete and unfinished masonry using the method approved for the work. Inspect roof openings, temporary covers, pumps and discharge routes after heavy rain. If excavation sides soften, water accumulates near foundations or adjacent ground moves, stop affected work and obtain professional advice.",
+    sources: []
   },
+
+  "What should I record in a daily construction site report?": {
+    answer: "A useful daily report records the date, weather, workers and trades present, activities and locations worked on, materials delivered, equipment used, inspections and tests completed, instructions received, safety observations, delays, visitors and photographs. Note quantities or measurable progress where possible and identify issues requiring decisions. The site supervisor should review and share the report regularly with the owner or project manager. Consistent records help verify progress, investigate delays and reconcile material use and contractor bills.",
+    sources: []
+  },
+
+  "How should I manage revisions to house construction drawings?": {
+    answer: "Maintain one controlled set of current drawings with revision numbers and dates. When a change is proposed, record the reason, affected plans or details, cost and schedule implications, and approvals required from the architect, structural engineer or services designer. Distribute the approved revision to the contractor and site supervisor, withdraw superseded copies and record when the change was implemented. Do not rely on marked-up screenshots or verbal instructions for structural, electrical or plumbing changes.",
+    sources: []
+  },
+
+  "What should I check before accepting bricks or blocks delivered to my site?": {
+    answer: "Check that the delivered unit type, dimensions, strength class and manufacturer match the approved specification. Inspect representative units for excessive breakage, visible defects, contamination and inconsistent dimensions, and compare delivery quantities with the invoice. Ask for product data or test documentation where specified. Store units on a stable, drained surface and protect them from contamination. Appearance alone cannot establish strength or suitability; the engineer or quality team should decide acceptance against the project requirements.",
+    sources: []
+  },
+
+  "How do I check whether a construction site is safe for children and visitors?": {
+    answer: "Restrict access to active work areas with secure barriers and clear warning signs. Cover or guard openings, excavations, stairwells and exposed services, keep tools and hazardous materials secured, and maintain safe pedestrian routes away from vehicles and lifting operations. Visitors should be accompanied by the site supervisor and provided with appropriate protective equipment. Do not allow children to enter the site, climb scaffolding or play near stored materials, even when workers are not present.",
+    sources: []
+  },
+
+  "What is a site instruction register and why is it useful?": {
+    answer: "A site instruction register records formal directions issued during construction, including the date, instruction number, description, drawing or specification reference, issuing professional, recipient and required response. It helps distinguish authorised instructions from informal conversations and makes it easier to trace changes, approvals, delays and cost effects. Instructions that change scope, price or time should also follow the contract's variation procedure and receive the required written approvals.",
+    sources: []
+  },
+
+  "How should construction materials be protected from theft and damage?": {
+    answer: "Use a delivery and stock register, secure storage areas, controlled site access and clear responsibility for receiving and issuing materials. Store cement in a dry, ventilated location off the floor, protect steel from contamination and standing water, and keep electrical and plumbing products in their recommended storage conditions. Record damaged or missing items promptly with photographs and delivery references. The contract should clarify who bears responsibility for storage, wastage, theft and insurance during each stage.",
+    sources: []
+  },
+
+  "What should I check before approving a contractor's running bill?": {
+    answer: "Compare the bill with the contract, BOQ, agreed measurement rules, completed work and previous certified payments. Check quantities on site, approved material advances, retention or deductions, taxes, variation approvals and supporting invoices where required. Exclude incomplete or rejected work unless the contract specifically allows payment for it. Ask the architect, engineer or quantity surveyor to verify measurements for substantial claims, and keep a signed measurement sheet and payment record.",
+    sources: []
+  },
+
+  "How do I plan construction work around Hyderabad's summer heat?": {
+    answer: "Schedule heat-sensitive work with the contractor and engineer, provide safe drinking water, shaded rest areas and suitable work-rest arrangements for labourers, and follow occupational safety guidance during hot periods. Protect fresh concrete and masonry from rapid moisture loss using the specified curing and protection method. Store materials according to manufacturer instructions and avoid placing concrete outside the approved temperature and placement controls. The site engineer should decide whether conditions require rescheduling or additional precautions.",
+    sources: []
+  },
+
+  "What should I do if the construction site has standing water after rain?": {
+    answer: "Keep people away from flooded excavations, electrical equipment and unstable ground. Arrange safe removal of water without discharging it onto neighbouring properties or undermining foundations. Before restarting work, have the site supervisor inspect excavation stability, soil softening, erosion, foundation exposure, temporary supports and electrical safety. Document the affected areas and obtain engineering advice if water has entered foundation excavations or caused movement. Do not simply pump out the water and continue without checking the ground and temporary works.",
+    sources: []
+  },
+
+  "Why should I get a boundary survey before starting house construction?": {
+    answer: "A boundary survey helps establish the plot limits, dimensions and corner positions before excavation, compound-wall work or setting out the building. Compare the survey with the registered property documents and approved layout plan, and resolve discrepancies with a qualified surveyor and property professional before construction. Do not rely only on an old fence, neighbouring wall or informal measurements. Accurate boundary information helps reduce the risk of encroachment disputes and costly changes after work begins.",
+    sources: []
+  },
+
+  "What should I do if my building permission may expire before construction is completed?": {
+    answer: "Check the validity period and conditions stated in the permission issued by the competent authority. Ask your architect or licensed professional to confirm the applicable renewal or extension procedure and submit any required application before the permission lapses. Keep acknowledgement and approval records, and do not assume that paying a fee automatically extends validity. The rules and process depend on the authority and permission type, so verify the current requirements for your property.",
+    sources: []
+  },
+
+  "Should I ask the contractor for construction site insurance?": {
+    answer: "Ask which insurance policies cover the project, who is insured, the policy period, exclusions, deductibles and the activities or third parties covered. Depending on the contract and site risks, relevant cover may include contractor's all-risk, worker compensation or employee-related cover, and third-party liability. Request copies of current policy schedules and proof of premium where appropriate, and confirm responsibilities with an insurance professional. A verbal statement that the site is insured is not enough.",
+    sources: []
+  },
+
+  "What is retention money in a house construction contract?": {
+    answer: "Retention is an agreed portion of payments withheld until specified milestones or defect obligations are met. The contract should state the percentage or amount, the bills it applies to, release conditions, release dates and how disputed defects are handled. Make sure the arrangement is commercially reasonable and consistent with local law and the contract. Do not deduct or withhold money arbitrarily; document agreed retention and every release in the payment ledger.",
+    sources: []
+  },
+
+  "What is a defects liability period in house construction?": {
+    answer: "A defects liability period is a contract-defined period after completion or handover during which the contractor must address specified workmanship defects, subject to the contract terms. The agreement should define when the period starts, how defects are reported, response and repair timelines, exclusions for misuse or normal wear, and how unresolved defects are escalated. Record issues in writing with dated photographs and keep proof of notification. Have the contract reviewed so the clause is clear and enforceable.",
+    sources: []
+  },
+
+  "When should I get construction materials tested by an independent laboratory?": {
+    answer: "Use independent testing when the project specification, engineer or applicable standard requires it, or when there is a reasonable concern about a material's identity, quality or compliance. Examples may include soil, concrete, reinforcement steel, blocks, aggregates and water, depending on the design and work stage. Agree the sampling method, test standard, laboratory competence and acceptance criteria before testing. Keep reports traceable to the supplier, batch, delivery and exact location where the material was used.",
+    sources: []
+  },
+
+  "What records should I keep for concrete pours in my house construction project?": {
+    answer: "For each pour, record the date, location and structural element, approved drawing revision, concrete grade and mix reference, supplier and delivery-ticket details, arrival and placement times, workability checks, sample identification, test results, weather, placing and compaction observations, curing arrangements and engineer's inspection. Photograph key stages before and during the pour. These records help trace test results to the actual work and investigate defects or disputes later.",
+    sources: []
+  },
+
+  "Why should I get a plumbing pressure-test report before pipes are concealed?": {
+    answer: "A pressure test, carried out using the method and limits specified for the plumbing system, can help identify leaks before pipes are covered by plaster, flooring or other finishes. Ask the plumbing contractor or site engineer to record the tested circuit, test medium, pressure, duration, gauge details, result, date and responsible person. The correct test method varies by pipe material and system; follow manufacturer instructions and the project specification rather than applying one pressure value to every installation.",
+    sources: []
+  },
+
+  "What electrical test reports should I ask for before occupying a new house?": {
+    answer: "Ask the qualified electrical contractor to provide test records appropriate to the installation, which may include insulation resistance, continuity of protective conductors, earthing and protective-device checks. The report should identify the circuits tested, test method, instrument details, results, date and responsible competent person. Also obtain the final circuit schedule and distribution-board labelling. Do not perform live electrical tests yourself; have testing and any corrective work handled by qualified personnel under applicable safety requirements.",
+    sources: []
+  },
+
+  "How do I confirm that the final house construction drawings match what was built?": {
+    answer: "Request as-built drawings that reflect approved changes and the final locations of structural elements and concealed electrical, plumbing and drainage services, where these records are part of the project scope. Compare them with the approved drawing revisions and site records, and ask the relevant architect or engineer to verify important deviations. Keep photographs of concealed services taken before covering. Accurate as-built information makes future maintenance, repairs and renovation safer and easier.",
+    sources: []
+  },
+
+  "How should I test rainwater pipes before house handover?": {
+    answer: "Ask the plumbing contractor to check that roof outlets, rainwater pipes, joints, bends and discharge points are complete and free of construction debris. A controlled water-flow test can help reveal leaks, blockages or poor connections. Confirm that rainwater is discharged to the approved collection, recharge or drainage arrangement and does not flow onto neighbouring land or weaken foundations. Record the test and correct defects before ceilings or access points are closed.",
+    sources: []
+  },
+
+  "What should I check before using a new underground water sump?": {
+    answer: "Before first use, confirm that the sump is structurally complete, cleaned of construction debris and tested for leakage using a method approved by the project team. Check the inlet, outlet, overflow, drain, access cover, ventilation and pump arrangement, and ensure the cover prevents accidental entry and contamination. Ask the contractor to demonstrate cleaning and maintenance access. Use a suitable water-quality test before drinking the stored water, especially if the source or cleaning process is uncertain.",
+    sources: []
+  },
+
+  "Should I arrange anti-termite treatment during house construction?": {
+    answer: "Discuss termite risk and the appropriate treatment with a qualified pest-management provider and the project team before relevant construction stages are covered. The method should suit the site conditions, foundation details and applicable product instructions and safety requirements. Obtain the product name, application record, treated areas, date and warranty terms. Do not apply chemicals independently or assume that one treatment guarantees permanent protection; control moisture, wood-to-soil contact and entry paths as part of ongoing prevention.",
+    sources: []
+  },
+
+  "How do I prevent water from collecting around my house foundation?": {
+    answer: "Plan the finished ground levels and surface drainage so rainwater flows away from the building toward an approved collection or discharge point. Check that paving, driveways, garden beds and downpipes do not direct water toward the plinth or neighbouring property. Keep inspection chambers and drains accessible for cleaning. The architect or civil engineer should review levels and drainage details for the actual plot, particularly where the site is low-lying or adjoining roads sit at a different level.",
+    sources: []
+  },
+
+  "What should I check around windows to prevent rainwater leakage?": {
+    answer: "Inspect the window frame installation, perimeter sealant, sill or threshold detailing, external plaster junctions and the route for draining water from frame tracks. Confirm that the product is installed according to the manufacturer's instructions and the approved detail. A controlled water-spray test by the contractor may help identify leakage before interior finishes are completed. Sealant alone cannot correct a poorly designed sill or drainage path; record and rectify the source of any water entry.",
+    sources: []
+  },
+
+  "How can I check whether a roof water tank installation is safe?": {
+    answer: "Have the structural engineer verify that the supporting slab, beams or dedicated platform were designed for the tank's full operating load and location. Check that the tank is securely supported on a suitable level base, the plumbing includes accessible isolation and overflow arrangements, and maintenance access is safe. Do not place a large tank on an existing roof or change its position without engineering review. Follow the tank manufacturer's installation and anchoring instructions.",
+    sources: []
+  },
+
+  "What should I check before closing a false ceiling below a bathroom or terrace?": {
+    answer: "Before closing the ceiling, inspect concealed pipes, joints, traps, valves and drainage connections, and complete the specified pressure or flow tests. Check that waterproofing tests have been recorded where relevant and that access panels are provided for components requiring maintenance. Photograph the concealed services and retain drawings showing their routes. Do not close the ceiling while leaks, unexplained dampness or incomplete testing remain unresolved.",
+    sources: []
+  },
+
+  "How do I choose a suitable septic tank or sewage treatment arrangement for a house?": {
+    answer: "First confirm whether a public sewer connection is available and what the local authority permits for the property. If an on-site system is allowed, its capacity, location, access, ventilation, setbacks and disposal arrangement must be designed for the expected occupants, soil conditions and applicable public-health rules. Use a qualified designer and obtain required approvals. Do not select a tank by a generic online size chart or discharge untreated sewage into stormwater drains or open ground.",
+    sources: []
+  },
+
+  "What should I check in external wall joints to reduce rainwater seepage?": {
+    answer: "Review the approved details at wall-to-window junctions, parapets, balconies, service penetrations, expansion or movement joints and interfaces between different materials. Confirm that compatible sealants, flashings, waterproofing layers and drainage paths are installed continuously and according to the manufacturer's instructions. Inspect these details before painting or cladding hides them. If leakage appears, identify and repair the entry path rather than simply applying another coat of exterior paint.",
+    sources: []
+  },
+
+  "How should I prepare my house for its first monsoon after construction?": {
+    answer: "Before the rainy season, clear terrace outlets, rainwater pipes and external drains; inspect parapets, roof penetrations, window seals, balcony outlets and visible waterproofing details. Check that ground levels direct water away from the building and that sump and pump systems work. Arrange repairs to cracks or damp patches before heavy rain, and keep photographs of any new leakage. For recurring seepage or signs of structural movement, obtain a qualified inspection instead of relying only on surface coatings.",
+    sources: []
+  }
 };
