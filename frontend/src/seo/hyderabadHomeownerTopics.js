@@ -188,36 +188,38 @@ groups["Foundation, services & homeowner project controls"] = [
     ["How can I verify a contractor's stage-wise construction bill?", "Explains measurement records, completed milestones, BOQ rates, approved variations, tax treatment and retention before payment."]
 ];
 
-  "Construction planning, BOQ & project delivery": [
+groups["Construction planning, BOQ & project delivery"] = [
     ["How do I plan a house construction project step by step?", "A stage-by-stage overview from plot checks and design through approvals, tendering, construction, inspections, testing and handover."],
     ["What should be included in a house construction BOQ?", "Explains item descriptions, units, quantities, material grades, workmanship, inclusions, exclusions and how a BOQ supports transparent billing."],
     ["How do I prepare a construction schedule for a new house?", "Covers dependencies, approvals, procurement lead times, realistic activity durations, weather allowances and weekly progress tracking."],
     ["What is the difference between carpet area, built-up area and super built-up area?", "Clarifies common area measurement terms and why the measurement basis must be stated in contracts and quotations."],
-  ],
-  "Foundation, RCC & concrete quality": [
+];
+groups["Foundation, RCC & concrete quality"] = [
     ["How do I select the right foundation for my house?", "Explains how soil conditions, loads, groundwater, nearby structures and engineering design determine foundation type."],
     ["What is the difference between isolated footing, combined footing and raft foundation?", "Describes typical applications and why the structural and geotechnical design—not a generic rule—selects the foundation."],
     ["What checks should be completed before a roof slab concrete pour?", "A pre-pour inspection covering drawings, reinforcement, cover, formwork, supports, embedded services, access, concrete supply and sign-off."],
     ["How can I check reinforcement steel before slab casting?", "Explains checking bar diameter and spacing against approved drawings, laps, anchorage, cover blocks, cleanliness and engineer inspection."],
     ["What is a concrete slump test and why is it done?", "Explains workability checks at delivery, representative sampling, recording results and why water must not be casually added at site."],
     ["Should water be added to a ready-m mix concrete truck at the construction site?", "Explains why only authorised adjustments under the mix supplier's and engineer's procedure are acceptable and why uncontrolled water weakens quality."],
-  ],
-  "Flooring, waterproofing & finishes": [
+];
+groups["Flooring, waterproofing & finishes"] = [
     ["How do I choose tiles for a house floor?", "Compares intended use, slip resistance, abrasion, water absorption, finish, size, shade variation, grout and maintenance."],
     ["What is the difference between vitrified, ceramic and porcelain tiles?", "Explains broad material distinctions and why technical data, intended application and manufacturer classification should guide selection."],
     ["How do I prevent bathroom leakage during house construction?", "Covers substrate preparation, waterproofing system continuity, pipe penetrations, floor slope, drain detailing, curing and documented water testing."],
     ["What is the correct slope for a bathroom floor and balcony?", "Explains positive drainage, avoiding ponding and confirming slope against the project design, drain positions and applicable requirements."],
-  ],
-  "Electrical, plumbing & building services": [
+];
+groups["Electrical, plumbing & building services"] = [
     ["How do I plan electrical points before plastering?", "A room-by-room coordination checklist for furniture, appliance loads, switch heights, circuits, conduits, data, AC and future access."],
     ["What should I check before concealed plumbing pipes are covered?", "Covers approved pipe type, joint quality, supports, pressure testing, photographs, isolation valves and access to serviceable components."],
     ["How do I choose UPVC, CPVC and PPR pipes for a house?", "Compares common applications, temperature and pressure ratings, joining methods, compatibility and the importance of approved system specifications."],
-  ],
-  "Ventilation, quality checks & handover": [
+];
+groups["Ventilation, quality checks & handover"] = [
     ["How do I plan ventilation and natural light in a new house?", "Explains orientation, window placement, cross-ventilation, shading, privacy, room use and coordination with structure and local rules."],
     ["What should I inspect during house construction before making stage payments?", "A milestone-based checklist linking measured completed work, inspection records, approved variations and contractual payment conditions."],
     ["What should be checked during final house handover?", "A practical handover list covering defects, water and electrical tests, drainage, doors/windows, finishes, keys, warranties, drawings and manuals."]
-  ],
+];
+
+
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
