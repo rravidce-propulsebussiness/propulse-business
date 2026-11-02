@@ -1263,5 +1263,80 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   "Is a smart home system worth installing during interior work?": {
     answer: "A smart-home system is useful when it solves clear needs such as lighting scenes, climate control, security or energy monitoring. Decide which devices must work together, whether they need neutral wires or dedicated cabling, how network coverage will reach each room, and how the home works if internet or cloud services fail. Preserve manual controls, plan secure account access and updates, and leave service access to hubs and drivers. Confirm compatibility and support before committing to a proprietary ecosystem.",
     sources: []
+  },
+
+  "How do I know whether my plot needs a soil test before construction?": {
+    answer: "A soil investigation helps the structural engineer understand the ground conditions below the proposed house. It is especially important where the plot has filled soil, variable ground, nearby water bodies, slopes, previous excavation, signs of settlement or where the proposed structure and local requirements call for it. Ask a qualified geotechnical professional to recommend the investigation scope and issue a site-specific report. Do not select a foundation type or depth from a neighbour's building or a generic online chart.",
+    sources: []
+  },
+
+  "What does safe bearing capacity mean in a soil test report?": {
+    answer: "Safe bearing capacity is a geotechnical design value used to assess the pressure that the ground can support under the assumptions and safety factors in the soil report. It is not a universal number for a neighbourhood: soil layers, groundwater, depth, settlement limits and test methods matter. Give the complete report to the structural engineer, who must check both bearing and settlement and design the foundation accordingly. Do not use a single value copied from another plot.",
+    sources: []
+  },
+
+  "Can I decide the footing size based on my neighbour's house?": {
+    answer: "A neighbour's footing may sit on different soil, at a different depth, carry different loads or have been designed under different rules. Even adjacent plots can contain different fill, groundwater or soil layers. Foundation dimensions and reinforcement must be determined by a qualified structural engineer using the proposed building loads and suitable site investigation. Treat a neighbour's foundation only as background information, never as a design instruction.",
+    sources: []
+  },
+
+  "Why is a plinth beam provided in a house?": {
+    answer: "A plinth beam is a structural member at or near plinth level that connects parts of the building's foundation or frame as designed. Depending on the structural system, it can help tie columns and support masonry or manage differential movement; its role is not identical in every building. Its dimensions, reinforcement, concrete grade and connection details must follow the structural drawings. Do not cut, omit or alter a plinth beam to accommodate plumbing or door openings without written engineering approval.",
+    sources: []
+  },
+
+  "How do I check terrace waterproofing before laying tiles?": {
+    answer: "Before covering terrace waterproofing, check that the substrate is prepared, corners and upstands are detailed, pipe penetrations and rainwater outlets are sealed, and the designed slope drains water without ponding. Conduct the specified ponding or other system test for the required duration and record the result before laying protection or tiles. Confirm compatibility of the waterproofing, screed, adhesive and tile system. Protect the membrane from punctures during subsequent work and retain the product warranty and installation record.",
+    sources: []
+  },
+
+  "How should concrete be cured during hot weather in Telangana?": {
+    answer: "Hot weather increases evaporation and can cause rapid moisture loss in fresh concrete. The site team should plan casting time, material temperature, transport, placement, finishing and immediate curing protection according to the approved mix and project specification. Use the specified curing method and duration; do not add water at the site or change the mix informally to improve workability. The engineer and concrete supplier should set the controls for the actual weather and member.",
+    sources: []
+  },
+
+  "Should I use AAC blocks or red clay bricks for my house?": {
+    answer: "AAC blocks are generally lighter and larger than many conventional clay bricks, which can reduce dead load and speed up laying when the system is designed and installed correctly. Clay bricks have different availability, weight, thermal and moisture characteristics. Compare tested product properties, dimensional tolerance, water absorption, mortar or adhesive system, wall thickness, lintel details, service chasing and fixing methods. The structural designer must account for the chosen masonry system and its connections; workmanship and curing matter for either option.",
+    sources: []
+  },
+
+  "What is the correct plaster thickness for internal and external walls?": {
+    answer: "There is no single plaster thickness that is correct for every wall. It depends on the masonry or concrete substrate, line and level, plaster system and project specification. Large thicknesses can crack or debond and may indicate that the underlying wall needs correction or a designed multi-coat system. Check surface preparation, mesh at dissimilar-material junctions where specified, curing, straightness and finished dimensions. Agree the approved thickness and method with the architect or site engineer before plastering.",
+    sources: []
+  },
+
+  "How do I choose exterior paint for a house in Hyderabad?": {
+    answer: "Exterior paint selection should start with the wall substrate, local exposure, orientation, dampness and the manufacturer's technical data. Correct cracks, salt deposits and water ingress first; then use the specified primer and compatible coating system. Compare weathering performance, water-vapour behaviour, coverage, number of coats, warranty conditions and maintenance instructions rather than colour or brand name alone. Test a sample on the actual wall and ensure rainwater detailing prevents repeated wetting.",
+    sources: []
+  },
+
+  "What should I check before connecting my house to a sewer line?": {
+    answer: "Before connecting to a public sewer, confirm that a connection is available and obtain any required approval from the responsible local authority or utility. A plumber should verify the connection level, pipe gradient, diameter, inspection chambers, venting, backflow risk and access for cleaning. Test the completed line for leaks and flow before covering it. Do not connect stormwater drains to a foul sewer unless the local authority expressly permits that arrangement.",
+    sources: []
+  },
+
+  "Is rainwater harvesting required for an individual house in Telangana?": {
+    answer: "Rainwater-harvesting obligations can depend on the current state and local-body rules, plot size, building type, location and approval conditions. Check the latest requirement with the authority handling the building permission rather than relying on an old threshold or generic online statement. A workable system needs suitable roof catchment, first-flush arrangements where specified, filtration, safe recharge or storage design, overflow routing and maintenance access. Have the recharge design checked against site soil and groundwater conditions.",
+    sources: []
+  },
+
+  "What provisions should I make for rooftop solar during construction?": {
+    answer: "If rooftop solar may be added later, ask the structural engineer to review the proposed panel and support loads and identify suitable mounting zones. Coordinate conduit routes, inverter and battery locations, ventilation, maintenance access, earthing and protection devices before ceilings and waterproofing are finished. Avoid drilling the completed terrace membrane without an approved detail. The electrical installer must verify current utility interconnection, metering and safety requirements before commissioning.",
+    sources: []
+  },
+
+  "What is a comfortable staircase riser and tread for a house?": {
+    answer: "Staircase riser and tread dimensions must be consistent and comply with the building rules applicable to the project. Comfort also depends on total floor-to-floor height, number of steps, landing size, headroom, width, handrails, lighting and the needs of household members. Have the architect dimension the full stair section before construction and check the first and last risers against finished floor levels. Do not rely on a generic dimension that may not meet local requirements.",
+    sources: []
+  },
+
+  "What clauses should a house construction agreement include?": {
+    answer: "A house construction agreement should identify the parties, site, approved drawings, detailed scope, BOQ or pricing basis, material and workmanship specifications, exclusions, start and completion milestones, payment schedule, measurement method, taxes, variation approval, site safety, utilities, inspection rights, delay handling, defects and warranty obligations. Attach the latest signed drawings and specifications and define how disputes and termination are handled. Have a qualified legal professional review the agreement before signing, especially for high-value work.",
+    sources: []
+  },
+
+  "How can I verify a contractor's stage-wise construction bill?": {
+    answer: "Check a stage-wise bill against the signed BOQ, actual site measurements, approved drawings and the milestone definition in the agreement. Ask for measurement sheets, dated progress photographs, delivery records where relevant and written approval for every variation. Verify that quantities are not billed twice and that incomplete or defective work is treated according to the contract. Confirm taxes, prior payments, retention and deductions before releasing funds; avoid paying solely on a verbal progress estimate.",
+    sources: []
   }
 };
