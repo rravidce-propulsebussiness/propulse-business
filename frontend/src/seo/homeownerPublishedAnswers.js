@@ -1190,32 +1190,32 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
     sources: []
   },
 
-  "Which is better for kitchen cabinets: laminate or acrylic?": {
-    answer: "Laminate and acrylic are both used as exterior shutter finishes, but they look and perform differently. Laminate is available in many textures, colours and price grades and is generally easier to specify across a range of budgets. Acrylic gives a smooth, glossy reflective surface and can create a more uniform high-gloss look, but fingerprints, scratches, edge finishing and product quality should be considered. Neither finish makes the cabinet waterproof. Compare the exact brand, thickness, substrate, edge treatment, cleaning instructions and warranty, and inspect a full-size sample in your kitchen lighting before choosing.",
+  "What is the kitchen work triangle and does every kitchen need it?": {
+    answer: "The kitchen work triangle is a planning idea that connects the sink, cooking hob and refrigerator so the main preparation tasks can happen without unnecessary travel. It is a useful starting point, not a rigid rule for every modern kitchen. In a parallel, island or open-plan kitchen, the actual workflow, landing space, appliance doors, walkways and number of users may matter more than drawing a perfect triangle. Ask the designer to show movement paths and clearances on the plan, and make sure the refrigerator and oven can open without blocking the main route.",
     sources: []
   },
-  "Which is better: veneer or laminate for wardrobes?": {
-    answer: "Veneer is a thin layer of natural wood, so it offers real wood grain and natural variation; it usually needs the finish and maintenance recommended by the supplier. Laminate is a manufactured decorative surface with more predictable colour and pattern, and is commonly selected for easier routine care and a wider range of designs. The better choice depends on the look, budget, exposure to sunlight, maintenance expectations and the quality of the substrate and edge detailing. Ask for a physical sample, confirm whether the veneer is natural or reconstituted, and get the finish and care instructions in writing.",
+  "What is the ideal height for a kitchen countertop?": {
+    answer: "Countertop height should suit the primary users rather than being copied blindly from a standard catalogue. It depends on user height, floor finish, cabinet construction, countertop thickness and the type of work done at the counter. Ask the designer to mark the finished floor-to-counter dimension on the elevation and confirm it with a full-scale mock-up or site measurement before fabrication. Also check that the sink, hob, wall cabinets and appliances work comfortably with that height.",
     sources: []
   },
-  "Which plywood thickness is suitable for kitchen cabinets?": {
-    answer: "There is no one thickness for every kitchen component. Carcass sides, shelves, shutters, drawer bottoms and back panels have different spans and loads, so the designer should specify thickness by component and hardware system. A shelf carrying heavy utensils may need a different thickness or support arrangement from a narrow divider. Ask for a component-wise board schedule showing thickness, grade, brand and intended use, and check that hinge screws, drawer runners and wall fixings are compatible with the selected board. Do not accept a quotation that says only ‘plywood’ without a grade and thickness.",
-    sources: [{ label: "BIS – standards and product conformity information", url: "https://www.bis.gov.in/" }]
-  },
-  "Is HDHMR board good for kitchen cabinets?": {
-    answer: "HDHMR is a high-density engineered fibreboard product category used in some furniture and cabinet applications, but the name alone does not establish its moisture resistance, load capacity or suitability near a sink. Performance varies by manufacturer, product specification, thickness, edge sealing and installation. Ask for the exact product datasheet, declared properties, applicable standard or test evidence, and the manufacturer's permitted exposure conditions. For sink units and other moisture-prone areas, detail plumbing access, leak protection and edge sealing carefully, and compare the product against the alternatives specified for that component.",
-    sources: [{ label: "BIS – standards and product conformity information", url: "https://www.bis.gov.in/" }]
-  },
-  "How do I choose kitchen cabinet colours?": {
-    answer: "Choose kitchen colours after considering natural light, room size, countertop, flooring, wall colour and how much cleaning the surface will need. Light colours can make a compact or poorly lit kitchen feel brighter, while darker finishes can add contrast but may show dust, water spots or fingerprints depending on the texture. Use a limited palette: one main cabinet colour, one complementary colour or wood tone, and a coordinated countertop and backsplash. View large samples vertically in the actual kitchen at morning and evening light; small catalogue chips can look very different at full scale.",
+  "How high should overhead kitchen cabinets be installed?": {
+    answer: "The position of overhead cabinets depends on countertop height, user reach, ceiling height, chimney and hob clearances, window positions and appliance requirements. The bottom of the cabinet should leave enough usable space above the counter without making shelves unreachable. Have the designer dimension the counter, backsplash, cabinet bottom, cabinet height and ceiling gap together on one elevation. Follow the appliance manufacturer's required clearances above the hob and chimney rather than reducing them to gain storage.",
     sources: []
   },
-  "What warranty should I get for modular kitchen and wardrobes?": {
-    answer: "Ask for separate written warranty terms for the cabinet boards, shutters and finish, hinges, drawer channels, accessories, countertop, electrical items and installation workmanship. The document should identify the manufacturer and model, warranty duration, start date, what defects are covered, exclusions, service contact, claim process and whether labour or replacement is included. Confirm how water damage, misuse, normal wear, adjustment and consumables are treated. A verbal promise such as ‘lifetime warranty’ is not enough unless the covered component, conditions and remedy are clearly documented.",
+  "Which countertop is best for an Indian kitchen?": {
+    answer: "Choose a countertop by comparing heat exposure, stain resistance, porosity, scratch behaviour, maintenance, joint visibility, edge details and local repair options. Granite, engineered surfaces and other countertop materials have different care requirements and limitations; no surface should be treated as indestructible. Ask the supplier for the exact material type, thickness, finish, sealing or maintenance instructions, warranty and sample. Also plan sink cut-outs, hob openings, supports and joints before fabrication, because poor detailing can cause failures even when the slab itself is good.",
     sources: []
   },
-  "How do I identify good-quality plywood before buying?": {
-    answer: "Check the board's manufacturer, grade and standard marking, thickness, batch details and invoice rather than relying only on colour, smell or a salesperson's claim. Ask for the product datasheet and applicable conformity or test documents, and verify that the grade matches the cabinet's expected moisture exposure and load. Inspect sheets for delamination, damaged edges, uneven thickness, warping and visible core gaps. Buy traceable material from a reliable dealer and retain batch details. Visual inspection cannot prove every performance property; formal verification requires appropriate testing.",
-    sources: [{ label: "BIS – standards and product conformity information", url: "https://www.bis.gov.in/" }]
+  "How do I choose a backsplash for a kitchen?": {
+    answer: "A kitchen backsplash should protect the wall from cooking splashes and be easy to clean around the hob and sink. Choose a surface compatible with heat and moisture exposure, and coordinate its height and joints with the countertop, overhead cabinets, chimney and electrical outlets. Ask the installer how corners, countertop junctions, cut-outs and sealant joints will be finished. A beautiful material can still become difficult to maintain if it has deep texture, porous joints or poorly sealed edges.",
+    sources: []
   },
+  "How should I plan storage below the kitchen sink?": {
+    answer: "Plan the sink cabinet around the bowl depth, drain trap, water filters, plumbing valves, waste segregation and access for future repairs. Use a removable or service-friendly internal arrangement instead of boxing in pipes permanently. Protect board edges and joints from leaks, provide a leak-inspection route and avoid storing items where they block shut-off valves. Confirm the exact sink and plumbing model before the cabinet is manufactured so the drawer or shutter layout does not clash with the trap and pipework.",
+    sources: []
+  },
+  "What should I check before approving a modular kitchen drawing?": {
+    answer: "Before approval, check the measured room dimensions, appliance models, sink and hob positions, refrigerator opening, countertop height, overhead-cabinet clearance, chimney duct route, electrical points, plumbing, drawer access and door swings. Review a dimensioned plan and elevations, not only a 3D render. The quotation should match the drawing and list board grade and thickness, finish, hardware brands and models, accessories, countertop scope, installation, exclusions and warranty. Sign off the final revision and keep a copy before production begins.",
+    sources: []
+  }
 };
