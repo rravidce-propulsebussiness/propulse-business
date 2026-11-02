@@ -31,10 +31,10 @@ function GuideHub(){
 
 export default function ConstructionGuide(){
   const {guideSlug}=useParams()
+  const [checkedItems,setCheckedItems]=useState({})
   if(!guideSlug)return <GuideHub/>
   const guide=guideBySlug(guideSlug)
   if(!guide)return <Navigate to="/guides" replace/>
-  const [checkedItems,setCheckedItems]=useState({})
   const checklistTotal=guide.sections.reduce((total,item)=>total+(item.checklist?.length||0),0)
   const checkedCount=Object.values(checkedItems).filter(Boolean).length
   const related=[
