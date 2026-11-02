@@ -736,5 +736,38 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   "Which channel is best for kitchen drawers?": {
     answer: "Choose a drawer runner based on the drawer’s load, width, depth, opening frequency and the space available inside the cabinet. Common options include side-mounted telescopic channels and concealed undermount runners; some models offer soft-close or push-to-open functions. Compare the manufacturer’s rated load, extension type, adjustment range, corrosion protection and installation requirements. A heavy pot drawer needs a different specification from a shallow cutlery drawer. Ask the interior contractor to name the channel brand and model, state the load rating and include the quantity in the BOQ.",
     sources: []
+  },,
+
+  "How many doors should a house have according to Vastu?": {
+    answer: "Vastu traditions do not provide one universally agreed door count that suits every house. Recommendations can vary by text, practitioner and the way openings are counted. From a practical design perspective, plan doors around safe access, privacy, room function, furniture movement, ventilation and clear circulation. Avoid reducing essential exits or creating narrow passages just to meet a preferred number. If your family follows Vastu, agree on the interpretation with the consultant before the floor plan is frozen, then have the architect check that the layout remains functional and compliant with applicable building and fire-safety requirements.",
+    sources: []
   },
+  "Which direction should the main door face according to Vastu?": {
+    answer: "Many Vastu schools discuss north, east and other entrance zones differently, and there is no single rule accepted by every practitioner. The correct entrance location for a real plot also depends on which side the road is on, the plot shape, legal access, setbacks, parking, privacy and the internal layout. Start with a measured site plan and the actual road direction. If Vastu is important to you, ask the consultant to mark the preferred entrance zone on that exact plan, then have the architect verify door swing, steps, accessibility, daylight and circulation before construction.",
+    sources: []
+  },
+  "Where should the kitchen be according to Vastu?": {
+    answer: "Traditional Vastu guidance often prefers particular kitchen zones and cooking orientations, but recommendations vary between schools and should be treated as cultural preferences rather than building regulations. In practical planning, place the kitchen where it can connect conveniently to dining, receive suitable ventilation, accommodate safe cooking clearances and allow efficient plumbing and electrical routing. Keep the hob, sink, refrigerator and preparation counter arranged for a usable work triangle or workflow. If following Vastu, coordinate the preferred zone and cooking direction with these functional requirements before finalising the plan.",
+    sources: []
+  },
+  "Where should the master bedroom be according to Vastu?": {
+    answer: "Some Vastu traditions prefer the south-west zone for a master bedroom, but this is not a statutory planning rule and interpretations differ. The best room location for a particular house also depends on the plot orientation, floor layout, privacy, noise, daylight, ventilation, attached toilet placement and furniture clearances. Check that the bed can be positioned without blocking circulation or windows and that wardrobes have enough opening space. If you follow Vastu, treat the preferred zone as one design input alongside comfort, structure and the approved building layout.",
+    sources: []
+  },
+  "Where should the pooja room be placed according to Vastu?": {
+    answer: "Many Vastu practitioners prefer a north-east area for a pooja space, but views differ and a small home may not have a suitable room in that zone. Choose a clean, quiet and accessible location that does not obstruct circulation or reduce essential storage and room sizes. Provide safe lighting and ventilation, keep the space away from dampness and avoid placing electrical wiring or heat sources unsafely. If a separate room is not practical, a well-designed niche or cabinet can serve the family’s needs. Confirm any Vastu preference with the designer before fixing walls and services.",
+    sources: []
+  },
+  "Where should toilets be placed according to Vastu?": {
+    answer: "Vastu recommendations for toilet locations vary, and a preferred zone should not override plumbing, ventilation, waterproofing or structural requirements. Position toilets so soil and waste pipes can connect with suitable gradients, inspection access is possible and the room can be ventilated effectively. Keep the toilet layout practical for privacy and accessibility, provide correct floor slope and waterproofing, and avoid compromising beams, columns or other structural elements to move a bathroom. If Vastu matters to the household, discuss the preferred location during concept planning, before plumbing shafts and floor levels are fixed.",
+    sources: []
+  },
+  "Which direction should I sleep facing according to Vastu?": {
+    answer: "Some Vastu traditions recommend sleeping with the head toward the south or east, while interpretations can differ. These are traditional beliefs, not a building-code or medical requirement. For bedroom design, prioritise a comfortable bed position, clear walking space, suitable ventilation, control of morning and evening glare, quiet surroundings and convenient access to switches and storage. If you choose to follow a Vastu direction, test whether the bed still fits the room without blocking doors, wardrobes or windows.",
+    sources: []
+  },
+  "What Vastu precautions should I take before building a house?": {
+    answer: "If Vastu is important to your family, discuss it before the floor plan and structural grid are finalised; late changes can create expensive plumbing, beam, stair and room-layout conflicts. Give the consultant a correctly oriented survey with north direction, road side, dimensions and levels. Ask for written recommendations on entrance, kitchen, bedrooms, pooja space, toilets and staircase, and mark which are essential preferences versus optional suggestions. Then have the architect and structural engineer check daylight, ventilation, circulation, setbacks, drainage, safety and structural feasibility. Vastu guidance is a traditional design preference and does not replace local building rules or engineering advice.",
+    sources: []
+  }
 };
