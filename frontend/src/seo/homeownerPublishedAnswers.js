@@ -2125,5 +2125,55 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
     answer: "Request as-built drawings that reflect approved changes and the final locations of structural elements and concealed electrical, plumbing and drainage services, where these records are part of the project scope. Compare them with the approved drawing revisions and site records, and ask the relevant architect or engineer to verify important deviations. Keep photographs of concealed services taken before covering. Accurate as-built information makes future maintenance, repairs and renovation safer and easier.",
     sources: []
   }
+,
+  "How should I test rainwater pipes before house handover?": {
+    answer: "Ask the plumbing contractor to check that roof outlets, rainwater pipes, joints, bends and discharge points are complete and free of construction debris. A controlled water-flow test can help reveal leaks, blockages or poor connections. Confirm that rainwater is discharged to the approved collection, recharge or drainage arrangement and does not flow onto neighbouring land or weaken foundations. Record the test and correct defects before ceilings or access points are closed.",
+    sources: []
+  },
+
+  "What should I check before using a new underground water sump?": {
+    answer: "Before first use, confirm that the sump is structurally complete, cleaned of construction debris and tested for leakage using a method approved by the project team. Check the inlet, outlet, overflow, drain, access cover, ventilation and pump arrangement, and ensure the cover prevents accidental entry and contamination. Ask the contractor to demonstrate cleaning and maintenance access. Use a suitable water-quality test before drinking the stored water, especially if the source or cleaning process is uncertain.",
+    sources: []
+  },
+
+  "Should I arrange anti-termite treatment during house construction?": {
+    answer: "Discuss termite risk and the appropriate treatment with a qualified pest-management provider and the project team before relevant construction stages are covered. The method should suit the site conditions, foundation details and applicable product instructions and safety requirements. Obtain the product name, application record, treated areas, date and warranty terms. Do not apply chemicals independently or assume that one treatment guarantees permanent protection; control moisture, wood-to-soil contact and entry paths as part of ongoing prevention.",
+    sources: []
+  },
+
+  "How do I prevent water from collecting around my house foundation?": {
+    answer: "Plan the finished ground levels and surface drainage so rainwater flows away from the building toward an approved collection or discharge point. Check that paving, driveways, garden beds and downpipes do not direct water toward the plinth or neighbouring property. Keep inspection chambers and drains accessible for cleaning. The architect or civil engineer should review levels and drainage details for the actual plot, particularly where the site is low-lying or adjoining roads sit at a different level.",
+    sources: []
+  },
+
+  "What should I check around windows to prevent rainwater leakage?": {
+    answer: "Inspect the window frame installation, perimeter sealant, sill or threshold detailing, external plaster junctions and the route for draining water from frame tracks. Confirm that the product is installed according to the manufacturer's instructions and the approved detail. A controlled water-spray test by the contractor may help identify leakage before interior finishes are completed. Sealant alone cannot correct a poorly designed sill or drainage path; record and rectify the source of any water entry.",
+    sources: []
+  },
+
+  "How can I check whether a roof water tank installation is safe?": {
+    answer: "Have the structural engineer verify that the supporting slab, beams or dedicated platform were designed for the tank's full operating load and location. Check that the tank is securely supported on a suitable level base, the plumbing includes accessible isolation and overflow arrangements, and maintenance access is safe. Do not place a large tank on an existing roof or change its position without engineering review. Follow the tank manufacturer's installation and anchoring instructions.",
+    sources: []
+  },
+
+  "What should I check before closing a false ceiling below a bathroom or terrace?": {
+    answer: "Before closing the ceiling, inspect concealed pipes, joints, traps, valves and drainage connections, and complete the specified pressure or flow tests. Check that waterproofing tests have been recorded where relevant and that access panels are provided for components requiring maintenance. Photograph the concealed services and retain drawings showing their routes. Do not close the ceiling while leaks, unexplained dampness or incomplete testing remain unresolved.",
+    sources: []
+  },
+
+  "How do I choose a suitable septic tank or sewage treatment arrangement for a house?": {
+    answer: "First confirm whether a public sewer connection is available and what the local authority permits for the property. If an on-site system is allowed, its capacity, location, access, ventilation, setbacks and disposal arrangement must be designed for the expected occupants, soil conditions and applicable public-health rules. Use a qualified designer and obtain required approvals. Do not select a tank by a generic online size chart or discharge untreated sewage into stormwater drains or open ground.",
+    sources: []
+  },
+
+  "What should I check in external wall joints to reduce rainwater seepage?": {
+    answer: "Review the approved details at wall-to-window junctions, parapets, balconies, service penetrations, expansion or movement joints and interfaces between different materials. Confirm that compatible sealants, flashings, waterproofing layers and drainage paths are installed continuously and according to the manufacturer's instructions. Inspect these details before painting or cladding hides them. If leakage appears, identify and repair the entry path rather than simply applying another coat of exterior paint.",
+    sources: []
+  },
+
+  "How should I prepare my house for its first monsoon after construction?": {
+    answer: "Before the rainy season, clear terrace outlets, rainwater pipes and external drains; inspect parapets, roof penetrations, window seals, balcony outlets and visible waterproofing details. Check that ground levels direct water away from the building and that sump and pump systems work. Arrange repairs to cracks or damp patches before heavy rain, and keep photographs of any new leakage. For recurring seepage or signs of structural movement, obtain a qualified inspection instead of relying only on surface coatings.",
+    sources: []
+  }
 
 };
