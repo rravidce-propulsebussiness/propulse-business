@@ -1694,5 +1694,54 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
     answer: "Ask for a complete scope matrix and BOQ before signing. Check whether excavation, soil disposal, foundation changes, steel and concrete specifications, waterproofing, electrical points, plumbing fixtures, doors and windows, flooring, painting, staircase railing, compound wall, sump, tank, approvals, taxes and debris removal are included. Look for quantity limits, brand allowances, provisional sums, escalation clauses and extra-work rates. Ask the builder to confirm in writing what triggers an additional charge and require approval of variations before the work is carried out.",
     sources: []
   }
+  "How do I check current cement prices before buying for house construction?": {
+    answer: "Ask at least two or three local authorised dealers for a dated quotation for the exact cement type, grade and bag size specified for your work. Confirm whether the price includes GST, transport, unloading and any minimum-order charge, and check the manufacturing date and bag condition at delivery. Compare the same product and terms rather than comparing different cement types or brands. Prices change by location, supplier and date, so use the quotations valid for your purchase period and keep the invoice with the site records.",
+    sources: []
+  },
+
+  "How should I purchase and store TMT steel for house construction?": {
+    answer: "Purchase steel to the approved structural specifications and bar schedule, not from a generic online quantity estimate. Confirm the manufacturer, grade, diameter markings, batch or test documentation and invoice, and ask the engineer or quality team to verify compliance. Store bars off the ground on supports, separated by size and protected from soil, standing water and contamination. Track receipts, issued quantities, cut-and-bend records and unused returns. Do not substitute a different grade or diameter without written structural approval.",
+    sources: []
+  },
+
+  "How do I compare labour charges for house construction in Hyderabad?": {
+    answer: "Labour quotations should be compared against the same drawings, scope, measurement method, workmanship expectations and work programme. Clarify whether the price covers excavation, shuttering, steel fixing, concreting, masonry, plastering, tiling, painting, scaffolding, curing, debris handling and rework. Confirm who supplies tools, safety equipment, water and power, and how attendance, measurement, overtime and extra work are recorded. Local labour rates vary with season, skill availability, site access and project complexity, so obtain current written quotations rather than relying on a single generic rate.",
+    sources: []
+  },
+
+  "What payment schedule should I agree with a house construction contractor?": {
+    answer: "Tie payments to clearly described and verifiable milestones in the signed agreement, such as completion and inspection of specified work packages. State the evidence required for each claim, who measures and approves the work, how material advances are accounted for, and how defects or incomplete items are treated. Keep a record of invoices, receipts, measurements and approved variations. Avoid large advances without contractual protection, and do not release a milestone payment solely because a date has arrived. The schedule should be reviewed against the project's cash flow and procurement plan.",
+    sources: []
+  },
+
+  "How long does each stage of independent house construction take?": {
+    answer: "The duration of each stage depends on the design, approvals, plot conditions, number of floors, crew size, material availability, weather, inspection requirements and curing or testing periods. Break the programme into approvals and mobilisation, excavation and foundations, structural work, masonry, services, plaster, waterproofing, finishes, testing and handover. Ask the contractor for a project-specific baseline schedule with start and finish dates, dependencies, procurement lead times and inspection hold points. Update actual progress weekly and record the reason and impact of each delay instead of relying on a generic total-duration promise.",
+    sources: []
+  },
+
+  "What should I check during a weekly house construction site inspection?": {
+    answer: "Use a dated checklist based on the current drawings and work stage. Check whether work matches approved drawings, whether the site is safe and organised, whether delivered materials match approved specifications, and whether required inspections and tests are recorded. Review workmanship, protection of completed work, water management, housekeeping, progress against the schedule and any open defects. Photograph key areas and note the location, responsible person and target date for each action. A homeowner checklist is a monitoring aid, not a replacement for inspection by the architect, engineer or qualified supervisor.",
+    sources: []
+  },
+
+  "How do I verify the quantity of cement and steel used at my construction site?": {
+    answer: "Maintain a simple material reconciliation: opening stock plus deliveries, minus documented issues, returns and closing stock. Match supplier invoices and delivery notes to physical counts and record where materials were used. For steel, compare cutting and bending records and bar schedules with the approved structural drawings; for cement, track bags issued to each work activity and investigate unusual differences. Allow for legitimate handling losses and site conditions, but ask the engineer or quantity surveyor to review unexplained variances. Stock totals alone cannot prove that the installed work meets design requirements.",
+    sources: []
+  },
+
+  "What should I do if the contractor asks for extra payment during construction?": {
+    answer: "Ask for a written variation describing the changed scope, reason, affected drawing or specification, quantity, rate, total cost and schedule impact. Check whether the work was already included in the signed BOQ or contract and whether the change was requested or approved by you. Obtain the required architect or engineer approval before structural or service changes proceed. Agree the price and authorisation in writing before the extra work starts, except where immediate action is needed to address a safety risk. Keep the variation with the payment records.",
+    sources: []
+  },
+
+  "How do I check whether construction work is progressing according to schedule?": {
+    answer: "Compare actual completed quantities and inspection milestones with the approved baseline schedule, not just the percentage claimed by the contractor. Check whether predecessor work is complete, materials and labour are available for the next activity, and required tests or approvals have been obtained. Record delayed activities, their causes, the responsible party and the effect on later work. Ask for a recovery plan with realistic sequencing and resource commitments. Do not accelerate structural work by skipping specified curing, testing or inspection requirements.",
+    sources: []
+  },
+
+  "What should be included in a house construction handover checklist?": {
+    answer: "The handover checklist should record room-by-room defects, operation of doors and windows, plumbing leaks and drainage, electrical points and distribution-board labels, water pumps and tanks, waterproofed areas, roof and balcony outlets, fixtures, access covers and safety items. Collect applicable completion or occupancy documents, approved as-built drawings, test and commissioning reports, warranties, manuals, keys, meter details and contact information for service providers. Record outstanding defects, agreed rectification dates and final meter readings in a signed handover note. Arrange qualified inspection for structural or concealed-system concerns.",
+    sources: []
+  }
 
 };
