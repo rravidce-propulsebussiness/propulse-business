@@ -1264,4 +1264,55 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
     answer: "A smart-home system is useful when it solves clear needs such as lighting scenes, climate control, security or energy monitoring. Decide which devices must work together, whether they need neutral wires or dedicated cabling, how network coverage will reach each room, and how the home works if internet or cloud services fail. Preserve manual controls, plan secure account access and updates, and leave service access to hubs and drivers. Confirm compatibility and support before committing to a proprietary ecosystem.",
     sources: []
   }
+
+
+  "What are the different types of foundations used for house construction?": {
+    answer: "The foundation type is selected from the soil investigation, structural loads, groundwater conditions, site constraints and nearby building conditions. Common systems include isolated or combined footings, strip footings, raft foundations and piles, but they are not interchangeable options to choose by cost or habit. Ask for the soil report, structural design basis, foundation layout, founding level, reinforcement details and concrete specification. The structural engineer should confirm the system for the actual plot and building; a neighbour's foundation depth or a generic online rule is not a safe design reference.",
+    sources: []
+  },
+
+  "How much steel is required for house construction?": {
+    answer: "There is no dependable single steel quantity per square foot for every house. Reinforcement depends on the structural grid, spans, number of floors, soil and foundation design, seismic requirements, member sizes and detailing. Use the structural drawings and a bar bending schedule (BBS) to estimate each diameter and length, including laps, hooks, bends and wastage allowances stated by the estimator. Compare the supplier's invoices and site issue records with the BBS, and have the structural engineer approve substitutions. Do not reduce reinforcement or change bar diameters to meet a budget without a revised design.",
+    sources: []
+  },
+
+  "Which concrete grade is used for house construction?": {
+    answer: "Concrete grade must follow the structural drawings and approved mix design for each element; it should not be selected from a generic house-construction chart. The engineer specifies the grade and exposure requirements for footings, columns, beams, slabs and other members based on design and site conditions. Confirm whether the work uses design-mix or permitted nominal-mix concrete, the approved supplier or batching method, workability, delivery records, sampling and cube-test frequency. Never add water at site without the responsible engineer's approval, and do not assume a higher grade automatically fixes poor batching, placement, compaction or curing.",
+    sources: [
+      { label: "BIS – IS 456: Plain and reinforced concrete", url: "https://standards.bis.gov.in/website/standard-details" },
+      { label: "BIS – Know Your Standard", url: "https://www.bis.gov.in/know-your-standard/?lang=en" }
+    ]
+  },
+
+  "What is the standard thickness of an RCC roof slab?": {
+    answer: "An RCC slab does not have one safe standard thickness for every house. The required depth is designed from the span, support conditions, loading, deflection and vibration limits, reinforcement arrangement, concrete grade, fire and durability requirements, and the overall structural system. Check the structural drawing for slab thickness, beam levels, reinforcement, openings, drops and service sleeves before shuttering. Do not increase or reduce slab depth at site to resolve a level mismatch; refer the issue to the structural designer and obtain revised details where needed.",
+    sources: [
+      { label: "BIS – IS 456: Plain and reinforced concrete", url: "https://standards.bis.gov.in/website/standard-details" }
+    ]
+  },
+
+  "How do I check waterproofing before laying tiles?": {
+    answer: "Before tiles cover a wet area, confirm that the substrate is sound and correctly sloped to the drain, corners and pipe penetrations are treated, and the specified waterproofing system has been applied at the required coverage and thickness. Check that the membrane has cured according to the product instructions and that the applicator has completed the specified ponding or water-retention test with the agreed duration and water level. Inspect the ceiling or adjoining walls below for leakage, record the test result and repair failures before tiling. Follow the system manufacturer's method statement and the project consultant's acceptance criteria rather than relying on a quick visual check.",
+    sources: []
+  },
+
+  "What should I inspect before an RCC footing concrete pour?": {
+    answer: "Before a footing pour, verify the excavation dimensions and founding level against the approved drawings and soil report, and obtain the engineer's acceptance of the exposed founding stratum. Check that any required dewatering and blinding or levelling concrete are complete, reinforcement diameter and spacing match the bar schedule, cover blocks are suitable and stable, starter bars and column locations are correct, and formwork is clean and secure. Confirm the approved concrete grade, delivery and sampling plan, access for placing and vibration, and curing arrangements. Photograph and record the inspection; do not pour over soft, disturbed or waterlogged founding material without the engineer's direction.",
+    sources: [
+      { label: "BIS – IS 456: Plain and reinforced concrete", url: "https://standards.bis.gov.in/website/standard-details" }
+    ]
+  },
+
+  "What should I check in TMT steel delivered to a construction site?": {
+    answer: "Match the delivered steel to the structural specification and purchase order: manufacturer, grade, nominal diameter, quantity, batch or heat identification and applicable standard marking. Check invoices and mill test certificates, retain traceability records, and inspect bars for severe corrosion, oil, mud, damage or obvious defects. Verify that the specified grade and ductility requirements are met; a brand name or rib pattern alone does not prove compliance. Store bars off the ground, separated by diameter and protected from contamination. Ask the structural engineer to approve any proposed brand, grade or diameter substitution before use.",
+    sources: [
+      { label: "BIS – Know Your Standard", url: "https://www.bis.gov.in/know-your-standard/?lang=en" }
+    ]
+  },
+
+  "How should construction-stage payments be linked to work progress?": {
+    answer: "Use a written stage-payment schedule tied to measurable, inspected work rather than calendar dates or verbal milestones. Define each stage clearly—for example, approved foundation completion, plinth, each structural floor, masonry and services, waterproofing tests, finishes and handover—and state the evidence needed before an invoice becomes due. The agreement should identify material and labour scope, taxes, variation approval, retention if agreed, defect rectification, delay handling and the process for measuring completed quantities. Keep dated site records, approved drawings, test reports, bills and payment receipts. Have the contract reviewed for the project's jurisdiction and never pay for concealed work before the agreed inspection and documentation.",
+    sources: []
+  }
+
 };
