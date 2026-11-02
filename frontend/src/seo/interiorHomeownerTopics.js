@@ -158,7 +158,7 @@ groups["Interior planning & room-by-room design"]=[
 ["How do I make home interiors suitable for elderly parents?","Plan step-free routes where feasible, adequate lighting, non-slip surfaces, reachable storage, grab-bar backing and clear circulation with professional advice."],
 ["Which interior materials are easiest to maintain with pets?","Choose cleanable, scratch-tolerant surfaces and washable fabrics based on the pet, product care instructions and room use."],
 ["How do I reduce noise between bedrooms and living areas?","Use layout zoning, solid door seals, suitable wall/ceiling assemblies, soft furnishings and properly specified acoustic products."],
-["Is a smart home system worth installing during interior work?","Plan requirements, wiring, network coverage, device compatibility, manual controls, privacy, power backup and future service access before closing walls."],,
+["Is a smart home system worth installing during interior work?","Plan requirements, wiring, network coverage, device compatibility, manual controls, privacy, power backup and future service access before closing walls."],
 "Interior styles & design aesthetics":[
 ["What are the most popular interior design styles for Indian homes?","Compare contemporary, modern, minimalist, Scandinavian, Japandi, industrial, traditional, transitional and eclectic styles by shapes, materials, colour and upkeep."],
 ["What is the difference between modern and contemporary interior design?","Explain the distinction between a defined modernist design movement and an evolving contemporary approach, with practical examples."],
