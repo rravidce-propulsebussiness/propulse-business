@@ -1,4 +1,5 @@
 import {Link, Navigate, useParams} from 'react-router-dom'
+import { useState } from 'react'
 import {guideBySlug,CONSTRUCTION_GUIDES} from '../seo/constructionGuides'
 import './ConstructionGuide.css'
 import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
@@ -33,6 +34,9 @@ export default function ConstructionGuide(){
   if(!guideSlug)return <GuideHub/>
   const guide=guideBySlug(guideSlug)
   if(!guide)return <Navigate to="/guides" replace/>
+  const [checkedItems,setCheckedItems]=useState({})
+  const checklistTotal=guide.sections.reduce((total,item)=>total+(item.checklist?.length||0),0)
+  const checkedCount=Object.values(checkedItems).filter(Boolean).length
   const related=[
     ...CONSTRUCTION_GUIDES.filter(item=>item.slug!==guide.slug&&item.category===guide.category),
     ...CONSTRUCTION_GUIDES.filter(item=>item.slug!==guide.slug&&item.category!==guide.category),
@@ -46,6 +50,7 @@ export default function ConstructionGuide(){
       <h1>{guide.heading}</h1>
       <p>{guide.summary}</p>
       <div className="guide-actions"><Link className="primary" to={guide.cta}>{guide.ctaLabel}</Link><Link className="secondary" to="/packages">View Packages</Link></div>
+      <div className="guide-actions guide-print-actions"><button type="button" className="primary" onClick={()=>window.print()}>Print / Save PDF</button><span>{checkedCount} of {checklistTotal} checks completed</span><button type="button" className="secondary" onClick={()=>setCheckedItems({})}>Reset checklist</button></div>
     </section>
 
     {guide.note&&<section className="guide-note"><b>Important</b><p>{guide.note}</p></section>}
@@ -63,6 +68,10 @@ export default function ConstructionGuide(){
           <h2>{item.heading}</h2>
           <p>{item.body}</p>
           {item.bullets?.length>0&&<ul>{item.bullets.map(bullet=><li key={bullet}>{bullet}</li>)}</ul>}
+          {item.checklist?.length>0&&<div className="guide-checklist-items">{item.checklist.map((label,checkIndex)=>{
+            const checkId=guide.slug+'-'+index+'-'+checkIndex
+            return <label key={checkId}><input type="checkbox" checked={Boolean(checkedItems[checkId])} onChange={event=>setCheckedItems(current=>({...current,[checkId]:event.target.checked}))}/><span>{label}</span></label>
+          })}</div>}
         </section>)}
       </div>
     </section>
