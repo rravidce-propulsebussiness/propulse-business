@@ -102,7 +102,14 @@ groups["More interior cost, layout & material questions"] = [
 ["How do I choose handles for kitchen cabinets?","Covers grip, projection, finish, cleaning, child safety and alignment with shutter style."],
 ["What is the best lighting for a wardrobe?","Explains sensor lights, colour rendering, glare, wiring access and safe installation."],
 ["How much space is needed between a bed and wardrobe?","Explains door swing, drawer pull-out, walking clearance and site-measured furniture layouts."],
-["What should I finalise before starting interior work?","A checklist for approved drawings, material codes, electrical points, appliance sizes, finishes, BOQ and payment milestones."]
+["What should I finalise before starting interior work?","A checklist for approved drawings, material codes, electrical points, appliance sizes, finishes, BOQ and payment milestones."],
+["What is the kitchen work triangle and does every kitchen need it?","Understand the relationship between sink, hob and refrigerator, and when workflow and clearances matter more than a rigid triangle."],
+["What is the ideal height for a kitchen countertop?","Learn how user height, floor finish, cabinet construction and appliance positions determine a comfortable finished counter height."],
+["How high should overhead kitchen cabinets be installed?","Plan overhead cabinet position around user reach, counter height, ceiling, windows, chimney and appliance clearances."],
+["Which countertop is best for an Indian kitchen?","Compare countertop materials by heat, stains, porosity, scratches, maintenance, joints and repairability."],
+["How do I choose a backsplash for a kitchen?","Choose a cleanable splash-resistant surface and coordinate it with the hob, sink, countertop, cabinets and electrical outlets."],
+["How should I plan storage below the kitchen sink?","Plan the sink cabinet around plumbing, filters, valves, waste segregation, leak inspection and future service access."],
+["What should I check before approving a modular kitchen drawing?","Review dimensions, appliances, clearances, service points, materials, hardware, scope, exclusions and signed drawing revisions."]
 ];
 
 groups["Hardware & accessories"]=[
@@ -143,15 +150,6 @@ groups["Interior planning & room-by-room design"]=[
 ["How do I reduce noise between bedrooms and living areas?","Use layout zoning, solid door seals, suitable wall/ceiling assemblies, soft furnishings and properly specified acoustic products."],
 ["Is a smart home system worth installing during interior work?","Plan requirements, wiring, network coverage, device compatibility, manual controls, privacy, power backup and future service access before closing walls."],
  ];
-groups["Modular kitchen planning & installation"]=[
-    ["What is the kitchen work triangle and does every kitchen need it?","Understand the relationship between sink, hob and refrigerator, and when workflow and clearances matter more than a rigid triangle."],
-    ["What is the ideal height for a kitchen countertop?","Learn how user height, floor finish, cabinet construction and appliance positions determine a comfortable finished counter height."],
-    ["How high should overhead kitchen cabinets be installed?","Plan overhead cabinet position around user reach, counter height, ceiling, windows, chimney and appliance clearances."],
-    ["Which countertop is best for an Indian kitchen?","Compare countertop materials by heat, stains, porosity, scratches, maintenance, joints and repairability."],
-    ["How do I choose a backsplash for a kitchen?","Choose a cleanable splash-resistant surface and coordinate it with the hob, sink, countertop, cabinets and electrical outlets."],
-    ["How should I plan storage below the kitchen sink?","Plan the sink cabinet around plumbing, filters, valves, waste segregation, leak inspection and future service access."],
-    ["What should I check before approving a modular kitchen drawing?","Review dimensions, appliances, clearances, service points, materials, hardware, scope, exclusions and signed drawing revisions."]
-];
 
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
