@@ -1596,5 +1596,54 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
     answer: "The project file should include the signed agreement, approved architectural and structural drawings, BOQ and specifications, approved revisions, work schedule, invoices and payment receipts, material delivery records, relevant test reports, inspection approvals, variation approvals and dated progress records. At completion, collect applicable completion or occupancy documents, as-built service drawings, warranties, manuals, test and commissioning records, and handover acknowledgements. The exact list depends on the contract, project scope and local rules. Keep digital copies as well as originals where issued.",
     sources: []
   }
+  "How do I estimate house construction cost for a 100-square-yard plot?": {
+    answer: "A 100-square-yard plot is 900 square feet of land, but the construction budget is based on the proposed built-up area and scope, not simply the plot size. First confirm the permitted footprint, setbacks, number of floors and room layout with an architect. Then prepare a drawing-based BOQ covering structure, masonry, plaster, flooring, doors and windows, electrical, plumbing, waterproofing, finishes and external works. Add approval fees, professional fees, site logistics, taxes where applicable and a contingency. Ask contractors to state exclusions and specifications so the estimate can be compared fairly.",
+    sources: []
+  },
+
+  "How do I estimate house construction cost for a 150-square-yard plot?": {
+    answer: "A 150-square-yard plot is 1,350 square feet of land; it does not mean the house will have that much built-up area on every floor. The permitted footprint and total floor area depend on setbacks, road width, local rules, design and approvals. Get a measured floor plan, calculate the built-up area for each level and prepare a BOQ with item descriptions, quantities and specifications. Separate structural work, finishes, services, compound wall, water storage, site development and approval-related costs. Treat any per-square-foot figure as an early planning benchmark only, not a quotation.",
+    sources: []
+  },
+
+  "How do I estimate house construction cost for a 200-square-yard plot?": {
+    answer: "A 200-square-yard plot contains 1,800 square feet of land, but the buildable and built-up areas depend on the sanctioned plan, setbacks, floor count and design. Estimate the project from the actual drawings: measure each floor, list the work items and specify the material and workmanship standards. Include foundations and structure, masonry, finishes, doors and windows, electrical and plumbing, waterproofing, external development and professional or approval costs. Request a written BOQ and exclusions from each contractor; do not multiply the plot area by a generic rate and treat it as the final project cost.",
+    sources: []
+  },
+
+  "What is included in a per-square-foot house construction rate?": {
+    answer: "A per-square-foot rate is meaningful only when the contractor defines the area measurement and included scope. Ask whether it covers excavation, foundations, RCC structure, masonry, plaster, flooring, painting, doors and windows, electrical, plumbing, waterproofing, sanitary fittings, kitchen work, compound wall, sump, overhead tank, approvals, taxes and debris removal. Confirm brands, grades, thicknesses or finish specifications where relevant, and identify provisional allowances and exclusions. Compare two offers only after aligning these details and the built-up-area calculation.",
+    sources: []
+  },
+
+  "How do I calculate built-up area for a multi-floor house?": {
+    answer: "Use the approved or proposed floor plans and measure each floor according to the measurement convention stated in the estimate or contract. Add the areas included by that convention and show balconies, staircases, utility spaces, shafts, parking and open-to-sky portions separately where their treatment differs. Do not assume every covered or uncovered space is counted identically by every contractor or authority. Ask the architect and contractor to provide a floor-wise area statement with dimensions and a clearly defined inclusion rule before applying a rate.",
+    sources: []
+  },
+
+  "Is the foundation cost the same for every house on the same plot size?": {
+    answer: "No. Foundation cost depends on soil profile and bearing characteristics, groundwater, building loads, number of floors, structural system, neighbouring foundations, excavation access and the foundation solution designed for the site. Two houses on plots of identical size can therefore have very different foundation requirements. Use a site-specific geotechnical investigation where advised and obtain a structural design based on the actual building. Compare foundation quotations against the same drawings, specifications and measured quantities rather than choosing the lowest lump-sum figure.",
+    sources: []
+  },
+
+  "What costs are commonly excluded from a basic house construction package?": {
+    answer: "Common exclusions can include plan approval and statutory fees, architect and engineering fees, soil investigation, borewell, sump, septic or sewer connection, compound wall and gate, paving and landscaping, utility deposits, transformer or service upgrades, solar systems, air-conditioning, wardrobes, modular kitchen, loose furniture, appliances, premium lighting, boundary-level changes and taxes. The exact exclusions vary by contractor and package. Request a signed inclusion-and-exclusion schedule with allowances, owner-supplied items and rates for extra work before paying an advance.",
+    sources: []
+  },
+
+  "How much contingency should I keep in a house construction budget?": {
+    answer: "Keep a separate contingency allowance for uncertainties such as concealed site conditions, approved design changes, price movement, utility connections and owner-selected upgrades. The suitable amount depends on how complete the drawings and BOQ are, site uncertainty, procurement timing and contract terms; there is no single percentage that suits every project. Do not use contingency to cover vague or missing scope. Track each use with a written reason, approved variation, cost and remaining balance, and review the allowance with your architect or project manager.",
+    sources: []
+  },
+
+  "How do I compare construction quotations with different per-square-foot rates?": {
+    answer: "Do not compare the headline rate alone. First align the built-up-area measurement, drawings, structural scope, material brands and specifications, finish level, electrical and plumbing points, waterproofing system, external works, taxes, payment milestones, project duration and warranty terms. Convert lump-sum items into comparable BOQ lines where possible and list every exclusion or provisional allowance. Ask each contractor to price the same scope and identify assumptions in writing. A lower rate may simply leave more items outside the package.",
+    sources: []
+  },
+
+  "How should I budget for price changes during a long construction project?": {
+    answer: "Identify which materials and services are fixed-price, which are subject to a price-adjustment clause and which will be purchased directly by the owner. The agreement should explain the reference date, evidence required for a change, calculation method, notice period and approval process. Plan procurement for long-lead items without buying materials too early or storing them unsafely. Keep a dated cost tracker for committed amounts, paid amounts, approved variations and forecast balance. Avoid accepting an unexplained verbal increase; request supporting supplier quotations and follow the signed contract.",
+    sources: []
+  }
 
 };
