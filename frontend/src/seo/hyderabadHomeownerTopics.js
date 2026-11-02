@@ -169,7 +169,8 @@ groups["Permissions, legal checks & homeowner handover"] = [
   ["What documents should I collect when my house construction is complete?","Lists sanctioned drawings, completion/occupancy records where applicable, warranties, test reports, manuals and handover records."],
   ["What is a defect-liability period in house construction?","Explains written defect reporting, contractor obligations, exclusions and the importance of defining the period in the agreement."],
   ["How should I approve extra work and cost variations during construction?","Explains written variation orders, scope, rates, time impact and approval before work proceeds."],
-  "Foundation, services & homeowner project controls": [
+ ];
+groups["Foundation, services & homeowner project controls"] = [
     ["How do I know whether my plot needs a soil test before construction?", "Explains when geotechnical investigation is important and what a soil report tells the structural designer."],
     ["What does safe bearing capacity mean in a soil test report?", "Explains the meaning of bearing capacity and why foundation design must use the site-specific geotechnical report."],
     ["Can I decide the footing size based on my neighbour's house?", "Explains why nearby foundations are not a substitute for site-specific soil investigation and structural design."],
