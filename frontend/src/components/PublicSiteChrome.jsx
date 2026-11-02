@@ -63,7 +63,7 @@ export function PublicHeader() {
             <button type="button" className={pathname.startsWith('/experts') || pathname.startsWith('/professionals') ? 'active' : ''} aria-expanded={professionalsOpen} aria-haspopup="true" onClick={() => setProfessionalsOpen(value => !value)}>Professionals <span aria-hidden="true">⌄</span></button>
             <div className="public-site-professionals-dropdown">
               <Link to="/experts"><span>⌕</span><span><b>Find Professionals</b><small>Browse contractors, architects and engineers</small></span></Link>
-              <Link to="/signup"><span>＋</span><span><b>Join as a Professional</b><small>Create your ProPulse account</small></span></Link>
+              <Link to="/professionals"><span>＋</span><span><b>Join as a Professional</b><small>Explore professional leads</small></span></Link>
               <Link to="/login"><span>↗</span><span><b>Professional Login</b><small>Access your account</small></span></Link>
             </div>
           </div>
@@ -71,7 +71,7 @@ export function PublicHeader() {
         </nav>
         <div className="public-site-actions">
           <Link className="public-site-login" to="/login">Professional Login</Link>
-          <Link className="public-site-join" to="/signup">Join as a Professional <ArrowIcon/></Link>
+          <Link className="public-site-join" to="/professionals">Join as a Professional <ArrowIcon/></Link>
           <Link className="public-site-quote" to="/quote#construction">Get a Quote <ArrowIcon/></Link>
         </div>
         <button className={'public-site-menu-toggle' + (open ? ' open' : '')} type="button" aria-label={open ? 'Close navigation' : 'Open navigation'} aria-expanded={open} aria-controls="public-mobile-navigation" onClick={() => setOpen(value => !value)}>
@@ -82,7 +82,7 @@ export function PublicHeader() {
           <nav aria-label="Mobile navigation">
             {NAV_ITEMS.map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} onClick={closeMenu} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
             <Link to="/experts" onClick={closeMenu}>Find Professionals</Link>
-            <Link to="/signup" onClick={closeMenu}>Join as a Professional</Link>
+            <Link to="/professionals" onClick={closeMenu}>Join as a Professional</Link>
             <Link to="/login" onClick={closeMenu}>Professional Login</Link>
           </nav>
           <div className="public-site-mobile-actions">
