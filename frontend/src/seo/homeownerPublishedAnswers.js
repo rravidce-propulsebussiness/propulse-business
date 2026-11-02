@@ -2075,5 +2075,55 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
     answer: "Keep people away from flooded excavations, electrical equipment and unstable ground. Arrange safe removal of water without discharging it onto neighbouring properties or undermining foundations. Before restarting work, have the site supervisor inspect excavation stability, soil softening, erosion, foundation exposure, temporary supports and electrical safety. Document the affected areas and obtain engineering advice if water has entered foundation excavations or caused movement. Do not simply pump out the water and continue without checking the ground and temporary works.",
     sources: []
   }
+,
+  "Why should I get a boundary survey before starting house construction?": {
+    answer: "A boundary survey helps establish the plot limits, dimensions and corner positions before excavation, compound-wall work or setting out the building. Compare the survey with the registered property documents and approved layout plan, and resolve discrepancies with a qualified surveyor and property professional before construction. Do not rely only on an old fence, neighbouring wall or informal measurements. Accurate boundary information helps reduce the risk of encroachment disputes and costly changes after work begins.",
+    sources: []
+  },
+
+  "What should I do if my building permission may expire before construction is completed?": {
+    answer: "Check the validity period and conditions stated in the permission issued by the competent authority. Ask your architect or licensed professional to confirm the applicable renewal or extension procedure and submit any required application before the permission lapses. Keep acknowledgement and approval records, and do not assume that paying a fee automatically extends validity. The rules and process depend on the authority and permission type, so verify the current requirements for your property.",
+    sources: []
+  },
+
+  "Should I ask the contractor for construction site insurance?": {
+    answer: "Ask which insurance policies cover the project, who is insured, the policy period, exclusions, deductibles and the activities or third parties covered. Depending on the contract and site risks, relevant cover may include contractor's all-risk, worker compensation or employee-related cover, and third-party liability. Request copies of current policy schedules and proof of premium where appropriate, and confirm responsibilities with an insurance professional. A verbal statement that the site is insured is not enough.",
+    sources: []
+  },
+
+  "What is retention money in a house construction contract?": {
+    answer: "Retention is an agreed portion of payments withheld until specified milestones or defect obligations are met. The contract should state the percentage or amount, the bills it applies to, release conditions, release dates and how disputed defects are handled. Make sure the arrangement is commercially reasonable and consistent with local law and the contract. Do not deduct or withhold money arbitrarily; document agreed retention and every release in the payment ledger.",
+    sources: []
+  },
+
+  "What is a defects liability period in house construction?": {
+    answer: "A defects liability period is a contract-defined period after completion or handover during which the contractor must address specified workmanship defects, subject to the contract terms. The agreement should define when the period starts, how defects are reported, response and repair timelines, exclusions for misuse or normal wear, and how unresolved defects are escalated. Record issues in writing with dated photographs and keep proof of notification. Have the contract reviewed so the clause is clear and enforceable.",
+    sources: []
+  },
+
+  "When should I get construction materials tested by an independent laboratory?": {
+    answer: "Use independent testing when the project specification, engineer or applicable standard requires it, or when there is a reasonable concern about a material's identity, quality or compliance. Examples may include soil, concrete, reinforcement steel, blocks, aggregates and water, depending on the design and work stage. Agree the sampling method, test standard, laboratory competence and acceptance criteria before testing. Keep reports traceable to the supplier, batch, delivery and exact location where the material was used.",
+    sources: []
+  },
+
+  "What records should I keep for concrete pours in my house construction project?": {
+    answer: "For each pour, record the date, location and structural element, approved drawing revision, concrete grade and mix reference, supplier and delivery-ticket details, arrival and placement times, workability checks, sample identification, test results, weather, placing and compaction observations, curing arrangements and engineer's inspection. Photograph key stages before and during the pour. These records help trace test results to the actual work and investigate defects or disputes later.",
+    sources: []
+  },
+
+  "Why should I get a plumbing pressure-test report before pipes are concealed?": {
+    answer: "A pressure test, carried out using the method and limits specified for the plumbing system, can help identify leaks before pipes are covered by plaster, flooring or other finishes. Ask the plumbing contractor or site engineer to record the tested circuit, test medium, pressure, duration, gauge details, result, date and responsible person. The correct test method varies by pipe material and system; follow manufacturer instructions and the project specification rather than applying one pressure value to every installation.",
+    sources: []
+  },
+
+  "What electrical test reports should I ask for before occupying a new house?": {
+    answer: "Ask the qualified electrical contractor to provide test records appropriate to the installation, which may include insulation resistance, continuity of protective conductors, earthing and protective-device checks. The report should identify the circuits tested, test method, instrument details, results, date and responsible competent person. Also obtain the final circuit schedule and distribution-board labelling. Do not perform live electrical tests yourself; have testing and any corrective work handled by qualified personnel under applicable safety requirements.",
+    sources: []
+  },
+
+  "How do I confirm that the final house construction drawings match what was built?": {
+    answer: "Request as-built drawings that reflect approved changes and the final locations of structural elements and concealed electrical, plumbing and drainage services, where these records are part of the project scope. Compare them with the approved drawing revisions and site records, and ask the relevant architect or engineer to verify important deviations. Keep photographs of concealed services taken before covering. Accurate as-built information makes future maintenance, repairs and renovation safer and easier.",
+    sources: []
+  }
 
 };
