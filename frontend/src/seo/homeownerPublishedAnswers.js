@@ -1975,5 +1975,55 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
     answer: "Use the signed BOQ, drawings, specifications and approved variation register as the completion checklist. Inspect each room and external area, verify quantities and operation of installed systems, collect test and commissioning records, and list incomplete or defective items with closure dates. Confirm that excluded or owner-supplied items are clearly accounted for and reconcile the final bill against measured work and prior payments. Sign final completion or handover documents only after the agreed conditions and outstanding-item arrangements are recorded.",
     sources: []
   }
+,
+  "What should I check before approving a house foundation layout on site?": {
+    answer: "Compare the setting-out with the latest approved architectural and structural drawings. Verify plot boundaries, building offsets, grid lines, diagonal measurements, column or wall positions, excavation limits and reference levels with the surveyor or site engineer. Confirm that underground services and neighbouring foundations have been considered. Resolve any mismatch with the architect and structural engineer before excavation or concrete work proceeds; do not shift a footing or column to suit a site convenience without approved revised drawings.",
+    sources: []
+  },
+
+  "What is a construction method statement and should a homeowner ask for one?": {
+    answer: "A method statement describes how a particular activity will be carried out, including sequence, materials, equipment, workforce, inspections, safety controls and quality checks. It is useful for higher-risk or technically sensitive work such as excavation, waterproofing, concrete placement and repairs. Ask the contractor or supervising engineer for a method statement when the work needs coordinated steps or hold points. It should match the approved drawings, product instructions and project specification rather than being a generic template.",
+    sources: []
+  },
+
+  "What are inspection hold points in house construction?": {
+    answer: "A hold point is a stage where work must pause until a specified inspection or approval is completed. Examples may include checking reinforcement and embedded services before a concrete pour, inspecting waterproofing before it is covered, and testing concealed plumbing before closing walls or floors. The project quality plan should identify who inspects, what records are required and who can release the work. Agree these points in advance so they do not become last-minute disputes or get skipped under schedule pressure.",
+    sources: []
+  },
+
+  "How do I check concrete cover blocks before an RCC pour?": {
+    answer: "Cover blocks help maintain the specified distance between reinforcement and the formwork. Before a pour, the responsible site engineer should check that the cover material, size, spacing and placement match the approved structural drawings and project specification, and that bars remain stable during concreting. Cover requirements vary by member, exposure and design, so do not use a single generic dimension throughout the house. Do not replace proper cover blocks with loose bricks, wood or random stone pieces.",
+    sources: []
+  },
+
+  "Why should reinforcement be checked before concrete is poured?": {
+    answer: "Once concrete is placed, much of the reinforcement becomes concealed and difficult to inspect. Before the pour, the engineer or authorised inspector should verify bar sizes and spacing against drawings, laps and anchorage, bends, support and cover, cleanliness, congestion, openings, sleeves and embedded services. Any deviation should be resolved and documented before concrete placement. A homeowner can request dated inspection photographs and approval records, but should not independently alter reinforcement or approve structural changes.",
+    sources: []
+  },
+
+  "What should I check in formwork before an RCC concrete pour?": {
+    answer: "The site team should confirm that formwork matches the required dimensions and levels, is adequately supported and braced, has tight joints to limit grout loss, and can safely carry the wet-concrete and construction loads. Check access for placing and compacting concrete, cleanliness inside the forms, release-agent use and safe removal arrangements. The design and inspection should be handled by competent personnel, especially for large or complex pours. Do not allow concreting if the formwork is visibly unstable, leaking or out of alignment.",
+    sources: []
+  },
+
+  "How should concrete be compacted during house construction?": {
+    answer: "Concrete should be placed and compacted using a method suitable for the mix, member shape, reinforcement congestion and placement conditions. Mechanical vibration is commonly used for many reinforced-concrete elements, but the equipment, technique and duration must be controlled by trained workers to avoid honeycombing, segregation or displacement of reinforcement. Follow the approved method statement and concrete specification. Do not add water to make a stiff mix easier to place; raise workability concerns with the engineer and supplier before placement.",
+    sources: []
+  },
+
+  "What causes honeycombing in concrete and how should it be repaired?": {
+    answer: "Honeycombing is a rough or voided area where mortar has not adequately filled around aggregate and reinforcement. It can result from poor placement or compaction, leaking formwork, congested reinforcement or an unsuitable mix. Do not hide it with plaster or patch it without assessment. Photograph and record the location, expose only as directed, and ask the structural engineer to assess its depth, extent and effect on reinforcement or durability. The repair method should be specified for the actual defect and documented before finishing.",
+    sources: []
+  },
+
+  "What should I check after removing RCC formwork?": {
+    answer: "After formwork removal, inspect the member for visible cracks, honeycombing, exposed reinforcement, surface voids, dimensional irregularities, deflection concerns and damage from stripping. Record defects with location and photographs and have the site engineer or structural engineer assess anything beyond minor surface imperfections. Do not chip, cut, drill or patch structural concrete without approval. Formwork removal timing and any subsequent loading must follow the project specification and engineer's instructions, not simply the appearance of the concrete.",
+    sources: []
+  },
+
+  "How do I maintain a construction quality register for my house?": {
+    answer: "Keep one organised record of approved drawings and revisions, material approvals, delivery notes, test reports, inspection requests, hold-point releases, concrete pour records, waterproofing tests, defect logs, variation approvals and dated site photographs. Give each record a date, location, activity and responsible person so it can be traced later. Store digital copies with clear file names and retain originals where required. A quality register helps resolve questions at handover, but it is only useful if entries are made at the time the work occurs.",
+    sources: []
+  }
 
 };
