@@ -158,8 +158,44 @@ groups["Interior planning & room-by-room design"]=[
 ["How do I make home interiors suitable for elderly parents?","Plan step-free routes where feasible, adequate lighting, non-slip surfaces, reachable storage, grab-bar backing and clear circulation with professional advice."],
 ["Which interior materials are easiest to maintain with pets?","Choose cleanable, scratch-tolerant surfaces and washable fabrics based on the pet, product care instructions and room use."],
 ["How do I reduce noise between bedrooms and living areas?","Use layout zoning, solid door seals, suitable wall/ceiling assemblies, soft furnishings and properly specified acoustic products."],
-["Is a smart home system worth installing during interior work?","Plan requirements, wiring, network coverage, device compatibility, manual controls, privacy, power backup and future service access before closing walls."],
- ];
+["Is a smart home system worth installing during interior work?","Plan requirements, wiring, network coverage, device compatibility, manual controls, privacy, power backup and future service access before closing walls."]
+],
+groups["Interior styles & design aesthetics"] = [
+["What are the most popular interior design styles for Indian homes?","Compare contemporary, modern, minimalist, Scandinavian, Japandi, industrial, traditional, transitional and eclectic styles by shapes, materials, colour and upkeep."],
+["What is the difference between modern and contemporary interior design?","Explain the distinction between a defined modernist design movement and an evolving contemporary approach, with practical examples."],
+["What is a minimalist interior design style and how do I achieve it?","Cover edited furniture, storage planning, restrained palettes, visual calm, lighting and avoiding a room that feels empty."],
+["What is Japandi interior design and is it suitable for Indian homes?","Explain the blend of Japanese restraint and Scandinavian warmth, natural textures, low visual clutter and climate-aware material choices."],
+["How can I create a luxury interior look on a practical budget?","Prioritise proportion, lighting, cohesive finishes, fewer focal materials, well-made hardware and selective feature details over expensive decoration everywhere."],
+["How do I choose an interior design style for my home?","Use lifestyle, architecture, existing furniture, maintenance, natural light and a reference board to select a consistent style before buying finishes."],
+["Can I mix two interior design styles in one home?","Show how to combine styles through a shared colour palette, repeated materials, consistent proportions and controlled statement pieces."],
+["What is a transitional interior design style?","Describe how classic shapes and modern simplicity can be balanced through furniture profiles, neutral colours, texture and lighting."]
+],
+groups["Interior colour selection & combinations"] = [
+["How do I choose the right colour palette for my home interiors?","Use a repeatable process: collect fixed finishes, assess daylight, choose a base neutral, select supporting colours and test large samples in the actual rooms."],
+["What are the best colour combinations for a premium-looking living room?","Compare warm neutral, greige and wood, ivory and muted green, taupe and charcoal, and other balanced palettes with guidance on where to use accents."],
+["Which wall colours make a small room look bigger?","Explain how light reflectance, continuity, contrast, ceiling colour, daylight and clutter affect perceived room size without promising that one colour always enlarges a room."],
+["How do I choose warm or cool colours for my home?","Explain undertones, daylight direction, fixed flooring and stone, lighting temperature and how to keep adjacent rooms visually connected."],
+["What is the 60-30-10 colour rule in interior design?","Explain the 60/30/10 guideline as a flexible starting point for dominant, secondary and accent colours, not a compulsory formula."],
+["How do I select an accent wall colour without making the room look busy?","Choose a focal wall based on architecture and sightlines, limit competing patterns and test the colour beside flooring, curtains and furniture."],
+["Which colours go well with wooden furniture and flooring?","Match wood undertones and grain with warm whites, earthy greens, muted blues, greige or charcoal, while testing the actual wood sample."],
+["How do I coordinate wall paint, curtains and sofa colours?","Build the palette around the largest fixed or costly item, repeat one or two undertones and use fabric samples under the room's lighting."],
+["What colour combination is suitable for a master bedroom?","Compare restful warm neutrals, muted greens, dusty blues and earthy tones while considering daylight, bedding, wardrobes and personal preference."]
+],
+groups["Room-wise colours, paint & lighting"] = [
+["Which colours are suitable for a modern modular kitchen?","Compare warm white, greige, muted green, navy, wood and two-tone combinations with practical notes on fingerprints, grease and cleaning."],
+["How do I choose colours for a north-facing or low-light room?","Explain how limited direct sun changes colour appearance and why warm undertones, sample boards and layered lighting can help."],
+["How should I test paint colours before painting the whole house?","Recommend large sample patches or movable boards, multiple walls, morning/evening checks and testing beside fixed materials under final lighting."],
+["What is the difference between matte, satin and gloss paint finishes?","Compare sheen, washability, glare, surface preparation and where each finish may be appropriate; confirm product-specific specifications."]
+],
+groups["Premium materials, finishes & coordination"] = [
+["Which interior finishes make a home look premium?","Explain how consistent joinery, edge detailing, restrained stone or wood accents, quality hardware, lighting and neat installation create a premium result."],
+["How do I choose between laminate, acrylic, veneer and PU finishes?","Compare appearance, maintenance, repairability, substrate needs, edge treatment and cost drivers without declaring one finish universally best."],
+["How do I combine marble-look surfaces, wood and metal without clashing?","Use a limited material palette, coordinate undertones and sheen, request physical samples and repeat each accent deliberately."],
+["What lighting colour temperature is best for home interiors?","Explain warm, neutral and cool white in Kelvin, typical uses by activity and why consistency and dimming matter more than one universal setting."],
+["How do I select flooring colour to match my interior theme?","Choose flooring after considering fixed cabinetry, wall undertones, room size, daylight, grout, maintenance and transitions between rooms."],
+["How can I make every room look coordinated without using the same colours everywhere?","Create a whole-home palette with shared undertones and repeat materials, then vary accent colours and intensity by room function."],
+["What should I include in an interior colour and material selection board?","List paint codes, laminate or veneer references, countertop, tile, flooring, metal finish, fabric, lighting temperature and dated approval samples."]
+];
 
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
