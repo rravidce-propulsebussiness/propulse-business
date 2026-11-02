@@ -703,5 +703,38 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   "What should be included in a construction site inspection checklist?": {
     answer: "A useful site inspection checklist follows the construction sequence and records what will become hidden. Before foundation concrete, check setting-out, excavation dimensions, soil conditions, reinforcement, cover, formwork and any required engineer approval. Before each slab or beam pour, verify the latest drawings, bar sizes and spacing, laps, anchorage, cover, openings, embedded services, shuttering, props, concrete grade, testing and curing arrangements. During masonry and services, inspect line, level, junctions, conduits, pipe pressure tests and drainage falls. For waterproofing, record substrate preparation, corners, penetrations, membrane application and water-test results. At handover, close snags and collect approvals, test reports, warranties and as-built drawings. Record date, location, photos, responsible person, corrective action and sign-off for every inspection.",
     sources: [{"label":"BIS – National Building Code","url":"https://www.bis.gov.in/standards/national-building-code/?lang=en"},{"label":"BuildNow – approval checklist","url":"https://buildnow.telangana.gov.in/checklist/"}]
-  }
+  },
+
+  "How much does a 2BHK interior cost in Hyderabad?": {
+    answer: "A 2BHK interior does not have one reliable fixed price because two flats with the same bedroom count can need very different amounts of cabinetry and civil work. The biggest cost drivers are kitchen layout and running length, wardrobe width and height, lofts, TV/storage units, board and shutter materials, hardware, countertop, false ceiling, lighting, electrical changes, painting and loose furniture. A useful estimate should be built room by room from measured dimensions, not only from the flat’s carpet area or a headline per-square-foot rate. Ask each designer to quote the same drawings and specifications, and separate modular work from civil, electrical, appliances, curtains and loose furniture.",
+    sources: []
+  },
+  "How much does a TV unit cost in Hyderabad?": {
+    answer: "The price of a TV unit depends mainly on its width and height, storage volume, substrate, shutter finish, wall panelling, fluted or decorative elements, lighting, wiring work and installation. A simple floating console with a finished back panel is a different scope from a full-height feature wall with drawers, display shelves and concealed lighting. Before comparing quotes, share the TV size, wall dimensions, storage needs and reference design. Ask for separate quantities and rates for the carcass, shutters, finish, hardware, lighting, electrical work and installation so you can see what is driving the total.",
+    sources: []
+  },
+  "What is the difference between 0.8mm and 1mm laminate?": {
+    answer: "The figures refer to the nominal thickness of the decorative laminate sheet, not the thickness or strength of the plywood or MDF underneath it. A 1mm sheet is thicker than a 0.8mm sheet and may be preferred for some frequently used exterior surfaces, but thickness alone does not guarantee better scratch resistance, colour stability or overall cabinet life. The laminate grade, surface texture, backing, adhesive, substrate flatness, edge detailing and workmanship all matter. Confirm the manufacturer’s product specification and intended application rather than choosing only by the number printed in a quotation.",
+    sources: [{ label: "BIS – standards and product conformity information", url: "https://www.bis.gov.in/" }]
+  },
+  "What is the difference between BWR and BWP plywood?": {
+    answer: "BWR and BWP are commonly used trade descriptions for plywood intended for different levels of moisture exposure; they should not be treated as interchangeable labels or as proof that a board can remain wet indefinitely. For kitchen and utility applications, ask the supplier for the exact IS standard and grade marking, manufacturer, batch traceability and test or conformity documents. Check the board stamp and invoice, and confirm whether the product is intended for the actual exposure in that cabinet. Even a moisture-resistant board can fail if water enters through unsealed edges, plumbing leaks or poor installation.",
+    sources: [{ label: "BIS – standards and product conformity information", url: "https://www.bis.gov.in/" }]
+  },
+  "Which material is best for a TV unit: plywood, MDF or HDHMR?": {
+    answer: "There is no single best board for every part of a TV unit. Plywood is often chosen where screw holding, load and robust fixing are important; MDF gives a smooth, consistent surface and can suit painted or routed decorative panels in dry interiors; HDHMR is a higher-density engineered board that may suit selected shutter and furniture applications when its product specification and moisture limits are appropriate. The right choice depends on the span, shelf load, wall fixing, finish, edge treatment and exposure to moisture. Ask the designer to specify the exact board type, thickness and grade separately for carcass, shelves, shutters and decorative panels.",
+    sources: []
+  },
+  "Which hinges are best for kitchen cabinets?": {
+    answer: "For most modular kitchen shutters, use a reputable concealed cabinet hinge selected for the shutter overlay, opening angle, weight and cabinet construction. Soft-close hinges improve the closing action, but the hinge model, cup drilling, mounting plate, screw fixing and adjustment quality matter just as much. Wide or heavy shutters may need an appropriate number and capacity of hinges according to the manufacturer’s fitting guidance. In wet or corrosive environments, check the hardware’s material and corrosion-resistance specification. Ask for the brand and model in the quotation rather than accepting only the phrase ‘premium soft-close hinge’.",
+    sources: []
+  },
+  "What is the difference between soft-close and normal hinges?": {
+    answer: "A normal cabinet hinge allows the shutter to close without a built-in damping mechanism, so it can slam if pushed or released. A soft-close hinge incorporates a damper that slows the final part of the closing movement and reduces impact noise. Soft-close does not automatically mean the hinge is stronger or lasts longer: quality depends on the hinge design, materials, cycle rating where published, correct installation and adjustment. Check whether the soft-close function is integrated or uses an add-on damper, and confirm the exact model and warranty.",
+    sources: []
+  },
+  "Which channel is best for kitchen drawers?": {
+    answer: "Choose a drawer runner based on the drawer’s load, width, depth, opening frequency and the space available inside the cabinet. Common options include side-mounted telescopic channels and concealed undermount runners; some models offer soft-close or push-to-open functions. Compare the manufacturer’s rated load, extension type, adjustment range, corrosion protection and installation requirements. A heavy pot drawer needs a different specification from a shallow cutlery drawer. Ask the interior contractor to name the channel brand and model, state the load rating and include the quantity in the BOQ.",
+    sources: []
+  },
 };
