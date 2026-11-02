@@ -1357,4 +1357,56 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
     sources: []
   }
 
+
+
+  "How do I choose a trustworthy construction company in Hyderabad?": {
+    answer: "Shortlist companies by checking their registered business identity, named project team, relevant experience, completed projects you can independently visit, client references you can contact, and the clarity of their written scope. Ask who will supervise the site, who prepares and approves structural drawings, how quality inspections are recorded, and which subcontractors are involved. Verify that the agreement names the contracting party and payment recipient, describes the project and specifications, and explains variations, delays, defects and handover. Do not rely only on advertisements, social-media photos, verbal promises or claims such as 'No. 1' without verifiable evidence.",
+    sources: []
+  },
+
+  "What questions should I ask a builder before signing a construction agreement?": {
+    answer: "Ask for the detailed BOQ and specifications, approved drawing responsibility, project schedule, stage-payment triggers, material brands and permitted substitutions, site supervision arrangements, inspection and testing process, insurance and safety responsibilities, taxes, exclusions, variation procedure, delay provisions, defect-liability terms and handover documents. Confirm the legal name of the contractor, authorised signatory, bank account beneficiary and who is responsible for subcontractors. Ensure the agreement identifies how disputes and termination are handled. Have an independent lawyer review the final agreement before paying a substantial advance or allowing work to begin.",
+    sources: []
+  },
+
+  "How do I compare two house construction quotations?": {
+    answer: "Compare quotations against the same approved drawings, built-up-area measurement method, BOQ and finish specification. Check quantities and rates separately, and compare concrete grades, steel specification, masonry type, plaster, waterproofing, flooring, doors, windows, electrical points, plumbing fixtures, painting and external works. Mark every exclusion, provisional amount, tax, transport charge, wastage assumption and variation rate. A lower total may simply omit items or use different specifications. Ask each contractor to clarify gaps in writing and prepare a like-for-like comparison before selecting on price.",
+    sources: []
+  },
+
+  "What can I do if a construction contractor delays my house project?": {
+    answer: "Start by checking the signed agreement for the completion date, milestone definitions, extension-of-time clauses, notice requirements and delay consequences. Maintain a dated record of site progress, labour presence, material deliveries, approved changes, payments and written communications. Ask the contractor for a recovery schedule that identifies the cause of delay, remaining work, resources and revised milestones. Avoid making undocumented deductions or stopping payments without checking the contract. If the delay remains unresolved, obtain advice from an independent construction professional and a lawyer about the contractual notice and dispute-resolution process.",
+    sources: []
+  },
+
+  "Who is responsible for material wastage during house construction?": {
+    answer: "Responsibility depends on the contract, procurement arrangement, BOQ measurement rules and who controls storage, handling and installation. The agreement should state whether materials are supplied by the owner or contractor, how quantities are measured, what reasonable wastage allowances apply, who bears damage or theft, and how unused materials and scrap are accounted for. Keep delivery challans, stock registers, issue records and dated site measurements. Do not accept an unexplained extra-material bill without checking actual consumption, returns, breakage and the agreed terms.",
+    sources: []
+  },
+
+  "How do I verify cement and steel bills at a construction site?": {
+    answer: "Match each invoice to the purchase order, supplier identity, delivery challan, date, product description, quantity, unit and applicable tax details. For cement, record the manufacturer, product type, batch details and bag count, and check that bags are dry and properly stored. For steel, reconcile diameter-wise quantities and grade with the structural specification, markings and mill test certificates. Compare delivered quantities with site stock and issue records, and keep weighbridge slips where relevant. A bill alone does not prove material quality or that the full quantity reached the site; retain traceability from purchase through use.",
+    sources: []
+  },
+
+  "What is included in turnkey house construction?": {
+    answer: "Turnkey construction generally means the contractor coordinates an agreed package of design, procurement, construction and handover, but the phrase has no universal scope by itself. The agreement must list included drawings, approvals support, civil and structural work, materials, electrical and plumbing, finishes, fixtures, external development, testing, cleaning and handover records. It should also list exclusions such as land, statutory fees, utility connections, borewell, compound wall, lift, solar, modular interiors or loose furniture where applicable. Ask for a room-wise and activity-wise BOQ, named specifications, taxes, milestones and a written variation process before comparing turnkey offers.",
+    sources: []
+  },
+
+  "How can I avoid hidden charges in house construction?": {
+    answer: "Ask for a detailed BOQ and a written inclusions-and-exclusions schedule before signing. Identify items often left outside a headline quote, such as soil testing, excavation in hard strata, dewatering, extra foundation work, approval fees, utility connections, compound walls, gates, sump, septic or sewer connections, external paving, rainwater systems, GST, transport and premium finish upgrades. Clarify how quantities are measured, how site-condition changes are priced, who approves variations and whether rates are fixed or adjustable. Require written approval and a revised cost impact before extra work begins, and keep copies of every approved change.",
+    sources: []
+  },
+
+  "What warranty should a house construction company provide?": {
+    answer: "There is no single warranty period that should be assumed for every component or contractor. Ask the company to state, in writing, the defect-liability or workmanship commitment, start date, exclusions, response time, inspection process and remedy for each relevant category. Clarify separate manufacturer warranties for pumps, electrical equipment, sanitaryware, waterproofing products, doors, windows and other supplied items, and confirm who helps make a claim. The contract should explain how defects are reported and rectified, including after handover. Have the agreement reviewed so the wording is consistent with applicable law and does not replace statutory rights.",
+    sources: []
+  },
+
+  "What documents should I receive at house construction handover?": {
+    answer: "Request the final approved drawings and documented revisions, structural and services drawings as applicable, completion or occupancy records required for the project, test and inspection reports, waterproofing test records, material and equipment warranties, invoices for owner-purchased items, operation manuals, keys and access credentials, and contact details for service providers. Ask for a snag list with each item marked as completed or outstanding and signed by both parties. Record meter readings, utility connections, equipment demonstrations and any retained materials. The exact statutory documents depend on the building and local approval requirements, so verify them with the project professional and competent authority.",
+    sources: []
+  }
+
 };
