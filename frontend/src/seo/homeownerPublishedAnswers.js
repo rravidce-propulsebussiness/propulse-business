@@ -1645,5 +1645,54 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
     answer: "Identify which materials and services are fixed-price, which are subject to a price-adjustment clause and which will be purchased directly by the owner. The agreement should explain the reference date, evidence required for a change, calculation method, notice period and approval process. Plan procurement for long-lead items without buying materials too early or storing them unsafely. Keep a dated cost tracker for committed amounts, paid amounts, approved variations and forecast balance. Avoid accepting an unexplained verbal increase; request supporting supplier quotations and follow the signed contract.",
     sources: []
   }
+  "How do I estimate construction cost for a G+1 house?": {
+    answer: "Start with the proposed ground-floor and first-floor plans and calculate each level's built-up area separately using one agreed measurement method. The estimate must reflect the structural design, foundation, staircase, roof, walls, finishes, electrical and plumbing scope, external works and site conditions. A G+1 house is not always the cost of a ground-floor house multiplied by two: foundations, columns, beams, stairs, roof treatment and service arrangements may change. Ask for a drawing-based BOQ and a clear list of inclusions, exclusions and provisional items.",
+    sources: []
+  },
+
+  "Is constructing the first floor cheaper than constructing the ground floor?": {
+    answer: "The first floor may have different costs from the ground floor, but it is not automatically cheaper. The ground floor may include excavation, foundations, plinth work and ground-level services, while an upper floor may need additional structural capacity, stair access, balcony protection and different material handling. The actual comparison depends on the design, existing structure, access, finishes and whether the foundation was originally designed for the extra floor. Have a structural engineer verify the existing building before adding a floor; never assume it can carry the additional load.",
+    sources: []
+  },
+
+  "How much does a compound wall cost for a residential plot?": {
+    answer: "Compound-wall cost depends on the measured wall length and height, foundation and soil conditions, wall type, columns or supports, plaster or cladding, coping, gate size, site levels and access. A plot's square-yard area alone is not enough to calculate it because different plot shapes have different perimeters. Measure each boundary side, confirm the legal boundary and prepare a BOQ for excavation, foundation, masonry or other wall system, finishes and gate work. Check local height and approval requirements before construction.",
+    sources: []
+  },
+
+  "How do I estimate staircase construction cost?": {
+    answer: "A staircase estimate needs the floor-to-floor height, stair configuration, clear width, number and size of landings, structural system, finish, railing and lighting details. Concrete stairs, steel stairs and other systems have different material, fabrication and installation costs. Include the stair opening and supporting structure in the main building design rather than pricing the visible steps alone. Ask for drawings and a separate BOQ covering structure, shuttering, reinforcement where designed, finishes, handrail and edge protection.",
+    sources: []
+  },
+
+  "What factors affect borewell drilling cost on a residential plot?": {
+    answer: "Borewell costs can depend on drilling depth, ground formation, rig access, casing requirements, diameter, site location, transport, yield testing and any additional pump or electrical work. Water availability and depth are uncertain, and a nearby borewell does not guarantee the same result on your plot. Obtain written rates that define what is included, how depth is measured, casing charges, testing and payment if water is not found. Check applicable permissions and test water quality before drinking use.",
+    sources: []
+  },
+
+  "What affects the cost of an underground water sump?": {
+    answer: "Sump cost depends on the required storage volume, dimensions, excavation, soil and groundwater conditions, structural design, concrete or tank system, waterproofing, access cover, inlet and outlet details, pump arrangement and site access. A sump below a driveway may need design for additional imposed loads. Ask for a drawing and itemised estimate that includes excavation disposal, structure, waterproofing, pipe connections, testing and cleaning access. Capacity should be based on household demand and supply reliability, not a guess based only on plot size.",
+    sources: []
+  },
+
+  "How do I budget for a house construction project in stages?": {
+    answer: "Divide the budget into defined work packages such as site preparation and foundation, structure, masonry and plaster, waterproofing, electrical and plumbing, doors and windows, flooring, painting, fixtures and external works. For each package, record the BOQ value, planned period, procurement lead time, payment milestone, amount paid and forecast balance. Keep taxes, professional and approval fees, owner-supplied items and contingency visible as separate lines. Release contractor payments against verified progress and the signed agreement, not simply against a calendar date.",
+    sources: []
+  },
+
+  "What is the difference between shell construction and turnkey construction?": {
+    answer: "Shell construction generally covers the building's core structure and basic enclosure, while turnkey construction usually aims to deliver a more complete, usable house. However, these labels are not standardised and contractors define them differently. One shell package may include plastering or basic services while another may exclude them; a turnkey package may still exclude approvals, wardrobes, appliances, compound walls or utility connections. Compare the actual BOQ, drawings, material specifications, fixtures, exclusions, handover documents and warranty terms rather than relying on the package name.",
+    sources: []
+  },
+
+  "Should I buy construction materials myself or let the contractor supply them?": {
+    answer: "Owner procurement can improve visibility over brands and invoices, but it also makes the owner responsible for ordering quantities, delivery timing, storage, wastage and coordination. Contractor procurement may simplify scheduling and accountability, but the contract should define approved brands, specifications, rates, bill access, quality checks and treatment of unused materials. Decide item by item based on your time, technical support and the contract structure. Keep delivery notes and invoices, and obtain written approval before substitutions.",
+    sources: []
+  },
+
+  "How do I check whether a builder's construction package has hidden costs?": {
+    answer: "Ask for a complete scope matrix and BOQ before signing. Check whether excavation, soil disposal, foundation changes, steel and concrete specifications, waterproofing, electrical points, plumbing fixtures, doors and windows, flooring, painting, staircase railing, compound wall, sump, tank, approvals, taxes and debris removal are included. Look for quantity limits, brand allowances, provisional sums, escalation clauses and extra-work rates. Ask the builder to confirm in writing what triggers an additional charge and require approval of variations before the work is carried out.",
+    sources: []
+  }
 
 };
