@@ -1498,5 +1498,54 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
     answer: "Compare the claimed milestone with the signed agreement, approved drawings, BOQ and actual site measurements. Inspect the work that is visible and complete, check required test and inspection records, and confirm that materials billed as delivered are physically present or supported by agreed ownership and delivery evidence. List incomplete or defective items and agree how they affect the milestone under the contract. Ask for a dated progress statement, measurement sheet, invoice and photographs before releasing payment. Do not pay for work that has not been completed merely because the next calendar date has arrived, and do not withhold an amount arbitrarily without following the agreement.",
     sources: []
   }
+  "What should I check before building a compound wall?": {
+    answer: "Before building a compound wall, confirm the legal plot boundary and obtain a survey or demarcation where needed. Check local approval requirements, wall height and any restrictions near roads, drains or neighbouring properties. The design should account for soil conditions, wall height, wind exposure, gates and nearby level differences; a qualified engineer should design the foundation and reinforcement where required. Agree on the finish, coping, drainage openings, gate supports and responsibility for damage to adjoining property. Do not copy a neighbour's wall dimensions without checking whether the site conditions are the same.",
+    sources: []
+  },
+
+  "What should I consider when planning a staircase for a house?": {
+    answer: "Plan the staircase early, alongside the floor plan and structural design. Check the available floor-to-floor height, stair location, clear width, headroom, landing space, door swings, handrail, lighting and safe access for children and older occupants. The number and dimensions of risers and treads must comply with applicable local building rules and be coordinated with the structural drawings; they should not be guessed from a typical online dimension. Confirm the final stair opening and levels before slab work so late changes do not affect beams, rooms or circulation.",
+    sources: []
+  },
+
+  "How do I plan an underground sump for a house?": {
+    answer: "Estimate household water demand, supply frequency, tanker access and space available before deciding sump capacity. The tank should be designed for the site conditions, groundwater exposure, soil pressure and vehicle loads if it is below a driveway. Specify an accessible inspection cover, safe cleaning access, screened inlet, overflow routed to an approved drain, washout arrangement and a reliable pump connection. Keep sewage and stormwater lines separate, and have the tank structure and waterproofing details reviewed by qualified professionals. Test for leakage and clean the sump before first use.",
+    sources: []
+  },
+
+  "How do I choose the capacity and location of an overhead water tank?": {
+    answer: "Choose tank capacity from the number of occupants, expected daily use, water-supply pattern and any backup storage already available. Locate it where the structural design can safely support the full tank weight, including its supporting platform and maintenance loads. Provide a stable, accessible base, secure connections, overflow and washout pipes, a screened vent and a safe route for maintenance. The structural engineer should approve the tank position and support details before construction; moving a full tank to a different slab area can change the load path.",
+    sources: []
+  },
+
+  "What should I check before drilling a borewell on my plot?": {
+    answer: "First check local permissions and restrictions, nearby borewell locations, underground utilities, access for the drilling rig and the likely impact on neighbours. Groundwater availability is uncertain, so do not treat a driller's depth estimate or a nearby successful borewell as a guarantee. Use a qualified local hydrogeology professional where appropriate, obtain required permissions, and agree in writing on drilling charges, casing, depth measurement, yield testing and what happens if water is not found. Test the water quality before using it for drinking, and provide a hygienic sealed head and drainage around the borewell.",
+    sources: []
+  },
+
+  "Why does a newly built house roof leak during rain?": {
+    answer: "Roof leakage can result from poor slope or drainage, cracks, weak construction joints, badly sealed pipe penetrations, parapet details, blocked outlets or an incompatible waterproofing system. Identify the entry point and inspect the terrace, outlets, upstands and service penetrations rather than simply painting the ceiling below. Ask the contractor to document the repair method and product system, prepare the substrate correctly and complete the specified curing or application steps. Carry out a controlled water test only under an agreed method and after confirming that ponding will not overload the roof. Persistent or structural cracking needs professional assessment.",
+    sources: []
+  },
+
+  "Are hairline cracks in new house plaster normal?": {
+    answer: "Fine plaster shrinkage cracks can occur as materials dry, but not every crack should be dismissed as normal. Record the crack's location, width, direction, length and whether it is changing; photograph it with a date and scale. Cracks around beams, columns, lintels, openings or structural joints, recurring cracks, water seepage, displacement or cracks that widen should be inspected by a qualified engineer. The repair depends on the cause: filling and repainting without addressing movement, moisture or poor bonding may only hide the symptom temporarily.",
+    sources: []
+  },
+
+  "How long should concrete be cured after casting?": {
+    answer: "Concrete needs adequate moisture and temperature control after placement so it can develop the intended properties. The required curing method and duration depend on the concrete, cementitious materials, weather, member, construction specification and applicable standards. Follow the project specification and the engineer's instructions rather than relying on one universal number of days. Protect fresh concrete from rapid drying, rain impact, vibration and early loading, and keep records of the casting date and curing method. Do not remove formwork or load a member simply because its surface looks hard.",
+    sources: []
+  },
+
+  "How should electrical and plumbing work be coordinated before plastering?": {
+    answer: "Before plastering, compare the latest architectural, electrical and plumbing drawings with the actual site. Confirm switch and socket positions, appliance points, conduit routes, pipe slopes, water points, drain locations, sleeves, access panels and service clearances. Pressure-test plumbing as specified, check electrical conduits and boxes, and photograph concealed routes with measurements from fixed reference points. Obtain the relevant supervisor's inspection and approval before covering the work. Late changes after plastering can cause rework, leaks, damaged wiring and unnecessary wall cutting.",
+    sources: []
+  },
+
+  "What approvals should I check before starting house construction in Hyderabad?": {
+    answer: "Before work begins, verify the plot's title and land-use position, applicable layout and building permissions, sanctioned plan, permitted use, setbacks, height and floor limits, and any conditions attached to the approval. The exact process and authority depend on the property's location and jurisdiction, so confirm current requirements with the relevant local planning or municipal authority and a qualified architect. Keep approved drawings and receipts at the site, and do not assume that a neighbouring building or a broker's statement proves your plot has the same permissions. Changes from the sanctioned plan may require formal approval.",
+    sources: []
+  }
 
 };
