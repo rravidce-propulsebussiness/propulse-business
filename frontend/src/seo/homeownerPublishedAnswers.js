@@ -2025,5 +2025,55 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
     answer: "Keep one organised record of approved drawings and revisions, material approvals, delivery notes, test reports, inspection requests, hold-point releases, concrete pour records, waterproofing tests, defect logs, variation approvals and dated site photographs. Give each record a date, location, activity and responsible person so it can be traced later. Store digital copies with clear file names and retain originals where required. A quality register helps resolve questions at handover, but it is only useful if entries are made at the time the work occurs.",
     sources: []
   }
+,
+  "How do I protect a construction site from rain during the monsoon?": {
+    answer: "Plan temporary drainage before the monsoon and keep excavations, material storage and access routes protected from runoff. Cover cement and moisture-sensitive materials without trapping condensation, store steel off the ground, and prevent water from collecting around foundations or neighbouring properties. Protect fresh concrete and unfinished masonry using the method approved for the work. Inspect roof openings, temporary covers, pumps and discharge routes after heavy rain. If excavation sides soften, water accumulates near foundations or adjacent ground moves, stop affected work and obtain professional advice.",
+    sources: []
+  },
+
+  "What should I record in a daily construction site report?": {
+    answer: "A useful daily report records the date, weather, workers and trades present, activities and locations worked on, materials delivered, equipment used, inspections and tests completed, instructions received, safety observations, delays, visitors and photographs. Note quantities or measurable progress where possible and identify issues requiring decisions. The site supervisor should review and share the report regularly with the owner or project manager. Consistent records help verify progress, investigate delays and reconcile material use and contractor bills.",
+    sources: []
+  },
+
+  "How should I manage revisions to house construction drawings?": {
+    answer: "Maintain one controlled set of current drawings with revision numbers and dates. When a change is proposed, record the reason, affected plans or details, cost and schedule implications, and approvals required from the architect, structural engineer or services designer. Distribute the approved revision to the contractor and site supervisor, withdraw superseded copies and record when the change was implemented. Do not rely on marked-up screenshots or verbal instructions for structural, electrical or plumbing changes.",
+    sources: []
+  },
+
+  "What should I check before accepting bricks or blocks delivered to my site?": {
+    answer: "Check that the delivered unit type, dimensions, strength class and manufacturer match the approved specification. Inspect representative units for excessive breakage, visible defects, contamination and inconsistent dimensions, and compare delivery quantities with the invoice. Ask for product data or test documentation where specified. Store units on a stable, drained surface and protect them from contamination. Appearance alone cannot establish strength or suitability; the engineer or quality team should decide acceptance against the project requirements.",
+    sources: []
+  },
+
+  "How do I check whether a construction site is safe for children and visitors?": {
+    answer: "Restrict access to active work areas with secure barriers and clear warning signs. Cover or guard openings, excavations, stairwells and exposed services, keep tools and hazardous materials secured, and maintain safe pedestrian routes away from vehicles and lifting operations. Visitors should be accompanied by the site supervisor and provided with appropriate protective equipment. Do not allow children to enter the site, climb scaffolding or play near stored materials, even when workers are not present.",
+    sources: []
+  },
+
+  "What is a site instruction register and why is it useful?": {
+    answer: "A site instruction register records formal directions issued during construction, including the date, instruction number, description, drawing or specification reference, issuing professional, recipient and required response. It helps distinguish authorised instructions from informal conversations and makes it easier to trace changes, approvals, delays and cost effects. Instructions that change scope, price or time should also follow the contract's variation procedure and receive the required written approvals.",
+    sources: []
+  },
+
+  "How should construction materials be protected from theft and damage?": {
+    answer: "Use a delivery and stock register, secure storage areas, controlled site access and clear responsibility for receiving and issuing materials. Store cement in a dry, ventilated location off the floor, protect steel from contamination and standing water, and keep electrical and plumbing products in their recommended storage conditions. Record damaged or missing items promptly with photographs and delivery references. The contract should clarify who bears responsibility for storage, wastage, theft and insurance during each stage.",
+    sources: []
+  },
+
+  "What should I check before approving a contractor's running bill?": {
+    answer: "Compare the bill with the contract, BOQ, agreed measurement rules, completed work and previous certified payments. Check quantities on site, approved material advances, retention or deductions, taxes, variation approvals and supporting invoices where required. Exclude incomplete or rejected work unless the contract specifically allows payment for it. Ask the architect, engineer or quantity surveyor to verify measurements for substantial claims, and keep a signed measurement sheet and payment record.",
+    sources: []
+  },
+
+  "How do I plan construction work around Hyderabad's summer heat?": {
+    answer: "Schedule heat-sensitive work with the contractor and engineer, provide safe drinking water, shaded rest areas and suitable work-rest arrangements for labourers, and follow occupational safety guidance during hot periods. Protect fresh concrete and masonry from rapid moisture loss using the specified curing and protection method. Store materials according to manufacturer instructions and avoid placing concrete outside the approved temperature and placement controls. The site engineer should decide whether conditions require rescheduling or additional precautions.",
+    sources: []
+  },
+
+  "What should I do if the construction site has standing water after rain?": {
+    answer: "Keep people away from flooded excavations, electrical equipment and unstable ground. Arrange safe removal of water without discharging it onto neighbouring properties or undermining foundations. Before restarting work, have the site supervisor inspect excavation stability, soil softening, erosion, foundation exposure, temporary supports and electrical safety. Document the affected areas and obtain engineering advice if water has entered foundation excavations or caused movement. Do not simply pump out the water and continue without checking the ground and temporary works.",
+    sources: []
+  }
 
 };
