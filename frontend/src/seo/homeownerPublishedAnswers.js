@@ -1188,5 +1188,80 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
   "What is included in a complete 2BHK interior package?": {
     answer: "A complete 2BHK interior package should be defined room by room rather than by its name. It may cover a modular kitchen, wardrobes, TV/storage units, beds, ceiling, lighting and selected furniture, but appliances, loose furniture, curtains, decor, civil changes, painting and electrical upgrades may be excluded. Ask for dimensioned drawings, board and finish specifications, hardware brands, quantities, taxes, installation timeline, warranty and a signed exclusions list. Compare packages only after matching the same scope.",
     sources: []
+  },
+
+  "How do I design a small living room to look spacious?": {
+    answer: "A small living room feels more spacious when furniture dimensions and walking routes are planned before buying pieces. Measure the sofa, TV wall, door swings and main circulation path; use appropriately scaled seating, raised-leg or visually light furniture, and closed storage to reduce clutter. Keep the palette coordinated and use layered lighting rather than relying on one bright ceiling fixture. Avoid blocking windows or narrowing the route between the entrance and seating.",
+    sources: []
+  },
+
+  "What is the best flooring for a 2BHK flat?": {
+    answer: "Choose flooring by room use, household needs, maintenance and product data rather than appearance alone. Vitrified tiles are common for living areas and are available in many finishes; natural stone has variation and may need sealing; laminate and other floating floors have different moisture limitations. Check slip resistance for wet zones, tile size and joint layout, substrate preparation, skirting, transitions and replacement availability. Ask for a sample and confirm the exact product code and installation method.",
+    sources: []
+  },
+
+  "Which paint finish is best for living room walls?": {
+    answer: "Paint finish depends on wall condition, lighting, cleaning needs and the manufacturer's product range. Matte finishes can reduce glare and conceal minor surface irregularities but may be harder to scrub; higher-sheen washable finishes can be easier to clean while highlighting wall imperfections. Prepare and prime the surface correctly, test a sample in daytime and evening light, and confirm the product's stated washability and coverage. Do not compare paint only by colour name.",
+    sources: []
+  },
+
+  "How do I choose curtains for a living room?": {
+    answer: "Choose curtains after measuring the finished window opening and deciding how much daylight, privacy and heat control are needed. Consider fabric weight, lining, opacity, stack-back space, track or rod type and whether the curtains must clear handles or furniture. For a full-height look, coordinate the track position with the ceiling and false-ceiling design. Test fabric samples in the room and confirm finished drop and width before stitching.",
+    sources: []
+  },
+
+  "How can I make a small bedroom more storage-friendly?": {
+    answer: "Start with an inventory of clothes, luggage, bedding and daily-use items, then allocate storage by frequency of use. Full-height wardrobes and overhead cabinets can use vertical space, while under-bed drawers or lift-up storage may suit seasonal items. Use sliding shutters only where track access and internal drawer clearances work; hinged shutters need swing space. Keep windows, doors and walking paths clear, and avoid filling every wall with deep cabinets.",
+    sources: []
+  },
+
+  "What is the best design for a bathroom vanity unit?": {
+    answer: "A bathroom vanity should fit the basin, user reach and available circulation while leaving access to the trap, valves and service connections. Select a cabinet and finish suited to the bathroom's moisture exposure, seal cut edges, ventilate the cabinet and protect it from standing water. Confirm mirror, task lighting, splash zones and electrical separation with the relevant professionals. Provide removable access panels rather than permanently boxing in plumbing.",
+    sources: []
+  },
+
+  "How do I design a utility area in an apartment?": {
+    answer: "Measure the washing machine and dryer, including door opening and service clearances, before fixing the utility layout. Plan a correctly trapped drain, water supply with accessible shut-off, safe electrical point, ventilation, floor drainage and a route for maintenance. Keep detergents and cleaning supplies in secure storage, and allow space for drying racks without blocking windows or circulation. Confirm plumbing falls and waterproofing with the site professional.",
+    sources: []
+  },
+
+  "How do I design a balcony for a small apartment?": {
+    answer: "Before furnishing a balcony, check the building's permitted use, structural loading limits, waterproofing, drainage and railing safety. Choose outdoor-rated furniture and finishes that tolerate sun and rain, keep drainage outlets clear and avoid drilling into waterproofed surfaces without approval. Use compact foldable seating or vertical planters where space is limited, while maintaining safe access to doors and the railing. Do not attach heavy planters or screens to a railing unless approved.",
+    sources: []
+  },
+
+  "What is the best material for a bathroom vanity cabinet?": {
+    answer: "A bathroom vanity cabinet is exposed to humidity, splashes and possible plumbing leaks, so select the board and finish by the manufacturer's stated bathroom suitability. Seal all cut edges and penetrations, use corrosion-appropriate hardware, keep the trap and shut-off valves accessible and provide ventilation. A floating cabinet needs suitable wall anchoring; a floor-standing cabinet needs protection at its base. No decorative board should be treated as waterproof unless its product specification explicitly supports that use.",
+    sources: []
+  },
+
+  "How do I plan a home office in a small room?": {
+    answer: "A compact home office needs a desk sized for the monitor, keyboard and writing tasks, with adequate legroom and a chair suited to the user. Position the screen to reduce glare, add task lighting and plan power and data points before cabinetry is installed. Provide cable routes that remain accessible, storage for frequently used items and ventilation around equipment. Check door swings and chair clearance so the workspace does not obstruct the room.",
+    sources: []
+  },
+
+  "What should I consider when designing a kids bedroom?": {
+    answer: "Design a child's room around safety and flexibility rather than a fixed theme that may quickly date. Anchor tall wardrobes and shelves to suitable structural support, avoid unstable furniture and sharp projecting edges, and keep cords and small items out of reach as appropriate for the child's age. Provide accessible storage, layered lighting and a study area that can adjust as needs change. Check window, balcony and electrical safety with qualified professionals.",
+    sources: []
+  },
+
+  "How do I make home interiors suitable for elderly parents?": {
+    answer: "For an older family member, prioritise clear routes, good glare-controlled lighting, non-slip flooring, reachable switches and storage, and adequate space to approach beds and bathrooms. Where appropriate, discuss grab bars, shower seating, threshold changes and door clearances with an occupational therapist or qualified accessibility professional; wall backing must be designed before finishes are closed. Avoid loose rugs and furniture that narrows the walking path. Adaptations should suit the person's actual mobility needs.",
+    sources: []
+  },
+
+  "Which interior materials are easiest to maintain with pets?": {
+    answer: "Pet-friendly materials depend on the animal, claws, shedding and cleaning routine. Consider durable easy-clean flooring, washable removable upholstery covers, stain-resistant fabrics and finishes with clear care instructions. Provide a dedicated feeding or litter area with ventilation and washable surfaces, and secure cables or toxic cleaning products. No material is completely scratch- or stain-proof, so inspect samples and ask suppliers about repair and replacement options.",
+    sources: []
+  },
+
+  "How do I reduce noise between bedrooms and living areas?": {
+    answer: "Noise reduction works best when the source and transmission path are identified. Separate noisy living or entertainment areas from bedrooms where the plan allows, use well-fitted solid doors and seals, and add soft furnishings to reduce echo within a room. Wall or ceiling acoustic assemblies need specified materials, detailing and correct installation; decorative foam alone will not soundproof a room. Ask a qualified acoustic professional for persistent noise or shared-wall problems.",
+    sources: []
+  },
+
+  "Is a smart home system worth installing during interior work?": {
+    answer: "A smart-home system is useful when it solves clear needs such as lighting scenes, climate control, security or energy monitoring. Decide which devices must work together, whether they need neutral wires or dedicated cabling, how network coverage will reach each room, and how the home works if internet or cloud services fail. Preserve manual controls, plan secure account access and updates, and leave service access to hubs and drivers. Confirm compatibility and support before committing to a proprietary ecosystem.",
+    sources: []
   }
 };
