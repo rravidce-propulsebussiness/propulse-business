@@ -125,5 +125,24 @@ groups["Interior materials & maintenance"]=[
 ["How do I clean matte laminate without leaving marks?","Provide safe cleaning guidance and warn against abrasive pads and harsh solvents."],
 ["How do I maintain acrylic kitchen shutters?","Explain soft-cloth cleaning, suitable cleaners, scratch precautions and edge care."]
 ];
+
+groups["Interior planning & room-by-room design"]=[
+["How do I design a small living room to look spacious?","Use measured furniture layouts, clear circulation, layered lighting, storage and a restrained material palette."],
+["What is the best flooring for a 2BHK flat?","Compare vitrified tiles, natural stone, laminate and other options by use, maintenance, slip resistance and budget."],
+["Which paint finish is best for living room walls?","Compare matte, eggshell and washable finishes by light, wall condition, cleaning and product specification."],
+["How do I choose curtains for a living room?","Plan fabric, lining, privacy, daylight, track type, stack-back space and finished measurements."],
+["How can I make a small bedroom more storage-friendly?","Use vertical storage, under-bed options, measured wardrobes and multi-purpose furniture without blocking circulation."],
+["What is the best design for a bathroom vanity unit?","Cover moisture-suitable materials, basin dimensions, plumbing access, storage, ventilation and safe electrical separation."],
+["How do I design a utility area in an apartment?","Plan washer dimensions, drainage, water points, ventilation, drying, storage and maintenance access."],
+["How do I design a balcony for a small apartment?","Balance weather-resistant finishes, drainage, safe railing clearance, compact seating, plants and usable circulation."],
+["What is the best material for a bathroom vanity cabinet?","Compare moisture exposure, board and finish suitability, sealed edges, hardware and leak protection."],
+["How do I plan a home office in a small room?","Coordinate desk depth, ergonomic seating, task lighting, sockets, data, cable management and storage."],
+["What should I consider when designing a kids bedroom?","Prioritise anchored furniture, safe edges, accessible storage, adaptable layouts, study lighting and washable finishes."],
+["How do I make home interiors suitable for elderly parents?","Plan step-free routes where feasible, adequate lighting, non-slip surfaces, reachable storage, grab-bar backing and clear circulation with professional advice."],
+["Which interior materials are easiest to maintain with pets?","Choose cleanable, scratch-tolerant surfaces and washable fabrics based on the pet, product care instructions and room use."],
+["How do I reduce noise between bedrooms and living areas?","Use layout zoning, solid door seals, suitable wall/ceiling assemblies, soft furnishings and properly specified acoustic products."],
+["Is a smart home system worth installing during interior work?","Plan requirements, wiring, network coverage, device compatibility, manual controls, privacy, power backup and future service access before closing walls."]
+];
+
 export const INTERIOR_HOMEOWNER_TOPIC_GROUPS=Object.entries(groups).map(([category,entries])=>({category,topics:entries.map(([title,description],index)=>({id:category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index,title,description,intent:'Homeowner question / cost / comparison / planning intent',evidence:'Search-language research; exact monthly volume not available from public results'}))}));
 export const INTERIOR_HOMEOWNER_TOPICS=INTERIOR_HOMEOWNER_TOPIC_GROUPS.flatMap(group=>group.topics.map(topic=>({...topic,category:group.category})));
