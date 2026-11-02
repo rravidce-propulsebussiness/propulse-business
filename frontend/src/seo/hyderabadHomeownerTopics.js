@@ -168,7 +168,24 @@ groups["Permissions, legal checks & homeowner handover"] = [
   ["When should I hire a structural engineer for house construction?","Covers design, foundation, structural drawings, site inspections, alterations and defect assessment."],
   ["What documents should I collect when my house construction is complete?","Lists sanctioned drawings, completion/occupancy records where applicable, warranties, test reports, manuals and handover records."],
   ["What is a defect-liability period in house construction?","Explains written defect reporting, contractor obligations, exclusions and the importance of defining the period in the agreement."],
-  ["How should I approve extra work and cost variations during construction?","Explains written variation orders, scope, rates, time impact and approval before work proceeds."]
+  ["How should I approve extra work and cost variations during construction?","Explains written variation orders, scope, rates, time impact and approval before work proceeds."],
+ ];
+groups["Foundation, services & homeowner project controls"] = [
+    ["How do I know whether my plot needs a soil test before construction?", "Explains when geotechnical investigation is important and what a soil report tells the structural designer."],
+    ["What does safe bearing capacity mean in a soil test report?", "Explains the meaning of bearing capacity and why foundation design must use the site-specific geotechnical report."],
+    ["Can I decide the footing size based on my neighbour's house?", "Explains why nearby foundations are not a substitute for site-specific soil investigation and structural design."],
+    ["Why is a plinth beam provided in a house?", "Explains the role of plinth beams in the structural system and why their size and reinforcement come from engineering design."],
+    ["How do I check terrace waterproofing before laying tiles?", "A practical checklist covering slope, outlets, detailing, ponding tests and protection of the waterproofing layer."],
+    ["How should concrete be cured during hot weather in Telangana?", "Explains temperature, evaporation, curing methods and the need to follow the approved concrete specification."],
+    ["Should I use AAC blocks or red clay bricks for my house?", "Compares weight, thermal performance, dimensions, workmanship, anchoring and system-level design considerations."],
+    ["What is the correct plaster thickness for internal and external walls?", "Explains why plaster thickness depends on substrate and specification, and why excessive thickness needs correction rather than concealment."],
+    ["How do I choose exterior paint for a house in Hyderabad?", "Compares exposure, substrate preparation, primer, weather resistance, product data and maintenance."],
+    ["What should I check before connecting my house to a sewer line?", "Covers local connection permission, invert levels, inspection chambers, slope, venting and testing by a qualified plumber."],
+    ["Is rainwater harvesting required for an individual house in Telangana?", "Explains that requirements depend on current local rules, plot and building details, and how to verify the applicable authority conditions."],
+    ["What provisions should I make for rooftop solar during construction?", "Covers structural loading review, conduit routes, inverter location, earthing, waterproofing and utility approvals."],
+    ["What is a comfortable staircase riser and tread for a house?", "Explains that dimensions must comply with applicable building rules and be coordinated for consistent, safe steps."],
+    ["What clauses should a house construction agreement include?", "Lists scope, drawings, specifications, exclusions, milestones, payment terms, variations, quality checks, safety, delay and defect obligations."],
+    ["How can I verify a contractor's stage-wise construction bill?", "Explains measurement records, completed milestones, BOQ rates, approved variations, tax treatment and retention before payment."]
 ];
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
