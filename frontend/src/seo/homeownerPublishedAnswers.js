@@ -1488,4 +1488,103 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
     sources: []
   },
 
+  "How do I plan a house construction project step by step?": {
+    answer: "Plan the project in a deliberate sequence. First verify title, plot boundaries, access, land use and the applicable approval route with independent legal and technical professionals. Commission a site survey and, where advised, a geotechnical investigation. Develop an architectural brief around family needs, budget, future expansion, daylight, ventilation and parking; then coordinate architectural, structural, electrical, plumbing and other service drawings before pricing. Obtain the required permissions before starting work. Prepare a detailed BOQ and written specifications, compare contractor bids on the same scope, and sign an agreement defining milestones, quality checks, variations, delay treatment and defect obligations. During construction, record inspections and concealed services before they are covered, track costs and changes in writing, and test systems before handover. The exact sequence and approvals depend on the site and project category; use licensed local professionals.",
+    sources: []
+  },
+
+  "What should be included in a house construction BOQ?": {
+    answer: "A BOQ (Bill of Quantities) should describe each work item clearly enough that two contractors price the same scope. Include item description, location, unit of measurement, estimated quantity, material specification and grade where relevant, workmanship or installation requirements, and the rate and amount. Break work into logical sections such as earthwork, concrete, reinforcement, masonry, plaster, waterproofing, flooring, doors/windows, electrical, plumbing and painting. State whether transport, loading, scaffolding, wastage, testing, taxes, debris removal and protection are included. Identify provisional quantities, owner-supplied items, exclusions and assumptions. Link important items to approved drawings and product submittals. During execution, measure completed work jointly and record approved variations separately. A BOQ is only useful when its descriptions and measurement rules are unambiguous; ask the designer or quantity surveyor to review it before signing.",
+    sources: []
+  },
+
+  "How do I prepare a construction schedule for a new house?": {
+    answer: "Build the schedule from the approved scope and dependencies, not from an optimistic single completion date. Start with design, soil investigation, permissions and procurement decisions; then map site preparation, foundation, plinth, frame, masonry, services, waterproofing, finishes, testing and handover. Identify activities that cannot overlap safely—for example, concealed service testing must precede closing walls or floors. Include realistic lead times for steel, windows, tiles, joinery and specialist equipment, as well as inspection hold points, curing periods, weather and public holidays. Assign an owner to each activity and update planned versus actual progress weekly. Track decisions and materials that could delay the critical path. The contractor should provide a baseline schedule and explain revisions; do not shorten structural or product-specified curing and testing periods simply to recover time.",
+    sources: []
+  },
+
+  "What is the difference between carpet area, built-up area and super built-up area?": {
+    answer: "Carpet area generally refers to the usable floor area within the internal walls of a home, subject to the definition used by the applicable regulation or agreement. Built-up area commonly adds wall thickness and certain covered spaces to the usable area. Super built-up area is a commercial term that may add a proportionate share of common areas in a larger development. These terms are not interchangeable, and the exact inclusions can vary by legal context and document. Ask for a dimensioned plan and a written area statement that explains balconies, terraces, shafts, walls and common areas separately. For a construction quotation, confirm whether the rate is based on plot area, plinth/built-up area, carpet area or another measured quantity. Compare projects only after aligning the measurement basis and scope.",
+    sources: []
+  },
+
+  "How do I select the right foundation for my house?": {
+    answer: "The foundation must be selected by the structural engineer using the building loads and site-specific ground information. Relevant factors include soil strata and bearing characteristics, settlement risk, groundwater, nearby foundations, slope, fill, basement requirements and the number and arrangement of floors. A geotechnical investigation may be needed to inform the design; a neighbour's footing or a rule of thumb is not a safe substitute. The engineer then coordinates the foundation type, dimensions, reinforcement, founding level and construction sequence with the architectural layout and applicable standards. During excavation, the actual soil and groundwater conditions should be checked against the report, and unexpected conditions referred back to the engineer before concrete is placed. Do not alter footing depth, size or reinforcement on site without written design approval.",
+    sources: []
+  },
+
+  "What is the difference between isolated footing, combined footing and raft foundation?": {
+    answer: "An isolated footing typically supports one column where soil and spacing conditions permit. A combined footing supports two or more columns, often where columns are close together or a boundary limits an individual footing. A raft or mat foundation spreads loads over a large area and may be considered where soil conditions, column layout or settlement considerations make it appropriate. These are broad descriptions, not selection rules: the correct system depends on geotechnical data, structural loads, settlement, groundwater, adjacent properties, construction feasibility and cost. The structural engineer should document the design assumptions and drawings. Never select a foundation by copying a nearby house or choosing the option that uses the least concrete; inappropriate foundations can cause serious movement and damage.",
+    sources: []
+  },
+
+  "What checks should be completed before a roof slab concrete pour?": {
+    answer: "Before a roof slab pour, compare the work with the latest approved structural and service drawings. Check reinforcement bar size, spacing, laps, anchorage and support; cover blocks and chairs; openings and sleeves; electrical conduits and plumbing provisions; slab thickness and levels; and cleanliness of the formwork. Inspect shuttering, props, bracing, joints and safe access for leaks or movement. Confirm that concrete grade, mix documentation, quantity, delivery sequence, sampling and testing arrangements are ready. Ensure the engineer or authorised site supervisor has inspected and signed the pre-pour checklist. Photograph concealed work and record any approved changes. Do not pour over unresolved discrepancies or rely on a verbal assurance that a missing bar or service opening can be fixed later.",
+    sources: []
+  },
+
+  "How can I check reinforcement steel before slab casting?": {
+    answer: "Check reinforcement against the approved structural drawings and bar-bending schedule, not against a generic online spacing chart. Verify bar diameter, number, spacing, direction, top and bottom layers, extra bars, crank or support details, lap positions and development/anchorage as specified. Confirm that reinforcement is clean enough for proper bond, tied securely and held at the required cover with suitable blocks and chairs; bricks or loose stones are not acceptable substitutes for specified cover supports. Check openings, sleeves and embedded items with the services drawings before concrete placement. Have the responsible engineer inspect and record the work. If a bar is missing, displaced or conflicts with a conduit, stop and obtain an approved correction rather than cutting or shifting reinforcement informally.",
+    sources: []
+  },
+
+  "What is a concrete slump test and why is it done?": {
+    answer: "A concrete slump test is a field check of the consistency or workability of fresh concrete using a standard cone procedure. It helps the site team assess whether a delivered batch is within the specified workability range; it does not directly measure compressive strength or prove that concrete is durable. Sampling and testing should follow the applicable standard and project quality plan, with results recorded against the truck/batch, time and mix details. Workability can be affected by transport time, temperature and admixtures. Do not improve slump by casually adding water at site: any permitted adjustment must be authorised, controlled and recorded under the supplier's mix procedure and engineer's direction. Strength assessment requires the specified sampling and compressive-strength testing as well as proper placing, compaction and curing.",
+    sources: []
+  },
+
+  "Should water be added to a ready-m mix concrete truck at the construction site?": {
+    answer: "Do not add water to a ready-mix truck simply because the concrete looks stiff or is difficult to place. Uncontrolled water changes the water-cement ratio and can reduce strength and durability, increase shrinkage and cause segregation or bleeding. If workability is outside the approved range, inform the supplier and responsible engineer. Any adjustment, if permitted by the approved mix design and applicable procedure, must be made by authorised personnel, measured, mixed adequately and documented; the resulting concrete may need retesting. Check delivery time, mix identification, slump requirements, temperature and site handling before discharge. The safest practice is to specify the correct mix and placing method in advance and ensure adequate labour, vibration equipment and access. Never conceal an unauthorised water addition in the pour record.",
+    sources: []
+  },
+
+  "How do I choose tiles for a house floor?": {
+    answer: "Choose floor tiles by room use first, then appearance. For bathrooms, balconies and other wet areas, prioritise suitable slip resistance and water-related performance for the actual surface condition. For living areas, consider abrasion and impact resistance, furniture loads, cleaning, glare and how visible dust or scratches may be. Check tile size against room dimensions, falls and drain locations; large tiles can reduce grout joints but require a suitable substrate and skilled installation. Compare actual samples in the room's lighting and check shade, calibre, batch consistency, edge quality and recommended adhesive and grout. Confirm skirting, thresholds, movement joints and transitions between materials. Keep spare tiles from the same batch for future repairs and follow the manufacturer's installation instructions.",
+    sources: []
+  },
+
+  "What is the difference between vitrified, ceramic and porcelain tiles?": {
+    answer: "Ceramic and vitrified/porcelain tiles are manufactured and classified differently, but marketing labels alone do not tell you whether a product suits a particular room. Compare the manufacturer's technical data for water absorption, breaking strength, abrasion or wear classification, stain resistance, surface finish and recommended application. Porcelain is generally a denser, lower-absorption ceramic category, while vitrified is a broad trade term used for products made through vitrification processes; terminology can vary by market. For wet floors, ask for tested slip-performance information relevant to the expected use, not just a glossy showroom appearance. Also check calibration, shade variation, rectification, adhesive compatibility and maintenance. Select by documented performance and installation requirements rather than assuming one label is always superior.",
+    sources: []
+  },
+
+  "How do I prevent bathroom leakage during house construction?": {
+    answer: "Prevent bathroom leakage by treating waterproofing as a complete system, not just a coat of chemical on the floor. Prepare a sound, clean substrate and form the required falls to drains. Use a compatible waterproofing system with the specified primer, coats, reinforcement at corners and pipe penetrations, upturns and termination details. Coordinate floor traps, sleeves, thresholds and wall finishes so there are no gaps in the water barrier. Follow the product data sheet for application thickness, coverage, curing and protection. Conduct and document the specified ponding or water test before tiling, and inspect the ceiling or adjoining spaces below. Protect the membrane during tile work and use compatible adhesives and grouts. If leakage appears, identify the source before applying a surface patch that may hide the real defect.",
+    sources: []
+  },
+
+  "What is the correct slope for a bathroom floor and balcony?": {
+    answer: "A bathroom or balcony floor should drain continuously toward its outlet without reverse falls or standing water. The required slope is determined by the design, floor dimensions, drain positions, finish material and applicable local requirements; there is no single slope figure that should be copied blindly into every project. Before tiling, check the screed levels with a straightedge and water test, confirm the drain is at the intended low point and ensure thresholds prevent water escaping into adjacent rooms. Large-format tiles may need careful cutting and setting around floor traps. Verify that waterproofing remains continuous at corners, doorways and pipe penetrations. A completed floor should be tested for ponding and drainage before handover, with any low spots corrected before fixtures and finishes make repair difficult.",
+    sources: []
+  },
+
+  "How do I plan electrical points before plastering?": {
+    answer: "Plan electrical points from a furniture and appliance layout before conduits are installed. Mark beds, wardrobes, TV units, kitchen counters, work desks, refrigerators, washing machines, AC indoor/outdoor units and likely future equipment. Ask a licensed electrical professional to calculate connected loads, circuit distribution, protective devices, earthing and cable sizes in accordance with applicable rules. Locate switches and sockets for convenient access while considering children, water zones and furniture clearance. Plan dedicated circuits where required, adequate outlets, data/Wi-Fi points, doorbell, exhaust fans and outdoor lighting. Coordinate conduits with beams, columns, plumbing and false ceilings; never cut structural members to route wiring. Photograph conduit routes before plastering and keep an updated circuit schedule and as-built drawing for future maintenance.",
+    sources: []
+  },
+
+  "What should I check before concealed plumbing pipes are covered?": {
+    answer: "Before concealing plumbing, inspect the pipe system against the approved layout and manufacturer's instructions. Confirm pipe material, diameter, pressure/temperature rating, route, supports, gradients for drainage, cleanouts, sleeves and isolation valves. Check that joints were made with the correct tools and compatible fittings, and that pipes are protected from sharp edges, sunlight where unsuitable, heat sources and movement. Pressure-test water-supply lines and test drainage lines using the specified method before closing chases or floors; record the results and rectify leaks. Keep access to valves, traps and serviceable connections. Photograph the completed routes with measurements from fixed reference points and retain product invoices and warranty details. Testing should be performed by a qualified plumber under the project quality plan.",
+    sources: []
+  },
+
+  "How do I choose UPVC, CPVC and PPR pipes for a house?": {
+    answer: "UPVC, CPVC and PPR are different piping systems and should be selected for the service they are designed and certified to perform. UPVC is commonly used for certain cold-water, drainage or waste applications depending on the product system; CPVC is commonly used for hot and cold potable-water distribution; PPR is a thermoplastic pressure-pipe system joined by heat fusion. These general descriptions do not replace the manufacturer's ratings. Compare pressure class, temperature range, potable-water certification where relevant, UV exposure limits, chemical compatibility, joining method, fittings availability, installation skill and warranty. Do not mix incompatible brands or joining systems without written approval. Ask the plumber to provide product data and follow the exact system instructions, then pressure-test or leak-test the installation before concealment.",
+    sources: []
+  },
+
+  "How do I plan ventilation and natural light in a new house?": {
+    answer: "Good daylight and ventilation start with the room layout and site context. Study the sun path, neighbouring buildings, road noise, prevailing breezes, privacy and rain exposure before fixing window sizes and positions. Where possible, provide openings on more than one side of a space to support cross-ventilation, while ensuring airflow is not blocked by partitions or furniture. Use shading, overhangs, screens or suitable glazing to control glare and heat gain; more glass is not automatically better. Kitchens and bathrooms need effective exhaust or ventilation provisions. Coordinate window openings with lintels, beams, columns, waterproofing and security. A local architect should check the plan against plot setbacks, ventilation and building rules applicable to the site.",
+    sources: []
+  },
+
+  "What should I inspect during house construction before making stage payments?": {
+    answer: "Before paying a construction milestone, compare the contractor's claim with the agreement, BOQ, approved drawings and actual completed work. Ask for joint measurements or inspection records for items that will soon be concealed, such as reinforcement, waterproofing and plumbing. Check material delivery evidence, test reports, quality observations and approved samples where relevant. Separate original contract work from written variations, and confirm the rate, quantity and time impact of each change before payment. Verify arithmetic, taxes, previous advances, retention and deductions against the contract. Do not pay solely because a calendar date has arrived if the milestone is incomplete, and do not withhold agreed payments without following the contract's process. Keep signed measurement sheets, bills, receipts and photographs in one project record.",
+    sources: []
+  },
+
+  "What should be checked during final house handover?": {
+    answer: "Walk through the house systematically with the contractor and designer before final payment. Test each tap, flush, drain, water heater, pump and visible plumbing connection; check for leaks and adequate drainage. Test lights, switches, sockets, protective devices and the electrical panel with a qualified electrician. Operate doors, windows, locks, shutters, drawers, fans and appliances; inspect tile lippage, grout, paint, sealants, skirting, counters and visible cracks. Check roof and wet-area waterproofing records, external drainage, rainwater pipes and access covers. Prepare a snag list with room, defect, responsible party and target date, then re-inspect completed items. Collect approved/as-built drawings, permissions and completion documents where applicable, warranties, product manuals, test certificates, keys, spare tiles/paint and service contacts. Record meter readings and handover date in writing.",
+    sources: []
+  },
 };
