@@ -1315,4 +1315,46 @@ export const PUBLISHED_HOMEOWNER_ANSWERS = {
     sources: []
   }
 
+
+
+  "How much does house construction cost per square foot in Hyderabad?": {
+    answer: "There is no reliable single per-square-foot rate for every Hyderabad house. A quote changes with the location and site access, soil and foundation requirements, number of floors, structural design, built-up area measurement, material brands, finish level, labour scope, services, approvals and contractor overheads. Ask for a dated, itemised BOQ that states what is included and excluded, the specifications for each material and the basis used to calculate area. Compare at least two quotes on the same drawings and scope. Check whether GST, architect and structural fees, compound wall, borewell, sump, lift, solar, modular kitchen, wardrobes, external works and utility charges are included. Treat online rates as preliminary budgeting indicators, not a binding project estimate.",
+    sources: []
+  },
+
+  "How do I estimate the construction cost of a 200-square-yard plot?": {
+    answer: "A 200-square-yard plot is a land area, not the built-up area or a construction quotation. First confirm the measured plot dimensions and the legally permissible footprint, setbacks, floor count and built-up area for the site. Then prepare floor-wise plans and calculate the actual areas included in the estimate, clarifying how balconies, staircases, parking, terrace rooms and common areas are measured. Build the estimate from quantities and specifications for excavation, concrete, reinforcement, masonry, plaster, waterproofing, flooring, doors, windows, electrical, plumbing, painting and external works. Ask the architect or quantity surveyor to identify provisional sums, exclusions, taxes and contingency separately; do not multiply the plot area by a generic rate and treat it as the final cost.",
+    sources: []
+  },
+
+  "Is ground-floor construction cheaper than a G+1 house?": {
+    answer: "A single-storey house may avoid some upper-floor elements, but it is not automatically cheaper for the same total usable area. A G+1 design can use the plot more efficiently, while adding staircases, upper-floor structure, slab work, vertical services and access requirements. Foundation and column design must be checked for the intended final building from the start; adding another floor later without a verified structural design is unsafe. Compare alternatives using the same total usable area, room schedule, finish specification, services and external scope, and include the cost of stairs, terrace treatment and future expansion provisions.",
+    sources: []
+  },
+
+  "How many cement bags are required to build a house?": {
+    answer: "The cement requirement cannot be calculated accurately from plot area or built-up area alone. It depends on the structural design, concrete grades and mix designs, masonry and plaster specifications, floor finishes, mortar use, wastage control and the quantities of each activity. Ask for an item-wise quantity estimate based on drawings and approved mix proportions, and keep separate records for concrete, masonry, plaster and other cement-based work. Reconcile purchase invoices, delivery challans, stock and daily consumption against measured progress. Do not use a fixed bags-per-square-foot rule as a procurement instruction or change a mix by adding cement without the engineer's approval.",
+    sources: []
+  },
+
+  "How do I calculate brickwork quantity for a house?": {
+    answer: "Start with the wall lengths and heights from the latest approved architectural drawings, then calculate each wall's gross volume or area using the specified wall thickness. Deduct openings such as doors and windows according to the measurement rules in the contract or BOQ, and separate different wall thicknesses and materials. Convert the measured quantity using the actual block or brick dimensions and the specified mortar joint, allowing for the agreed breakage and wastage factor. Check lintels, chases, ducts and partial-height walls separately. Have the estimator state whether the BOQ is measured in cubic metres or square metres and use one consistent method when comparing contractor quotes.",
+    sources: []
+  },
+
+  "Are AAC blocks better than red bricks for house construction?": {
+    answer: "AAC blocks and fired-clay bricks have different weight, thermal, acoustic, strength, water-absorption and installation characteristics. AAC can reduce wall dead load and may improve thermal performance, but it requires compatible mortar or adhesive, correct jointing, suitable fixings and detailing at openings and service chases. Red bricks also vary widely by source and quality, so inspect dimensions, consistency and test information rather than relying on colour alone. Compare the specified product's test data, wall thickness, structural role, plaster system, local availability, labour familiarity and total installed cost. The structural designer should confirm the wall type and any load-bearing role.",
+    sources: []
+  },
+
+  "How can I identify poor-quality construction work at my site?": {
+    answer: "Look for work that differs from approved drawings or specifications, missing inspection records, unexplained material substitutions, poor alignment, leaking wet areas, visible cracks, honeycombing, exposed reinforcement, inadequate curing and unfinished safety provisions. These signs do not all have the same severity, and appearance alone cannot establish structural safety. Photograph and date each observation, record the location and stage, compare it with the approved drawing and BOQ, and raise a written inspection request with the site engineer or project consultant. Do not conceal suspected defects with plaster or paint before they are assessed. Structural cracks, significant concrete defects or exposed reinforcement need prompt review by the structural engineer.",
+    sources: []
+  },
+
+  "What should I check before an RCC roof slab is cast?": {
+    answer: "Before slab casting, compare shuttering levels, dimensions, supports and openings with the approved structural and services drawings. Check reinforcement diameter, spacing, laps, anchorage, cover blocks, extra bars at supports and around openings, beam reinforcement, embedded conduits and sleeves, and that no services cut or displace structural bars. Confirm formwork stability, cleanliness, access for concrete placement and vibration, approved concrete grade and mix, delivery and cube-sampling arrangements, pour sequence and curing plan. Record the engineer's pre-pour inspection and resolve discrepancies before concrete arrives. Never cut, bend or remove reinforcement or change slab thickness at site without written structural approval.",
+    sources: []
+  }
+
 };
