@@ -386,6 +386,18 @@ groups["Construction planning & site quality"] = [
   ["How should defects found during house construction be recorded?", "Practical homeowner guidance covering how should defects found during house construction be recorded? Review the approved project documents and obtain qualified site-specific advice where required."]
 ];
 
+
+groups["Foundation design, steel estimation & construction payments"] = [
+  ["What is a safe foundation depth for a house?", "Explains why founding depth depends on soil investigation, loads, groundwater and the structural engineer's design rather than a universal measurement."],
+  ["How does soil bearing capacity affect foundation design?", "Shows how geotechnical findings influence footing size, settlement checks and the choice of shallow or deep foundation systems."],
+  ["What is the difference between isolated, combined and raft foundations?", "Compares the purpose and use of three common foundation systems and explains who selects the appropriate design."],
+  ["How is steel quantity calculated from a bar bending schedule?", "Explains bar marks, cutting lengths, quantities and theoretical unit weight, and how to reconcile a BBS with site records."],
+  ["How do I check concrete grade at a construction site?", "Covers approved mix details, delivery challans, fresh-concrete checks, specimen identification and laboratory test reports."],
+  ["How long should concrete be cured in hot weather?", "Explains early moisture protection, curing methods, project-specific duration and the importance of a curing log."],
+  ["How should I create a stage-wise house construction payment schedule?", "Links payments to measurable milestones, BOQ quantities, inspection records, approved variations and handover obligations."],
+  ["What should I check before approving a foundation concrete pour?", "Provides a pre-pour checklist for founding level, dimensions, reinforcement, cover, formwork, concrete supply and inspection sign-off."]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
