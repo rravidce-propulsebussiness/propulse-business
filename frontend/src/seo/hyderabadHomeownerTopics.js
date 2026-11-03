@@ -426,6 +426,18 @@ groups["Interior cost, materials & BOQ"] = [
   ["How much does a false ceiling cost and what affects the price?", "Practical interior planning guidance explaining the cost drivers, material specifications, measurement basis and quotation checks for this work."],
 ];
 
+
+groups["Room-wise interior planning & storage"] = [
+  ["How should I plan a bedroom wardrobe interior?", "Practical room-wise design guidance covering dimensions, storage planning, material choices, hardware, safety and installation checks."],
+  ["What is the best material for kitchen cabinets?", "Practical room-wise design guidance covering dimensions, storage planning, material choices, hardware, safety and installation checks."],
+  ["How do I plan storage inside a modular kitchen?", "Practical room-wise design guidance covering dimensions, storage planning, material choices, hardware, safety and installation checks."],
+  ["What should I consider when designing a TV unit?", "Practical room-wise design guidance covering dimensions, storage planning, material choices, hardware, safety and installation checks."],
+  ["How do I plan a crockery unit for a dining area?", "Practical room-wise design guidance covering dimensions, storage planning, material choices, hardware, safety and installation checks."],
+  ["What materials are suitable for a pooja unit?", "Practical room-wise design guidance covering dimensions, storage planning, material choices, hardware, safety and installation checks."],
+  ["What should I consider when designing a bathroom vanity?", "Practical room-wise design guidance covering dimensions, storage planning, material choices, hardware, safety and installation checks."],
+  ["How do I choose hardware for wardrobes and kitchen cabinets?", "Practical room-wise design guidance covering dimensions, storage planning, material choices, hardware, safety and installation checks."],
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
