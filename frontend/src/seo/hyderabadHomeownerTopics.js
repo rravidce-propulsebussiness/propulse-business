@@ -460,6 +460,18 @@ groups["Interior finishes, surfaces & lighting details"] = [
   ["How do I choose skirting for a modern interior?", "Compare skirting materials and details by flooring, wall finish, moisture, cleaning, corners and shadow-gap coordination."]
 ];
 
+groups["Interior installation, inspection & handover"] = [
+  ["What should I check before installing a modular kitchen?", "Pre-installation checklist for site measurements, cabinet drawings, appliances, services, materials, hardware and protection."],
+  ["How do I check whether wardrobe shutters are properly aligned?", "Inspect shutter gaps, vertical alignment, hinge action, sliding tracks, rubbing, sagging and cabinet level."],
+  ["What should I inspect before accepting a kitchen countertop installation?", "Check countertop material, joints, edges, cut-outs, support, sealing, finish, care instructions and warranty."],
+  ["How should electrical points be planned for home interiors?", "Coordinate electrical locations with furniture, appliances, carpentry, circuits, safety, access and concealed services."],
+  ["What causes gaps between modular cabinets and walls?", "Understand wall irregularities, measurement tolerances, filler panels, scribe details and cabinet installation alignment."],
+  ["How do I prevent drawers and cabinet shutters from sagging?", "Select suitable board spans, shelf supports, runner capacity, hinges, fixings and load limits to prevent sagging."],
+  ["What should I check before installing a false ceiling?", "Coordinate ceiling framing, fixtures, services, access panels, moisture conditions and concealed-work inspection."],
+  ["What should I check before accepting interior carpentry work?", "Room-wise inspection of cabinet fixing, shutters, drawers, finishes, hardware, services and documentation."],
+  ["How do I prepare an interior snag list?", "Create a photo-based room-wise defect register with owners, corrective actions, due dates and reinspection."]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
