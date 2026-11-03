@@ -483,6 +483,17 @@ groups["Interior installation checks & handover"] = [
   ["What should be included in an interior handover checklist?", "Room-wise acceptance checklist covering workmanship, services, snags, warranties, manuals and final handover records."]
 ];
 
+groups["Interior finishing, ceiling & fixing quality"] = [
+  ["How do I check false ceiling framing before gypsum boards are fixed?", "Inspect ceiling channels, hangers, anchors, spacing, bracing and service supports before gypsum boarding hides the frame."],
+  ["What causes cracks in gypsum false ceilings?", "Identify framing movement, board fixing, joint treatment, moisture and vibration causes before repairing ceiling cracks."],
+  ["How do I inspect wall putty and paint finish before handover?", "Check surface preparation, primer, shade, sheen, sanding marks, patchiness and paint defects under real lighting."],
+  ["What should I check before polishing veneer?", "Review veneer bonding, grain matching, stain samples, sanding limits, coating system, curing and finish quality."],
+  ["How do I prevent moisture damage behind a kitchen backsplash?", "Protect backsplash substrates and junctions through leak control, compatible waterproofing, adhesive, grout and sealant details."],
+  ["How do I check bathroom waterproofing before vanity installation?", "Verify wet-area detailing, pipe penetrations, floor falls and test records before vanity cabinets conceal the surfaces."],
+  ["How should concealed LED drivers be installed for maintenance?", "Plan compatible, ventilated and accessible LED drivers, wiring, labelling and replacement access before closing ceilings or cabinets."],
+  ["What should I check before fixing wall-mounted cabinets?", "Verify wall substrate, concealed services, load-rated anchors, backing, cabinet brackets and safe installation clearances."]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
