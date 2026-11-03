@@ -22,9 +22,36 @@
   flex-basis:106px !important;
 }
 
+/* Keep the navigation and action buttons visually separated at desktop widths. */
+.public-site-header__inner{
+  gap:16px;
+}
+.public-site-nav{
+  gap:16px;
+}
+.public-site-actions{
+  gap:8px !important;
+  margin-left:8px;
+  padding-left:10px;
+  position:relative;
+  z-index:2;
+  background:rgba(255,255,255,.98);
+}
+.public-site-login,
+.public-site-join{
+  flex:0 0 auto;
+}
+
 /* Prevent anchor navigation from placing sections underneath the fixed stack. */
 html{
   scroll-padding-top:106px;
+}
+
+@media(max-width:1320px) and (min-width:1021px){
+  .public-site-header__inner{gap:10px;padding-left:18px;padding-right:18px}
+  .public-site-nav{gap:11px}
+  .public-site-actions{margin-left:4px;padding-left:7px}
+  .public-site-login,.public-site-join{padding-left:8px;padding-right:8px}
 }
 
 @media(max-width:1020px){
@@ -39,6 +66,7 @@ html{
   html{
     scroll-padding-top:98px;
   }
+  .public-site-actions{margin-left:0;padding-left:0;background:transparent}
 }
 
 @media(max-width:640px){
