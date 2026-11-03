@@ -36,6 +36,8 @@ jobs:
         run: npm run lint
       - name: Frontend source graph
         run: npm run test:source-graph
+      - name: Blog published-answer coverage
+        run: npm run test:blog-published-answers
       - name: Authoritative auth bootstrap
         run: npm run test:auth-bootstrap
       - name: CSV export security
