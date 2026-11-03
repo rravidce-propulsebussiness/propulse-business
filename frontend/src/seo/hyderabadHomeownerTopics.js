@@ -375,7 +375,7 @@ groups["Electrical, plumbing, safety & approvals"] = [
 
 groups["Construction planning & site quality"] = [
   ["How can I identify poor-quality construction work at my site?", "Practical homeowner guidance covering how can I identify poor-quality construction work at my site? Review the approved project documents and obtain qualified site-specific advice where required."],
-  ["How can I avoid hidden charges in house construction?", "Practical homeowner guidance covering how can I avoid hidden charges in house construction? Review the approved project documents and obtain qualified site-specific advice where required."],
+  ["How can I avoid hidden charges in house construction?", "Provides a scope and BOQ checklist for provisional items, site conditions, external works, variations, taxes and milestone payments."],
   ["Is a labour-only construction contract cheaper?", "Practical homeowner guidance covering is a labour-only construction contract cheaper? Review the approved project documents and obtain qualified site-specific advice where required."],
   ["How long does it take to construct an independent house in Hyderabad?", "Practical homeowner guidance covering how long does it take to construct an independent house in Hyderabad? Review the approved project documents and obtain qualified site-specific advice where required."],
   ["How should I record changes made during house construction?", "Practical homeowner guidance covering how should I record changes made during house construction? Review the approved project documents and obtain qualified site-specific advice where required."],
@@ -405,7 +405,6 @@ groups["Construction cost, BOQ & material quantity estimates"] = [
   ["How much cement is required for house construction?", "Shows why cement quantities must be estimated by activity and approved mix rather than a universal bag-per-square-foot thumb rule."],
   ["How do I estimate sand and aggregate for concrete?", "Covers approved mix design, measured concrete volume, material grading, moisture and delivery reconciliation."],
   ["What is the difference between a labour contract and turnkey house construction?", "Compares procurement responsibility, supervision, wastage, quality control, exclusions, cash flow and warranty obligations."],
-  ["How can I avoid hidden charges in house construction?", "Provides a scope and BOQ checklist for provisional items, site conditions, external works, variations, taxes and milestone payments."]
 ];
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
