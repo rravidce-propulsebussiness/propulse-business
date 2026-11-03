@@ -574,6 +574,17 @@ groups["RCC slab, masonry & building envelope"] = [
   ["How do I plan ventilation and daylight in a new house?", "Plan daylight and ventilation room by room at the concept stage, using the plot orientation, neighbouring buildings, window locations, room depth, privacy, shading and local building re…"]
 ];
 
+groups["Plaster, concrete defects & construction quality"] = [
+  ["How do I check plaster thickness and finish quality?", "Check plaster against the specified system and approved sample, not an assumed universal thickness. Before application, confirm the background is sound, clean and prepared as required, …"],
+  ["What causes cracks in internal and external plaster?", "Plaster cracks can result from substrate movement, differential expansion between masonry and concrete, shrinkage, excessive or unsuitable mortar, poor surface preparation, rapid drying…"],
+  ["How should concrete be cured after casting?", "Cure concrete using the method, start time and duration specified for the concrete mix, member, weather and project requirements. The objective is to prevent premature moisture loss and…"],
+  ["What causes honeycombing in RCC concrete?", "Honeycombing is a surface or internal void pattern where concrete has not fully filled the space around reinforcement or formwork. Possible causes include congested reinforcement, unsui…"],
+  ["How do I check door frame installation during construction?", "Check door frames against the approved opening schedule for size, material, finish, handing, threshold and hardware preparation before fixing. Verify that the masonry opening is correct…"],
+  ["What should I inspect before installing windows in a house?", "Before window installation, verify the opening dimensions, sill and lintel levels, frame material, glass specification, hardware, ventilation provision and approved shop drawings. Check…"],
+  ["How do I check floor screed levels before tiling?", "Before tiling, survey the screed against the finished-floor levels and approved setting-out plan. Check overall level or designed fall, flatness, thickness where specified, surface stre…"],
+  ["What should be included in a house construction quality checklist?", "A useful house construction quality checklist should follow the sequence of work and identify the drawing or specification, inspection point, acceptance responsibility, evidence and cor…"]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
