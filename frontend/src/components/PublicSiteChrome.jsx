@@ -26,15 +26,14 @@ function PhoneIcon() {
 export function PublicHeader() {
   const location = useLocation()
   const [open, setOpen] = useState(false)
-  const [professionalsOpen, setProfessionalsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = location.pathname.replace(/\/+$/, '') || '/'
   const activeLabel = useMemo(() => NAV_ITEMS.find(item => item.match(pathname))?.label || '', [pathname])
 
-  useEffect(() => { setOpen(false); setProfessionalsOpen(false) }, [pathname, location.hash])
+  useEffect(() => { setOpen(false) }, [pathname, location.hash])
   useEffect(() => {
     const onResize = () => { if (window.innerWidth > 1020) setOpen(false) }
-    const onKeyDown = event => { if (event.key === 'Escape') { setOpen(false); setProfessionalsOpen(false) } }
+    const onKeyDown = event => { if (event.key === 'Escape') setOpen(false) }
     window.addEventListener('keydown', onKeyDown); window.addEventListener('resize', onResize)
     return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('resize', onResize) }
   }, [])
@@ -44,7 +43,7 @@ export function PublicHeader() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  const closeMenu = () => { setOpen(false); setProfessionalsOpen(false) }
+  const closeMenu = () => setOpen(false)
   return <>
     <div className="public-site-topbar">
       <div className="public-site-topbar__inner">
@@ -59,14 +58,7 @@ export function PublicHeader() {
         <Link className="public-site-logo" to="/" aria-label="ProPulse home"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
         <nav className="public-site-nav" aria-label="Main navigation">
           {NAV_ITEMS.slice(0, 4).map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
-          <div className={'public-site-professionals-menu'+(professionalsOpen?' is-open':'')}>
-            <button type="button" className={pathname.startsWith('/experts') || pathname.startsWith('/professionals') ? 'active' : ''} aria-expanded={professionalsOpen} aria-haspopup="true" onClick={() => setProfessionalsOpen(value => !value)}>Professionals <span aria-hidden="true">⌄</span></button>
-            <div className="public-site-professionals-dropdown">
-              <Link to="/experts"><span>⌕</span><span><b>Find Professionals</b><small>Browse contractors, architects and engineers</small></span></Link>
-              <Link to="/professionals"><span>＋</span><span><b>Join as a Professional</b><small>Explore professional leads</small></span></Link>
-              <Link to="/login"><span>↗</span><span><b>Professional Login</b><small>Access your account</small></span></Link>
-            </div>
-          </div>
+          <Link className={pathname.startsWith('/experts') ? 'active' : ''} to="/experts" aria-current={pathname.startsWith('/experts') ? 'page' : undefined}>Find Professionals</Link>
           {NAV_ITEMS.slice(4).map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
         </nav>
         <div className="public-site-actions">
