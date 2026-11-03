@@ -517,6 +517,18 @@ groups["Kitchen appliances, utility & functional furniture"] = [
   ["How do I plan a shoe cabinet near the entrance?", "Size entrance shoe storage for actual footwear while preserving door swing, circulation, ventilation, anchoring and cleaning access."]
 ];
 
+
+groups["Wall finishes, paint & interior defect checks"] = [
+  ["How do I choose wall paint finishes for different rooms?", "Compare sheen, washability, wall condition, moisture exposure and product specifications when selecting room-wise paint finishes."],
+  ["What causes paint to peel or blister on interior walls?", "Investigate moisture, surface preparation, coating compatibility and application conditions before repainting damaged walls."],
+  ["How do I prepare walls before applying interior paint?", "Check substrate condition, repair defects, remove dust, use compatible primer and follow the coating manufacturer's preparation and drying instructions."],
+  ["What should I check before installing wallpaper?", "Verify wall dryness, smoothness, primer and adhesive compatibility, pattern repeat, batch consistency and seam finishing."],
+  ["How do I choose wall panels for a living room?", "Compare panel substrate, finish, fixing method, wall support, service access, lighting coordination and room suitability."],
+  ["How do I inspect paint quality before interior handover?", "Inspect shade consistency, coverage, surface defects, cut-in lines, approved specifications and documented snag corrections."],
+  ["What causes cracks at the junction of walls and ceilings?", "Understand shrinkage, differential movement, joint preparation, moisture and structural warning signs before choosing a repair."],
+  ["How do I choose a bathroom exhaust fan?", "Select fan performance for room and duct conditions, safe wet-area installation, external discharge, make-up air and service access."]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
