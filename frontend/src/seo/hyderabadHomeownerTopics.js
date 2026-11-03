@@ -585,6 +585,17 @@ groups["Plaster, concrete defects & construction quality"] = [
   ["What should be included in a house construction quality checklist?", "A useful house construction quality checklist should follow the sequence of work and identify the drawing or specification, inspection point, acceptance responsibility, evidence and cor…"]
 ];
 
+groups["Construction materials, contractor bills & site management"] = [
+  ["How do I verify construction materials delivered to a house site?", "Verify each delivery against the approved material submittal, purchase order and project specification before unloading or using it. Check the product name, manufacturer, grade or class…"],
+  ["What should I check in a cement bag before using it?", "Check that the cement bag is from the approved manufacturer and cement type specified for the work, with the product standard, grade, batch details and manufacturing information legible…"],
+  ["How do I check TMT steel quality for house construction?", "Check TMT reinforcement against the structural drawings, bar bending schedule and approved material specification. Verify the manufacturer, grade, nominal diameter, applicable standard …"],
+  ["How should construction work be measured for contractor payments?", "Measure completed work using the measurement rules, drawings, BOQ descriptions and payment terms agreed in the construction contract. Define the unit for each item—such as square metres…"],
+  ["How do I monitor daily progress at a house construction site?", "Monitor site progress against a simple baseline programme that lists activities, planned start and finish dates, dependencies, responsible contractor and inspection hold points. Each da…"],
+  ["What should I check before approving a contractor's construction bill?", "Before approving a contractor's bill, compare the claimed quantities and completed milestones with the signed contract, approved BOQ, latest drawings, agreed rates and previous payments…"],
+  ["How do I manage changes during house construction?", "Manage a construction change through a written variation process before carrying out the changed work. Describe the requested change, reason, affected rooms or structural elements, revi…"],
+  ["What records should be maintained at a house construction site?", "Maintain an organised site file or digital register containing sanctioned drawings and revisions, structural and service drawings, contract and BOQ, material approvals, delivery challan…"]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
