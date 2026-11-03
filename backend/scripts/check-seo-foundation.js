@@ -99,7 +99,7 @@ assert(home.includes('Direct Home Construction')&&home.includes('Direct Interior
 assert(home.includes('Professional Marketplace')&&home.includes('Technology & Business OS'),'Homepage must disclose marketplace and technology');
 assert(!landing.includes("a:'No. ProPulse is a requirement and discovery platform"),'Hyderabad FAQ must not deny ProPulse direct construction services');
 const technologyPage=read('../frontend/src/pages/Technology.jsx');
-assert(technologyPage.includes('Business OS')&&technologyPage.includes('direct project-execution'),'Technology page must explain company product and divisions');
+assert(technologyPage.includes('ProPulse Business Products')&&technologyPage.includes('CRM &amp; Lead Management')&&technologyPage.includes('Website & Software Development'),'Technology page must explain its actual Business OS product and digital service offerings');
 assert(read('../hostinger-server.js').includes("'/technology'"),'Hostinger wrapper must serve the Technology page');
 assert(buildScript.includes("fs.mkdirSync(path.dirname(target),{recursive:true})"),'Nested SEO routes must create their output directories');
 assert(buildScript.includes('og:description')&&buildScript.includes('twitter:description'),'Static pages must receive route-specific social metadata');
