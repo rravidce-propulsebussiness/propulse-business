@@ -415,6 +415,17 @@ groups["Construction cost, BOQ & material quantity estimates"] = [
   ["How should I compare construction rates from Hyderabad contractors?", "Explains how should i compare construction rates from hyderabad contractors using project drawings, measured BOQ quantities, Hyderabad site conditions and comparable written quotations."],
 ];
 
+
+groups["Interior cost, materials & BOQ"] = [
+  ["What is included in a modular kitchen cost?", "Practical interior planning guidance explaining the cost drivers, material specifications, measurement basis and quotation checks for this work."],
+  ["How do I calculate the cost of a wardrobe?", "Practical interior planning guidance explaining the cost drivers, material specifications, measurement basis and quotation checks for this work."],
+  ["What is the difference between laminate, acrylic and PU finishes?", "Practical interior planning guidance explaining the cost drivers, material specifications, measurement basis and quotation checks for this work."],
+  ["How do I choose plywood for home interiors?", "Practical interior planning guidance explaining the cost drivers, material specifications, measurement basis and quotation checks for this work."],
+  ["What should an interior design BOQ include?", "Practical interior planning guidance explaining the cost drivers, material specifications, measurement basis and quotation checks for this work."],
+  ["What affects the cost of a TV unit?", "Practical interior planning guidance explaining the cost drivers, material specifications, measurement basis and quotation checks for this work."],
+  ["How much does a false ceiling cost and what affects the price?", "Practical interior planning guidance explaining the cost drivers, material specifications, measurement basis and quotation checks for this work."],
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
