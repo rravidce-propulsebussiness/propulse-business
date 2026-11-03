@@ -405,6 +405,14 @@ groups["Construction cost, BOQ & material quantity estimates"] = [
   ["How much cement is required for house construction?", "Shows why cement quantities must be estimated by activity and approved mix rather than a universal bag-per-square-foot thumb rule."],
   ["How do I estimate sand and aggregate for concrete?", "Covers approved mix design, measured concrete volume, material grading, moisture and delivery reconciliation."],
   ["What is the difference between a labour contract and turnkey house construction?", "Compares procurement responsibility, supervision, wastage, quality control, exclusions, cash flow and warranty obligations."],
+  ["What affects the cost of building a house in Hyderabad?", "Explains what affects the cost of building a house in hyderabad using project drawings, measured BOQ quantities, Hyderabad site conditions and comparable written quotations."],
+  ["How do I estimate the foundation cost for a house?", "Explains how do i estimate the foundation cost for a house using project drawings, measured BOQ quantities, Hyderabad site conditions and comparable written quotations."],
+  ["What affects the cost of an RCC roof slab?", "Explains what affects the cost of an rcc roof slab using project drawings, measured BOQ quantities, Hyderabad site conditions and comparable written quotations."],
+  ["What should a G+1 house construction budget include?", "Explains what should a g+1 house construction budget include using project drawings, measured BOQ quantities, Hyderabad site conditions and comparable written quotations."],
+  ["What should a G+2 house construction budget include?", "Explains what should a g+2 house construction budget include using project drawings, measured BOQ quantities, Hyderabad site conditions and comparable written quotations."],
+  ["How do I prepare a material-wise BOQ for house construction?", "Explains how do i prepare a material-wise boq for house construction using project drawings, measured BOQ quantities, Hyderabad site conditions and comparable written quotations."],
+  ["How do I estimate construction cost from built-up area?", "Explains how do i estimate construction cost from built-up area using project drawings, measured BOQ quantities, Hyderabad site conditions and comparable written quotations."],
+  ["How should I compare construction rates from Hyderabad contractors?", "Explains how should i compare construction rates from hyderabad contractors using project drawings, measured BOQ quantities, Hyderabad site conditions and comparable written quotations."],
 ];
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
