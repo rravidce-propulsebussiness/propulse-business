@@ -398,6 +398,16 @@ groups["Foundation design, steel estimation & construction payments"] = [
   ["What should I check before approving a foundation concrete pour?", "Provides a pre-pour checklist for founding level, dimensions, reinforcement, cover, formwork, concrete supply and inspection sign-off."]
 ];
 
+
+groups["Construction cost, BOQ & material quantity estimates"] = [
+  ["What is included in a house construction cost per square foot?", "Defines the measurement basis, inclusions, exclusions, specifications and BOQ checks behind a per-square-foot construction quote."],
+  ["How do I calculate the number of bricks required for a house?", "Explains wall-wise quantity take-off, openings, actual unit dimensions, mortar joints and handling allowance."],
+  ["How much cement is required for house construction?", "Shows why cement quantities must be estimated by activity and approved mix rather than a universal bag-per-square-foot thumb rule."],
+  ["How do I estimate sand and aggregate for concrete?", "Covers approved mix design, measured concrete volume, material grading, moisture and delivery reconciliation."],
+  ["What is the difference between a labour contract and turnkey house construction?", "Compares procurement responsibility, supervision, wastage, quality control, exclusions, cash flow and warranty obligations."],
+  ["How can I avoid hidden charges in house construction?", "Provides a scope and BOQ checklist for provisional items, site conditions, external works, variations, taxes and milestone payments."]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
