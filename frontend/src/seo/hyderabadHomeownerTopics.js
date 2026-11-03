@@ -438,6 +438,17 @@ groups["Room-wise interior planning & storage"] = [
   ["How do I choose hardware for wardrobes and kitchen cabinets?", "Practical room-wise design guidance covering dimensions, storage planning, material choices, hardware, safety and installation checks."],
 ];
 
+ groups["Interior materials, lighting & installation quality"] = [
+  ["What is the difference between veneer and laminate?", "Compare natural-wood veneer and decorative laminate by appearance, substrate, durability, finish, maintenance and quotation details."],
+  ["How do I choose a TV back panel material?", "Choose a TV feature-wall finish with attention to TV mounting, wall support, ventilation, wiring, material weight and service access."],
+  ["What are fluted panels and where can they be used?", "Understand fluted-panel materials, suitable rooms, moisture limits, groove layout, installation and cleaning."],
+  ["How do I plan profile lighting in interior design?", "Plan LED profile placement, light output, glare, diffuser, driver access, wiring and heat management."],
+  ["What is the difference between MDF, HDHMR and plywood?", "Compare engineered boards by construction, moisture performance, screw holding, finish, application and product certification."],
+  ["How do I choose CNC jali or decorative panels?", "Select decorative CNC panels by material, pattern strength, opening size, support, safety, finish and maintenance."],
+  ["How should interior work be inspected before handover?", "Use a room-wise snag checklist for finishes, cabinetry, hardware, lighting, services, documentation and defect closure."],
+  ["How do I prevent moisture damage in kitchen and bathroom cabinets?", "Prevent swelling and delamination through suitable board selection, sealed edges, leak control, ventilation and service access."]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
