@@ -552,6 +552,17 @@ groups["Bathroom tiling, shower glass & plumbing checks"] = [
   ["What causes tiles to crack after installation?", "Tiles can crack after installation because of substrate movement, inadequate or uneven bedding, point loading, insufficient movement joints, structural deflection, impact, incompatible mater…"]
 ];
 
+groups["House construction site checks & approvals"] = [
+  ["What approvals are needed before building a house in Hyderabad?", "Before construction, confirm the plot's title and permitted land use, the competent planning authority, applicable building rules and the approvals required for that specific site and p…"],
+  ["What should I check before starting excavation for a house?", "Before excavation, verify the plot boundaries, approved building set-out, reference benchmarks, finished ground and plinth levels, and the foundation locations against the latest struct…"],
+  ["How do I check brickwork quality during house construction?", "Check brickwork by verifying the specified brick or block type, dimensions, strength and water absorption documentation, and inspect delivered units for excessive breakage, distortion o…"],
+  ["What is the purpose of a plinth beam in a house?", "A plinth beam is a reinforced-concrete member provided at or near plinth level where the structural design requires it. Depending on the foundation and framing system, it can tie suppor…"],
+  ["What should I inspect before casting an RCC column?", "Before casting an RCC column, compare its location, dimensions, orientation, starter bars, lap or coupler positions, reinforcement quantity and bar arrangement with the latest structura…"],
+  ["How do I check staircase dimensions before construction?", "Check the staircase against the approved architectural and structural drawings before fixing formwork. Measure the total floor-to-floor height and divide it into the designed number of …"],
+  ["What should I check before starting external plastering?", "Before external plastering, confirm that masonry and concrete backgrounds are stable, reasonably clean and free from loose mortar, dust, oil and active leakage. Check that concealed ele…"],
+  ["How do I inspect roof waterproofing before laying tiles?", "Before covering roof waterproofing with tiles or a protective screed, check the membrane system against the approved specification and manufacturer's installation details. Inspect subst…"]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
