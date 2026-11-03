@@ -494,6 +494,17 @@ groups["Interior finishing, ceiling & fixing quality"] = [
   ["What should I check before fixing wall-mounted cabinets?", "Verify wall substrate, concealed services, load-rated anchors, backing, cabinet brackets and safe installation clearances."]
 ];
 
+groups["Wardrobe, ceiling & furniture care"] = [
+  ["What is edge banding in modular furniture and why is it important?", "Understand edge-band materials, board protection, moisture limits, bonding quality and edge inspection for modular furniture."],
+  ["How do I check waterproofing before installing bathroom interiors?", "Inspect bathroom waterproofing layers, junctions, pipe penetrations, test records and concealed-work approval before cabinetry."],
+  ["What should I inspect in a gypsum false ceiling?", "Check ceiling framing, suspension, board joints, access panels, service coordination and safe support for fixtures."],
+  ["How do I prevent termite damage in plywood furniture?", "Prevent termite and moisture problems through site inspection, suitable materials, professional treatment and routine checks."],
+  ["How do I plan a loft above a wardrobe?", "Plan wardrobe loft dimensions, loads, anchoring, shutters, access and ceiling clearances before fabrication."],
+  ["How do I choose a mirror for a wardrobe shutter?", "Select wardrobe mirrors by safety backing, weight, shutter hardware, fixing compatibility, edge protection and maintenance."],
+  ["What is the difference between hinged and sliding wardrobe doors?", "Compare door swing, usable access, room clearance, tracks, hinge capacity and long-term maintenance."],
+  ["How do I maintain laminate and veneer interior surfaces?", "Use suitable cleaning and care methods for laminate and coated veneer while protecting edges from moisture and heat."]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
