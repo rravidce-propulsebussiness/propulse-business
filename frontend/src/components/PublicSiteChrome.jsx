@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import './PublicSiteChrome.css'
+import './PublicSiteChromeFix.css'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Home', match: path => path === '/' },
