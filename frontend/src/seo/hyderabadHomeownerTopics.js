@@ -505,6 +505,18 @@ groups["Wardrobe, ceiling & furniture care"] = [
   ["How do I maintain laminate and veneer interior surfaces?", "Use suitable cleaning and care methods for laminate and coated veneer while protecting edges from moisture and heat."]
 ];
 
+
+groups["Kitchen appliances, utility & functional furniture"] = [
+  ["How do I choose a kitchen sink and faucet?", "Coordinate sink size, bowl layout, faucet reach, water pressure, countertop fixing and plumbing access before fabrication."],
+  ["What should I check before installing a kitchen chimney?", "Verify appliance clearances, duct routing, electrical supply, mounting support, ventilation and service access against the manufacturer's instructions."],
+  ["How do I plan a utility area in an apartment?", "Coordinate appliance dimensions, water supply, drainage, electrical points, ventilation, waterproofing and accessible storage."],
+  ["How do I select drawer channels for kitchen cabinets?", "Choose drawer runners by load rating, extension, cabinet clearances, installation method, adjustment and hardware quality."],
+  ["How do I plan a study table and storage unit?", "Plan ergonomics, device dimensions, leg clearance, lighting, power points, cable management and storage around the user's work."],
+  ["How do I choose bathroom mirror lighting?", "Select flattering, glare-controlled mirror lighting with suitable wet-area rating, safe electrical placement and accessible drivers."],
+  ["What should an interior installation contract include?", "Specify approved drawings, detailed BOQ, materials, brands, exclusions, variations, milestones, inspection, warranty and handover."],
+  ["How do I plan a shoe cabinet near the entrance?", "Size entrance shoe storage for actual footwear while preserving door swing, circulation, ventilation, anchoring and cleaning access."]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
