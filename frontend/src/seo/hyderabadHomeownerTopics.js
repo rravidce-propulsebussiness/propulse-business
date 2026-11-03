@@ -449,6 +449,17 @@ groups["Room-wise interior planning & storage"] = [
   ["How do I prevent moisture damage in kitchen and bathroom cabinets?", "Prevent swelling and delamination through suitable board selection, sealed edges, leak control, ventilation and service access."]
 ];
 
+groups["Interior finishes, surfaces & lighting details"] = [
+  ["What is the best material for a kitchen backsplash?", "Compare backsplash materials by heat exposure, cleaning, grout, durability, fixing and suitability behind cooking areas."],
+  ["How do I choose a kitchen countertop edge profile?", "Choose countertop edge details by material, fabrication method, comfort, cleaning, chipping risk and support."],
+  ["What is the difference between PU, duco and laminate finishes?", "Understand painted coating systems and laminate by substrate, appearance, application, maintenance and repairability."],
+  ["How do I choose a finish for wardrobe shutters?", "Select wardrobe shutter finishes by room conditions, panel size, edge details, hardware, maintenance and warranty."],
+  ["What should I know before installing a glass partition at home?", "Plan safety glazing, supports, hardware, door movement, privacy, sealing and maintenance before a glass partition is installed."],
+  ["How do I plan lighting for a false ceiling?", "Coordinate downlights, task lighting, profiles, wiring, ceiling framing, glare and accessible drivers on a reflected ceiling plan."],
+  ["What causes laminate to peel or bubble?", "Identify adhesive, substrate, moisture, heat and edge-sealing causes before repairing delaminated laminate."],
+  ["How do I choose skirting for a modern interior?", "Compare skirting materials and details by flooring, wall finish, moisture, cleaning, corners and shadow-gap coordination."]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
