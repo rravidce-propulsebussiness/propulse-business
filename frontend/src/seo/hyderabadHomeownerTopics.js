@@ -596,6 +596,17 @@ groups["Construction materials, contractor bills & site management"] = [
   ["What records should be maintained at a house construction site?", "Maintain an organised site file or digital register containing sanctioned drawings and revisions, structural and service drawings, contract and BOQ, material approvals, delivery challan…"]
 ];
 
+groups["Concrete testing, foundations & house handover"] = [
+  ["What should I do if fresh concrete fails the site slump check?", "If a fresh concrete slump result falls outside the approved mix or project acceptance range, inform the site engineer and concrete supplier immediately and hold the batch from placement…"],
+  ["How are concrete cube test results used at a construction site?", "Concrete cube tests provide compressive-strength results from samples taken from a concrete batch and tested at the specified ages using the required standard procedure. Confirm that sa…"],
+  ["When can RCC formwork be removed?", "RCC formwork and props should be removed only when the concrete has achieved the strength and support conditions required for the member, the span, loading, temperature, curing history …"],
+  ["What should I check before backfilling around foundations?", "Before backfilling, obtain approval that the foundation, plinth beam, retaining surfaces and any below-ground waterproofing or protective treatment are complete and have passed the spec…"],
+  ["How do I check damp proof course (DPC) in house construction?", "Check the damp proof course against the approved detail for its material, location, continuity, width, thickness and connection to the floor or wall waterproofing system. Confirm that i…"],
+  ["What should I inspect before laying a roof screed?", "Before laying a roof screed, check the structural slab has been accepted, the surface is clean and prepared, and all embedded services, rainwater outlets, sleeves and upstands are compl…"],
+  ["How do I check the quality of a construction site's safety arrangements?", "Review site safety arrangements before work starts and during each activity. Check secure boundaries, warning signs, safe access, housekeeping, electrical distribution and earthing, sca…"],
+  ["What should I check before handing over a newly built house?", "Before handover, compare the completed house with the sanctioned and approved drawings, contract scope, specifications and signed variations. Inspect structural and visible workmanship,…"]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
