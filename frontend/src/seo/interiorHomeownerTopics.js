@@ -3,6 +3,8 @@
 // never as a replacement for structural design, safety, ventilation or approved plans.
 const groups = {
 "Interior costs & budgets":[
+["How much does a complete 2BHK interior package include?","Understand typical scope, room-wise inclusions, materials, hardware, exclusions, services, installation and handover items before comparing quotations."],
+
 ["How much does a 2BHK interior cost in Hyderabad?","Room-wise estimate for kitchen, wardrobes, TV unit, ceiling, painting, lighting, hardware, taxes and exclusions."],
 ["How much does a 3BHK interior cost in Hyderabad?","Compare essential, standard and premium scope with transparent room-wise assumptions."],
 ["How much does a TV unit cost in Hyderabad?","Compare floating consoles, wall panels and full-height storage by dimensions, material, finish, lighting and hardware."],

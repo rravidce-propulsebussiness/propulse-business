@@ -375,7 +375,7 @@ groups["Electrical, plumbing, safety & approvals"] = [
 
 groups["Construction planning & site quality"] = [
   ["How can I identify poor-quality construction work at my site?", "Practical homeowner guidance covering how can I identify poor-quality construction work at my site? Review the approved project documents and obtain qualified site-specific advice where required."],
-  ["How can I avoid hidden charges in house construction?", "Practical homeowner guidance covering how can I avoid hidden charges in house construction? Review the approved project documents and obtain qualified site-specific advice where required."],
+  ["How can I avoid hidden charges in house construction?", "Provides a scope and BOQ checklist for provisional items, site conditions, external works, variations, taxes and milestone payments."],
   ["Is a labour-only construction contract cheaper?", "Practical homeowner guidance covering is a labour-only construction contract cheaper? Review the approved project documents and obtain qualified site-specific advice where required."],
   ["How long does it take to construct an independent house in Hyderabad?", "Practical homeowner guidance covering how long does it take to construct an independent house in Hyderabad? Review the approved project documents and obtain qualified site-specific advice where required."],
   ["How should I record changes made during house construction?", "Practical homeowner guidance covering how should I record changes made during house construction? Review the approved project documents and obtain qualified site-specific advice where required."],
@@ -384,6 +384,227 @@ groups["Construction planning & site quality"] = [
   ["How long does each stage of independent house construction take?", "Practical homeowner guidance covering how long does each stage of independent house construction take? Review the approved project documents and obtain qualified site-specific advice where required."],
   ["What should I check during a weekly house construction site inspection?", "Practical homeowner guidance covering what should I check during a weekly house construction site inspection? Review the approved project documents and obtain qualified site-specific advice where required."],
   ["How should defects found during house construction be recorded?", "Practical homeowner guidance covering how should defects found during house construction be recorded? Review the approved project documents and obtain qualified site-specific advice where required."]
+];
+
+
+groups["Foundation design, steel estimation & construction payments"] = [
+  ["What is a safe foundation depth for a house?", "Explains why founding depth depends on soil investigation, loads, groundwater and the structural engineer's design rather than a universal measurement."],
+  ["How does soil bearing capacity affect foundation design?", "Shows how geotechnical findings influence footing size, settlement checks and the choice of shallow or deep foundation systems."],
+  ["What is the difference between isolated, combined and raft foundations?", "Compares the purpose and use of three common foundation systems and explains who selects the appropriate design."],
+  ["How is steel quantity calculated from a bar bending schedule?", "Explains bar marks, cutting lengths, quantities and theoretical unit weight, and how to reconcile a BBS with site records."],
+  ["How do I check concrete grade at a construction site?", "Covers approved mix details, delivery challans, fresh-concrete checks, specimen identification and laboratory test reports."],
+  ["How long should concrete be cured in hot weather?", "Explains early moisture protection, curing methods, project-specific duration and the importance of a curing log."],
+  ["How should I create a stage-wise house construction payment schedule?", "Links payments to measurable milestones, BOQ quantities, inspection records, approved variations and handover obligations."],
+  ["What should I check before approving a foundation concrete pour?", "Provides a pre-pour checklist for founding level, dimensions, reinforcement, cover, formwork, concrete supply and inspection sign-off."]
+];
+
+
+groups["Construction cost, BOQ & material quantity estimates"] = [
+  ["What is included in a house construction cost per square foot?", "Defines the measurement basis, inclusions, exclusions, specifications and BOQ checks behind a per-square-foot construction quote."],
+  ["How do I calculate the number of bricks required for a house?", "Explains wall-wise quantity take-off, openings, actual unit dimensions, mortar joints and handling allowance."],
+  ["How much cement is required for house construction?", "Shows why cement quantities must be estimated by activity and approved mix rather than a universal bag-per-square-foot thumb rule."],
+  ["How do I estimate sand and aggregate for concrete?", "Covers approved mix design, measured concrete volume, material grading, moisture and delivery reconciliation."],
+  ["What is the difference between a labour contract and turnkey house construction?", "Compares procurement responsibility, supervision, wastage, quality control, exclusions, cash flow and warranty obligations."],
+  ["What affects the cost of building a house in Hyderabad?", "Explains what affects the cost of building a house in hyderabad using project drawings, measured BOQ quantities, Hyderabad site conditions and comparable written quotations."],
+  ["How do I estimate the foundation cost for a house?", "Explains how do i estimate the foundation cost for a house using project drawings, measured BOQ quantities, Hyderabad site conditions and comparable written quotations."],
+  ["What affects the cost of an RCC roof slab?", "Explains what affects the cost of an rcc roof slab using project drawings, measured BOQ quantities, Hyderabad site conditions and comparable written quotations."],
+  ["What should a G+1 house construction budget include?", "Explains what should a g+1 house construction budget include using project drawings, measured BOQ quantities, Hyderabad site conditions and comparable written quotations."],
+  ["What should a G+2 house construction budget include?", "Explains what should a g+2 house construction budget include using project drawings, measured BOQ quantities, Hyderabad site conditions and comparable written quotations."],
+  ["How do I prepare a material-wise BOQ for house construction?", "Explains how do i prepare a material-wise boq for house construction using project drawings, measured BOQ quantities, Hyderabad site conditions and comparable written quotations."],
+  ["How do I estimate construction cost from built-up area?", "Explains how do i estimate construction cost from built-up area using project drawings, measured BOQ quantities, Hyderabad site conditions and comparable written quotations."],
+  ["How should I compare construction rates from Hyderabad contractors?", "Explains how should i compare construction rates from hyderabad contractors using project drawings, measured BOQ quantities, Hyderabad site conditions and comparable written quotations."],
+];
+
+
+groups["Interior cost, materials & BOQ"] = [
+  ["What is included in a modular kitchen cost?", "Practical interior planning guidance explaining the cost drivers, material specifications, measurement basis and quotation checks for this work."],
+  ["How do I calculate the cost of a wardrobe?", "Practical interior planning guidance explaining the cost drivers, material specifications, measurement basis and quotation checks for this work."],
+  ["What is the difference between laminate, acrylic and PU finishes?", "Practical interior planning guidance explaining the cost drivers, material specifications, measurement basis and quotation checks for this work."],
+  ["How do I choose plywood for home interiors?", "Practical interior planning guidance explaining the cost drivers, material specifications, measurement basis and quotation checks for this work."],
+  ["What should an interior design BOQ include?", "Practical interior planning guidance explaining the cost drivers, material specifications, measurement basis and quotation checks for this work."],
+  ["What affects the cost of a TV unit?", "Practical interior planning guidance explaining the cost drivers, material specifications, measurement basis and quotation checks for this work."],
+  ["How much does a false ceiling cost and what affects the price?", "Practical interior planning guidance explaining the cost drivers, material specifications, measurement basis and quotation checks for this work."],
+];
+
+
+groups["Room-wise interior planning & storage"] = [
+  ["How should I plan a bedroom wardrobe interior?", "Practical room-wise design guidance covering dimensions, storage planning, material choices, hardware, safety and installation checks."],
+  ["What is the best material for kitchen cabinets?", "Practical room-wise design guidance covering dimensions, storage planning, material choices, hardware, safety and installation checks."],
+  ["How do I plan storage inside a modular kitchen?", "Practical room-wise design guidance covering dimensions, storage planning, material choices, hardware, safety and installation checks."],
+  ["What should I consider when designing a TV unit?", "Practical room-wise design guidance covering dimensions, storage planning, material choices, hardware, safety and installation checks."],
+  ["How do I plan a crockery unit for a dining area?", "Practical room-wise design guidance covering dimensions, storage planning, material choices, hardware, safety and installation checks."],
+  ["What materials are suitable for a pooja unit?", "Practical room-wise design guidance covering dimensions, storage planning, material choices, hardware, safety and installation checks."],
+  ["What should I consider when designing a bathroom vanity?", "Practical room-wise design guidance covering dimensions, storage planning, material choices, hardware, safety and installation checks."],
+  ["How do I choose hardware for wardrobes and kitchen cabinets?", "Practical room-wise design guidance covering dimensions, storage planning, material choices, hardware, safety and installation checks."],
+];
+
+ groups["Interior materials, lighting & installation quality"] = [
+  ["What is the difference between veneer and laminate?", "Compare natural-wood veneer and decorative laminate by appearance, substrate, durability, finish, maintenance and quotation details."],
+  ["How do I choose a TV back panel material?", "Choose a TV feature-wall finish with attention to TV mounting, wall support, ventilation, wiring, material weight and service access."],
+  ["What are fluted panels and where can they be used?", "Understand fluted-panel materials, suitable rooms, moisture limits, groove layout, installation and cleaning."],
+  ["How do I plan profile lighting in interior design?", "Plan LED profile placement, light output, glare, diffuser, driver access, wiring and heat management."],
+  ["What is the difference between MDF, HDHMR and plywood?", "Compare engineered boards by construction, moisture performance, screw holding, finish, application and product certification."],
+  ["How do I choose CNC jali or decorative panels?", "Select decorative CNC panels by material, pattern strength, opening size, support, safety, finish and maintenance."],
+  ["How should interior work be inspected before handover?", "Use a room-wise snag checklist for finishes, cabinetry, hardware, lighting, services, documentation and defect closure."],
+  ["How do I prevent moisture damage in kitchen and bathroom cabinets?", "Prevent swelling and delamination through suitable board selection, sealed edges, leak control, ventilation and service access."]
+];
+
+groups["Interior finishes, surfaces & lighting details"] = [
+  ["What is the best material for a kitchen backsplash?", "Compare backsplash materials by heat exposure, cleaning, grout, durability, fixing and suitability behind cooking areas."],
+  ["How do I choose a kitchen countertop edge profile?", "Choose countertop edge details by material, fabrication method, comfort, cleaning, chipping risk and support."],
+  ["What is the difference between PU, duco and laminate finishes?", "Understand painted coating systems and laminate by substrate, appearance, application, maintenance and repairability."],
+  ["How do I choose a finish for wardrobe shutters?", "Select wardrobe shutter finishes by room conditions, panel size, edge details, hardware, maintenance and warranty."],
+  ["What should I know before installing a glass partition at home?", "Plan safety glazing, supports, hardware, door movement, privacy, sealing and maintenance before a glass partition is installed."],
+  ["How do I plan lighting for a false ceiling?", "Coordinate downlights, task lighting, profiles, wiring, ceiling framing, glare and accessible drivers on a reflected ceiling plan."],
+  ["What causes laminate to peel or bubble?", "Identify adhesive, substrate, moisture, heat and edge-sealing causes before repairing delaminated laminate."],
+  ["How do I choose skirting for a modern interior?", "Compare skirting materials and details by flooring, wall finish, moisture, cleaning, corners and shadow-gap coordination."]
+];
+
+groups["Interior installation, inspection & handover"] = [
+  ["What should I check before installing a modular kitchen?", "Pre-installation checklist for site measurements, cabinet drawings, appliances, services, materials, hardware and protection."],
+  ["How do I check whether wardrobe shutters are properly aligned?", "Inspect shutter gaps, vertical alignment, hinge action, sliding tracks, rubbing, sagging and cabinet level."],
+  ["What should I inspect before accepting a kitchen countertop installation?", "Check countertop material, joints, edges, cut-outs, support, sealing, finish, care instructions and warranty."],
+  ["How should electrical points be planned for home interiors?", "Coordinate electrical locations with furniture, appliances, carpentry, circuits, safety, access and concealed services."],
+  ["What causes gaps between modular cabinets and walls?", "Understand wall irregularities, measurement tolerances, filler panels, scribe details and cabinet installation alignment."],
+  ["How do I prevent drawers and cabinet shutters from sagging?", "Select suitable board spans, shelf supports, runner capacity, hinges, fixings and load limits to prevent sagging."],
+  ["What should I check before installing a false ceiling?", "Coordinate ceiling framing, fixtures, services, access panels, moisture conditions and concealed-work inspection."],
+  ["What should I check before accepting interior carpentry work?", "Room-wise inspection of cabinet fixing, shutters, drawers, finishes, hardware, services and documentation."],
+  ["How do I prepare an interior snag list?", "Create a photo-based room-wise defect register with owners, corrective actions, due dates and reinspection."]
+];
+
+groups["Interior installation checks & handover"] = [
+  ["How do I inspect modular kitchen installation quality?", "Room-by-room checklist for cabinet fixing, alignment, hardware, countertop sealing, appliance services and snag closure."],
+  ["What should I check before installing a granite kitchen countertop?", "Pre-installation checks for slab condition, cabinet support, cut-outs, edge details, joints and sealing."],
+  ["How do I check wardrobe shutter alignment after installation?", "Inspect wardrobe gaps, shutter planes, hinge adjustment, sliding tracks, anchoring and signs of warping."],
+  ["What electrical points should be planned for a modular kitchen?", "Coordinate kitchen appliance loads, countertop sockets, isolators, safety protection and wiring routes before cabinetry."],
+  ["How do I plan electrical points for a bedroom and TV unit?", "Plan bedside charging, lighting, TV power, data, signal cables and accessible service points with furniture elevations."],
+  ["What causes gaps between interior panels and walls?", "Understand measurement, wall alignment, substrate movement, fixing and expansion causes before choosing a repair detail."],
+  ["How do I check tile and stone countertop joints?", "Check grout, movement joints, countertop seams, lippage, sealing and substrate support for durable finishes."],
+  ["What should be included in an interior handover checklist?", "Room-wise acceptance checklist covering workmanship, services, snags, warranties, manuals and final handover records."]
+];
+
+groups["Interior finishing, ceiling & fixing quality"] = [
+  ["How do I check false ceiling framing before gypsum boards are fixed?", "Inspect ceiling channels, hangers, anchors, spacing, bracing and service supports before gypsum boarding hides the frame."],
+  ["What causes cracks in gypsum false ceilings?", "Identify framing movement, board fixing, joint treatment, moisture and vibration causes before repairing ceiling cracks."],
+  ["How do I inspect wall putty and paint finish before handover?", "Check surface preparation, primer, shade, sheen, sanding marks, patchiness and paint defects under real lighting."],
+  ["What should I check before polishing veneer?", "Review veneer bonding, grain matching, stain samples, sanding limits, coating system, curing and finish quality."],
+  ["How do I prevent moisture damage behind a kitchen backsplash?", "Protect backsplash substrates and junctions through leak control, compatible waterproofing, adhesive, grout and sealant details."],
+  ["How do I check bathroom waterproofing before vanity installation?", "Verify wet-area detailing, pipe penetrations, floor falls and test records before vanity cabinets conceal the surfaces."],
+  ["How should concealed LED drivers be installed for maintenance?", "Plan compatible, ventilated and accessible LED drivers, wiring, labelling and replacement access before closing ceilings or cabinets."],
+  ["What should I check before fixing wall-mounted cabinets?", "Verify wall substrate, concealed services, load-rated anchors, backing, cabinet brackets and safe installation clearances."]
+];
+
+groups["Wardrobe, ceiling & furniture care"] = [
+  ["What is edge banding in modular furniture and why is it important?", "Understand edge-band materials, board protection, moisture limits, bonding quality and edge inspection for modular furniture."],
+  ["How do I check waterproofing before installing bathroom interiors?", "Inspect bathroom waterproofing layers, junctions, pipe penetrations, test records and concealed-work approval before cabinetry."],
+  ["What should I inspect in a gypsum false ceiling?", "Check ceiling framing, suspension, board joints, access panels, service coordination and safe support for fixtures."],
+  ["How do I prevent termite damage in plywood furniture?", "Prevent termite and moisture problems through site inspection, suitable materials, professional treatment and routine checks."],
+  ["How do I plan a loft above a wardrobe?", "Plan wardrobe loft dimensions, loads, anchoring, shutters, access and ceiling clearances before fabrication."],
+  ["How do I choose a mirror for a wardrobe shutter?", "Select wardrobe mirrors by safety backing, weight, shutter hardware, fixing compatibility, edge protection and maintenance."],
+  ["What is the difference between hinged and sliding wardrobe doors?", "Compare door swing, usable access, room clearance, tracks, hinge capacity and long-term maintenance."],
+  ["How do I maintain laminate and veneer interior surfaces?", "Use suitable cleaning and care methods for laminate and coated veneer while protecting edges from moisture and heat."]
+];
+
+
+groups["Kitchen appliances, utility & functional furniture"] = [
+  ["How do I choose a kitchen sink and faucet?", "Coordinate sink size, bowl layout, faucet reach, water pressure, countertop fixing and plumbing access before fabrication."],
+  ["What should I check before installing a kitchen chimney?", "Verify appliance clearances, duct routing, electrical supply, mounting support, ventilation and service access against the manufacturer's instructions."],
+  ["How do I plan a utility area in an apartment?", "Coordinate appliance dimensions, water supply, drainage, electrical points, ventilation, waterproofing and accessible storage."],
+  ["How do I select drawer channels for kitchen cabinets?", "Choose drawer runners by load rating, extension, cabinet clearances, installation method, adjustment and hardware quality."],
+  ["How do I plan a study table and storage unit?", "Plan ergonomics, device dimensions, leg clearance, lighting, power points, cable management and storage around the user's work."],
+  ["How do I choose bathroom mirror lighting?", "Select flattering, glare-controlled mirror lighting with suitable wet-area rating, safe electrical placement and accessible drivers."],
+  ["What should an interior installation contract include?", "Specify approved drawings, detailed BOQ, materials, brands, exclusions, variations, milestones, inspection, warranty and handover."],
+  ["How do I plan a shoe cabinet near the entrance?", "Size entrance shoe storage for actual footwear while preserving door swing, circulation, ventilation, anchoring and cleaning access."]
+];
+
+
+groups["Wall finishes, paint & interior defect checks"] = [
+  ["How do I choose wall paint finishes for different rooms?", "Compare sheen, washability, wall condition, moisture exposure and product specifications when selecting room-wise paint finishes."],
+  ["What causes paint to peel or blister on interior walls?", "Investigate moisture, surface preparation, coating compatibility and application conditions before repainting damaged walls."],
+  ["How do I prepare walls before applying interior paint?", "Check substrate condition, repair defects, remove dust, use compatible primer and follow the coating manufacturer's preparation and drying instructions."],
+  ["What should I check before installing wallpaper?", "Verify wall dryness, smoothness, primer and adhesive compatibility, pattern repeat, batch consistency and seam finishing."],
+  ["How do I choose wall panels for a living room?", "Compare panel substrate, finish, fixing method, wall support, service access, lighting coordination and room suitability."],
+  ["How do I inspect paint quality before interior handover?", "Inspect shade consistency, coverage, surface defects, cut-in lines, approved specifications and documented snag corrections."],
+  ["What causes cracks at the junction of walls and ceilings?", "Understand shrinkage, differential movement, joint preparation, moisture and structural warning signs before choosing a repair."],
+  ["How do I choose a bathroom exhaust fan?", "Select fan performance for room and duct conditions, safe wet-area installation, external discharge, make-up air and service access."]
+];
+
+
+groups["Flooring, tile installation & bathroom fittings"] = [
+  ["How do I choose floor tiles for a house?", "Compare room use, slip performance, wear, water absorption, tile batch, maintenance and installation requirements before selecting flooring."],
+  ["What should I check before installing floor tiles?", "Inspect substrate readiness, floor levels, setting-out, adhesive coverage, movement joints, grout and finished alignment."],
+  ["What causes hollow sounds in floor tiles?", "Understand adhesive coverage, bedding voids, substrate movement and warning signs before deciding whether tile repair is needed."],
+  ["How do I plan tile layout to reduce narrow cuts?", "Set out tile grids using actual site dimensions, grout joints, doorways, drains and visible edges before fixing."],
+  ["How do I choose skirting for floor tiles?", "Coordinate skirting material, height, corners, movement joints, waterproofing and terminations with the floor and wall finishes."],
+  ["What is the correct way to slope a bathroom floor?", "Plan falls around drain position, tile format, threshold levels and waterproofing, then verify drainage before handover."],
+  ["How do I check bathroom waterproofing before tiling?", "Verify membrane details, junctions, penetrations, curing, specified water testing, protection and test records before covering."],
+  ["How do I choose bathroom fittings and accessories?", "Match fittings to plumbing, water pressure, fixture dimensions, service access, fixing support, finish and replacement-part availability."]
+];
+
+groups["Bathroom tiling, shower glass & plumbing checks"] = [
+  ["How do I inspect grout joints between bathroom tiles?", "Inspect grout joints for consistent width and depth, complete filling, clean edges, pinholes, cracks and separation from tile edges. Check that the grout type is suitable for the tile, joint…"],
+  ["What should I check before installing a shower glass partition?", "Before ordering a shower glass partition, verify the finished floor and wall dimensions at multiple points, the shower opening, door swing, handle clearance and access for cleaning. Confirm …"],
+  ["How do I check plumbing lines before closing bathroom walls?", "Before closing a bathroom wall or concealing a pipe, compare the installed routes, diameters, materials, gradients and fixture connection points with the approved plumbing drawings. Check th…"],
+  ["How do I manage floor level differences between rooms?", "Plan room-to-room floor levels before screeding or tiling by coordinating structural slab levels, screed thickness, waterproofing build-up, tile or stone thickness, adhesive and door thresho…"],
+  ["What causes water to collect near a bathroom floor drain?", "Water may collect near a bathroom drain because the floor falls are incorrect, the drain body or grate is set too high, the screed has local depressions, tile edges obstruct flow, or the dra…"],
+  ["How do I choose grout for floor and wall tiles?", "Choose grout based on tile type, joint width, room exposure, expected movement, cleaning chemicals and the grout manufacturer's approved applications. Check whether the product is cementitio…"],
+  ["How do I inspect tile alignment and lippage?", "Inspect tile alignment by checking joint straightness, consistent spacing, pattern continuity, level changes at adjacent edges and alignment with walls, doorways, drains and fixtures. Lippag…"],
+  ["What causes tiles to crack after installation?", "Tiles can crack after installation because of substrate movement, inadequate or uneven bedding, point loading, insufficient movement joints, structural deflection, impact, incompatible mater…"]
+];
+
+groups["House construction site checks & approvals"] = [
+  ["What approvals are needed before building a house in Hyderabad?", "Before construction, confirm the plot's title and permitted land use, the competent planning authority, applicable building rules and the approvals required for that specific site and p…"],
+  ["What should I check before starting excavation for a house?", "Before excavation, verify the plot boundaries, approved building set-out, reference benchmarks, finished ground and plinth levels, and the foundation locations against the latest struct…"],
+  ["How do I check brickwork quality during house construction?", "Check brickwork by verifying the specified brick or block type, dimensions, strength and water absorption documentation, and inspect delivered units for excessive breakage, distortion o…"],
+  ["What is the purpose of a plinth beam in a house?", "A plinth beam is a reinforced-concrete member provided at or near plinth level where the structural design requires it. Depending on the foundation and framing system, it can tie suppor…"],
+  ["What should I inspect before casting an RCC column?", "Before casting an RCC column, compare its location, dimensions, orientation, starter bars, lap or coupler positions, reinforcement quantity and bar arrangement with the latest structura…"],
+  ["How do I check staircase dimensions before construction?", "Check the staircase against the approved architectural and structural drawings before fixing formwork. Measure the total floor-to-floor height and divide it into the designed number of …"],
+  ["What should I check before starting external plastering?", "Before external plastering, confirm that masonry and concrete backgrounds are stable, reasonably clean and free from loose mortar, dust, oil and active leakage. Check that concealed ele…"],
+  ["How do I inspect roof waterproofing before laying tiles?", "Before covering roof waterproofing with tiles or a protective screed, check the membrane system against the approved specification and manufacturer's installation details. Inspect subst…"]
+];
+
+groups["RCC slab, masonry & building envelope"] = [
+  ["What should I check before casting an RCC roof slab?", "Before casting an RCC roof slab, check the latest structural and architectural drawings, slab thickness, beam and opening locations, reinforcement layout, bar spacing, laps, anchorage, …"],
+  ["How do I check slab reinforcement before concreting?", "Compare the slab reinforcement with the latest structural drawings and bar bending schedule rather than relying on a typical spacing. Check bar diameter, direction, spacing, top and bot…"],
+  ["What is the purpose of a lintel beam above doors and windows?", "A lintel is a structural member above an opening that supports the masonry or other loads above it and transfers those loads to the adjacent wall or supports. Its material, bearing leng…"],
+  ["How do I prevent cracks in brick walls?", "Reduce the risk of masonry cracks by using suitable, consistent units and mortar, preparing the supporting surface, maintaining the specified bond and joint filling, and following the d…"],
+  ["What should I check when constructing a compound wall?", "Before building a compound wall, confirm the legal plot boundary, approved wall alignment, required setbacks, height restrictions, gate access and any local authority conditions. Check …"],
+  ["How do I inspect concrete columns and beams after shuttering is removed?", "After formwork removal, inspect concrete columns and beams for visible honeycombing, voids, exposed reinforcement, cracks, segregation, bulging, dimensional variation, misalignment and …"],
+  ["What should I check before installing a roof rainwater pipe?", "Before installing a roof rainwater pipe, confirm the roof catchment areas, drainage layout, outlet locations, pipe route, discharge point and maintenance access against the approved plu…"],
+  ["How do I plan ventilation and daylight in a new house?", "Plan daylight and ventilation room by room at the concept stage, using the plot orientation, neighbouring buildings, window locations, room depth, privacy, shading and local building re…"]
+];
+
+groups["Plaster, concrete defects & construction quality"] = [
+  ["How do I check plaster thickness and finish quality?", "Check plaster against the specified system and approved sample, not an assumed universal thickness. Before application, confirm the background is sound, clean and prepared as required, …"],
+  ["What causes cracks in internal and external plaster?", "Plaster cracks can result from substrate movement, differential expansion between masonry and concrete, shrinkage, excessive or unsuitable mortar, poor surface preparation, rapid drying…"],
+  ["How should concrete be cured after casting?", "Cure concrete using the method, start time and duration specified for the concrete mix, member, weather and project requirements. The objective is to prevent premature moisture loss and…"],
+  ["What causes honeycombing in RCC concrete?", "Honeycombing is a surface or internal void pattern where concrete has not fully filled the space around reinforcement or formwork. Possible causes include congested reinforcement, unsui…"],
+  ["How do I check door frame installation during construction?", "Check door frames against the approved opening schedule for size, material, finish, handing, threshold and hardware preparation before fixing. Verify that the masonry opening is correct…"],
+  ["What should I inspect before installing windows in a house?", "Before window installation, verify the opening dimensions, sill and lintel levels, frame material, glass specification, hardware, ventilation provision and approved shop drawings. Check…"],
+  ["How do I check floor screed levels before tiling?", "Before tiling, survey the screed against the finished-floor levels and approved setting-out plan. Check overall level or designed fall, flatness, thickness where specified, surface stre…"],
+  ["What should be included in a house construction quality checklist?", "A useful house construction quality checklist should follow the sequence of work and identify the drawing or specification, inspection point, acceptance responsibility, evidence and cor…"]
+];
+
+groups["Construction materials, contractor bills & site management"] = [
+  ["How do I verify construction materials delivered to a house site?", "Verify each delivery against the approved material submittal, purchase order and project specification before unloading or using it. Check the product name, manufacturer, grade or class…"],
+  ["What should I check in a cement bag before using it?", "Check that the cement bag is from the approved manufacturer and cement type specified for the work, with the product standard, grade, batch details and manufacturing information legible…"],
+  ["How do I check TMT steel quality for house construction?", "Check TMT reinforcement against the structural drawings, bar bending schedule and approved material specification. Verify the manufacturer, grade, nominal diameter, applicable standard …"],
+  ["How should construction work be measured for contractor payments?", "Measure completed work using the measurement rules, drawings, BOQ descriptions and payment terms agreed in the construction contract. Define the unit for each item—such as square metres…"],
+  ["How do I monitor daily progress at a house construction site?", "Monitor site progress against a simple baseline programme that lists activities, planned start and finish dates, dependencies, responsible contractor and inspection hold points. Each da…"],
+  ["What should I check before approving a contractor's construction bill?", "Before approving a contractor's bill, compare the claimed quantities and completed milestones with the signed contract, approved BOQ, latest drawings, agreed rates and previous payments…"],
+  ["How do I manage changes during house construction?", "Manage a construction change through a written variation process before carrying out the changed work. Describe the requested change, reason, affected rooms or structural elements, revi…"],
+  ["What records should be maintained at a house construction site?", "Maintain an organised site file or digital register containing sanctioned drawings and revisions, structural and service drawings, contract and BOQ, material approvals, delivery challan…"]
+];
+
+groups["Concrete testing, foundations & house handover"] = [
+  ["What should I do if fresh concrete fails the site slump check?", "If a fresh concrete slump result falls outside the approved mix or project acceptance range, inform the site engineer and concrete supplier immediately and hold the batch from placement…"],
+  ["How are concrete cube test results used at a construction site?", "Concrete cube tests provide compressive-strength results from samples taken from a concrete batch and tested at the specified ages using the required standard procedure. Confirm that sa…"],
+  ["When can RCC formwork be removed?", "RCC formwork and props should be removed only when the concrete has achieved the strength and support conditions required for the member, the span, loading, temperature, curing history …"],
+  ["What should I check before backfilling around foundations?", "Before backfilling, obtain approval that the foundation, plinth beam, retaining surfaces and any below-ground waterproofing or protective treatment are complete and have passed the spec…"],
+  ["How do I check damp proof course (DPC) in house construction?", "Check the damp proof course against the approved detail for its material, location, continuity, width, thickness and connection to the floor or wall waterproofing system. Confirm that i…"],
+  ["What should I inspect before laying a roof screed?", "Before laying a roof screed, check the structural slab has been accepted, the surface is clean and prepared, and all embedded services, rainwater outlets, sleeves and upstands are compl…"],
+  ["How do I check the quality of a construction site's safety arrangements?", "Review site safety arrangements before work starts and during each activity. Check secure boundaries, warning signs, safe access, housekeeping, electrical distribution and earthing, sca…"],
+  ["What should I check before handing over a newly built house?", "Before handover, compare the completed house with the sanctioned and approved drawings, contract scope, specifications and signed variations. Inspect structural and visible workmanship,…"]
 ];
 
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
