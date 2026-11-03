@@ -1,0 +1,53 @@
+/* Fixed public header stack: keep the utility bar + navigation out of page content. */
+.public-site-topbar{
+  position:fixed !important;
+  top:0;
+  left:0;
+  right:0;
+  z-index:3000;
+}
+
+.public-site-header{
+  position:fixed !important;
+  top:34px !important;
+  left:0;
+  right:0;
+  z-index:2999;
+}
+
+/* The header is out of normal flow, so reserve the full utility-bar + nav height. */
+.public-site-header-spacer{
+  height:106px !important;
+  min-height:106px !important;
+  flex-basis:106px !important;
+}
+
+/* Prevent anchor navigation from placing sections underneath the fixed stack. */
+html{
+  scroll-padding-top:106px;
+}
+
+@media(max-width:1020px){
+  .public-site-header{
+    top:34px !important;
+  }
+  .public-site-header-spacer{
+    height:98px !important;
+    min-height:98px !important;
+    flex-basis:98px !important;
+  }
+  html{
+    scroll-padding-top:98px;
+  }
+}
+
+@media(max-width:640px){
+  .public-site-header-spacer{
+    height:96px !important;
+    min-height:96px !important;
+    flex-basis:96px !important;
+  }
+  html{
+    scroll-padding-top:96px;
+  }
+}
