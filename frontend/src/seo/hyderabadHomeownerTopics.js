@@ -563,6 +563,17 @@ groups["House construction site checks & approvals"] = [
   ["How do I inspect roof waterproofing before laying tiles?", "Before covering roof waterproofing with tiles or a protective screed, check the membrane system against the approved specification and manufacturer's installation details. Inspect subst…"]
 ];
 
+groups["RCC slab, masonry & building envelope"] = [
+  ["What should I check before casting an RCC roof slab?", "Before casting an RCC roof slab, check the latest structural and architectural drawings, slab thickness, beam and opening locations, reinforcement layout, bar spacing, laps, anchorage, …"],
+  ["How do I check slab reinforcement before concreting?", "Compare the slab reinforcement with the latest structural drawings and bar bending schedule rather than relying on a typical spacing. Check bar diameter, direction, spacing, top and bot…"],
+  ["What is the purpose of a lintel beam above doors and windows?", "A lintel is a structural member above an opening that supports the masonry or other loads above it and transfers those loads to the adjacent wall or supports. Its material, bearing leng…"],
+  ["How do I prevent cracks in brick walls?", "Reduce the risk of masonry cracks by using suitable, consistent units and mortar, preparing the supporting surface, maintaining the specified bond and joint filling, and following the d…"],
+  ["What should I check when constructing a compound wall?", "Before building a compound wall, confirm the legal plot boundary, approved wall alignment, required setbacks, height restrictions, gate access and any local authority conditions. Check …"],
+  ["How do I inspect concrete columns and beams after shuttering is removed?", "After formwork removal, inspect concrete columns and beams for visible honeycombing, voids, exposed reinforcement, cracks, segregation, bulging, dimensional variation, misalignment and …"],
+  ["What should I check before installing a roof rainwater pipe?", "Before installing a roof rainwater pipe, confirm the roof catchment areas, drainage layout, outlet locations, pipe route, discharge point and maintenance access against the approved plu…"],
+  ["How do I plan ventilation and daylight in a new house?", "Plan daylight and ventilation room by room at the concept stage, using the plot orientation, neighbouring buildings, window locations, room depth, privacy, shading and local building re…"]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
