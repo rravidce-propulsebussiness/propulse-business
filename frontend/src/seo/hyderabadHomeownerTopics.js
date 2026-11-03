@@ -541,6 +541,17 @@ groups["Flooring, tile installation & bathroom fittings"] = [
   ["How do I choose bathroom fittings and accessories?", "Match fittings to plumbing, water pressure, fixture dimensions, service access, fixing support, finish and replacement-part availability."]
 ];
 
+groups["Bathroom tiling, shower glass & plumbing checks"] = [
+  ["How do I inspect grout joints between bathroom tiles?", "Inspect grout joints for consistent width and depth, complete filling, clean edges, pinholes, cracks and separation from tile edges. Check that the grout type is suitable for the tile, joint…"],
+  ["What should I check before installing a shower glass partition?", "Before ordering a shower glass partition, verify the finished floor and wall dimensions at multiple points, the shower opening, door swing, handle clearance and access for cleaning. Confirm …"],
+  ["How do I check plumbing lines before closing bathroom walls?", "Before closing a bathroom wall or concealing a pipe, compare the installed routes, diameters, materials, gradients and fixture connection points with the approved plumbing drawings. Check th…"],
+  ["How do I manage floor level differences between rooms?", "Plan room-to-room floor levels before screeding or tiling by coordinating structural slab levels, screed thickness, waterproofing build-up, tile or stone thickness, adhesive and door thresho…"],
+  ["What causes water to collect near a bathroom floor drain?", "Water may collect near a bathroom drain because the floor falls are incorrect, the drain body or grate is set too high, the screed has local depressions, tile edges obstruct flow, or the dra…"],
+  ["How do I choose grout for floor and wall tiles?", "Choose grout based on tile type, joint width, room exposure, expected movement, cleaning chemicals and the grout manufacturer's approved applications. Check whether the product is cementitio…"],
+  ["How do I inspect tile alignment and lippage?", "Inspect tile alignment by checking joint straightness, consistent spacing, pattern continuity, level changes at adjacent edges and alignment with walls, doorways, drains and fixtures. Lippag…"],
+  ["What causes tiles to crack after installation?", "Tiles can crack after installation because of substrate movement, inadequate or uneven bedding, point loading, insufficient movement joints, structural deflection, impact, incompatible mater…"]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
