@@ -63,7 +63,7 @@ test('public homepage presents homeowner acquisition journeys',async({page})=>{
   await expect(page.getByRole('link',{name:/view packages/i}).first()).toHaveAttribute('href','/packages')
   await expect(page.getByRole('link',{name:/get construction estimate/i}).first()).toHaveAttribute('href','/quote#construction')
   await expect(page.getByRole('link',{name:/find professionals/i}).first()).toHaveAttribute('href','/experts')
-  await page.getByRole('button',{name:/professionals/i}).click()
+  await page.getByRole('button',{name:/talk to our team/i}).click()
   await expect(page.getByRole('link',{name:/join as a professional/i}).first()).toHaveAttribute('href','/professionals')
   await expect(page.getByRole('heading',{name:/what do you need/i})).toBeVisible()
   await expect(page.getByRole('heading',{name:'Build Your Home'})).toBeVisible()
