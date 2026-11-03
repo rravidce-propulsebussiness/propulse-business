@@ -472,6 +472,17 @@ groups["Interior installation, inspection & handover"] = [
   ["How do I prepare an interior snag list?", "Create a photo-based room-wise defect register with owners, corrective actions, due dates and reinspection."]
 ];
 
+groups["Interior installation checks & handover"] = [
+  ["How do I inspect modular kitchen installation quality?", "Room-by-room checklist for cabinet fixing, alignment, hardware, countertop sealing, appliance services and snag closure."],
+  ["What should I check before installing a granite kitchen countertop?", "Pre-installation checks for slab condition, cabinet support, cut-outs, edge details, joints and sealing."],
+  ["How do I check wardrobe shutter alignment after installation?", "Inspect wardrobe gaps, shutter planes, hinge adjustment, sliding tracks, anchoring and signs of warping."],
+  ["What electrical points should be planned for a modular kitchen?", "Coordinate kitchen appliance loads, countertop sockets, isolators, safety protection and wiring routes before cabinetry."],
+  ["How do I plan electrical points for a bedroom and TV unit?", "Plan bedside charging, lighting, TV power, data, signal cables and accessible service points with furniture elevations."],
+  ["What causes gaps between interior panels and walls?", "Understand measurement, wall alignment, substrate movement, fixing and expansion causes before choosing a repair detail."],
+  ["How do I check tile and stone countertop joints?", "Check grout, movement joints, countertop seams, lippage, sealing and substrate support for durable finishes."],
+  ["What should be included in an interior handover checklist?", "Room-wise acceptance checklist covering workmanship, services, snags, warranties, manuals and final handover records."]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
