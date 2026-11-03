@@ -41,10 +41,11 @@ export const CORE_PUBLIC_SEO_ROUTES=[
   },
   {
     path:'/technology',
-    title:'Construction Business Software & Technology | ProPulse',
-    description:'Explore ProPulse technology for construction and interior companies, including Business OS for CRM, quotations, projects, operations and finance.',
-    heading:'ProPulse Technology & Business OS',
-    summary:'Business software for construction and interiors, alongside ProPulse direct services and lead marketplace.',
+    type:'services-hub',
+    title:'Digital Products & Services | Websites, SEO, Marketing & Business OS | ProPulse',
+    description:'Explore ProPulse digital services including website and software development, SEO and AI search optimization, digital marketing and lead generation, graphic design, video editing, hosting, WhatsApp Business API and marketing, plus Business OS for construction, interior and real-estate companies.',
+    heading:'Products & Services for modern businesses',
+    summary:'Build your digital presence, get found in search and AI answers, generate leads, create content, stay online and run your construction or interior business with ProPulse Business OS.',
   },
   {
     path:'/quote',
@@ -102,7 +103,6 @@ export const CORE_PUBLIC_SEO_ROUTES=[
     heading:'Construction, interior and real-estate questions answered',
     summary:'Search practical homeowner questions by category and use the answers to plan better construction, interior and property decisions.',
   },
-
   {
     path:'/best-construction-company-hyderabad',
     type:'construction-trust-guide',
