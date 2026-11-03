@@ -529,6 +529,18 @@ groups["Wall finishes, paint & interior defect checks"] = [
   ["How do I choose a bathroom exhaust fan?", "Select fan performance for room and duct conditions, safe wet-area installation, external discharge, make-up air and service access."]
 ];
 
+
+groups["Flooring, tile installation & bathroom fittings"] = [
+  ["How do I choose floor tiles for a house?", "Compare room use, slip performance, wear, water absorption, tile batch, maintenance and installation requirements before selecting flooring."],
+  ["What should I check before installing floor tiles?", "Inspect substrate readiness, floor levels, setting-out, adhesive coverage, movement joints, grout and finished alignment."],
+  ["What causes hollow sounds in floor tiles?", "Understand adhesive coverage, bedding voids, substrate movement and warning signs before deciding whether tile repair is needed."],
+  ["How do I plan tile layout to reduce narrow cuts?", "Set out tile grids using actual site dimensions, grout joints, doorways, drains and visible edges before fixing."],
+  ["How do I choose skirting for floor tiles?", "Coordinate skirting material, height, corners, movement joints, waterproofing and terminations with the floor and wall finishes."],
+  ["What is the correct way to slope a bathroom floor?", "Plan falls around drain position, tile format, threshold levels and waterproofing, then verify drainage before handover."],
+  ["How do I check bathroom waterproofing before tiling?", "Verify membrane details, junctions, penetrations, curing, specified water testing, protection and test records before covering."],
+  ["How do I choose bathroom fittings and accessories?", "Match fittings to plumbing, water pressure, fixture dimensions, service access, fixing support, finish and replacement-part availability."]
+];
+
 export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([category, entries]) => ({
   category,
   topics: entries.map(([title, description], index) => ({
