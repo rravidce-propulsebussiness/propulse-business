@@ -94,7 +94,7 @@ assert(buildScript.includes('data-seo-static-fallback'),'Static SEO pages must c
 assert(buildScript.includes('businessIdentityContent(route)'),'Static SEO HTML must explain direct ProPulse services and technology');
 assert(buildScript.includes("route.path==='/technology'"),'Technology page must include crawlable Business OS content');
 assert(app.includes('path="/technology" element={<Technology/>}'),'Technology page must be accessible in the SPA');
-assert(publicChrome.includes("{ to: '/technology', label: 'Technology'"),'Technology must be present in public navigation');
+assert(publicChrome.includes("{ to: '/technology', label: 'Products & Services'"),'Technology must be present in public navigation');
 assert(home.includes('Direct Home Construction')&&home.includes('Direct Interior Execution'),'Homepage must disclose direct execution');
 assert(home.includes('Professional Marketplace')&&home.includes('Technology & Business OS'),'Homepage must disclose marketplace and technology');
 assert(!landing.includes("a:'No. ProPulse is a requirement and discovery platform"),'Hyderabad FAQ must not deny ProPulse direct construction services');
