@@ -183,7 +183,7 @@ export default function WhatsAppAutomation() {
   }
 
   const endpoint = useMemo(() => window.location.origin + '/api/v1/messaging/automations/trigger', [])
-  const sample = 'curl -X POST ' + endpoint + ' \\\n  -H "Authorization: Bearer pma_test_YOUR_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"event":"lead.created","to":"+919876543210","data":{"name":"Asha"}}\''
+  const sample = 'curl -X POST ' + endpoint + ' \\\n  -H "X-Propulse-API-Key: pma_test_YOUR_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"event":"lead.created","to":"+919876543210","data":{"name":"Asha"}}\''
 
   return <div className="wa-page">
     <UserHeader />
