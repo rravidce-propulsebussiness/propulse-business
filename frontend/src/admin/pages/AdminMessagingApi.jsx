@@ -245,7 +245,7 @@ function PlaygroundTab({ clients, issuedKey }) {
 
 function DocsTab({ overview }) {
   const endpoint = overview?.endpoints?.messages || (window.location.origin + '/api/v1/messaging/messages')
-  const sample = 'curl -X POST ' + endpoint + ' \\\n  -H "Authorization: Bearer pma_test_YOUR_KEY" \\\n  -H "Content-Type: application/json" \\\n  -H "Idempotency-Key: order-123" \\\n  -d \'{"to":"+919876543210","text":"Hello from my app"}\''
+  const sample = 'curl -X POST ' + endpoint + ' \\\n  -H "X-Propulse-API-Key: pma_test_YOUR_KEY" \\\n  -H "Content-Type: application/json" \\\n  -H "Idempotency-Key: order-123" \\\n  -d \'{"to":"+919876543210","text":"Hello from my app"}\''
   return <>
     <section className="messaging-tab-intro">
       <div><span className="messaging-section-kicker">DEVELOPER DOCUMENTATION</span><h2>Connect to Propulse Messaging</h2><p>Use the test endpoint to validate your integration before connecting live WhatsApp business assets.</p></div>
