@@ -204,7 +204,7 @@ function PlaygroundTab({ clients, issuedKey }) {
     try {
       const result = await fetch(API_BASE_URL + '/v1/messaging/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + apiKey },
+        headers: { 'Content-Type': 'application/json', 'X-Propulse-API-Key': apiKey },
         credentials: 'omit',
         body: JSON.stringify({ to, text: message }),
       })
@@ -254,8 +254,8 @@ function DocsTab({ overview }) {
     <div className="messaging-docs-grid">
       <section className="messaging-panel">
         <span className="messaging-section-kicker">01 · AUTHENTICATION</span><h3>Use a test key</h3>
-        <p>Send your key in the Authorization header. Propulse stores only a one-way hash and shows the secret once when it is created.</p>
-        <pre className="messaging-code-block"><code>Authorization: Bearer pma_test_YOUR_KEY</code></pre>
+        <p>Send your key with the X-Propulse-API-Key header. Propulse stores only a one-way hash and shows the secret once when it is created.</p>
+        <pre className="messaging-code-block"><code>X-Propulse-API-Key: pma_test_YOUR_KEY</code></pre>
       </section>
       <section className="messaging-panel">
         <span className="messaging-section-kicker">02 · SEND A TEST MESSAGE</span><h3>POST /messages</h3>
