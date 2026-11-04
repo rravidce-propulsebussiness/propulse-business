@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { API_BASE_URL, authRequest } from '../utils/auth'
+import { authRequest } from '../utils/auth'
 import UserHeader from '../components/UserHeader'
 import './WhatsAppAutomation.css'
 
