@@ -8,9 +8,10 @@ const router = express.Router();
 
 async function authenticateClient(req, res, next) {
   const authorization = String(req.headers.authorization || '');
-  const match = authorization.match(/^Bearer (pma_test_[A-Za-z0-9_-]{40,})$/);
-  if (!match) return res.status(401).json({ error: 'A valid Propulse test API key is required', code: 'API_KEY_REQUIRED' });
-  const keyHash = crypto.createHash('sha256').update(match[1]).digest('hex');
+  const bearerMatch = authorization.match(/^Bearer (pma_test_[A-Za-z0-9_-]{40,})$/);
+  const apiKey = String(req.get('X-Propulse-API-Key') || bearerMatch?.[1] || '');
+  if (!/^pma_test_[A-Za-z0-9_-]{40,}$/.test(apiKey)) return res.status(401).json({ error: 'A valid Propulse test API key is required', code: 'API_KEY_REQUIRED' });
+  const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
   try {
     const result = await pool.query("SELECT id,company_name,environment,rate_limit_per_minute,owner_user_id FROM messaging_api_clients WHERE api_key_hash=$1 AND status='active' AND environment='test' LIMIT 1", [keyHash]);
     if (!result.rowCount) return res.status(401).json({ error: 'Invalid or revoked API key', code: 'API_KEY_INVALID' });
@@ -51,9 +52,9 @@ router.get('/docs', (req, res) => res.json({
   environment: 'test',
   endpoints: [
     { method: 'GET', path: '/api/v1/messaging/health', authentication: 'none' },
-    { method: 'POST', path: '/api/v1/messaging/messages', authentication: 'Bearer test API key' },
+    { method: 'POST', path: '/api/v1/messaging/messages', authentication: 'X-Propulse-API-Key or Bearer test API key' },
     { method: 'GET', path: '/api/v1/messaging/messages', authentication: 'Bearer test API key' },
-    { method: 'POST', path: '/api/v1/messaging/automations/trigger', authentication: 'Workspace test API key' },
+    { method: 'POST', path: '/api/v1/messaging/automations/trigger', authentication: 'X-Propulse-API-Key or Bearer workspace test API key' },
   ],
   note: 'Test messages are simulated and are not delivered through WhatsApp.',
 }));
