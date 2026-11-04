@@ -127,7 +127,7 @@ async function deleteRule(req, res) {
 }
 
 async function recordRun({ ownerUserId, rule, recipient, data, apiClientId = null }) {
-  const renderedMessage = renderTemplate(rule.message_template, data);
+  const renderedMessage = renderTemplate(rule.message_template, data).slice(0, 4096);
   const result = await pool.query(
     "INSERT INTO whatsapp_automation_runs (owner_user_id,rule_id,api_client_id,event_name,recipient_masked,message_length,status) VALUES ($1,$2,$3,$4,$5,$6,'simulated') RETURNING id,created_at",
     [ownerUserId, rule.id, apiClientId, rule.trigger_event, maskRecipient(recipient), renderedMessage.length]
