@@ -2,6 +2,7 @@ const express = require('express');
 const crypto = require('node:crypto');
 const pool = require('../config/database');
 const rateLimit = require('../middleware/rateLimitMiddleware');
+const automationController = require('../controllers/whatsappAutomationController');
 
 const router = express.Router();
 
@@ -11,7 +12,7 @@ async function authenticateClient(req, res, next) {
   if (!match) return res.status(401).json({ error: 'A valid Propulse test API key is required', code: 'API_KEY_REQUIRED' });
   const keyHash = crypto.createHash('sha256').update(match[1]).digest('hex');
   try {
-    const result = await pool.query("SELECT id,company_name,environment,rate_limit_per_minute FROM messaging_api_clients WHERE api_key_hash=$1 AND status='active' AND environment='test' LIMIT 1", [keyHash]);
+    const result = await pool.query("SELECT id,company_name,environment,rate_limit_per_minute,owner_user_id FROM messaging_api_clients WHERE api_key_hash=$1 AND status='active' AND environment='test' LIMIT 1", [keyHash]);
     if (!result.rowCount) return res.status(401).json({ error: 'Invalid or revoked API key', code: 'API_KEY_INVALID' });
     req.messagingClient = result.rows[0];
     void pool.query('UPDATE messaging_api_clients SET last_used_at=CURRENT_TIMESTAMP WHERE id=$1', [req.messagingClient.id]).catch(error => console.error('Messaging API last-used update failed:', error.message));
@@ -52,11 +53,13 @@ router.get('/docs', (req, res) => res.json({
     { method: 'GET', path: '/api/v1/messaging/health', authentication: 'none' },
     { method: 'POST', path: '/api/v1/messaging/messages', authentication: 'Bearer test API key' },
     { method: 'GET', path: '/api/v1/messaging/messages', authentication: 'Bearer test API key' },
+    { method: 'POST', path: '/api/v1/messaging/automations/trigger', authentication: 'Workspace test API key' },
   ],
   note: 'Test messages are simulated and are not delivered through WhatsApp.',
 }));
 
 router.use(authenticateClient, perClientRateLimit);
+router.post('/automations/trigger', automationController.triggerApiEvent);
 
 router.post('/messages', async (req, res) => {
   const recipient = String(req.body?.to || '').trim();
