@@ -11,7 +11,7 @@ export default function UserHeader({ variant } = {}) {
   useEffect(()=>{setOpen(false)},[location.pathname,location.search])
   useEffect(()=>{
     const onKeyDown=event=>{if(event.key==='Escape')setOpen(false)}
-    const onResize=()=>{if(window.innerWidth>1150)setOpen(false)}
+    const onResize=()=>{if(window.innerWidth>1540)setOpen(false)}
     window.addEventListener('keydown',onKeyDown)
     window.addEventListener('resize',onResize)
     return()=>{window.removeEventListener('keydown',onKeyDown);window.removeEventListener('resize',onResize)}
