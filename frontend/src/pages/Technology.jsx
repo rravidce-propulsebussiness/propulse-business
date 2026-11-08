@@ -8,7 +8,6 @@ const serviceGroups = [
   { icon: 'design', title: 'Creative & Graphic Design', description: 'Stunning designs for your brand.' },
   { icon: 'video', title: 'Video & Media', description: 'Professional video editing and content creation.' },
   { icon: 'server', title: 'Hosting & Digital Infrastructure', description: 'Reliable hosting, domains and cloud solutions.' },
-  { icon: 'whatsapp', title: 'WhatsApp API & Marketing', description: 'Automate and grow with WhatsApp Business API.' },
 ]
 
 function Icon({ name, size = 30 }) {
@@ -83,7 +82,6 @@ export default function Technology() {
             <div className="ps-float ps-float-web"><Icon name="code" size={19}/><span>Website<br/>Development</span></div>
             <div className="ps-float ps-float-seo"><Icon name="search" size={19}/><span>SEO &amp;<br/>AEO</span></div>
             <div className="ps-float ps-float-marketing"><Icon name="megaphone" size={19}/><span>Digital<br/>Marketing</span></div>
-            <div className="ps-float ps-float-whatsapp"><Icon name="whatsapp" size={20}/><span>WhatsApp<br/>Marketing</span></div>
             <div className="ps-float ps-float-video"><Icon name="video" size={19}/><span>Video Editing<br/>&amp; Media</span></div>
             <div className="ps-float ps-float-design"><Icon name="design" size={19}/><span>Graphic<br/>Design</span></div>
             <div className="ps-arrow">↗</div>

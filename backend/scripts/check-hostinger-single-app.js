@@ -103,7 +103,7 @@ assert(wrapper.includes("extensions:['html']"),'Hostinger wrapper resolves prere
 assert(wrapper.includes('knownSpaFrontendPath(req.path)')&&wrapper.includes("res.status(404).send('Not found')"),'Hostinger wrapper must return 404 for unknown HTML routes');
 assert(backendServer.includes('knownSpaFrontendPath(req.path)')&&backendServer.includes("res.status(404).send('Not found')"),'Backend single-process SPA fallback must return 404 for unknown HTML routes');
 for(const [label,source] of [['Hostinger wrapper',wrapper],['Backend single-process',backendServer]]){
-  assert(source.includes('privateFrontendPath')&&source.includes('whatsapp-automation'),label+' must serve WhatsApp automation deep links through the private SPA fallback');
+  assert(source.includes('privateFrontendPath')&&!source.includes('whatsapp-automation'),label+' must not route the removed WhatsApp automation page');
 }
 assert(backendServer.includes("'/interior-estimator'")&&backendServer.includes('publicDynamicFrontendPath'),'Backend SPA allowlist must preserve estimator redirects and dynamic SEO routes');
 assert(wrapper.includes("'/interior-estimator'")&&wrapper.includes('publicDynamicFrontendPath'),'Wrapper SPA allowlist must preserve estimator redirects and dynamic SEO routes');

@@ -50,7 +50,7 @@ export default function UserHeader({ variant } = {}) {
     <nav id="user-header-site-nav" aria-label="Professional navigation" className={"user-header-nav" + (open ? " open" : "")}>
       <Link className={active("/professionals")} to="/professionals" onClick={()=>setOpen(false)}>Home</Link>
       <Link className={active("/purchased-leads")} to="/purchased-leads" onClick={()=>setOpen(false)}>Purchased Leads</Link>
-      {user?.role==='business' && <Link className={active("/professional-requests")} to="/professional-requests" onClick={()=>setOpen(false)}>Requests</Link>}{user?.role==='business' && <Link className={active("/whatsapp-automation")} to="/whatsapp-automation" onClick={()=>setOpen(false)}>WhatsApp</Link>}
+      {user?.role==='business' && <Link className={active("/professional-requests")} to="/professional-requests" onClick={()=>setOpen(false)}>Requests</Link>}
       <Link className={active("/wallet")} to="/wallet" onClick={()=>setOpen(false)}>Wallet</Link>
       <Link className={active("/membership")} to="/membership" onClick={()=>setOpen(false)}>Membership</Link>
       {user?.role==='business'&&<Link className="user-mobile-offers-link" to="/professionals?offers=1" onClick={()=>setOpen(false)}>Offers</Link>}

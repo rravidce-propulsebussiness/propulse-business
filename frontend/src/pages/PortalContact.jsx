@@ -11,7 +11,7 @@ const audienceCopy={
   professionals:{label:'Professional',title:'Professional Support',sub:'Connect with ProPulse for leads, business account support, wallet, memberships, verification and marketplace assistance.'},
   users:{label:'Customer',title:'Customer Support',sub:'Connect with ProPulse for homeowner account and project support.'}
 };
-const empty={company_name:'',email:'info@propulsetechnologies.online',phone:'+91 9000360812',whatsapp:'+91 9000360812',address:'',business_hours:'',support_email:'info@propulsetechnologies.online',careers_email:'info@propulsetechnologies.online',maps_url:'',social_handles:[]};
+const empty={company_name:'',email:'info@propulsetechnologies.online',phone:'+91 9000360812',address:'',business_hours:'',support_email:'info@propulsetechnologies.online',careers_email:'info@propulsetechnologies.online',maps_url:'',social_handles:[]};
 
 export default function PortalContact({audience='lead_partners'}){
   const copy=audienceCopy[audience]||audienceCopy.lead_partners;
@@ -19,17 +19,16 @@ export default function PortalContact({audience='lead_partners'}){
   const user=getUser(), navigate=useNavigate();
   useEffect(()=>{let active=true;queueMicrotask(()=>{if(!active)return;setLoading(true);setError('');apiRequest('/contact?audience='+encodeURIComponent(audience),{},false).then(v=>active&&setData({...empty,...v})).catch(e=>active&&setError(e.message||'Unable to load contact details')).finally(()=>active&&setLoading(false))});return()=>{active=false}},[audience]);
   const socials=useMemo(()=>Array.isArray(data.social_handles)?data.social_handles.filter(s=>s.enabled&&s.url):[],[data]);
-  const wa=data.whatsapp?String(data.whatsapp).replace(/\D/g,''):'';
   function signOut(){clearSession();localStorage.removeItem('propulse_session_mode');navigate('/login',{replace:true})}
   return <div className="portal-contact-shell">
-    {audience==='lead_partners'?<><LeadPartnerSidebar user={user} onSignOut={signOut}/><main className="portal-contact-main partner-main"><header className="portal-contact-topbar partner-topbar"><div className="partner-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Contact</strong></div></header><PortalContactContent copy={copy} data={data} socials={socials} wa={wa} loading={loading} error={error} partner/></main></>:<><UserHeader/><main className="portal-contact-main user-contact-main"><div className="portal-contact-user-wrap"><div className="portal-contact-user-breadcrumb"><span>Professionals</span><b>/</b><strong>Contact</strong></div><PortalContactContent copy={copy} data={data} socials={socials} wa={wa} loading={loading} error={error}/></div></main></>}
+    {audience==='lead_partners'?<><LeadPartnerSidebar user={user} onSignOut={signOut}/><main className="portal-contact-main partner-main"><header className="portal-contact-topbar partner-topbar"><div className="partner-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Contact</strong></div></header><PortalContactContent copy={copy} data={data} socials={socials} loading={loading} error={error} partner/></main></>:<><UserHeader/><main className="portal-contact-main user-contact-main"><div className="portal-contact-user-wrap"><div className="portal-contact-user-breadcrumb"><span>Professionals</span><b>/</b><strong>Contact</strong></div><PortalContactContent copy={copy} data={data} socials={socials} loading={loading} error={error}/></div></main></>}
   </div>
 }
 
-function PortalContactContent({copy,data,socials,wa,loading,error,partner=false}){
-  const channelCount=[data.email,data.phone,data.whatsapp,data.support_email].filter(Boolean).length;
+function PortalContactContent({copy,data,socials,loading,error,partner=false}){
+  const channelCount=[data.email,data.phone,data.support_email].filter(Boolean).length;
   return <div className={`portal-contact-content${partner?' partner-contact-content':''}`}>
-    <section className={`portal-contact-heading${partner?' premium-page-hero':''}`}><div className="portal-contact-hero-copy">{partner&&<span className="portal-contact-hero-kicker">LEAD PARTNER / SUPPORT</span>}<h1>{partner?'Contact & support':copy.title}</h1><p>{copy.sub}</p>{partner&&<div className="portal-contact-hero-meta"><span><b>{channelCount}</b> support channels</span><span><b>{socials.length}</b> social links</span><span><b>{data.business_hours||'Business hours'}</b></span></div>}</div>{partner&&<div className="portal-contact-hero-actions">{data.email&&<a href={'mailto:'+data.email}><span>✉</span><div><b>Email support</b><small>{data.email}</small></div></a>}{wa&&<a href={'https://wa.me/'+wa} target="_blank" rel="noreferrer"><span>◉</span><div><b>WhatsApp</b><small>{data.whatsapp}</small></div></a>}</div>}</section>
+    <section className={`portal-contact-heading${partner?' premium-page-hero':''}`}><div className="portal-contact-hero-copy">{partner&&<span className="portal-contact-hero-kicker">LEAD PARTNER / SUPPORT</span>}<h1>{partner?'Contact & support':copy.title}</h1><p>{copy.sub}</p>{partner&&<div className="portal-contact-hero-meta"><span><b>{channelCount}</b> support channels</span><span><b>{socials.length}</b> social links</span><span><b>{data.business_hours||'Business hours'}</b></span></div>}</div>{partner&&<div className="portal-contact-hero-actions">{data.email&&<a href={'mailto:'+data.email}><span>✉</span><div><b>Email support</b><small>{data.email}</small></div></a>}</div>}</section>
     {error&&<div className="portal-contact-alert">{error}<button type="button" onClick={()=>window.location.reload()}>Retry</button></div>}
     <section className="portal-contact-grid">
       <div className="portal-contact-left">
@@ -37,7 +36,6 @@ function PortalContactContent({copy,data,socials,wa,loading,error,partner=false}
           <div className="portal-contact-info-grid">
             <a className="portal-contact-info" href={data.email?'mailto:'+data.email:'#'}><span>✉</span><div><small>Email</small><strong>{loading?'Loading…':data.email||'—'}</strong></div></a>
             <a className="portal-contact-info" href={data.phone?'tel:'+data.phone:'#'}><span>☎</span><div><small>Phone</small><strong>{loading?'Loading…':data.phone||'—'}</strong></div></a>
-            <a className="portal-contact-info" href={wa?'https://wa.me/'+wa:'#'} target="_blank" rel="noreferrer"><span>◉</span><div><small>WhatsApp</small><strong>{loading?'Loading…':data.whatsapp||'—'}</strong></div></a>
             <div className="portal-contact-info"><span>◷</span><div><small>Business hours</small><strong>{loading?'Loading…':data.business_hours||'—'}</strong></div></div>
           </div>
         </article>

@@ -12,7 +12,6 @@ const EMPTY_CONTACT = {
   email: 'info@propulsetechnologies.online',
   support_email: 'info@propulsetechnologies.online',
   phone: '+91 9000360812',
-  whatsapp: '+91 9000360812',
   address: '',
   business_hours: '',
   maps_url: '',
@@ -111,10 +110,9 @@ function PublicContact() {
 
   const email = String(data.email || data.support_email || '').trim()
   const phone = String(data.phone || '').trim()
-  const whatsapp = String(data.whatsapp || '').replace(/\D/g, '')
   const mapsUrl = /^https?:\/\//i.test(String(data.maps_url || '')) ? data.maps_url : ''
   const socials = data.social_handles.filter(item => item?.enabled && /^https?:\/\//i.test(String(item?.url || '')))
-  const hasContact = Boolean(email || phone || whatsapp)
+  const hasContact = Boolean(email || phone)
   const hasOffice = Boolean(data.address || data.business_hours || mapsUrl)
 
   return <main className="contact-page">
@@ -141,8 +139,6 @@ function PublicContact() {
         {hasContact ? <section className="contact-methods" aria-label="Ways to contact us">
           {phone && <ContactCard icon="phone" title="Call us" detail={phone}
             href={'tel:' + phone.replace(/[^+\d]/g, '')} action="Call now"/>}
-          {whatsapp && <ContactCard icon="chat" title="WhatsApp" detail={data.whatsapp || ('+' + whatsapp)}
-            href={'https://wa.me/' + whatsapp} action="Start a chat" external/>}
           {email && <ContactCard icon="mail" title="Email us" detail={email}
             href={'mailto:' + email} action="Send an email"/>}
         </section> : !error && <p className="contact-status">

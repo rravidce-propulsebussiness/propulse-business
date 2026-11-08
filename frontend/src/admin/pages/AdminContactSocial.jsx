@@ -10,7 +10,7 @@ const AUDIENCES=[
   {key:'lead_partners',label:'Lead Partners',sub:'Shown to lead partners',icon:'◆'},
   {key:'common',label:'Common Settings',sub:'Shared across all sections',icon:'⚙'}
 ];
-const fresh={audience:'website',company_name:'',email:'',phone:'',whatsapp:'',address:'',business_hours:'',support_email:'',careers_email:'',maps_url:'',website_url:'/',social_handles:[]};
+const fresh={audience:'website',company_name:'',email:'',phone:'',address:'',business_hours:'',support_email:'',careers_email:'',maps_url:'',website_url:'/',social_handles:[]};
 const makeId=()=> 'social-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);
 
 export default function AdminContactSocial(){
@@ -51,7 +51,7 @@ export default function AdminContactSocial(){
   const publishedCount=useMemo(()=>form.social_handles.filter(s=>s.enabled&&s.url).length,[form.social_handles]);
   const hiddenCount=useMemo(()=>form.social_handles.filter(s=>!s.enabled).length,[form.social_handles]);
   const current= AUDIENCES.find(x=>x.key===audience);
-  const contactChannels=[form.email,form.phone,form.whatsapp,form.support_email].filter(Boolean).length;
+  const contactChannels=[form.email,form.phone,form.support_email].filter(Boolean).length;
   if(loading&&!form.company_name&&!loaded[audience]) return <main className="admin-contact-page"><BootLoader contained message="Loading contact settings" /></main>;
 
   return <main className="admin-contact-page">
@@ -74,7 +74,7 @@ export default function AdminContactSocial(){
             <div className="admin-contact-fields">
               <label>Company name<input value={form.company_name} onChange={e=>update('company_name',e.target.value)} required={audience!=='common'}/></label>
               <label>Email address<input type="email" value={form.email} onChange={e=>update('email',e.target.value)}/></label>
-              <div className="admin-contact-two"><label>Phone<input value={form.phone} onChange={e=>update('phone',e.target.value)}/></label><label>WhatsApp<input value={form.whatsapp} onChange={e=>update('whatsapp',e.target.value)}/></label></div>
+              <label>Phone<input value={form.phone} onChange={e=>update('phone',e.target.value)}/></label>
               <label>Address<textarea rows="3" value={form.address} onChange={e=>update('address',e.target.value)}/></label>
               <label>Business hours<input value={form.business_hours} onChange={e=>update('business_hours',e.target.value)}/></label>
               <div className="admin-contact-two"><label>Support email<input type="email" value={form.support_email} onChange={e=>update('support_email',e.target.value)}/></label><label>Careers email<input type="email" value={form.careers_email} onChange={e=>update('careers_email',e.target.value)}/></label></div>

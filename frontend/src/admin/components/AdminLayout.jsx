@@ -55,7 +55,6 @@ const navigation=[
     {to:'/admin/jobs',label:'Background Jobs'},
     {to:'/admin/risk-center',label:'Risk Center'},
     {to:'/admin/notifications',label:'Notifications'},
-    {to:'/admin/messaging-api',label:'Messaging API'},
     {to:'/admin/audit-timeline',label:'Audit Timeline'},
     {to:'/admin/financial-integrity',label:'Financial Integrity'},
     {to:'/admin/test-reset',label:'Test Data Reset'}

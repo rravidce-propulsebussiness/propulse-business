@@ -23,10 +23,3 @@
   }
 }
 
-/* Keep the WhatsApp safety note clear of the fixed support launcher. */
-body:has(.wa-page) .support-chat-launcher{
-  width:46px;
-  padding:0;
-  justify-content:center;
-}
-body:has(.wa-page) .support-chat-launcher b{display:none}

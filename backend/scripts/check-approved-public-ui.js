@@ -113,7 +113,8 @@ assert.match(contact,/Happy to help you/);
 assert.doesNotMatch(contact,/Questions about construction, interiors or real estate\? Reach our team directly\./);
 assert.match(contact,/href=\{'tel:' \+ phone\.replace/);
 assert.match(contact,/href=\{'mailto:' \+ email\}/);
-assert.match(contact,/https:\/\/wa\.me\//);
+// WhatsApp was removed from Propulse; the contact page offers phone and email only.
+assert.doesNotMatch(contact,/wa\.me|WhatsApp/);
 assert.match(contact,/openLeadPopup\(''\)/);
 assert.doesNotMatch(contact,/contact-service-strip|contact-map-grid|contact-direct-links/);
 // The portfolio must not imply that illustrative stock photos are completed client work.
