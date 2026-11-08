@@ -6,7 +6,6 @@ import '../pages/LeadPartnerShared.css';
 const nav=[
   {to:'/lead-partner/dashboard',label:'Dashboard',icon:'⌂',exact:true,aliases:['/lead-partner']},
   {to:'/lead-partner/inventory',label:'Lead Inventory',icon:'◈'},
-  {to:'/lead-partner/meta-leads',label:'Meta Lead Ads',icon:'◎'},
   {to:'/lead-partner/pricing',label:'Pricing & Revenue',icon:'₹'},
   {to:'/lead-partner/withdrawals',label:'Earnings & Withdrawals',icon:'⇩'},
   {to:'/lead-partner/reports',label:'Reports',icon:'▥'},

@@ -21,7 +21,6 @@ const navigation=[
     {to:'/admin/customer-flows',label:'Customer Flows'},
     {to:'/admin/leads/upload',label:'Upload Leads'},
     {to:'/admin/leads/sheets',label:'Google Sheets'},
-    {to:'/admin/leads/meta',label:'Meta Lead Ads'},
     {to:'/admin/leads/entitlements',label:'Lead Entitlements'},
     {to:'/admin/lead-reports',label:'Lead Reports'},
     {to:'/admin/industries',label:'Industries & Locations',aliases:['/admin/pincodes']}
