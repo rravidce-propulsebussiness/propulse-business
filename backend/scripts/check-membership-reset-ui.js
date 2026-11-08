@@ -18,7 +18,8 @@ assert(membership.includes('setCurrentMembership(membershipRecord(refreshedMembe
 assert(!membership.includes("user?.membership_type || ''"),'Cached user membership_type must not decide current membership state');
 assert(membership.includes("const currentGroup = currentMembership?.membership_plan_id"),'Current membership group must require a real membership record');
 assert(membership.includes("const isCurrent = Boolean(currentMembership?.membership_plan_id) && currentGroup === level.key"),'Plan buttons must only become current when a real membership exists');
-assert(membership.includes("saveSession({ user: { ...user, is_pro_member: access.isPro } })"),'Live access response must refresh the cached Pro flag after reset');
+assert(membership.includes("saveSession({ user: { ...latestUser, is_pro_member: access.isPro } })"),'Live access response must refresh the cached Pro flag after reset');
+assert(membership.includes('}, [token, userId])')&&!membership.includes('}, [token, user])'),'Membership loader must depend on the user id, not the user object it replaces (endless refetch loop)');
 assert(!membership.includes("String(currentMembership?.plan_group || currentMembership?.plan?.plan_group || (isProMember ? 'grow' : ''))"),'Pro access alone must not manufacture a current GROW plan');
 
 console.log('Membership post-reset UI regression test passed.');

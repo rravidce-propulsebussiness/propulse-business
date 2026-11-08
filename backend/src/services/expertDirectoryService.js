@@ -11,13 +11,31 @@ function normalizeGroups(value){
   return [...new Set(items.map(item=>String(item||'').trim().toLowerCase()).filter(Boolean))];
 }
 
+// The single settings row is read on every public directory, project and
+// profile request. Cache it briefly (pool reads only, never inside a caller's
+// transaction) to save a cross-region database round trip per page.
+// updateSettings() clears the cache, so admin changes apply immediately here.
+const SETTINGS_CACHE_MS=30000;
+let settingsCache=null;
+
+function clearSettingsCache(){settingsCache=null;}
+
 async function getSettings(client=pool){
+  if(client!==pool)return readSettings(client);
+  const now=Date.now();
+  if(settingsCache&&settingsCache.expiresAt>now)return {...settingsCache.value,allowedPlanGroups:[...settingsCache.value.allowedPlanGroups]};
+  const value=await readSettings(client);
+  settingsCache={value,expiresAt:now+SETTINGS_CACHE_MS};
+  return {...value,allowedPlanGroups:[...value.allowedPlanGroups]};
+}
+
+async function readSettings(client){
   const result=await client.query(
     "SELECT id,directory_enabled,require_active_membership,require_verified,allowed_plan_groups,show_projects,show_videos,show_plans,updated_by,updated_at FROM expert_directory_settings WHERE id=1"
   );
   if(!result.rows.length){
     await client.query("INSERT INTO expert_directory_settings(id) VALUES(1) ON CONFLICT(id) DO NOTHING");
-    return getSettings(client);
+    return readSettings(client);
   }
   const row=result.rows[0];
   return {
@@ -69,6 +87,7 @@ async function updateSettings(actorId,payload={}){
     await pool.query("INSERT INTO expert_directory_settings(id) VALUES(1) ON CONFLICT(id) DO NOTHING");
     return updateSettings(actorId,payload);
   }
+  clearSettingsCache();
   return getSettings();
 }
 
@@ -287,6 +306,7 @@ async function updateBusinessVisibility(actorId,userId,payload={}){
 
 module.exports={
   getSettings,
+  clearSettingsCache,
   updateSettings,
   getUserDirectoryStatus,
   getOverview,

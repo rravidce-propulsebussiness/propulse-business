@@ -6,7 +6,10 @@ const assert=(condition,message)=>{if(!condition)throw new Error(message)};
 
 const index=read('../frontend/index.html');
 const app=read('../frontend/src/App.jsx');
-const manager=read('../frontend/src/components/SeoManager.jsx');
+const managerShell=read('../frontend/src/components/SeoManager.jsx');
+// SeoManager lazy-loads its logic (and the large route tables) from seoApply.js.
+const manager=managerShell+String.fromCharCode(10)+read('../frontend/src/components/seoApply.js');
+assert(managerShell.includes("import('./seoApply.js')")&&!managerShell.includes('seoConfig'),'SEO route tables must stay out of the main bundle (lazy seoApply.js)');
 const config=read('../frontend/src/seo/seoConfig.js');
 const hyderabad=read('../frontend/src/seo/hyderabadSeo.js');
 const regional=read('../frontend/src/seo/regionalSeo.js');

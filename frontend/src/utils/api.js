@@ -31,7 +31,57 @@ function requestSignal(signal, timeoutMs) {
   return { signal: controller.signal, cleanup: () => { clearTimeout(timer); signal?.removeEventListener?.('abort', abort) } }
 }
 
-export async function apiRequest(path, options = {}, includeToken = true) {
+// Reference lists that rarely change but were re-requested by almost every
+// page (each request costs ~1s on the live server). Plain GETs for these exact
+// paths share one in-memory result for a few minutes. Any non-GET request
+// (a save anywhere in the app, including admin edits) clears the cache.
+const REFERENCE_CACHE_MS = 5 * 60 * 1000
+const REFERENCE_PATHS = new Set(['/cities', '/industries', '/services', '/subservices', '/states', '/support-chat/config'])
+const referenceCache = new Map()
+
+// Give each caller its own copy so one page cannot mutate another's list.
+// List responses are arrays that also carry pagination keys and a `.data`
+// alias pointing back at the array, so copy those properties too.
+function copyResult(value) {
+  const copyItem = item => (item && typeof item === 'object' && !Array.isArray(item) ? { ...item } : item)
+  if (Array.isArray(value)) {
+    const copy = value.map(copyItem)
+    for (const key of Object.keys(value)) {
+      if (/^\d+$/.test(key)) continue
+      copy[key] = key === 'data' && value.data === value ? copy : value[key]
+    }
+    return copy
+  }
+  if (value && typeof value === 'object') return { ...value }
+  return value
+}
+
+export function clearReferenceCache() {
+  referenceCache.clear()
+}
+
+export function apiRequest(path, options = {}, includeToken = true) {
+  const method = String(options?.method || 'GET').toUpperCase()
+  if (method !== 'GET') {
+    referenceCache.clear()
+    return sendRequest(path, options, includeToken)
+  }
+  const cacheable = REFERENCE_PATHS.has(path) && !options?.signal && options?.body == null
+  if (!cacheable) return sendRequest(path, options, includeToken)
+  const now = Date.now()
+  const cached = referenceCache.get(path)
+  if (cached && cached.expiresAt > now) return cached.promise.then(value => copyResult(value))
+  const promise = sendRequest(path, options, includeToken).then(value => {
+    // Never keep a placeholder answer served while the backend is starting.
+    if (value?.degraded) referenceCache.delete(path)
+    return value
+  })
+  referenceCache.set(path, { promise, expiresAt: now + REFERENCE_CACHE_MS })
+  promise.catch(() => referenceCache.delete(path))
+  return promise.then(value => copyResult(value))
+}
+
+async function sendRequest(path, options = {}, includeToken = true) {
   const requestOptions = options
   const headers = { ...(requestOptions.headers || {}) }
   const hasBody = requestOptions.body !== undefined && requestOptions.body !== null

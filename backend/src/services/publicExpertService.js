@@ -190,17 +190,19 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
   }
 
   const whereClause='WHERE '+conditions.join(' AND ');
-  const count=(await pool.query(
+
+  const queryParams=[...params,currentPageSize,offset];
+  // Count and page rows are independent: run both queries at once.
+  const [countResult,result]=await Promise.all([
+    pool.query(
     `SELECT COUNT(*)::int AS total
      FROM users u
      JOIN business_profiles bp ON bp.user_id=u.id
      LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id
      ${whereClause}`,
     params
-  )).rows[0]?.total||0;
-
-  const queryParams=[...params,currentPageSize,offset];
-  const result=await pool.query(
+    ),
+    pool.query(
     `SELECT
        u.id AS user_id,
        bp.id AS business_profile_id,
@@ -250,7 +252,9 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
               u.created_at DESC,u.id DESC
      LIMIT $${queryParams.length-1} OFFSET $${queryParams.length}`,
     queryParams
-  );
+    ),
+  ]);
+  const count=countResult.rows[0]?.total||0;
 
   const publicRows=result.rows.map(row=>({
     ...row,
@@ -288,7 +292,10 @@ async function listRecentProjectVideos({page=1,pageSize=12}={}){
   const conditions=["bpp.is_published=TRUE","bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)","COALESCE(bpp.video_url,'')<>''",publicRedactedVideoReadySql('bpp')];
   addProjectEligibilityConditions(settings,params,conditions,{videosOnly:true});
   const where='WHERE '+conditions.join(' AND ');
-  const total=Number((await pool.query(
+  const queryParams=[...params];
+  // Count and page rows are independent: run both queries at once.
+  const [countResult,result]=await Promise.all([
+    pool.query(
     `SELECT COUNT(*)::int AS total
      FROM business_profile_projects bpp
      JOIN business_profiles bp ON bp.id=bpp.business_profile_id
@@ -296,9 +303,8 @@ async function listRecentProjectVideos({page=1,pageSize=12}={}){
      LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id
      ${where}`,
     params
-  )).rows[0]?.total||0);
-  const queryParams=[...params];
-  const result=await pool.query(
+    ),
+    pool.query(
     `SELECT
        bpp.id AS project_id,
        bpp.title,
@@ -328,7 +334,9 @@ async function listRecentProjectVideos({page=1,pageSize=12}={}){
      ORDER BY COALESCE(beds.is_official,FALSE) DESC,COALESCE(bpp.video_published_at,bpp.created_at) DESC,bpp.id DESC
      LIMIT ${currentPageSize} OFFSET ${offset}`,
     queryParams
-  );
+    ),
+  ]);
+  const total=Number(countResult.rows[0]?.total||0);
   const data=await materializeProjectMedia(result.rows);
   return {
     data,
@@ -352,7 +360,9 @@ async function listRecentProjects({page=1,pageSize=18,materializeMedia=true}={})
   const conditions=["bpp.is_published=TRUE","bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)"];
   addProjectEligibilityConditions(settings,params,conditions);
   const where='WHERE '+conditions.join(' AND ');
-  const total=Number((await pool.query(
+  // Count and page rows are independent: run both queries at once.
+  const [countResult,result]=await Promise.all([
+    pool.query(
     `SELECT COUNT(*)::int AS total
      FROM business_profile_projects bpp
      JOIN business_profiles bp ON bp.id=bpp.business_profile_id
@@ -360,8 +370,8 @@ async function listRecentProjects({page=1,pageSize=18,materializeMedia=true}={})
      LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id
      ${where}`,
     params
-  )).rows[0]?.total||0);
-  const result=await pool.query(
+    ),
+    pool.query(
     `SELECT
        bpp.id AS project_id,
        bpp.title,
@@ -398,7 +408,9 @@ async function listRecentProjects({page=1,pageSize=18,materializeMedia=true}={})
      ORDER BY COALESCE(beds.is_official,FALSE) DESC,COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) DESC,bpp.id DESC
      LIMIT ${currentPageSize} OFFSET ${offset}`,
     params
-  );
+    ),
+  ]);
+  const total=Number(countResult.rows[0]?.total||0);
   const data=materializeMedia?await materializeProjectMedia(result.rows):result.rows;
   return {
     data,

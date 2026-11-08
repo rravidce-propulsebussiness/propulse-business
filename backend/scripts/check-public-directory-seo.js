@@ -38,7 +38,7 @@ assert(!injected.includes('<img src=x onerror=alert(1)>'));
 assert(injected.includes('&lt;img src=x onerror=alert(1)&gt;'));
 
 const read=file=>fs.readFileSync(path.resolve(__dirname,'../..',file),'utf8');
-const seo=read('frontend/src/components/SeoManager.jsx');
+const seo=read('frontend/src/components/SeoManager.jsx')+String.fromCharCode(10)+read('frontend/src/components/seoApply.js');
 const routes=read('backend/src/routes/seoRoutes.js');
 const hostinger=read('hostinger-server.js');
 const nginx=read('frontend/deploy/nginx.conf');

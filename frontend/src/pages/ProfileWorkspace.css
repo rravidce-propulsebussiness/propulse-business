@@ -9,6 +9,8 @@
   --pa-peach:#fff0e4;
   isolation:isolate;
   position:relative;
+  /* Padding must sit inside the 100% width, or the page is 2x padding wider than the screen. */
+  box-sizing:border-box;
   width:min(100%,930px);
   max-width:930px;
   min-width:0;

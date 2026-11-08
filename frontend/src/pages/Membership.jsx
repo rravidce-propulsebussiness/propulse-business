@@ -96,6 +96,7 @@ const scaleBenefits = ['Everything in GROW', 'Website development', 'SEO service
 
 export default function Membership() {
   const user = getUser()
+  const userId = user?.id ?? null
   const token = getToken()
   const [plans, setPlans] = useState([])
   const [currentMembership, setCurrentMembership] = useState(null)
@@ -137,7 +138,11 @@ export default function Membership() {
         setInvestmentAccess(access || null)
         setPaymentOptions(options || {})
         setPaymentMode(options?.onlineEnabled&&options?.onlineDisplayMode==='live'?'online':options?.offlineEnabled!==false?'offline':'')
-        if (user && access && typeof access.isPro === 'boolean') saveSession({ user: { ...user, is_pro_member: access.isPro } })
+        // Read the latest user here instead of depending on the `user` object:
+        // saveSession() creates a new object, which used to re-run this effect
+        // in an endless loop of membership/plan/payment requests.
+        const latestUser = getUser()
+        if (latestUser && access && typeof access.isPro === 'boolean' && latestUser.is_pro_member !== access.isPro) saveSession({ user: { ...latestUser, is_pro_member: access.isPro } })
       } catch (err) {
         if (active) setError(err?.message || 'Unable to load membership options.')
       } finally {
@@ -146,7 +151,7 @@ export default function Membership() {
     }
     load()
     return () => { active = false }
-  }, [token, user])
+  }, [token, userId])
 
   const growPlans = useMemo(() => plans.filter((item) => planType(item) === 'pro' && String(item?.plan_group || '').toLowerCase() === 'grow').sort((a, b) => Number(a?.billing_months || 0) - Number(b?.billing_months || 0) || Number(a?.price || 0) - Number(b?.price || 0)), [plans])
   const scalePlans = useMemo(() => plans.filter((item) => planType(item) === 'pro' && String(item?.plan_group || '').toLowerCase() === 'scale').sort((a, b) => Number(a?.billing_months || 0) - Number(b?.billing_months || 0) || Number(a?.price || 0) - Number(b?.price || 0)), [plans])

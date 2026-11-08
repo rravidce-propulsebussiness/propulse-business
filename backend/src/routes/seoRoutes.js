@@ -12,6 +12,18 @@ const s3Storage=require('../services/s3PrivateObjectStorageService');
 const router=express.Router();
 const publicExpertService=require('../services/publicExpertService');
 
+// The SPA index.html template only changes on deploy. Keep it in memory and
+// re-read only when the file's modification time changes.
+const templateCache=new Map();
+function readTemplate(file){
+  const mtimeMs=fs.statSync(file).mtimeMs;
+  const cached=templateCache.get(file);
+  if(cached&&cached.mtimeMs===mtimeMs)return cached.html;
+  const html=fs.readFileSync(file,'utf8');
+  templateCache.set(file,{mtimeMs,html});
+  return html;
+}
+
 const HYDERABAD_CONSTRUCTION_LOCALITIES=[
   'uppal','habsiguda','tarnaka','nagole','kothapet','lb-nagar','saroornagar','vanasthalipuram','hayathnagar','dilsukhnagar',
   'gachibowli','financial-district','nanakramguda','kondapur','madhapur','hitec-city','manikonda','kokapet','narsingi','tellapur','nallagandla',
@@ -115,6 +127,40 @@ function safeOrigin(req){
   return 'http://localhost:5173';
 }
 
+// Every public page the frontend build prerendered (frontend/dist or the
+// bundled backend/hostinger-frontend copy). Read once per process so the
+// sitemap can never fall out of sync with the hand-written PUBLIC_PATHS list.
+// Skips the SPA shell, verification files, asset folders and anything noindex.
+let prebuiltPathsCache=null;
+function prebuiltPublicPaths(){
+  if(prebuiltPathsCache)return prebuiltPathsCache;
+  const root=[
+    path.resolve(__dirname,'../../hostinger-frontend'),
+    path.resolve(__dirname,'../../../frontend/dist'),
+  ].find(dir=>fs.existsSync(path.join(dir,'index.html')));
+  const found=[];
+  const walk=dir=>{
+    for(const entry of fs.readdirSync(dir,{withFileTypes:true})){
+      const full=path.join(dir,entry.name);
+      if(entry.isDirectory()){
+        if(['assets','brand','homepage','media','materials'].includes(entry.name)&&dir===root)continue;
+        walk(full);
+        continue;
+      }
+      if(!entry.name.endsWith('.html'))continue;
+      const rel='/'+path.relative(root,full).split(path.sep).join('/').replace(/\.html$/,'');
+      if(rel==='/index'||/^\/google[0-9a-f]+$/i.test(rel)||rel==='/404')continue;
+      if(!/^\/[a-z0-9/-]+$/.test(rel))continue;
+      const head=fs.readFileSync(full,'utf8').slice(0,6000);
+      if(/<meta\s+name=["']robots["']\s+content=["'][^"']*noindex/i.test(head))continue;
+      found.push(rel);
+    }
+  };
+  try{if(root)walk(root);}catch(error){console.error('Prebuilt sitemap scan failed:',error?.message||error);}
+  prebuiltPathsCache=found.sort();
+  return prebuiltPathsCache;
+}
+
 function xmlEscape(value){
   return String(value)
     .replaceAll('&','&amp;')
@@ -186,9 +232,11 @@ router.get('/sitemap.xml',async(req,res)=>{
   let officialProfiles=[];
   let independentProfiles=[];
   try{
-    projects=await publicExpertService.listIndexableProjectPaths();
-    officialProfiles=await publicExpertService.listIndexableOfficialProfiles();
-    independentProfiles=await publicExpertService.listIndexableIndependentProfiles();
+    [projects,officialProfiles,independentProfiles]=await Promise.all([
+      publicExpertService.listIndexableProjectPaths(),
+      publicExpertService.listIndexableOfficialProfiles(),
+      publicExpertService.listIndexableIndependentProfiles(),
+    ]);
   }catch(error){
     // A temporary database outage must not make the static site sitemap fail.
     console.error('Public project sitemap lookup failed:',error?.message||error);
@@ -197,7 +245,7 @@ router.get('/sitemap.xml',async(req,res)=>{
   const body=[
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...PUBLIC_PATHS.map(path=>'  <url><loc>'+xmlEscape(origin+(path==='/'?'/':path))+'</loc></url>'),
+    ...[...new Set([...PUBLIC_PATHS,...prebuiltPublicPaths()])].map(path=>'  <url><loc>'+xmlEscape(origin+(path==='/'?'/':path))+'</loc></url>'),
     ...officialProfiles.map(profile=>'  <url><loc>'+xmlEscape(origin+profile.path)+'</loc>'+ (profile.lastmod?'<lastmod>'+xmlEscape(profile.lastmod)+'</lastmod>':'')+'</url>'),
     ...independentProfiles.map(profile=>'  <url><loc>'+xmlEscape(origin+profile.path)+'</loc>'+ (profile.lastmod?'<lastmod>'+xmlEscape(profile.lastmod)+'</lastmod>':'')+'</url>'),
     ...projects.map(project=>'  <url><loc>'+xmlEscape(origin+project.path)+'</loc>'+
@@ -360,7 +408,7 @@ router.get('/projects',async(req,res)=>{
       path.resolve(__dirname,'../../../frontend/dist/index.html'),
     ].find(file=>fs.existsSync(file));
     if(!builtIndex)throw new Error('Published project gallery HTML template missing');
-    const html=renderProjectListingHtml(fs.readFileSync(builtIndex,'utf8'),items.data);
+    const html=renderProjectListingHtml(readTemplate(builtIndex),items.data);
     res.setHeader('Cache-Control','no-cache,must-revalidate');
     return res.status(200).type('html').send(html);
   }catch(error){
@@ -402,7 +450,7 @@ router.get('/projects/:projectKey',async(req,res)=>{
       res.setHeader('X-Robots-Tag','noindex');
       return res.status(503).type('text/plain').send('Project page is temporarily unavailable');
     }
-    const {html,path:canonicalPath}=renderProjectHtml(fs.readFileSync(builtIndex,'utf8'),project);
+    const {html,path:canonicalPath}=renderProjectHtml(readTemplate(builtIndex),project);
     if(req.path!==canonicalPath)return res.redirect(301,canonicalPath);
     res.setHeader('Cache-Control','no-cache, must-revalidate');
     return res.status(200).type('html').send(html);
@@ -428,7 +476,7 @@ router.get('/experts',async(req,res)=>{
       path.resolve(__dirname,'../../../frontend/dist/index.html'),
     ].find(file=>fs.existsSync(file));
     if(!builtIndex)throw new Error('Public professional directory HTML template missing');
-    const html=renderProfessionalDirectoryHtml(fs.readFileSync(builtIndex,'utf8'),profiles.data);
+    const html=renderProfessionalDirectoryHtml(readTemplate(builtIndex),profiles.data);
     res.setHeader('Cache-Control','no-cache,must-revalidate');
     return res.status(200).type('html').send(html);
   }catch(error){
@@ -464,7 +512,7 @@ router.get('/experts/:expertId',async(req,res)=>{
       res.setHeader('X-Robots-Tag','noindex');
       return res.status(503).type('text/plain').send('Professional profile temporarily unavailable');
     }
-    const {html}=renderPublicExpertHtml(fs.readFileSync(builtIndex,'utf8'),profile);
+    const {html}=renderPublicExpertHtml(readTemplate(builtIndex),profile);
     res.setHeader('Cache-Control','no-cache,must-revalidate');
     return res.status(200).type('html').send(html);
   }catch(error){
