@@ -18,10 +18,9 @@ export default function MetaLeadsPanel({partner=false}){
   const [saving,setSaving]=useState(false);
   const [error,setError]=useState('');
   const [message,setMessage]=useState('');
-  const load=useCallback(async()=>{
+  const load=useCallback(async({silent=false}={})=>{
     try{
-      setLoading(true);
-      setError('');
+      if(!silent){setLoading(true);setError('');}
       const [pages,rows]=await Promise.all([
         authRequest('/meta-leads/connections'),
         authRequest('/meta-leads/leads?'+new URLSearchParams({status,page:String(page)}))
@@ -29,10 +28,10 @@ export default function MetaLeadsPanel({partner=false}){
       setConnections(Array.isArray(pages?.connections)?pages.connections:[]);
       setLeads(Array.isArray(rows?.items)?rows.items:[]);
       setPagination(rows?.pagination||{page,total:0,limit:30});
-    }catch(e){setError(e?.message||'Unable to load Meta leads');}
-    finally{setLoading(false);}
+    }catch(e){if(!silent)setError(e?.message||'Unable to load Meta leads');}
+    finally{if(!silent)setLoading(false);}
   },[page,status]);
-  useEffect(()=>{load();},[load]);
+  useEffect(()=>{load();const timer=window.setInterval(()=>load({silent:true}),30000);return()=>window.clearInterval(timer);},[load]);
   async function connect(e){
     e.preventDefault();
     if(saving)return;
