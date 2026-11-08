@@ -22,6 +22,7 @@ const businessOsLeadIntegrationRoutes=require('./routes/businessOsLeadIntegratio
 const profileRoutes=require('./routes/profileRoutes');
 const adminRoutes=require('./routes/adminRoutes');
 const leadRoutes=require('./routes/leadRoutes');
+const {webhookRouter:metaLeadsWebhookRouter,apiRouter:metaLeadsApiRouter}=require('./routes/metaLeadRoutes');
 const paymentRoutes=require('./routes/paymentRoutes');
 const paymentReceivingDetailsRoutes=require('./routes/paymentReceivingDetailsRoutes');
 const couponRoutes=require('./routes/couponRoutes');
@@ -45,6 +46,7 @@ const observabilityRoutes=require('./routes/observabilityRoutes');
 const adminFaqRoutes=require('./routes/adminFaqRoutes');
 const { startLeadPartnerSheetAutoSync }=require('./services/leadPartnerSheetSyncScheduler');
 const { startAdminGoogleSheetAutoSync }=require('./services/adminGoogleSheetSyncScheduler');
+const { startMetaLeadSync }=require('./services/metaLeadScheduler');
 const { startFinancialReconciliationScheduler }=require('./services/financialReconciliationScheduler');
 const { startNotificationScheduler }=require('./services/notificationScheduler');
 const { startPrivateStorageBackupScheduler }=require('./services/privateStorageBackupScheduler');
@@ -156,6 +158,8 @@ app.use((req,res,next)=>{
 app.get('/favicon.ico',(req,res)=>res.redirect(308,'/favicon.svg'));
 app.use('/',seoRoutes);
 app.use('/api/payment-webhooks/razorpay',express.raw({type:'application/json',limit:'256kb'}),paymentWebhookRoutes);
+// Raw bytes are mandatory for verification of Meta's X-Hub-Signature-256.
+app.use('/api/meta-leads/webhook',express.raw({type:'application/json',limit:'256kb'}),metaLeadsWebhookRouter);
 const largeJsonParser=express.json({limit:LARGE_JSON_BYTES});
 const largeJsonFor=method=>(req,res,next)=>req.method===method?largeJsonParser(req,res,next):next();
 app.use('/api/auth/company-proofs',largeJsonFor('POST'));
@@ -312,7 +316,7 @@ async function readiness(req,res){
 }
 app.get('/health/ready',readiness);
 app.get('/health',readiness);
-app.use('/api/observability',observabilityRoutes);app.use('/api/direct-project-enquiries',directProjectEnquiryRoutes);app.use('/api/customer-flows',customerFlowRoutes);app.use('/api/auth',authRoutes);app.use('/api/oauth',oauthRoutes);app.use('/api/business-os',businessOsLeadIntegrationRoutes);app.use('/api/notifications',notificationRoutes);app.use('/api/professional-offers',professionalOfferRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/lead-partner',leadPartnerRoutes);app.use('/api/lead-reports',leadReportRoutes);app.use('/api/lead-partner/faqs',faqRoutes);app.use('/api/faqs',publicFaqRoutes);app.use('/api/experts',publicExpertRoutes);app.use('/api/upcoming-features',upcomingFeatureRoutes);app.use('/api/contact',contactRoutes);app.use('/api/homepage-media',homepageMediaRoutes);app.use('/api/admin/faqs',adminFaqRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/investor/payout-account',investorPayoutAccountRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
+app.use('/api/meta-leads',metaLeadsApiRouter);app.use('/api/observability',observabilityRoutes);app.use('/api/direct-project-enquiries',directProjectEnquiryRoutes);app.use('/api/customer-flows',customerFlowRoutes);app.use('/api/auth',authRoutes);app.use('/api/oauth',oauthRoutes);app.use('/api/business-os',businessOsLeadIntegrationRoutes);app.use('/api/notifications',notificationRoutes);app.use('/api/professional-offers',professionalOfferRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/lead-partner',leadPartnerRoutes);app.use('/api/lead-reports',leadReportRoutes);app.use('/api/lead-partner/faqs',faqRoutes);app.use('/api/faqs',publicFaqRoutes);app.use('/api/experts',publicExpertRoutes);app.use('/api/upcoming-features',upcomingFeatureRoutes);app.use('/api/contact',contactRoutes);app.use('/api/homepage-media',homepageMediaRoutes);app.use('/api/admin/faqs',adminFaqRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/investor/payout-account',investorPayoutAccountRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
 function serveExactPrerenderedHtml(root){
   return(req,res,next)=>{
     if(!['GET','HEAD'].includes(req.method))return next();
@@ -378,7 +382,7 @@ if(serveFrontendFromBackend){
 }
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
 app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});if(err.type==='entity.parse.failed')return res.status(400).json({error:'Invalid JSON body'});if(err.type==='entity.too.large')return res.status(413).json({error:'Request body is too large'});res.locals.operationalError=err;console.error(`[${req.requestId||'no-request-id'}] Unhandled server error:`,err.stack||err);return res.status(500).json({error:'Internal server error',requestId:req.requestId||undefined});});
-let server;let stopLeadPartnerSheetAutoSync=()=>{};let stopAdminGoogleSheetAutoSync=()=>{};let stopFinancialReconciliation=async()=>{};let stopNotifications=async()=>{};let stopPrivateStorageBackup=async()=>{};let stopDatabaseBackup=async()=>{};let shuttingDown=false;let startupReady=false;let startupError=null;let startupTimer=null;let backgroundJobsStarted=false;
+let server;let stopLeadPartnerSheetAutoSync=()=>{};let stopAdminGoogleSheetAutoSync=()=>{};let stopMetaLeadSync=()=>{};let stopFinancialReconciliation=async()=>{};let stopNotifications=async()=>{};let stopPrivateStorageBackup=async()=>{};let stopDatabaseBackup=async()=>{};let shuttingDown=false;let startupReady=false;let startupError=null;let startupTimer=null;let backgroundJobsStarted=false;
 async function shutdown(signal,exitCode=0){
   if(shuttingDown)return;
   shuttingDown=true;
@@ -389,6 +393,7 @@ async function shutdown(signal,exitCode=0){
     if(startupTimer){clearTimeout(startupTimer);startupTimer=null;}
     stopLeadPartnerSheetAutoSync();
     stopAdminGoogleSheetAutoSync();
+    stopMetaLeadSync();
     await stopFinancialReconciliation();
     await stopNotifications();
     await stopPrivateStorageBackup();
@@ -427,6 +432,7 @@ function startBackgroundJobsOnce(){
   if(runBackgroundJobsInWeb){
     stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync();
     stopAdminGoogleSheetAutoSync=startAdminGoogleSheetAutoSync();
+    stopMetaLeadSync=startMetaLeadSync({runImmediately:true});
     stopFinancialReconciliation=startFinancialReconciliationScheduler({runImmediately:true});
     stopNotifications=startNotificationScheduler({runImmediately:false});
     stopPrivateStorageBackup=startPrivateStorageBackupScheduler({runImmediately:true});
