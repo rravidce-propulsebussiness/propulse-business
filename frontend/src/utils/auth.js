@@ -1,4 +1,5 @@
 import { API_BASE_URL, apiRequest } from './api'
+import { setSessionHint } from './sessionHint'
 
 let currentUser = null
 let sessionKnown = false
@@ -11,6 +12,7 @@ export const isSessionKnown = () => sessionKnown
 export function saveSession({ user }) {
   currentUser = user || null
   sessionKnown = true
+  setSessionHint(Boolean(currentUser))
   // The authenticated user lives in memory only. The HttpOnly cookie is the
   // durable session and /auth/session repopulates this state after a reload without treating anonymous visitors as an error.
 }
@@ -18,6 +20,7 @@ export function saveSession({ user }) {
 export async function clearSession({ revoke = true } = {}) {
   currentUser = null
   sessionKnown = true
+  setSessionHint(false)
   localStorage.removeItem('propulse_auth_user')
   localStorage.removeItem('propulse_is_pro_member')
   if (revoke) {

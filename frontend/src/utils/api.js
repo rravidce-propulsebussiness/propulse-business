@@ -62,6 +62,7 @@ export async function apiRequest(path, options = {}, includeToken = true) {
 
   if (response.status === 401 && includeToken && path !== '/auth/login') {
     localStorage.removeItem('propulse_auth_user')
+    localStorage.removeItem('propulse_session_hint')
     localStorage.removeItem('propulse_is_pro_member')
     localStorage.removeItem('propulse_session_mode')
     if (window.location.pathname !== '/login') window.location.assign('/login')
@@ -111,6 +112,7 @@ export async function apiRequestBlob(path, options = {}, includeToken = true) {
 
   if (response.status === 401 && includeToken) {
     localStorage.removeItem('propulse_auth_user')
+    localStorage.removeItem('propulse_session_hint')
     localStorage.removeItem('propulse_is_pro_member')
     localStorage.removeItem('propulse_session_mode')
     if (window.location.pathname !== '/login') window.location.assign('/login')

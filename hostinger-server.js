@@ -4,6 +4,7 @@ const path=require('path');
 const {spawn}=require('child_process');
 
 const express=require('express');
+const compression=require('compression');
 const app=express();
 
 const publicPort=Number(process.env.PORT)||3000;
@@ -126,6 +127,9 @@ function proxyToBackend(req,res){
 }
 
 app.disable('x-powered-by');
+// Compress text responses. Proxied backend responses that are already
+// encoded pass through untouched (compression skips non-identity encodings).
+app.use(compression());
 app.use((req,res,next)=>{
   res.setHeader('X-ProPulse-Entry','hostinger-wrapper');
   res.setHeader('X-Content-Type-Options','nosniff');

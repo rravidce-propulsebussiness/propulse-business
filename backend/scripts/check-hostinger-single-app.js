@@ -24,7 +24,7 @@ assert(rootIndex.includes("const frontendDist=path.join(frontendRoot,'dist')"),'
 assert(rootIndex.includes("buildFrontendAsync()"),'Hostinger entry builds the frontend asynchronously after server startup');
 assert(rootIndex.includes("if(prebuiltFrontendReady())return;"),'Hostinger root runtime skips building whenever either prebuilt frontend is present');
 assert(pkg.scripts?.start==='node index.js','Hostinger starts through the default index.js entrypoint');
-for(const dependency of ['express','pg','bcryptjs','cors','dotenv','jsonwebtoken','react','react-dom','react-router-dom','vite','@vitejs/plugin-react']){
+for(const dependency of ['express','compression','pg','bcryptjs','cors','dotenv','jsonwebtoken','react','react-dom','react-router-dom','vite','@vitejs/plugin-react']){
   assert(pkg.dependencies?.[dependency],'Hostinger root package must install '+dependency);
 }
 assert(pkg.overrides?.['proxy-addr']==='2.0.8','Hostinger root must pin the patched proxy-addr release');
@@ -62,7 +62,7 @@ assert(backendBuildScript.includes('fs.cpSync(frontendDist,bundledFrontend,{recu
 assert(backendBuildScript.includes('fs.unlinkSync(frontendNodeModules)'),'Hostinger build safely unlinks the temporary frontend dependency link');
 assert(backendServer.includes("const bundledFrontendDist=path.resolve(__dirname,'../hostinger-frontend')"),'Backend server prefers bundled Hostinger frontend');
 assert(backendIndex.includes("const bundledFrontendIndex=path.join(bundledFrontendDist,'index.html')"),'Backend runtime detects the published frontend bundle');
-for(const dependency of ['express','pg','react','react-dom','react-router-dom','vite','@vitejs/plugin-react']){
+for(const dependency of ['express','compression','pg','react','react-dom','react-router-dom','vite','@vitejs/plugin-react']){
   assert(backendPkg.dependencies?.[dependency],'Backend-root Hostinger package installs '+dependency);
 }
 assert(backendIndex.includes("require('./src/server')"),'Backend-root Hostinger entry launches the real API in-process');

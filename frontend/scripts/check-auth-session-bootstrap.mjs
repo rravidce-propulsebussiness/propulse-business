@@ -20,6 +20,13 @@ assert(!auth.includes('JSON.parse(localStorage.getItem'), 'Browser auth cache mu
 assert(!auth.includes('localStorage.setItem'), 'Authenticated user/profile data must not be persisted in localStorage')
 assert(app.includes('function SessionBootstrap'), 'App must gate routing on session bootstrap')
 assert(app.includes('<SessionBootstrap><BrowserRouter>'), 'BrowserRouter must render only after session verification')
+const sessionHint = read('src/utils/sessionHint.js')
+assert(sessionHint.includes("const SESSION_HINT_VALUE = '1'") && (sessionHint.match(/localStorage\.setItem/g) || []).length === 1 && sessionHint.includes('localStorage.setItem(SESSION_HINT_KEY, SESSION_HINT_VALUE)'), 'The session hint may store only a constant marker, never user data')
+assert(app.includes('function mustWaitForSession(){return hasSessionHint()||SESSION_GATED_PATH.test(window.location.pathname)}'), 'Private routes and returning signed-in browsers must still wait for /auth/session')
+const gatedLine = app.split(/\r?\n/).find(line => line.startsWith('const SESSION_GATED_PATH=')) || ''
+for (const gated of ['admin', 'login', 'profile', 'wallet', 'lead-partner', 'investment', 'purchased-leads', 'professionals', 'whatsapp-automation', 'dashboard']) assert(gatedLine.includes('(' + gated + '|') || gatedLine.includes('|' + gated + '|') || gatedLine.includes('|' + gated + ')'), 'Session-dependent route /' + gated + ' must stay gated')
+assert(app.includes('if(!gated&&user)setGeneration('), 'A signed-in cookie discovered after optimistic render must remount routes with the verified user')
+assert(auth.includes('setSessionHint(Boolean(currentUser))') && auth.includes('setSessionHint(false)'), 'Session hint must follow verified session state')
 assert(app.includes("authRequest('/lead-partner/me')"), 'Lead Partner routes must verify the server-side approval record')
 assert(app.includes('LeadPartnerApprovalPending'), 'Pending Lead Partners must receive an approval-status screen instead of the active workspace')
 assert(signup.includes('maxLength={64}'), 'Signup password controls must enforce the backend character limit')

@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express=require('express');
+const compression=require('compression');
 const crypto=require('crypto');
 const fs=require('fs');
 const path=require('path');
@@ -96,6 +97,9 @@ const publicDynamicFrontendPath=requestPath=>/^\/hyderabad\/[a-z0-9-]+(?:\/(?:co
 const knownSpaFrontendPath=requestPath=>privateFrontendPath(requestPath)||publicSpaFrontendPaths.has(requestPath)||publicDynamicFrontendPath(requestPath);
 if(trustProxy) app.set('trust proxy',trustProxy==='false'?false:trustProxy==='true'?true:Number.isNaN(Number(trustProxy))?trustProxy:Number(trustProxy));
 app.disable('x-powered-by');
+// Gzip/deflate text responses (HTML, JS, CSS, JSON, SVG). Images, video and
+// already-encoded responses are skipped by compression's default filter.
+app.use(compression());
 app.use((req,res,next)=>{
   const incoming=String(req.get('x-request-id')||'').trim();
   req.requestId=/^[A-Za-z0-9._:-]{1,100}$/.test(incoming)?incoming:crypto.randomUUID();
@@ -346,7 +350,17 @@ if(serveFrontendFromBackend){
     ['/industries','/',''],
   ])app.get(from,redirectLegacyFrontend(target,hash));
   app.use(serveExactPrerenderedHtml(frontendDist));
-  app.use(express.static(frontendDist,{index:'index.html',extensions:['html'],fallthrough:true}));
+  app.use(express.static(frontendDist,{
+    index:'index.html',
+    extensions:['html'],
+    fallthrough:true,
+    setHeaders(res,filePath){
+      // Vite emits content-hashed files under assets/: safe to cache for a year.
+      // HTML and unhashed files must revalidate so deploys show up immediately.
+      if(filePath.includes(path.sep+'assets'+path.sep))res.setHeader('Cache-Control','public, max-age=31536000, immutable');
+      else res.setHeader('Cache-Control','no-cache');
+    },
+  }));
   app.use((req,res,next)=>{
     if(backendOnlyPath(req.path))return next();
     if(!['GET','HEAD'].includes(req.method))return next();
