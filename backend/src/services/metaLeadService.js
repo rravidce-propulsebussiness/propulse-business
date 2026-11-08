@@ -52,7 +52,7 @@ async function graph(endpoint, token, options = {}) {
     for (const [key, value] of Object.entries(options.params || {})) url.searchParams.set(key, value);
     const response = await fetch(url, {
       method: options.method || 'GET',
-      headers: {...(token ? {Authorization: 'Bearer ' + token} : {}), ...(options.body ? {'Content-Type': 'application/x-www-form-urlencoded'} : {})},
+      headers: {Authorization: 'Bearer ' + token, ...(options.body ? {'Content-Type': 'application/x-www-form-urlencoded'} : {})},
       body: options.body ? new URLSearchParams(options.body).toString() : undefined,
       signal: controller.signal
     });
@@ -220,4 +220,4 @@ async function processPending(batchSize=5) {
   }
   return {claimed:jobs.length,received,failed};
 }
-module.exports={connect,connections,disconnect,capture,list,retry,processPending,validSignature,validChallenge,extractFields,graph,encrypt,decrypt,checkUser};
+module.exports={connect,connections,disconnect,capture,list,retry,processPending,validSignature,validChallenge,extractFields};
