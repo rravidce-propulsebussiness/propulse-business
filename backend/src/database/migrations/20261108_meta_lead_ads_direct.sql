@@ -48,12 +48,12 @@ ALTER TABLE meta_ads_leads ENABLE ROW LEVEL SECURITY;
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname='anon') THEN
-    REVOKE ALL ON TABLE meta_lead_connections,meta_ads_leads FROM anon;
-    REVOKE ALL ON SEQUENCE meta_lead_connections_id_seq,meta_ads_leads_id_seq FROM anon;
+    EXECUTE 'REVOKE ALL ON TABLE meta_lead_connections,meta_ads_leads FROM anon';
+    EXECUTE 'REVOKE ALL ON SEQUENCE meta_lead_connections_id_seq,meta_ads_leads_id_seq FROM anon';
   END IF;
   IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname='authenticated') THEN
-    REVOKE ALL ON TABLE meta_lead_connections,meta_ads_leads FROM authenticated;
-    REVOKE ALL ON SEQUENCE meta_lead_connections_id_seq,meta_ads_leads_id_seq FROM authenticated;
+    EXECUTE 'REVOKE ALL ON TABLE meta_lead_connections,meta_ads_leads FROM authenticated';
+    EXECUTE 'REVOKE ALL ON SEQUENCE meta_lead_connections_id_seq,meta_ads_leads_id_seq FROM authenticated';
   END IF;
 END
 $$;
