@@ -68,10 +68,12 @@ async function previewPincodeStatus(pincode,cityId){
   if(Number(row.mapped_cities||0)>1&&!cityId)return{warning:`PIN ${pincode} maps to multiple Cities; include City in the sheet to make the import deterministic`};
   return{};
 }
-async function previewGoogleSheet({adminId,url,defaults,columnMappings={},defaultIndustryId=null}){
+// sheetResult/issueToken let other sources (Meta Lead Ads) reuse this exact
+// preview with already-built CSV and without a sheet activation token.
+async function previewGoogleSheet({adminId,url,defaults,columnMappings={},defaultIndustryId=null,sheetResult=null,issueToken=true}){
   const normalized=normalizeDefaults(defaults);
   const defaultIndustry=await resolveDefaultIndustry(defaultIndustryId);
-  const sheet=await fetchGoogleSheetCsv(url);
+  const sheet=sheetResult||await fetchGoogleSheetCsv(url);
   const analysis=sheetPreview.analyzeCsv(sheet.csv||'',{columnMappings,scope:'admin'});
   const parsed=parseRows(analysis.mappedCsv);
   if(!parsed.items.length)throw new Error('Google Sheet contains no data rows');
@@ -137,7 +139,7 @@ async function previewGoogleSheet({adminId,url,defaults,columnMappings={},defaul
     updates,
     mappingWarnings:analysis.mappingWarnings
   };
-  const token=await sheetPreview.createPreview({
+  const token=!issueToken?{}:await sheetPreview.createPreview({
     actorType:'admin',actorUserId:adminId,sourceUrl:url,spreadsheetId:sheet.spreadsheetId,gid:sheet.gid,
     fingerprint:analysis.fingerprint,defaults:{...normalized,defaultIndustryId:defaultIndustry?.id||null},columnMappings:analysis.effectiveMappings,summary
   });

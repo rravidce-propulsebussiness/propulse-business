@@ -1,5 +1,6 @@
 import GoogleSheetAutoSync from './GoogleSheetAutoSync';
 import SheetAutomationControls from './SheetAutomationControls';
+import MetaLeadAdsPanel from '../../components/MetaLeadAdsPanel';
 import './AdminLeadsV9.css';
 
 export default function AdminLeadSheets(){
@@ -17,5 +18,6 @@ export default function AdminLeadSheets(){
     </section>
     <SheetAutomationControls/>
     <GoogleSheetAutoSync/>
+    <MetaLeadAdsPanel scope="admin"/>
   </main>;
 }
