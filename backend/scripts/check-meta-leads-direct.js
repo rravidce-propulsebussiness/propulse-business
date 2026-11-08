@@ -31,7 +31,8 @@ try {
   assert.match(migration,/meta_leadgen_id VARCHAR\(40\) NOT NULL UNIQUE/,'event deduplication must use Meta lead ID');
   assert.doesNotMatch(migration,/google_sheet/i,'Meta storage must be separate from Google Sheets');
   const server=fs.readFileSync(path.resolve(__dirname,'../src/server.js'),'utf8');
-  assert.ok(server.indexOf("app.use('/api/meta-leads/webhook'")<server.indexOf("app.use(express.json({limit:DEFAULT_JSON_BYTES}))"),'signature verification must receive raw webhook bytes');
+  assert.ok(server.includes("app.use('/api/meta-leads/webhook'"),"Meta webhook must be mounted");
+  assert.ok(server.indexOf("app.use('/api/meta-leads/webhook'")<server.indexOf("app.use(express.json({limit:DEFAULT_JSON_BYTES}))"),"signature verification must receive raw webhook bytes");
   const backend=fs.readFileSync(path.resolve(__dirname,'../src/services/metaLeadService.js'),'utf8');
   assert.doesNotMatch(backend,/INSERT INTO admin_google_sheet_connections|INSERT INTO lead_partner_sheet_connections/i);
   console.log('Meta Lead Ads direct integration checks passed.');
