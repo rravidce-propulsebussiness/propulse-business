@@ -40,3 +40,20 @@ CREATE INDEX IF NOT EXISTS idx_meta_ads_leads_queue
   ON meta_ads_leads(next_attempt_at,id) WHERE status IN ('pending','retry');
 CREATE INDEX IF NOT EXISTS idx_meta_ads_leads_connection
   ON meta_ads_leads(connection_id,created_at DESC);
+
+-- These tables contain Page credentials and customer contact details.
+-- Supabase Data API roles must never be able to access them directly.
+ALTER TABLE meta_lead_connections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE meta_ads_leads ENABLE ROW LEVEL SECURITY;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname='anon') THEN
+    REVOKE ALL ON TABLE meta_lead_connections,meta_ads_leads FROM anon;
+    REVOKE ALL ON SEQUENCE meta_lead_connections_id_seq,meta_ads_leads_id_seq FROM anon;
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname='authenticated') THEN
+    REVOKE ALL ON TABLE meta_lead_connections,meta_ads_leads FROM authenticated;
+    REVOKE ALL ON SEQUENCE meta_lead_connections_id_seq,meta_ads_leads_id_seq FROM authenticated;
+  END IF;
+END
+$$;
