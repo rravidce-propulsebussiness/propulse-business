@@ -12,6 +12,7 @@ const EMPTY_CONTACT = {
   email: 'info@propulsetechnologies.online',
   support_email: 'info@propulsetechnologies.online',
   phone: '+91 9000360812',
+  whatsapp: '',
   address: '',
   business_hours: '',
   maps_url: '',
@@ -110,9 +111,11 @@ function PublicContact() {
 
   const email = String(data.email || data.support_email || '').trim()
   const phone = String(data.phone || '').trim()
+  const whatsappDigits = String(data.whatsapp || '').replace(/\D/g, '')
+  const whatsappUrl = /^\d{10,15}$/.test(whatsappDigits) ? 'https://wa.me/' + whatsappDigits : ''
   const mapsUrl = /^https?:\/\//i.test(String(data.maps_url || '')) ? data.maps_url : ''
   const socials = data.social_handles.filter(item => item?.enabled && /^https?:\/\//i.test(String(item?.url || '')))
-  const hasContact = Boolean(email || phone)
+  const hasContact = Boolean(email || phone || whatsappUrl)
   const hasOffice = Boolean(data.address || data.business_hours || mapsUrl)
 
   return <main className="contact-page">
@@ -141,6 +144,8 @@ function PublicContact() {
             href={'tel:' + phone.replace(/[^+\d]/g, '')} action="Call now"/>}
           {email && <ContactCard icon="mail" title="Email us" detail={email}
             href={'mailto:' + email} action="Send an email"/>}
+          {whatsappUrl && <ContactCard icon="chat" title="WhatsApp" detail="Message our team"
+            href={whatsappUrl} action="Start a chat" external/>}
         </section> : !error && <p className="contact-status">
           Direct contact details will be available here soon.
         </p>}
