@@ -1,1 +1,0 @@
-import{r as e}from"./rolldown-runtime-XKyaHtl9.js";import{g as t,u as n}from"./vendor-qzkkfB9L.js";import{a as r,d as i,o as a}from"./index-CgCg2o-I.js";var o=e(t(),1);function s(){let e=n();return(0,o.useCallback)(async(t,n={})=>{if(!a())throw r(),e(`/login`,{replace:!0}),Error(`Your admin session has expired. Please sign in again.`);return i(t,n)},[e])}export{s as t};
