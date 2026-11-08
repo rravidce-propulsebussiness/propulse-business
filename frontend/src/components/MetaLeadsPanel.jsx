@@ -4,14 +4,14 @@ import './MetaLeadsPanel.css';
 
 const statusNames={pending:'Queued',retry:'Retrying',received:'Received',failed:'Needs attention'};
 const dateText=value=>value?new Date(value).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'}):'—';
-const plain=value=>String(value??'').trim();
+const oauthErrors={state_invalid:'The Facebook sign-in expired or could not be verified. Please try again.',cancelled:'Facebook authorization was cancelled.',code_invalid:'Facebook did not return a valid authorization. Try linking again.',token_exchange_failed:'Facebook did not provide a usable access token. Check the app permissions and retry.',meta_rejected:'Facebook Page linking could not be completed. Check your Meta app setup and try again.'};
 
 export default function MetaLeadsPanel({partner=false}){
   const [connections,setConnections]=useState([]);
   const [leads,setLeads]=useState([]);
   const [pagination,setPagination]=useState({page:1,total:0,limit:30});
-  const [pageId,setPageId]=useState('');
-  const [token,setToken]=useState('');
+  const [authorizedPages,setAuthorizedPages]=useState([]);
+  const [linking,setLinking]=useState(false);
   const [status,setStatus]=useState('all');
   const [page,setPage]=useState(1);
   const [loading,setLoading]=useState(true);
@@ -32,19 +32,53 @@ export default function MetaLeadsPanel({partner=false}){
     finally{if(!silent)setLoading(false);}
   },[page,status]);
   useEffect(()=>{load();const timer=window.setInterval(()=>load({silent:true}),30000);return()=>window.clearInterval(timer);},[load]);
-  async function connect(e){
-    e.preventDefault();
+  useEffect(()=>{
+    const result=new URLSearchParams(window.location.search).get('metaConnect');
+    if(!result)return;
+    if(result!=='choose_page'){setError(oauthErrors[result]||'Unable to complete Facebook Page linking.');return;}
+    let alive=true;
+    setLinking(true);
+    authRequest('/meta-leads/oauth/pages',{timeoutMs:45000})
+      .then(data=>{
+        if(!alive)return;
+        const pages=Array.isArray(data?.pages)?data.pages:[];
+        setAuthorizedPages(pages);
+        if(!pages.length)setError('No eligible Facebook Pages were returned. Check that you manage the Page and granted Page permissions in Meta.');
+      })
+      .catch(e=>{if(alive)setError(e?.message||'Unable to retrieve your Facebook Pages.');})
+      .finally(()=>{if(alive)setLinking(false);});
+    return()=>{alive=false;};
+  },[]);
+  async function startLink(){
+    if(linking||saving)return;
+    setLinking(true);setError('');setMessage('');
+    try{
+      const data=await authRequest('/meta-leads/oauth/start',{method:'POST'});
+      const redirect=new URL(data?.authorizationUrl||'');
+      if(redirect.protocol!=='https:'||redirect.hostname!=='www.facebook.com')
+        throw new Error('Facebook returned an invalid authorization link.');
+      window.location.assign(redirect.toString());
+    }catch(e){setError(e?.message||'Facebook Page linking could not start.');setLinking(false);}
+  }
+  async function selectPage(selected){
     if(saving)return;
     setSaving(true);setError('');setMessage('');
     try{
-      await authRequest('/meta-leads/connections',{
-        method:'POST',body:JSON.stringify({pageId:plain(pageId),pageAccessToken:plain(token)})
+      await authRequest('/meta-leads/oauth/complete',{
+        method:'POST',body:JSON.stringify({pageId:selected.pageId}),timeoutMs:45000
       });
-      setPageId('');setToken('');
-      setMessage('Meta Page subscribed. Future Instant Form leads will enter this inbox automatically.');
+      setAuthorizedPages(p=>p.filter(item=>item.pageId!==selected.pageId));
+      setMessage(selected.pageName+' is connected. New Facebook and Instagram Instant Form leads will sync directly to ProPulse.');
+      window.history.replaceState(window.history.state,'',window.location.pathname);
       await load();
-    }catch(e){setError(e?.message||'Could not connect Meta Page');}
+    }catch(e){setError(e?.message||'Could not connect this Facebook Page.');}
     finally{setSaving(false);}
+  }
+  async function cancelLink(){
+    setError('');setMessage('');
+    try{await authRequest('/meta-leads/oauth/cancel',{method:'POST'});}catch{}
+    setAuthorizedPages([]);
+    window.history.replaceState(window.history.state,'',window.location.pathname);
   }
   async function disconnect(connection){
     if(!window.confirm('Disconnect '+connection.pageName+'? Already received leads will remain in the inbox.'))return;
@@ -83,12 +117,19 @@ export default function MetaLeadsPanel({partner=false}){
     <div className="meta-leads-layout">
       <section className="meta-leads-card">
         <div className="meta-leads-card-heading"><h2>Connect Meta Page</h2><span>Secure connection</span></div>
-        <p className="meta-leads-muted">Use the Page ID and its authorized Page access token. ProPulse verifies the Page and subscribes it to leadgen webhooks. Tokens are encrypted on the server.</p>
-        <form onSubmit={connect} className="meta-leads-form">
-          <label>Facebook Page ID<input required inputMode="numeric" pattern="[0-9]{5,40}" value={pageId} onChange={e=>setPageId(e.target.value)} placeholder="Page ID"/></label>
-          <label>Page access token<input required type="password" autoComplete="off" value={token} onChange={e=>setToken(e.target.value)} placeholder="Meta Page access token"/></label>
-          <button type="submit" disabled={saving}>{saving?'Connecting…':'Connect Meta Page'}</button>
-        </form>
+        <p className="meta-leads-muted">Link your Facebook account securely, choose the business Page you manage, and ProPulse will subscribe it to Instant Form leads. No Page ID or access token needed.</p>
+        <button type="button" className="meta-leads-facebook-button" onClick={startLink} disabled={linking||saving}>
+          <span className="meta-leads-facebook-mark" aria-hidden="true">f</span>
+          {linking?'Opening Facebook…':'Connect Facebook Page'}
+        </button>
+        <p className="meta-leads-muted meta-leads-help">You'll be redirected to Facebook to approve Page access, then brought back here to choose a Page.</p>
+        {authorizedPages.length>0&&<div className="meta-leads-available">
+          <div className="meta-leads-card-heading"><h3>Select a Facebook Page</h3><button type="button" className="meta-leads-cancel" onClick={cancelLink}>Done</button></div>
+          {authorizedPages.map(item=><div className="meta-leads-available-page" key={item.pageId}>
+            <div><strong>{item.pageName}</strong><small>Facebook Page</small></div>
+            <button type="button" disabled={saving} onClick={()=>selectPage(item)}>{saving?'Connecting…':'Link Page'}</button>
+          </div>)}
+        </div>}
         <div className="meta-leads-pages">
           <h3>Connected Pages</h3>
           {connections.length===0?<p className="meta-leads-muted">No Meta Pages connected yet.</p>:connections.map(c=><div key={c.id} className="meta-leads-page">
