@@ -287,16 +287,6 @@ export default function AdminLeadEntitlements(){
     finally{setSaving('')}
   }
 
-  function openCreateCampaign(){
-    setEditingCampaign(null)
-    setCampaign(defaultCampaign())
-    setSelectedBusinesses([])
-    setBusinessResults([])
-    setBusinessSearch('')
-    setError('')
-    setCampaignEditorOpen(true)
-  }
-
   function openEditCampaign(item){
     const users=Array.isArray(item.selected_users)?item.selected_users:[]
     setEditingCampaign(item)
