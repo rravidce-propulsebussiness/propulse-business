@@ -375,7 +375,7 @@ test('contact page shows direct channels without duplicated marketing panels',as
   await expect(page.getByRole('heading',{name:/Happy to help you/})).toBeVisible()
   await expect(page.locator('.contact-methods a[href="tel:+919876543210"]')).toBeVisible()
   await expect(page.locator('.contact-methods a[href="mailto:hello@example.com"]')).toBeVisible()
-  await expect(page.locator('.contact-methods a[href="https://wa.me/919876543210"]')).toBeVisible()
+  await expect(page.locator('.contact-methods a[href^="https://wa.me/"]')).toHaveCount(0)
   await expect(page.locator('.contact-service-strip,.contact-map,.contact-direct-links')).toHaveCount(0)
   await expect(page.getByRole('heading',{name:/Request construction or interior services/})).toBeVisible()
   await expect(page.getByRole('button',{name:/Send Direct Enquiry/})).toBeVisible()
