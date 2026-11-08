@@ -8,7 +8,8 @@ const crypto = require('crypto');
 const GRAPH_ORIGIN = 'https://graph.facebook.com';
 const DIALOG_ORIGIN = 'https://www.facebook.com';
 const DEFAULT_VERSION = 'v25.0';
-const DEFAULT_SCOPES = ['pages_show_list', 'pages_read_engagement', 'pages_manage_metadata', 'leads_retrieval', 'business_management'];
+// pages_manage_ads is required by Meta to list a Page's lead forms and read their leads.
+const DEFAULT_SCOPES = ['pages_show_list', 'pages_read_engagement', 'pages_manage_metadata', 'pages_manage_ads', 'leads_retrieval', 'business_management'];
 const REQUEST_TIMEOUT_MS = 12000;
 
 function clean(value) { return String(value ?? '').trim(); }

@@ -107,6 +107,7 @@ const service = require(src('services/metaLeadAdsService'));
   assert.strictEqual(dialog.origin, 'https://www.facebook.com');
   assert.strictEqual(dialog.searchParams.get('redirect_uri'), 'https://propulsetechnologies.online/api/meta-leads/oauth/callback');
   assert.ok(dialog.searchParams.get('scope').includes('leads_retrieval'));
+  assert.ok(dialog.searchParams.get('scope').split(',').includes('pages_manage_ads'), 'Login must request pages_manage_ads (needed to list lead forms and read leads)');
   const target = await service.finishOauth({ code: 'AUTHCODE', state: dialog.searchParams.get('state') });
   assert.strictEqual(target, '/lead-partner/inventory?meta=connected');
   assert.strictEqual(db.pages.length, 1);

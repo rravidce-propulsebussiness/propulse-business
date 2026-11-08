@@ -43,7 +43,7 @@ everyone must reconnect Meta.
    (This is separate from the WhatsApp webhook Business OS uses; it does not
    change Business OS.)
 3. **App Review** → request advanced access for `leads_retrieval`,
-   `pages_manage_metadata`, `pages_show_list`, `pages_read_engagement` and
+   `pages_manage_metadata`, `pages_manage_ads`, `pages_show_list`, `pages_read_engagement` and
    `business_management`. Until approved, only people with a role on the
    app (admins/developers/testers) can connect; partners can connect after.
 4. In Meta **Leads Access Manager** (Business Settings → Integrations →
