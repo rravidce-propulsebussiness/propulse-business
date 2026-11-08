@@ -1,0 +1,1 @@
+import{t as e}from"./MetaLeadsPanel-C7sCKiyP.js";import{t}from"./vendor-qzkkfB9L.js";var n=t();function r(){return(0,n.jsx)(e,{})}export{r as default};
