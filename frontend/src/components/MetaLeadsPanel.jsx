@@ -38,7 +38,7 @@ export default function MetaLeadsPanel({partner=false}){
     if(result!=='choose_page'){setError(oauthErrors[result]||'Unable to complete Facebook Page linking.');return;}
     let alive=true;
     setLinking(true);
-    authRequest('/meta-leads/oauth/pages')
+    authRequest('/meta-leads/oauth/pages',{timeoutMs:45000})
       .then(data=>{
         if(!alive)return;
         const pages=Array.isArray(data?.pages)?data.pages:[];
@@ -65,7 +65,7 @@ export default function MetaLeadsPanel({partner=false}){
     setSaving(true);setError('');setMessage('');
     try{
       await authRequest('/meta-leads/oauth/complete',{
-        method:'POST',body:JSON.stringify({pageId:selected.pageId})
+        method:'POST',body:JSON.stringify({pageId:selected.pageId}),timeoutMs:45000
       });
       setAuthorizedPages(p=>p.filter(item=>item.pageId!==selected.pageId));
       setMessage(selected.pageName+' is connected. New Facebook and Instagram Instant Form leads will sync directly to ProPulse.');
