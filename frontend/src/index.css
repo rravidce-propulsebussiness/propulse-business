@@ -32,4 +32,3 @@ p { margin: 0; }
 code,.counter { font-family: var(--mono); color: var(--text-h); }
 code { font-size: 14px; padding: 4px 8px; border-radius: 4px; background: var(--code-bg); }
 /* Locations are maintained manually. */
-.sync-link { display: none !important; }

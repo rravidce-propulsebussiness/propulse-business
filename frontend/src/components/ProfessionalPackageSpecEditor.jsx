@@ -13,7 +13,7 @@ const TREATMENTS = [
 const emptySpec = (title='',description='') => ({
   title,description,brand:'',grade:'',unit:'none',pricingTreatment:'included',allowanceValue:'',
 })
-export default function ProfessionalPackageSpecEditor({industry,sections=[],onChange}){
+export default function ProfessionalPackageSpecEditor({sections=[],onChange}){
   const items=Array.isArray(sections)?sections:[]
   const [expanded,setExpanded]=useState(null)
   const edit=(index,field,value)=>onChange(items.map((item,i)=>i===index?{...item,[field]:value}:item))

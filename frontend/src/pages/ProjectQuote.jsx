@@ -63,7 +63,7 @@ export default function ProjectQuote(){
           if(!matching.length){
             setPricingMessage('No '+categoryLabel(item.category).toLowerCase()+' packages are published yet. You can still submit your requirements and request a custom quotation from this professional.')
           }
-        }catch(error){
+        }catch{
           if(active&&!controller.signal.aborted)setPricingMessage('Unable to load this professional’s packages. Please try again later.')
         }
       }catch(error){
@@ -79,7 +79,6 @@ export default function ProjectQuote(){
   const industry=project?.category
   const flowKey=flowForIndustry[industry]||'build'
   const quoteIndustryLabel=project?categoryLabel(industry):'Project'
-  const picked=packages.find(plan=>plan.title===preferredPackage)
 
   if(project?.official)return <Navigate to="/contact#direct-project" replace/>
 

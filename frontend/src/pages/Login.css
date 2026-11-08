@@ -140,7 +140,6 @@
 .login-premium .google-auth-block {margin:0 0 13px;min-height:45px;display:grid;place-items:center}
 .login-premium .google-button-wrap {width:100%;min-height:44px;display:flex;align-items:center;justify-content:center;overflow:visible;border-radius:10px}
 .login-premium .google-button-wrap > div {display:flex;justify-content:center;align-items:center;max-width:100%;width:100%}
-.login-premium .google-unconfigured {padding:12px;border:1px solid var(--login-line);border-radius:10px;background:#fff9f4;color:#74675f;font-size:12px;text-align:center}
 .login-premium .auth-divider {display:flex;align-items:center;gap:12px;margin:16px 0 18px;color:#a4a3a1}
 .login-premium .auth-divider span{height:1px;flex:1;background:#eee5de}
 .login-premium .auth-divider b{font-size:12px;line-height:1.4;letter-spacing:.025em;font-weight:650;white-space:nowrap;text-transform:none}

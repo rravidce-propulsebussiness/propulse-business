@@ -47,7 +47,7 @@
 .prc-quotes .pqq-panel .panel-title p{font-size:13px;color:#788d9f}
 .prc-quotes .pqq-panel .panel-title button{border:1px solid #d9e4eb;background:#fff;color:#204966;border-radius:9px;padding:10px 13px;font-weight:800;cursor:pointer}
 @media(max-width:1050px){.prc-workspace{grid-template-columns:1fr}.prc-request-list{max-height:390px}.prc-overview{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:650px){.prc-main{padding:25px 14px 55px}.prc-heading{align-items:flex-start;flex-direction:column}.prc-heading h1{font-size:32px}.prc-refresh{width:100%}.prc-overview{gap:9px}.prc-summary-card{padding:16px}.prc-summary-card strong{font-size:29px}.prc-sections button{padding:13px 11px;font-size:12px}.prc-filters{padding-inline:12px}.prc-inbox-head{padding:19px 16px}.prc-search{margin-inline:13px}.prc-request-item{padding:15px 17px}.prc-detail{padding:20px;min-height:0}.prc-detail-top{flex-direction:column}.prc-contact-grid{grid-template-columns:1fr}.prc-quotes .pqq-panel{padding:17px}.prc-quotes .pqq-panel .panel-title{align-items:flex-start;flex-direction:column}}
+@media(max-width:650px){.prc-main{padding:25px 14px 55px}.prc-heading{align-items:flex-start;flex-direction:column}.prc-heading h1{font-size:32px}.prc-overview{gap:9px}.prc-summary-card{padding:16px}.prc-summary-card strong{font-size:29px}.prc-sections button{padding:13px 11px;font-size:12px}.prc-filters{padding-inline:12px}.prc-inbox-head{padding:19px 16px}.prc-search{margin-inline:13px}.prc-request-item{padding:15px 17px}.prc-detail{padding:20px;min-height:0}.prc-detail-top{flex-direction:column}.prc-contact-grid{grid-template-columns:1fr}.prc-quotes .pqq-panel{padding:17px}.prc-quotes .pqq-panel .panel-title{align-items:flex-start;flex-direction:column}}
 @media(prefers-reduced-motion:reduce){.prc-request-item{transition:none}}
 
 
@@ -249,16 +249,6 @@
 .prc-quotes .pqq-panel{border-radius:19px;box-shadow:0 14px 40px rgba(19,52,78,.06)}
 .prc-quotes .pqq-card{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
 .prc-quotes .pqq-card:hover{transform:translateY(-3px);border-color:#d2e0e9;box-shadow:0 20px 40px rgba(19,52,78,.09)}
-.prc-loading-row{display:flex;gap:12px;align-items:center;padding:20px 23px;border-top:1px solid #edf2f5}
-.prc-loading-row i{width:38px;height:38px;border-radius:12px;flex:none}
-.prc-loading-row span{flex:1;display:grid;gap:10px;min-width:0}
-.prc-loading-row b{height:11px;border-radius:8px;width:62%}
-.prc-loading-row b:last-child{width:86%;height:9px}
-.prc-loading-row em{width:54px;height:18px;border-radius:99px}
-.prc-loading-row i,.prc-loading-row b,.prc-loading-row em{
-  display:block;background:linear-gradient(100deg,#edf2f6 20%,#f9fbfd 40%,#edf2f6 60%);
-  background-size:220% 100%;animation:prc-skeleton 1.6s ease-in-out infinite;
-}
 .prc-shell :is(button,a,input):focus-visible{
   outline:3px solid #f29b65;outline-offset:3px;
 }

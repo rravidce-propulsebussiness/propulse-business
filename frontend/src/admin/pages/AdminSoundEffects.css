@@ -11,5 +11,4 @@
 .admin-sound-volume{width:calc(100% - 36px);margin:14px 18px 8px;accent-color:#f05b24}.admin-sound-scale{display:flex;justify-content:space-between;gap:12px;padding:0 18px 16px;color:#8b99a5;font-size:12px}
 .admin-sound-note{padding:16px 18px;border:1px solid #e1e8ed;border-radius:14px;background:#f8fbfd}.admin-sound-note b{color:#173f5e;font-size:12px}.admin-sound-note p{margin:5px 0 0;color:#7c8f9e;font-size:12px;line-height:1.55}
 .admin-sound-alert{padding:11px 13px;border-radius:10px;font-size:12px;font-weight:850}.admin-sound-alert.success{border:1px solid #bfe4d0;background:#f0faf5;color:#1b7650}.admin-sound-alert.error{border:1px solid #efc6be;background:#fff4f1;color:#a84334}
-.admin-sound-loading{padding:26px;border:1px dashed #d9e3ea;border-radius:14px;background:#fff;color:#7d8f9d;text-align:center}
 @media(max-width:720px){.admin-sound-hero,.admin-sound-master,.admin-sound-card-head,.admin-sound-row{align-items:flex-start;flex-direction:column}.admin-sound-hero button{width:100%}.admin-sound-row-actions{width:100%;justify-content:space-between}.admin-sound-scale{font-size:11px}}

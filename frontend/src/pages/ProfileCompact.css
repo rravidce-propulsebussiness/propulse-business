@@ -1,11 +1,4 @@
 /* Shared, compact professional editors. Existing profile and brochure APIs are unchanged. */
-.profile-page .profile-form-wide{display:block}
-.profile-page .profile-form-wide>.profile-main-column{width:100%}
-.profile-page .profile-form-wide>.profile-side-column{display:none}
-.profile-page .profile-form-wide>.profile-main-column>.profile-panel{max-width:none}
-.profile-page .profile-form-wide .profile-save{grid-column:auto}
-.profile-page .profile-tabs{position:relative;gap:7px}
-.profile-page .profile-tabs button.active{box-shadow:inset 0 0 0 1px #e9a17f;background:#fff0e8;color:#d64c1e}
 
 .profile-entry-card,
 .profile-page .profile-showcase-card.profile-entry-card,
@@ -99,11 +92,8 @@
   padding:38px 20px;border:1px dashed #cfdfe7;background:#f9fbfc;border-radius:14px}
 .profile-entry-empty strong{font-size:15px;color:#143f5e}
 .profile-entry-empty p{font-size:13px;color:#788d9e;margin:0;max-width:440px}
-.profile-page .profile-save{margin-top:14px;align-items:center;gap:20px}
-.profile-page .profile-save button{min-width:190px}
 
 .profile-company-brochures{padding:27px;max-width:none}
-.profile-company-brochures-main{padding:0}
 .profile-company-brochures .pw-heading{align-items:center;gap:18px;margin:0 0 22px}
 .profile-company-brochures .pw-heading>div{max-width:700px}
 .profile-company-brochures .pw-heading span{margin:0 0 5px;font-size:11px}
@@ -115,10 +105,6 @@
 .profile-company-brochures .pw-brochure-fields>label{display:grid;gap:8px}
 .profile-company-brochures .pw-brochure-bottom{gap:15px}
 .profile-entry-uploaded{color:#128459;font-size:12px;font-weight:850}
-.profile-company-brochures .pw-profile-save{
-  display:flex;justify-content:space-between;gap:16px;align-items:center;padding-top:10px;
-}
-.profile-company-brochures .pw-profile-save>span{color:#718697;font-size:12px}
 .profile-company-standalone .profile-entry-card{max-width:100%}
 .profile-company-standalone .profile-entry-summary h3{margin:0;color:#123e5b}
 .profile-company-standalone .profile-entry-overview{display:flex;align-items:center;gap:15px;min-width:0;flex:1}
@@ -146,8 +132,6 @@
   .profile-company-brochures{padding:17px}
   .profile-company-brochures .pw-heading{align-items:stretch;flex-direction:column}
   .profile-company-brochures .pw-heading .profile-entry-add{width:100%}
-  .profile-company-brochures .pw-profile-save{align-items:stretch;flex-direction:column}
-  .profile-company-brochures .pw-profile-save button{width:100%}
 }
 
 

@@ -622,14 +622,6 @@
   font-size:13px;
   font-weight:950;
 }
-.receiving-loading-ring{
-  width:25px;
-  height:25px;
-  border:3px solid #dce7f2;
-  border-top-color:#1c5d9f;
-  border-radius:50%;
-  animation:receivingSpin .8s linear infinite;
-}
 @keyframes receivingSpin{to{transform:rotate(360deg)}}
 
 /* Modal */

@@ -159,7 +159,7 @@ groups["Interior planning & room-by-room design"]=[
 ["Which interior materials are easiest to maintain with pets?","Choose cleanable, scratch-tolerant surfaces and washable fabrics based on the pet, product care instructions and room use."],
 ["How do I reduce noise between bedrooms and living areas?","Use layout zoning, solid door seals, suitable wall/ceiling assemblies, soft furnishings and properly specified acoustic products."],
 ["Is a smart home system worth installing during interior work?","Plan requirements, wiring, network coverage, device compatibility, manual controls, privacy, power backup and future service access before closing walls."]
-],
+];
 groups["Interior styles & design aesthetics"] = [
 ["What are the most popular interior design styles for Indian homes?","Compare contemporary, modern, minimalist, Scandinavian, Japandi, industrial, traditional, transitional and eclectic styles by shapes, materials, colour and upkeep."],
 ["What is the difference between modern and contemporary interior design?","Explain the distinction between a defined modernist design movement and an evolving contemporary approach, with practical examples."],
@@ -169,7 +169,7 @@ groups["Interior styles & design aesthetics"] = [
 ["How do I choose an interior design style for my home?","Use lifestyle, architecture, existing furniture, maintenance, natural light and a reference board to select a consistent style before buying finishes."],
 ["Can I mix two interior design styles in one home?","Show how to combine styles through a shared colour palette, repeated materials, consistent proportions and controlled statement pieces."],
 ["What is a transitional interior design style?","Describe how classic shapes and modern simplicity can be balanced through furniture profiles, neutral colours, texture and lighting."]
-],
+];
 groups["Interior colour selection & combinations"] = [
 ["How do I choose the right colour palette for my home interiors?","Use a repeatable process: collect fixed finishes, assess daylight, choose a base neutral, select supporting colours and test large samples in the actual rooms."],
 ["What are the best colour combinations for a premium-looking living room?","Compare warm neutral, greige and wood, ivory and muted green, taupe and charcoal, and other balanced palettes with guidance on where to use accents."],
@@ -180,13 +180,13 @@ groups["Interior colour selection & combinations"] = [
 ["Which colours go well with wooden furniture and flooring?","Match wood undertones and grain with warm whites, earthy greens, muted blues, greige or charcoal, while testing the actual wood sample."],
 ["How do I coordinate wall paint, curtains and sofa colours?","Build the palette around the largest fixed or costly item, repeat one or two undertones and use fabric samples under the room's lighting."],
 ["What colour combination is suitable for a master bedroom?","Compare restful warm neutrals, muted greens, dusty blues and earthy tones while considering daylight, bedding, wardrobes and personal preference."]
-],
+];
 groups["Room-wise colours, paint & lighting"] = [
 ["Which colours are suitable for a modern modular kitchen?","Compare warm white, greige, muted green, navy, wood and two-tone combinations with practical notes on fingerprints, grease and cleaning."],
 ["How do I choose colours for a north-facing or low-light room?","Explain how limited direct sun changes colour appearance and why warm undertones, sample boards and layered lighting can help."],
 ["How should I test paint colours before painting the whole house?","Recommend large sample patches or movable boards, multiple walls, morning/evening checks and testing beside fixed materials under final lighting."],
 ["What is the difference between matte, satin and gloss paint finishes?","Compare sheen, washability, glare, surface preparation and where each finish may be appropriate; confirm product-specific specifications."]
-],
+];
 groups["Premium materials, finishes & coordination"] = [
 ["Which interior finishes make a home look premium?","Explain how consistent joinery, edge detailing, restrained stone or wood accents, quality hardware, lighting and neat installation create a premium result."],
 ["How do I choose between laminate, acrylic, veneer and PU finishes?","Compare appearance, maintenance, repairability, substrate needs, edge treatment and cost drivers without declaring one finish universally best."],

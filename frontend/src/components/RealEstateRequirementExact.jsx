@@ -5,7 +5,6 @@ import QuoteLocationFields from './QuoteLocationFields'
 import './RealEstateRequirementExact.css'
 
 const HERO = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=2200&q=92'
-const PROMO = 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=90'
 
 const CARD_IMAGES = {
   residential: 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=900&q=88',

@@ -56,7 +56,6 @@ const MAX_REFERENCE_FILES = 8
 const MAX_REFERENCE_FILE_BYTES = 5 * 1024 * 1024
 const REFERENCE_FILE_TYPES = new Set(['image/jpeg','image/png','image/webp','application/pdf'])
 const HERO = 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=2100&q=92'
-const PROMO = 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=90'
 
 function Icon({ name, size = 20 }) {
   const p = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '1.8', strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }
@@ -100,7 +99,7 @@ function Chips({ question, value, onChange }) {
 }
 
 export default function InteriorRequirementExact(props) {
-  const { embedded = false, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion, projectQuote = null, marketplaceConsent=false, setMarketplaceConsent=()=>{}, quoteAreaSqft='', setQuoteAreaSqft=()=>{} } = props
+  const { embedded = false, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, projectQuote = null, marketplaceConsent=false, setMarketplaceConsent=()=>{}, quoteAreaSqft='', setQuoteAreaSqft=()=>{} } = props
   const fileRef = useRef(null)
   const previewUrlsRef = useRef(new Set())
   const [referenceFiles, setReferenceFiles] = useState([])

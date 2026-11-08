@@ -114,13 +114,6 @@ body:has(.profile-accordion-root) {
 .profile-accordion-pills>span {display:inline-flex;align-items:center;padding:9px 13px;color:#9f572f;
   border:1px solid #ffddc7;border-radius:99px;background:#fff1e6;font-size:12px;line-height:1.3}
 .profile-accordion-pills em {font-size:11px;color:#7c8793;font-style:normal}
-.profile-accordion-add {
-  display:inline-flex;align-items:center;justify-content:center;
-  border:1px dashed #ffb788!important;border-radius:99px;
-  padding:9px 13px;color:#ba5c27;background:#fffdfa;font-size:12px;font-weight:740;
-}
-.profile-accordion-add:hover {background:#fff2e7}
-.profile-accordion-subeditor{margin:0 0 17px}
 .profile-accordion-form .profile-panel,
 .profile-accordion-editor .profile-panel {
   margin:0 0 13px;
@@ -134,20 +127,14 @@ body:has(.profile-accordion-root) {
 .profile-accordion-form .panel-title p{font-size:11px;line-height:1.55;color:#7c8592}
 .profile-accordion-form .panel-title>div>span {background:#ffe9dc;color:#f36a1d}
 .profile-accordion-form .panel-title button {background:#fff4ec;border-color:#ffcfac;color:#e6651c;font-size:11px}
-.profile-accordion-form .profile-row {
-  min-width:0;max-width:100%;background:white;border:1px solid #f0e7df;
-}
-.profile-accordion-form .profile-row select,
 .profile-accordion-form .profile-grid input,
 .profile-accordion-form .profile-grid textarea {
   min-width:0;max-width:100%;background:#fff;border-color:#e8e3df;color:#27374b;
 }
-.profile-accordion-form .profile-row select:focus,
 .profile-accordion-form .profile-grid input:focus,
 .profile-accordion-form .profile-grid textarea:focus {border-color:#f6a56c;box-shadow:0 0 0 3px #ffe8d9}
 .profile-accordion-form .profile-showcase-card {border-color:#eae4df;background:#fff}
 .profile-accordion-form .profile-entry-summary h3 {overflow-wrap:anywhere}
-.profile-accordion-form .profile-list {max-width:100%;min-width:0}
 .profile-accordion-packages {min-width:0}
 .profile-accordion-segmented {display:inline-flex;gap:6px;padding:4px;border:1px solid #f1ddd0;border-radius:12px;background:#fff4ed;margin:0 0 15px}
 .profile-accordion-segmented button {
@@ -226,7 +213,6 @@ body:has(.profile-accordion-root) {
 }
 .profile-accordion-savebar .profile-accordion-save:disabled:not(.is-saved){opacity:.55}
 .profile-accordion-root .profile-accordion-card {scroll-margin-top:95px}
-.profile-accordion-root .profile-alert {border-radius:11px;padding:12px 14px}
 @keyframes pa-roof-glow {0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
 @keyframes pa-panel-in {from{opacity:.4;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
 /* White and orange site header only on /profile. Other pages retain their own theme. */
@@ -247,7 +233,7 @@ body:has(.profile-accordion-root) {
 }
 .profile-site-header .user-menu-toggle:hover {background:#ffead8}
 @media(max-width:1050px) {
-  .profile-accordion-root .profile-row,.profile-accordion-root .location-row {
+  .profile-accordion-root .location-row {
     grid-template-columns:1fr 1fr;gap:10px;
   }
   .profile-accordion-root .row-number{display:none}
@@ -284,7 +270,7 @@ body:has(.profile-accordion-root) {
   .profile-accordion-root .profile-overview-fields-editable{grid-template-columns:1fr}
   .profile-accordion-root .profile-overview-fields-editable>.wide,
   .profile-accordion-root .profile-overview-fields-editable>label.wide{grid-column:auto}
-  .profile-accordion-root .profile-row,.profile-accordion-root .location-row{grid-template-columns:1fr}
+  .profile-accordion-root .location-row{grid-template-columns:1fr}
   .profile-accordion-root .panel-title{flex-direction:column;gap:9px}
   .profile-accordion-root .panel-title button{width:100%}
   .profile-accordion-savebar{width:100%;border-radius:20px 20px 0 0;padding:11px 12px max(12px,env(safe-area-inset-bottom));gap:9px}

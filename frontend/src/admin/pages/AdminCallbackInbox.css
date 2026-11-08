@@ -3,8 +3,6 @@
 @media(max-width:770px){.admin-callback-row{grid-template-columns:1fr}.admin-callback-heading{flex-direction:column;align-items:flex-start}}
 
 /* Admin coordination for professional-prepared quote leads */
-.admin-quote-heading{margin-top:21px;padding-top:16px;border-top:1px solid #e4e9ed}
-.admin-quote-heading h3{font-size:20px;color:#143b58;margin:5px 0 6px}
 .admin-quote-row{align-items:flex-start}
 .admin-quote-row .admin-callback-contact{display:grid;gap:7px;min-width:0}
 .admin-quote-row .admin-callback-contact p,.admin-quote-proposal p{margin:0;color:#34576d;font-size:12px;line-height:1.55;overflow-wrap:anywhere}
