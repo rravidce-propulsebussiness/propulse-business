@@ -94,15 +94,17 @@ function toCsv(rows){
   return [keys.map(csvEscape).join(','),...rows.map(r=>keys.map(k=>csvEscape(r[k])).join(','))].join('\n');
 }
 
-async function previewGoogleSheet({userId,url,defaultIndustryId=null,columnMappings={}}){
+// sheetResult/issueToken let other sources (Meta Lead Ads) reuse this exact
+// preview with already-built CSV and without a sheet activation token.
+async function previewGoogleSheet({userId,url,defaultIndustryId=null,columnMappings={},sheetResult=null,issueToken=true}){
   const defaultIndustry=await resolveDefaultIndustry(defaultIndustryId);
-  const result=await fetchGoogleSheetCsv(url);
+  const result=sheetResult||await fetchGoogleSheetCsv(url);
   const analysis=sheetPreview.analyzeCsv(result.csv||'',{columnMappings,scope:'lead_partner'});
   const rows=parseCsv(analysis.mappedCsv);
   const prepared=applyDefaultIndustry(buildCanonicalRows(rows),defaultIndustry);
   const preview=await base.previewCsv({userId,csv:toCsv(prepared)});
   const summary={...preview.summary,mappingWarnings:analysis.mappingWarnings};
-  const token=await sheetPreview.createPreview({
+  const token=!issueToken?{}:await sheetPreview.createPreview({
     actorType:'lead_partner',actorUserId:userId,sourceUrl:url,spreadsheetId:result.spreadsheetId,gid:result.gid,
     fingerprint:analysis.fingerprint,defaults:{defaultIndustryId:defaultIndustry?.id||null},columnMappings:analysis.effectiveMappings,summary
   });

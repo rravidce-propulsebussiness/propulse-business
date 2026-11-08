@@ -41,6 +41,7 @@ const soundSettingsRoutes=require('./routes/soundSettingsRoutes');
 const supportChatRoutes=require('./routes/supportChatRoutes');
 const seoRoutes=require('./routes/seoRoutes');
 const paymentWebhookRoutes=require('./routes/paymentWebhookRoutes');
+const metaLeadAdsRoutes=require('./routes/metaLeadAdsRoutes');
 const observabilityRoutes=require('./routes/observabilityRoutes');
 const adminFaqRoutes=require('./routes/adminFaqRoutes');
 const { startLeadPartnerSheetAutoSync }=require('./services/leadPartnerSheetSyncScheduler');
@@ -156,6 +157,8 @@ app.use((req,res,next)=>{
 app.get('/favicon.ico',(req,res)=>res.redirect(308,'/favicon.svg'));
 app.use('/',seoRoutes);
 app.use('/api/payment-webhooks/razorpay',express.raw({type:'application/json',limit:'256kb'}),paymentWebhookRoutes);
+// Meta signs the raw body; mount before JSON parsing, CSRF and rate limits.
+app.use('/api/meta-leads/webhook',express.raw({type:'*/*',limit:'512kb'}),metaLeadAdsRoutes.webhook);
 const largeJsonParser=express.json({limit:LARGE_JSON_BYTES});
 const largeJsonFor=method=>(req,res,next)=>req.method===method?largeJsonParser(req,res,next):next();
 app.use('/api/auth/company-proofs',largeJsonFor('POST'));
@@ -312,7 +315,7 @@ async function readiness(req,res){
 }
 app.get('/health/ready',readiness);
 app.get('/health',readiness);
-app.use('/api/observability',observabilityRoutes);app.use('/api/direct-project-enquiries',directProjectEnquiryRoutes);app.use('/api/customer-flows',customerFlowRoutes);app.use('/api/auth',authRoutes);app.use('/api/oauth',oauthRoutes);app.use('/api/business-os',businessOsLeadIntegrationRoutes);app.use('/api/notifications',notificationRoutes);app.use('/api/professional-offers',professionalOfferRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/lead-partner',leadPartnerRoutes);app.use('/api/lead-reports',leadReportRoutes);app.use('/api/lead-partner/faqs',faqRoutes);app.use('/api/faqs',publicFaqRoutes);app.use('/api/experts',publicExpertRoutes);app.use('/api/upcoming-features',upcomingFeatureRoutes);app.use('/api/contact',contactRoutes);app.use('/api/homepage-media',homepageMediaRoutes);app.use('/api/admin/faqs',adminFaqRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/investor/payout-account',investorPayoutAccountRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
+app.use('/api/observability',observabilityRoutes);app.use('/api/direct-project-enquiries',directProjectEnquiryRoutes);app.use('/api/customer-flows',customerFlowRoutes);app.use('/api/auth',authRoutes);app.use('/api/oauth',oauthRoutes);app.use('/api/business-os',businessOsLeadIntegrationRoutes);app.use('/api/notifications',notificationRoutes);app.use('/api/professional-offers',professionalOfferRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/lead-partner',leadPartnerRoutes);app.use('/api/lead-reports',leadReportRoutes);app.use('/api/meta-leads',metaLeadAdsRoutes.router);app.use('/api/lead-partner/faqs',faqRoutes);app.use('/api/faqs',publicFaqRoutes);app.use('/api/experts',publicExpertRoutes);app.use('/api/upcoming-features',upcomingFeatureRoutes);app.use('/api/contact',contactRoutes);app.use('/api/homepage-media',homepageMediaRoutes);app.use('/api/admin/faqs',adminFaqRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/investor/payout-account',investorPayoutAccountRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
 function serveExactPrerenderedHtml(root){
   return(req,res,next)=>{
     if(!['GET','HEAD'].includes(req.method))return next();

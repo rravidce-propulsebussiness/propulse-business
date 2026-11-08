@@ -7,6 +7,7 @@ import { downloadCsv } from '../utils/csv';
 import './LeadPartnerHome.css';
 import './LeadPartnerInventory.css';
 import SheetImportPreview from '../components/SheetImportPreview';
+import MetaLeadAdsPanel from '../components/MetaLeadAdsPanel';
 
 const statusLabel = value => String(value || '').replace(/_/g, ' ').replace(/\b\w/g, x => x.toUpperCase());
 const formatDate = value => value ? new Date(value).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Never';
@@ -92,8 +93,8 @@ export default function LeadPartnerInventory() {
           </div>
           <div className="lp-workspace-status">
             <span>ACTIVE WORKSPACE</span>
-            <strong>{workspace==='leads'?'My Leads':workspace==='upload'?'Upload Leads':'Google Sheets'}</strong>
-            <small>{workspace==='leads'?'Search, filter and review inventory':workspace==='upload'?'Import CSV lead files safely':'Connect, sync and diagnose live sheets'}</small>
+            <strong>{workspace==='leads'?'My Leads':workspace==='upload'?'Upload Leads':workspace==='meta'?'Meta Lead Ads':'Google Sheets'}</strong>
+            <small>{workspace==='leads'?'Search, filter and review inventory':workspace==='upload'?'Import CSV lead files safely':workspace==='meta'?'Real-time Facebook & Instagram lead forms':'Connect, sync and diagnose live sheets'}</small>
           </div>
         </section>
 
@@ -113,10 +114,17 @@ export default function LeadPartnerInventory() {
             <div><strong>Google Sheets</strong><small>Automatic sync schedule managed by Admin</small></div>
             <b>{activeConnections.length}</b>
           </button>
+          <button type="button" className={workspace==='meta'?'active':''} onClick={()=>setWorkspace('meta')}>
+            <span className="lp-workspace-icon">f</span>
+            <div><strong>Meta Lead Ads</strong><small>Facebook &amp; Instagram leads in real time</small></div>
+            <b>Live</b>
+          </button>
         </nav>
 
         {message&&<div className={`partner-alert ${message.type}`}><strong>{message.type==='success'?'Operation complete':'Needs attention'}</strong><span>{message.text}</span></div>}
         <input ref={fileRef} hidden type="file" accept=".csv,text/csv" onChange={e=>importCsv(e.target.files?.[0])}/>
+
+        {workspace==='meta'&&<MetaLeadAdsPanel scope="partner"/>}
 
         {workspace==='upload'&&<section className="lp-inventory-workspace lp-upload-card">
           <header className="lp-workspace-head">
