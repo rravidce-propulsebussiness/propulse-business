@@ -39,6 +39,7 @@ export default function MetaLeadAdsPanel({ scope = 'partner' }) {
       const reason = params.get('reason')
       queueMicrotask(() => {
         if (!active) return
+        document.querySelector('.mla-panel')?.scrollIntoView({ block: 'start' })
         setMessage(outcome === 'connected'
           ? { type: 'success', text: 'Meta connected. Choose a Page and lead form below.' }
           : { type: 'error', text: reason || (outcome === 'cancelled' ? 'Meta login was cancelled.' : 'Meta connection failed.') })
@@ -61,7 +62,7 @@ export default function MetaLeadAdsPanel({ scope = 'partner' }) {
   }
 
   async function connectMeta() {
-    const result = await run('oauth', () => authRequest(base + '/oauth/start', { method: 'POST', body: {} }))
+    const result = await run('oauth', () => authRequest(base + '/oauth/start', { method: 'POST', body: JSON.stringify({}) }))
     if (result?.url) window.location.assign(result.url)
   }
 
@@ -74,18 +75,18 @@ export default function MetaLeadAdsPanel({ scope = 'partner' }) {
 
   async function analyze(nextMappings = mappings) {
     if (!pageId || !formId) return setMessage({ type: 'error', text: 'Choose a Page and a lead form first.' })
-    const result = await run('preview', () => authRequest(base + '/preview', { method: 'POST', body: { pageId, formId, columnMappings: nextMappings, defaultIndustryId: defaultIndustryId || null } }))
+    const result = await run('preview', () => authRequest(base + '/preview', { method: 'POST', body: JSON.stringify({ pageId, formId, columnMappings: nextMappings, defaultIndustryId: defaultIndustryId || null }) }))
     if (result) { setPreview(result); setMappings(result.columnMappings || {}); setStale(false) }
   }
 
   async function connectForm() {
-    const result = await run('connect', () => authRequest(base + '/connections', { method: 'POST', body: { pageId, formId, columnMappings: mappings, defaultIndustryId: defaultIndustryId || null } }),
+    const result = await run('connect', () => authRequest(base + '/connections', { method: 'POST', body: JSON.stringify({ pageId, formId, columnMappings: mappings, defaultIndustryId: defaultIndustryId || null }) }),
       'Lead form connected. New leads will arrive automatically; leads from the last 30 days are being imported now.')
     if (result) { setPreview(null); setFormId(''); setForms(f => f.map(x => x.formId === result.formId ? { ...x, connectedHere: true } : x)); load() }
   }
 
   async function syncConnection(id) {
-    await run('sync-' + id, () => authRequest(`${base}/connections/${id}/sync`, { method: 'POST', body: { days: 30 } }),
+    await run('sync-' + id, () => authRequest(`${base}/connections/${id}/sync`, { method: 'POST', body: JSON.stringify({ days: 30 }) }),
       r => `Checked ${r.checked} recent leads: ${r.imported} imported, ${r.duplicate} duplicates, ${r.failed} failed, ${r.skipped} already processed.`)
     load()
   }
@@ -98,7 +99,7 @@ export default function MetaLeadAdsPanel({ scope = 'partner' }) {
 
   async function disconnectAccount() {
     if (!window.confirm('Disconnect Meta completely? All connected lead forms stop importing and stored Page access is deleted.')) return
-    await run('account', () => authRequest(base + '/disconnect', { method: 'POST', body: {} }), 'Meta disconnected and Page access removed.')
+    await run('account', () => authRequest(base + '/disconnect', { method: 'POST', body: JSON.stringify({}) }), 'Meta disconnected and Page access removed.')
     setPageId(''); setForms([]); setPreview(null); load()
   }
 
@@ -120,7 +121,7 @@ export default function MetaLeadAdsPanel({ scope = 'partner' }) {
     {status && !status.configured && <div className="mla-setup">
       <strong>Meta Lead Ads is not switched on yet.</strong>
       {scope === 'admin'
-        ? <span>Add these server settings on Hostinger, then reload: {status.missing.join(', ')}. Webhook URL for the Meta app: <code>{status.webhookUrl}</code></span>
+        ? <span>Add these server settings on Hostinger, then reload: {status.missing.join(', ')}. In the Meta app, register the login redirect <code>{status.redirectUri}</code> and the Page webhook <code>{status.webhookUrl}</code> (field: leadgen).</span>
         : <span>ProPulse is finishing the Meta setup. This option will open here once it is ready.</span>}
     </div>}
 

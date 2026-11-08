@@ -14,6 +14,7 @@ const sheetPreview = require('./sheetImportPreviewService');
 const partnerSheets = require('./leadPartnerInventoryCompatService');
 const adminSheets = require('./adminGoogleSheetSyncService');
 const leadPartnerService = require('./leadPartnerService');
+const { resolvePincode } = require('./pincodeService');
 
 const SCOPES = new Set(['admin', 'lead_partner']);
 const STATE_AUDIENCE = 'propulse-meta-leads-oauth';
@@ -76,6 +77,33 @@ function leadsToCsv({ formName = '', questions = [], leads = [] }) {
     });
   });
   return [headers, ...rows].map(row => row.map(csvEscape).join(',')).join('\n');
+}
+
+// Lead partner imports require a 6-digit PIN, but Meta forms often only ask
+// for a locality or city. Infer the PIN the same way the admin import does
+// (only when the place maps to exactly one PIN) before handing rows over.
+const LOCALITY_HEADERS = ['locality', 'area', 'location', 'address', 'street address', 'post office', 'sub city', 'subcity'];
+async function fillMissingPincodes(csv, { columnMappings = {}, scope = 'lead_partner' } = {}) {
+  const matrix = sheetPreview.parseCsvMatrix(csv);
+  if (matrix.length < 2) return csv;
+  const headers = matrix[0];
+  const mappings = sheetPreview.analyzeCsv(csv, { columnMappings, scope }).effectiveMappings || {};
+  const indexOf = header => header ? headers.findIndex(h => h === header) : -1;
+  let pinIndex = indexOf(mappings.pincode);
+  const cityIndex = indexOf(mappings.city);
+  const localityIndexes = headers.map((h, i) => LOCALITY_HEADERS.includes(clean(h).toLowerCase()) ? i : -1).filter(i => i >= 0);
+  if (pinIndex < 0) { headers.push('Pincode'); pinIndex = headers.length - 1; matrix.slice(1).forEach(row => { row[pinIndex] = ''; }); }
+  const cache = new Map();
+  for (const row of matrix.slice(1)) {
+    if (/^\d{6}$/.test(clean(row[pinIndex]).replace(/\D/g, ''))) continue;
+    for (const place of [...localityIndexes.map(i => row[i]), cityIndex >= 0 ? row[cityIndex] : ''].map(clean).filter(Boolean)) {
+      const key = place.toLowerCase();
+      if (!cache.has(key)) cache.set(key, resolvePincode({ location: place }).then(r => r?.pincode || '').catch(() => ''));
+      const pin = await cache.get(key);
+      if (pin) { row[pinIndex] = pin; break; }
+    }
+  }
+  return matrix.map(row => headers.map((_, i) => csvEscape(row[i] ?? '')).join(',')).join('\n');
 }
 
 // ---------- OAuth ----------
@@ -142,6 +170,7 @@ async function getStatus({ userId, scope }) {
     configured: missing.length === 0,
     missing,
     webhookUrl: graph.config().redirectUri.replace('/oauth/callback', '/webhook'),
+    redirectUri: graph.config().redirectUri,
     pages: pages.rows.map(p => ({ pageId: p.page_id, name: p.page_name, authorizedAt: p.authorized_at })),
     connections,
   };
@@ -178,7 +207,8 @@ async function previewForm({ userId, scope, pageId, formId, columnMappings = {},
   const token = graph.decryptToken(page.page_token_encrypted);
   const { form, leads, csv } = await formSnapshot({ token, formId });
   if (!form?.page?.id || clean(form.page.id) !== page.page_id) throw httpError(400, 'This lead form does not belong to the selected Page');
-  const sheetResult = { csv, spreadsheetId: null, gid: null };
+  const prepared = scope === 'lead_partner' && leads.length ? await fillMissingPincodes(csv, { columnMappings, scope }) : csv;
+  const sheetResult = { csv: prepared, spreadsheetId: null, gid: null };
   if (!leads.length) {
     // A new form with no leads yet: still let the owner map its questions.
     const analysis = sheetPreview.analyzeCsv(csv, { columnMappings, scope });
@@ -278,7 +308,8 @@ async function importCsvForConnection(connection, csv) {
     });
     return { created: result.created || 0, duplicate: (result.updated || 0) + (result.unchanged || 0), failed: result.failed || 0, failures: result.failures || [] };
   }
-  const analysis = sheetPreview.analyzeCsv(csv, { columnMappings: mappings, scope: 'lead_partner' });
+  const prepared = await fillMissingPincodes(csv, { columnMappings: mappings, scope: 'lead_partner' });
+  const analysis = sheetPreview.analyzeCsv(prepared, { columnMappings: mappings, scope: 'lead_partner' });
   const result = await partnerSheets.importCsv({ userId: connection.owner_user_id, csv: analysis.mappedCsv, defaultIndustryId: connection.default_industry_id });
   return { created: result.created || 0, duplicate: result.duplicate || 0, failed: result.failed || 0, failures: result.failures || [] };
 }
@@ -381,5 +412,5 @@ async function backfillConnection({ connectionId, userId = null, scope = null, d
 
 module.exports = {
   assertScope, getStatus, startOauth, finishOauth, listForms, previewForm, connectForm, disconnectForm, disconnectAccount,
-  listConnections, backfillConnection, handleWebhook, verifyWebhookSubscription, processLead, leadsToCsv, returnPath,
+  listConnections, backfillConnection, handleWebhook, verifyWebhookSubscription, processLead, leadsToCsv, returnPath, fillMissingPincodes,
 };

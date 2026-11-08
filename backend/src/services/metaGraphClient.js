@@ -20,8 +20,10 @@ function encryptionKey() {
   return key.length === 32 ? key : null;
 }
 
+// Meta requires the OAuth redirect to match the registered URL exactly, so use
+// the canonical site unless META_LEADS_PUBLIC_ORIGIN deliberately overrides it.
 function publicOrigin() {
-  const configured = clean(process.env.META_LEADS_PUBLIC_ORIGIN || process.env.PUBLIC_APP_URL || process.env.FRONTEND_URL);
+  const configured = clean(process.env.META_LEADS_PUBLIC_ORIGIN);
   try {
     const url = new URL(configured);
     if (url.protocol === 'https:' || (url.protocol === 'http:' && process.env.NODE_ENV !== 'production')) return url.origin;

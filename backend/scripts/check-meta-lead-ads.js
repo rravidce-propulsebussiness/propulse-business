@@ -41,6 +41,7 @@ require.cache[require.resolve(src('services/leadPartnerService'))] = { exports: 
 require.cache[require.resolve(src('services/leadPartnerInventoryCompatService'))] = {
   exports: { importCsv: async ({ userId, csv }) => { db.imports.push({ userId, csv }); return { created: 1, duplicate: 0, failed: 0, failures: [] }; }, previewGoogleSheet: async () => ({}) },
 };
+require.cache[require.resolve(src('services/pincodeService'))] = { exports: { resolvePincode: async ({ location }) => ({ kondapur: { pincode: '500084' } })[String(location).toLowerCase()] || null } };
 require.cache[require.resolve(src('services/adminGoogleSheetSyncService'))] = { exports: { syncGoogleSheet: async () => ({ created: 1 }), previewGoogleSheet: async () => ({}) } };
 
 const graphCalls = [];
@@ -83,6 +84,18 @@ const service = require(src('services/metaLeadAdsService'));
     assert.strictEqual(analysis.effectiveMappings[field], header, `Meta field "${header}" must map to ${field}`);
   }
   assert.ok(analysis.mappedCsv.includes('meta-42') && analysis.mappedCsv.includes('Meta Lead Ads'), 'Mapped CSV carries the Meta lead id and source');
+
+  // Partner leads without a PIN get one inferred from an unambiguous locality; ambiguous cities stay blank
+  const noPin = service.leadsToCsv({ formName: 'F', leads: [
+    { id: '1', field_data: [{ name: 'full_name', values: ['A'] }, { name: 'phone_number', values: ['+919000000001'] }, { name: 'locality', values: ['Kondapur'] }, { name: 'city', values: ['Hyderabad'] }] },
+    { id: '2', field_data: [{ name: 'full_name', values: ['B'] }, { name: 'phone_number', values: ['+919000000002'] }, { name: 'city', values: ['Hyderabad'] }] },
+  ] });
+  const filled = sheetPreview.parseCsvMatrix(await service.fillMissingPincodes(noPin, { scope: 'lead_partner' }));
+  const pinCol = filled[0].indexOf('Pincode');
+  assert.ok(pinCol >= 0, 'A Pincode column is added when the form has none');
+  assert.strictEqual(filled[1][pinCol], '500084', 'Unambiguous locality fills the PIN');
+  assert.strictEqual(filled[2][pinCol], '', 'Ambiguous city must not guess a PIN');
+  assert.strictEqual(sheetPreview.analyzeCsv(filled.map(r => r.join(',')).join(String.fromCharCode(10)), { scope: 'lead_partner' }).effectiveMappings.pincode, 'Pincode');
 
   // Webhook subscription handshake
   assert.strictEqual(service.verifyWebhookSubscription({ mode: 'subscribe', token: 'verify-token-0123456789', challenge: '12345' }), '12345');
