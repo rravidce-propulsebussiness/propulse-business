@@ -255,7 +255,8 @@ assert(!home.includes('Explore services across Hyderabad'),'Homepage must not re
 for(const guidePath of ['/guides/best-steel-for-house-construction','/guides/prevent-cracks-in-house','/guides/choose-construction-contractor-hyderabad','/guides/2bhk-interiors-hyderabad','/guides/home-construction-checklist','/guides/waterproofing-precautions-new-house','/guides/best-cement-for-house-construction','/guides/m-sand-vs-river-sand-house-construction','/guides/soil-test-before-house-construction']){
   assert(landing.includes('to="'+guidePath+'"'),'Hyderabad/locality guide link missing '+guidePath);
 }
-assert(publicChrome.includes("{ to: '/faq', label: 'FAQ'"),'Shared public navigation must expose FAQ');
+// FAQ, About and the cost guide moved from the header to the shared footer.
+assert(publicChrome.includes('<Link to="/faq">FAQ</Link>')&&publicChrome.includes('<Link to="/about">About</Link>')&&publicChrome.includes('<Link to="/hyderabad/construction-cost">Construction Cost Guide</Link>'),'Shared public footer must link FAQ, About and the construction cost guide');
 assert(publicChrome.includes("to=\"/faq\""),'Shared public footer must expose FAQ');
 assert(userFaq.includes('<PublicHeader/>')&&userFaq.includes('<PublicFooter/>'),'Public FAQ page must use the shared public site chrome');
 assert(userFaq.includes('audience="homeowner"'),'Public FAQ page must keep the homeowner knowledge audience');

@@ -7,10 +7,8 @@ const NAV_ITEMS = [
   { to: '/', label: 'Home', match: path => path === '/' },
   { to: '/packages', label: 'Packages', match: path => path.startsWith('/packages') },
   { to: '/projects', label: 'Projects', match: path => path.startsWith('/projects') },
-  { to: '/hyderabad/construction-cost', label: 'Cost & Guides', match: path => path.startsWith('/hyderabad/construction-cost') || path.startsWith('/guides') },
-  { to: '/about', label: 'About', match: path => path.startsWith('/about') },
+  // Cost & Guides, About and FAQ live in the footer only.
   { to: '/technology', label: 'Products & Services', match: path => path.startsWith('/technology') },
-  { to: '/faq', label: 'FAQ', match: path => path.startsWith('/faq') },
   { to: '/contact', label: 'Contact', match: path => path.startsWith('/contact') },
 ]
 
@@ -58,9 +56,9 @@ export function PublicHeader() {
       <div className="public-site-header__inner">
         <Link className="public-site-logo" to="/" aria-label="ProPulse home"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
         <nav className="public-site-nav" aria-label="Main navigation">
-          {NAV_ITEMS.slice(0, 4).map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
+          {NAV_ITEMS.slice(0, 3).map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
           <Link className={pathname.startsWith('/experts') ? 'active' : ''} to="/experts" aria-current={pathname.startsWith('/experts') ? 'page' : undefined}>Find Professionals</Link>
-          {NAV_ITEMS.slice(4).map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
+          {NAV_ITEMS.slice(3).map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
         </nav>
         <div className="public-site-actions">
           <Link className="public-site-login" to="/login">Professional Login</Link>
@@ -97,7 +95,7 @@ export function PublicFooter({ phone = '', email = '', address = 'Hyderabad, Ind
   return <footer className="public-site-footer">
     <div className="public-site-footer__inner">
       <div className="public-site-footer-brand"><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>{description}</p></div>
-      <div><b>Homeowners</b><Link to="/">Home</Link><Link to="/packages">Packages</Link><Link to="/projects">Projects</Link><Link to="/experts">Find Professionals</Link></div>
+      <div><b>Homeowners</b><Link to="/">Home</Link><Link to="/experts">Find Professionals</Link></div>
       <div><b>Services</b><Link to="/contact">Direct ProPulse Projects</Link><Link to="/technology">Products &amp; Services</Link><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/hyderabad/construction-cost">Construction Cost Guide</Link></div>
       <div><b>Support</b><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/faq">FAQ</Link><Link to="/blog">Blog</Link><Link to="/contact">Contact</Link></div>
       <div><b>Contact</b><a href={phoneHref}>{displayPhone}</a><a href={'mailto:' + displayEmail}>{displayEmail}</a><span><PinIcon/>{address}</span></div>
