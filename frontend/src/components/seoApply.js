@@ -1,4 +1,5 @@
 import {HOME_SEO,SITE_NAME,isIndexablePath,seoForPath} from '../seo/seoConfig'
+import {businessJsonLd} from '../seo/businessProfile'
 
 const SERVICE_LABELS={
   construction:'Construction',
@@ -153,14 +154,7 @@ function breadcrumbItems(route,origin){
 
 function jsonLdFor(route,origin){
   const home=origin+'/'
-  const organization={
-    '@context':'https://schema.org',
-    '@type':'Organization',
-    name:SITE_NAME,
-    url:home,
-    logo:origin+'/brand/propulse-logo.png',
-    description:HOME_SEO.description,
-  }
+  const organization=businessJsonLd(origin)
   const website={
     '@context':'https://schema.org',
     '@type':'WebSite',
@@ -180,7 +174,7 @@ function jsonLdFor(route,origin){
       serviceType:'Residential house construction',
       description:'Plan residential house and villa construction in Hyderabad with a defined project scope, material preferences and estimate request.',
       areaServed:{'@type':'City',name:'Hyderabad',containedInPlace:{'@type':'State',name:'Telangana'}},
-      provider:{'@type':'Organization',name:SITE_NAME,url:home},
+      provider:{'@id':home+'#organization'},
       url:home,
     },
 

@@ -11,6 +11,8 @@ import {interiorNeeds,interiorChecklist} from '../src/seo/interiorSeo.js'
 import {HYDERABAD_HOMEOWNER_TOPIC_GROUPS} from '../src/seo/hyderabadHomeownerTopics.js'
 import {INTERIOR_HOMEOWNER_TOPIC_GROUPS} from '../src/seo/interiorHomeownerTopics.js'
 import {PUBLISHED_HOMEOWNER_ANSWERS} from '../src/seo/homeownerPublishedAnswers.js'
+import {BUSINESS,businessJsonLd,telephoneHref} from '../src/seo/businessProfile.js'
+import {TERMS_LAST_UPDATED,TERMS_SECTIONS} from '../src/seo/termsContent.js'
 
 const here=path.dirname(fileURLToPath(import.meta.url))
 const dist=path.resolve(here,'../dist')
@@ -309,12 +311,25 @@ function trustGuideContent(route){
   return '<section style="padding:10px 0 42px"><h2>Evidence before promises</h2><p>Ask for documents, real project references, named responsibility and written scope. ProPulse directly undertakes construction and interior execution in Hyderabad and also helps customers discover independent businesses through its marketplace. Check the named contracting entity and responsibilities in the quotation and agreement before paying.</p><h2>'+ (interior?'Six checks before hiring an interior company':'Six checks before hiring a construction company') +'</h2>'+sections.map((item,index)=>'<article style="padding:18px 0;border-bottom:1px solid #e4e9ed"><h3>'+String(index+1)+'. '+escapeHtml(item[0])+'</h3><p style="max-width:900px;line-height:1.65">'+escapeHtml(item[1])+'</p><ul>'+item[2].map(x=>'<li>'+escapeHtml(x)+'</li>').join('')+'</ul></article>').join('')+'<h2>Compare quotations fairly</h2><p>'+(interior?'Share the same room list, measured dimensions, finish schedule, hardware expectations and appliance details.':'Share the same plot, built-up area, floors, drawings, structural scope and material specifications.')+' Compare exclusions and taxes as carefully as the headline price. There is no universal ranking that proves one company is best for every homeowner.</p><h2>Frequently asked questions</h2>'+faqs.map(([q,a])=>'<article style="padding:14px 0;border-bottom:1px solid #e4e9ed"><h3>'+escapeHtml(q)+'</h3><p>'+escapeHtml(a)+'</p></article>').join('')+'<h2>Continue planning in Hyderabad</h2><ul><li><a href="/hyderabad/construction">Construction in Hyderabad</a></li><li><a href="/hyderabad/interior-designers">Interior design in Hyderabad</a></li><li><a href="/construction-blog">Construction blog</a></li><li><a href="/interior-blog">Interior blog</a></li><li><a href="/quote">'+(interior?'Start an interior':'Start a construction')+' requirement</a></li></ul></section>'
 }
 
+function termsContent(route){
+  if(route.type!=='terms')return ''
+  return '<article style="max-width:820px;padding:0 0 42px">'+TERMS_SECTIONS.map(section=>'<section style="padding:14px 0"><h2>'+escapeHtml(section.heading)+'</h2>'+section.paragraphs.map(text=>'<p style="line-height:1.65">'+escapeHtml(text)+'</p>').join('')+'</section>').join('')+'<p>Last updated: '+escapeHtml(TERMS_LAST_UPDATED)+'.</p></article>'
+}
+
+// Crawlable, machine-readable contact and legal links on every prerendered page.
+function staticFooter(){
+  const links=[['About','/about'],['Contact','/contact'],['FAQ','/faq'],['Terms of Use','/terms']].map(item=>'<a href="'+item[1]+'" style="margin-right:14px;color:#173f5e">'+escapeHtml(item[0])+'</a>').join('')
+  return '<footer data-seo-static-footer="true" style="font-family:Arial,sans-serif;max-width:1100px;margin:0 auto;padding:0 32px 32px;color:#173f5e"><nav aria-label="Company">'+links+'</nav>'+
+    '<address style="font-style:normal;margin-top:12px;line-height:1.7"><strong>'+escapeHtml(BUSINESS.legalName)+'</strong><br>'+escapeHtml(BUSINESS.addressDisplay)+'<br>'+
+    'Phone: <a href="'+telephoneHref()+'">'+escapeHtml(BUSINESS.telephoneDisplay)+'</a> · Email: <a href="mailto:'+escapeHtml(BUSINESS.email)+'">'+escapeHtml(BUSINESS.email)+'</a> · '+escapeHtml(BUSINESS.openingHours)+'</address></footer>'
+}
+
 function fallback(route){
   const nav=baseLinks(route).map(item=>'<a href="'+item[1]+'" style="margin-right:14px;color:#173f5e">'+escapeHtml(item[0])+'</a>').join('')
   return '<main data-seo-static-fallback="true" style="font-family:Arial,sans-serif;max-width:1100px;margin:0 auto;padding:32px;color:#173f5e">'+
     '<header style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap"><a href="/" aria-label="'+escapeHtml(SITE_NAME)+' home"><img src="/brand/propulse-logo.svg" alt="'+escapeHtml(SITE_NAME)+'" width="180" height="48"></a><nav aria-label="Primary">'+nav+'</nav></header>'+
     '<section style="padding:72px 0 34px"><p style="font-weight:700;color:#f05b24">PROPULSE BUSINESS</p><h1 style="max-width:850px;font-size:44px;line-height:1.08;margin:12px 0">'+escapeHtml(route.heading)+'</h1><p style="max-width:780px;font-size:18px;line-height:1.6">'+escapeHtml(route.summary)+'</p><p style="max-width:780px;line-height:1.6">'+escapeHtml(route.description)+'</p><p><a href="/quote" style="font-weight:700;color:#d94f22">Start your requirement</a> · <a href="/experts" style="font-weight:700;color:#173f5e">Find professionals</a></p></section>'+
-    businessIdentityContent(route)+trustGuideContent(route)+blogHubContent(route)+homepageSeoContent(route)+cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+guideContent(route)+regionalConstructionContent(route)+interiorLandingContent(route)+homeownerFaqContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
+    businessIdentityContent(route)+trustGuideContent(route)+blogHubContent(route)+homepageSeoContent(route)+cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+guideContent(route)+regionalConstructionContent(route)+interiorLandingContent(route)+homeownerFaqContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+termsContent(route)+'</main>'+staticFooter()
 }
 
 function breadcrumbItems(route){
@@ -355,13 +370,13 @@ function staticJsonLd(route){
   if(['interior-hub','interior-locality','interior-state-hub','interior-district'].includes(route.type))page.about={'@type':'Service',name:'Interior design and execution',areaServed:route.type==='interior-locality'?{'@type':'Place',name:route.localityName+', Hyderabad, Telangana, India'}:route.type==='interior-district'?{'@type':'AdministrativeArea',name:route.districtName+' district, '+route.stateName+', India'}:route.type==='interior-state-hub'?{'@type':'AdministrativeArea',name:route.stateName+', India'}:{'@type':'City',name:'Hyderabad, Telangana, India'}}
   if(route.type==='city-service'||route.type==='local-service')page.about={'@type':'Service',name:route.serviceSlug==='construction'?'Home construction':route.serviceSlug==='interior-designers'?'Interior design':'Real estate services',areaServed:route.type==='local-service'?{'@type':'Place',name:route.localityName+', Hyderabad, Telangana, India'}:{'@type':'City',name:'Hyderabad, Telangana, India'}}
   if(route.type==='state-construction-hub'||route.type==='district-construction')page.about={'@type':'Service',name:'Home construction',areaServed:route.type==='district-construction'?{'@type':'AdministrativeArea',name:route.districtName+' district, '+route.stateName+', India'}:{'@type':'AdministrativeArea',name:route.stateName+', India'}}
-  const organization={'@context':'https://schema.org','@type':'Organization',name:SITE_NAME,url:absolute('/'),logo:absolute('/brand/propulse-logo.png')}
+  const organization=businessJsonLd(origin||'')
   const website={'@context':'https://schema.org','@type':'WebSite',name:SITE_NAME,url:absolute('/'),inLanguage:'en-IN',description:route.path==='/'?route.description:undefined}
   const data=route.path==='/'?[
     organization,
     website,
     page,
-    {'@context':'https://schema.org','@type':'Service',name:'House and villa construction',serviceType:'Residential house construction',description:'Plan residential house and villa construction in Hyderabad with a defined project scope, material preferences and estimate request.',areaServed:{'@type':'City',name:'Hyderabad',containedInPlace:{'@type':'State',name:'Telangana'}},provider:{'@type':'Organization',name:SITE_NAME,url:absolute('/')},url:absolute('/')},
+    {'@context':'https://schema.org','@type':'Service',name:'House and villa construction',serviceType:'Residential house construction',description:'Plan residential house and villa construction in Hyderabad with a defined project scope, material preferences and estimate request.',areaServed:{'@type':'City',name:'Hyderabad',containedInPlace:{'@type':'State',name:'Telangana'}},provider:{'@id':absolute('/')+'#organization'},url:absolute('/')},
 
   ]:[organization,page,{'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:breadcrumbItems(route)}]
   return JSON.stringify(data).replaceAll('</script','<\\/script')

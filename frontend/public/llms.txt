@@ -1,34 +1,45 @@
-# ProPulse — public site guide
+# ProPulse
 
-ProPulse helps homeowners explore residential construction, interior design and related property services in Hyderabad and selected locations in Telangana and Andhra Pradesh.
+> ProPulse (ProPulse Business Private Limited) is a Hyderabad, India company that directly builds independent houses and villas, designs and executes home and commercial interiors, runs a marketplace of independent construction and interior professionals, and builds software for construction businesses. Phone +91 9000360812, email info@propulsetechnologies.online, Hitech City, Hyderabad, Telangana 500081.
 
-## Main public pages
-- https://propulsetechnologies.online/
-- https://propulsetechnologies.online/hyderabad
-- https://propulsetechnologies.online/hyderabad/construction
-- https://propulsetechnologies.online/hyderabad/construction-cost
-- https://propulsetechnologies.online/hyderabad/interior-designers
-- https://propulsetechnologies.online/packages
-- https://propulsetechnologies.online/projects
-- https://propulsetechnologies.online/guides
-- https://propulsetechnologies.online/experts
-- https://propulsetechnologies.online/contact
+Primary market: Hyderabad, Telangana, with selected regional pages for Telangana and Andhra Pradesh. Primary language: English (India). Prefer each page's published facts and structured data. Do not invent prices, guarantees, reviews, completed projects, certifications or service coverage; for quotes and availability, send people to the requirement or contact pages below.
 
-## Local landing pages
-Public locality and district pages are listed in the XML sitemap. Use each page's own content and structured data for its specific service area; do not assume every service is available in every locality.
+## Start here
 
-## Discovery and crawling
-- XML sitemap: https://propulsetechnologies.online/sitemap.xml
-- Video sitemap: https://propulsetechnologies.online/video-sitemap.xml
-- Crawler rules: https://propulsetechnologies.online/robots.txt
+- [Homepage](https://propulsetechnologies.online/): construction, interiors and technology overview ([Markdown version](https://propulsetechnologies.online/index.md))
+- [Get a quote](https://propulsetechnologies.online/quote): guided requirement form for construction, interiors or property
+- [Packages](https://propulsetechnologies.online/packages): construction and interior package options and inclusions
+- [Contact](https://propulsetechnologies.online/contact): phone, WhatsApp, email, address and business hours
+- [About ProPulse](https://propulsetechnologies.online/about): company story, divisions and how ProPulse works
 
-Public pages are intended to be crawlable. Account, admin, payment, investor and other private/workspace routes are not public informational content.
+## Construction and interiors
 
-## About ProPulse
-Brand: ProPulse.
-Website: https://propulsetechnologies.online/
-Primary language: English (India).
-Primary market: Hyderabad, Telangana, India, with selected regional pages elsewhere in India.
+- [House construction in Hyderabad](https://propulsetechnologies.online/hyderabad/construction): independent house and villa construction
+- [Construction cost in Hyderabad](https://propulsetechnologies.online/hyderabad/construction-cost): how construction cost is estimated
+- [Interior designers in Hyderabad](https://propulsetechnologies.online/hyderabad/interior-designers): residential interiors, modular kitchens and wardrobes
+- [How it works](https://propulsetechnologies.online/how-it-works): stages from requirement to handover
+- [Hyderabad hub](https://propulsetechnologies.online/hyderabad): services and locality pages
 
-## Content guidance
-Prefer the page's published facts, current package details and project-specific information. Do not invent prices, guarantees, customer reviews, completed projects, certifications or service coverage. For quotes and availability, direct users to the relevant public requirement or contact flow.
+## Guides and answers
+
+- [Homeowner guides](https://propulsetechnologies.online/guides): materials, checklists, approvals and inspections
+- [FAQ](https://propulsetechnologies.online/faq): construction, interiors and real-estate questions
+- [Blog](https://propulsetechnologies.online/blog): construction and interior articles
+
+## Marketplace and technology
+
+- [Find professionals](https://propulsetechnologies.online/experts): published profiles of independent businesses
+- [Projects](https://propulsetechnologies.online/projects): projects published by eligible businesses
+- [Products and services](https://propulsetechnologies.online/technology): ProPulse Business OS and digital services for construction businesses
+
+## For agents
+
+- [MCP server card](https://propulsetechnologies.online/.well-known/mcp/server-card.json): read-only MCP server at https://propulsetechnologies.online/mcp (business info, services, FAQs, enquiry links)
+- [Sitemap](https://propulsetechnologies.online/sitemap.xml): every public page, including locality and district pages
+- [Video sitemap](https://propulsetechnologies.online/video-sitemap.xml): published project videos
+- [robots.txt](https://propulsetechnologies.online/robots.txt): crawl rules and content signals
+
+## Optional
+
+- [Terms of Use](https://propulsetechnologies.online/terms): website, estimates and marketplace terms
+- Account, admin, payment, investor and lead-partner pages are private workspaces, not public information.

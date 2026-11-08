@@ -1,4 +1,5 @@
 import {INTERIOR_SEO_ROUTES} from './interiorSeo.js'
+import {TERMS_ROUTE} from './termsContent.js'
 import {HYDERABAD_SEO_ROUTES} from './hyderabadSeo.js'
 import {REGIONAL_SEO_ROUTES} from './regionalSeo.js'
 import {CONSTRUCTION_GUIDE_HUB_ROUTE,CONSTRUCTION_GUIDE_ROUTES} from './constructionGuides.js'
@@ -96,6 +97,7 @@ export const CORE_PUBLIC_SEO_ROUTES=[
     heading:'Contact ProPulse',
     summary:'Get in touch with ProPulse for requirement support, platform questions or help with your customer journey.',
   },
+  TERMS_ROUTE,
   {
     path:'/faq',
     title:'Construction, Interior & Real Estate FAQs | ProPulse',

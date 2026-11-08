@@ -5,6 +5,7 @@ const {spawn}=require('child_process');
 
 const express=require('express');
 const compression=require('compression');
+const {homepageAgentDiscovery}=require('./backend/src/agentReadiness');
 const app=express();
 
 const publicPort=Number(process.env.PORT)||3000;
@@ -72,6 +73,8 @@ function backendRoute(requestPath){
     ||requestPath.startsWith('/project-video-stream/')
     ||requestPath.startsWith('/project-cover/')
     ||requestPath==='/robots.txt'
+    ||requestPath==='/mcp'
+    ||requestPath.startsWith('/.well-known/mcp')
     ||requestPath==='/sitemap.xml'
     ||requestPath==='/video-sitemap.xml'
     ||requestPath==='/release.json'
@@ -85,7 +88,7 @@ function backendRoute(requestPath){
 function privateFrontendPath(requestPath){
   return /^\/(admin|login|signup|forgot-password|reset-password|profile|wallet|membership|notifications|purchased-leads|my-leads|investment|lead-partner|requirements|estimate|professional-contact|professionals|upcoming-features|whatsapp-automation|dashboard)(\/|$)/.test(requestPath);
 }
-const publicSpaFrontendPaths=new Set(['/','/quote','/solutions','/experts','/packages','/projects','/technology','/how-it-works','/about','/contact','/faq','/hyderabad','/guides','/interior-estimator','/interior-cost-estimator','/construction-estimator','/construction-cost-estimator']);
+const publicSpaFrontendPaths=new Set(['/','/quote','/solutions','/experts','/packages','/projects','/technology','/how-it-works','/about','/contact','/terms','/faq','/hyderabad','/guides','/interior-estimator','/interior-cost-estimator','/construction-estimator','/construction-cost-estimator']);
 function publicDynamicFrontendPath(requestPath){return /^\/hyderabad\/[a-z0-9-]+(?:\/(?:compare-options|[a-z0-9-]+))?$/.test(requestPath)||/^\/experts\/[0-9]+(?:\/quote)?\/?$/.test(requestPath)||/^\/guides\/[a-z0-9-]+$/.test(requestPath)||/^\/projects\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/quote)?\/?$/.test(requestPath)||/^\/[a-z0-9-]+\/construction(?:\/[a-z0-9-]+)?$/.test(requestPath);}
 function knownSpaFrontendPath(requestPath){return privateFrontendPath(requestPath)||publicSpaFrontendPaths.has(requestPath)||publicDynamicFrontendPath(requestPath);}
 
@@ -233,6 +236,8 @@ app.use((req,res,next)=>{
 // Give it a deterministic public redirect instead of relying on webroot fallback.
 app.get('/favicon.ico',(req,res)=>res.redirect(308,'/favicon.svg'));
 
+// Homepage: Link header for agents, and Markdown when Accept asks for it.
+app.use(homepageAgentDiscovery(frontendDist));
 app.use(serveExactPrerenderedHtml(frontendDist));
 
 app.use(express.static(frontendDist,{

@@ -284,7 +284,7 @@ export default function Home() {
           <div className="ph-pillars">{PILLARS.map((item, index) => <PillarCard key={item.key} item={item} index={index}/>)}</div>
           <div className="ph-market">
             <span className="ph-market-icon"><Icon name="people" size={22}/></span>
-            <div><b>Professional Marketplace</b><p>Compare independent businesses and their published work. Professionals can buy verified project leads.</p></div>
+            <div><b>Professional Marketplace</b><p>Compare independent businesses and their published work. Professionals can buy project leads.</p></div>
             <Link to="/experts">Find Professionals <Icon name="arrow" size={15}/></Link>
             <Link to="/packages" className="ph-market-alt">View all packages <Icon name="arrow" size={15}/></Link>
           </div>

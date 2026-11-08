@@ -43,6 +43,8 @@ const professionalOfferRoutes=require('./routes/professionalOfferRoutes');
 const soundSettingsRoutes=require('./routes/soundSettingsRoutes');
 const supportChatRoutes=require('./routes/supportChatRoutes');
 const seoRoutes=require('./routes/seoRoutes');
+const mcpRoutes=require('./routes/mcpRoutes');
+const {homepageAgentDiscovery}=require('./agentReadiness');
 const paymentWebhookRoutes=require('./routes/paymentWebhookRoutes');
 const observabilityRoutes=require('./routes/observabilityRoutes');
 const adminFaqRoutes=require('./routes/adminFaqRoutes');
@@ -90,9 +92,9 @@ const runBackgroundJobsInWeb=envFlag('RUN_BACKGROUND_JOBS_IN_WEB',true);
 const requireBackgroundWorker=envFlag('REQUIRE_BACKGROUND_WORKER',false);
 const workerHeartbeatMaxAgeSeconds=Math.min(600,Math.max(30,Math.floor(Number(process.env.WORKER_HEARTBEAT_MAX_AGE_SECONDS)||120)));
 const trustProxy=String(process.env.TRUST_PROXY||'').trim();
-const backendOnlyPath=requestPath=>requestPath.startsWith('/project-video-thumbnail/')||requestPath.startsWith('/project-video-stream/')||requestPath.startsWith('/project-cover/')||requestPath==='/robots.txt'||requestPath==='/sitemap.xml'||requestPath==='/video-sitemap.xml'||requestPath==='/release.json'||requestPath==='/health'||requestPath.startsWith('/health/')||requestPath.startsWith('/api')||requestPath.startsWith('/uploads');
+const backendOnlyPath=requestPath=>requestPath.startsWith('/project-video-thumbnail/')||requestPath.startsWith('/project-video-stream/')||requestPath.startsWith('/project-cover/')||requestPath==='/robots.txt'||requestPath==='/mcp'||requestPath.startsWith('/.well-known/mcp')||requestPath==='/sitemap.xml'||requestPath==='/video-sitemap.xml'||requestPath==='/release.json'||requestPath==='/health'||requestPath.startsWith('/health/')||requestPath.startsWith('/api')||requestPath.startsWith('/uploads');
 const privateFrontendPath=requestPath=>/^\/(admin|login|signup|forgot-password|reset-password|profile|wallet|membership|notifications|purchased-leads|my-leads|investment|lead-partner|requirements|estimate|professional-contact|professional-faq|professional-upcoming-features|professional-requests|professionals|upcoming-features|whatsapp-automation|dashboard)(\/|$)/.test(requestPath);
-const publicSpaFrontendPaths=new Set(['/','/quote','/solutions','/experts','/packages','/projects','/how-it-works','/about','/contact','/faq','/blog','/hyderabad','/guides','/interior-estimator','/interior-cost-estimator','/construction-estimator','/construction-cost-estimator']);
+const publicSpaFrontendPaths=new Set(['/','/quote','/solutions','/experts','/packages','/projects','/how-it-works','/about','/contact','/terms','/faq','/blog','/hyderabad','/guides','/interior-estimator','/interior-cost-estimator','/construction-estimator','/construction-cost-estimator']);
 const publicDynamicFrontendPath=requestPath=>/^\/hyderabad\/[a-z0-9-]+(?:\/(?:compare-options|[a-z0-9-]+))?$/.test(requestPath)||/^\/experts\/[0-9]+(?:\/quote)?\/?$/.test(requestPath)||/^\/guides\/[a-z0-9-]+$/.test(requestPath)||/^\/projects\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/quote)?\/?$/.test(requestPath)||/^\/[a-z0-9-]+\/(?:construction|interior-designers)(?:\/[a-z0-9-]+)?$/.test(requestPath);
 const knownSpaFrontendPath=requestPath=>privateFrontendPath(requestPath)||publicSpaFrontendPaths.has(requestPath)||publicDynamicFrontendPath(requestPath);
 if(trustProxy) app.set('trust proxy',trustProxy==='false'?false:trustProxy==='true'?true:Number.isNaN(Number(trustProxy))?trustProxy:Number(trustProxy));
@@ -131,6 +133,9 @@ app.use((req,res,next)=>{
   });
   next();
 });
+// Public read-only MCP server and its server card; mounted before the
+// credentialed CORS policy because any agent may call it cross-origin.
+app.use(mcpRoutes);
 const protectedCors=cors({origin(origin,callback){if(!origin||configuredOrigins.includes(origin))return callback(null,true);return callback(new Error('CORS origin not allowed'));},credentials:true});
 app.use((req,res,next)=>{
   // Hashed JS/CSS are public. Keep strict origin validation for API requests,
@@ -349,6 +354,7 @@ if(serveFrontendFromBackend){
     ['/pricing','/','#pricing'],
     ['/industries','/',''],
   ])app.get(from,redirectLegacyFrontend(target,hash));
+  app.use(homepageAgentDiscovery(frontendDist));
   app.use(serveExactPrerenderedHtml(frontendDist));
   app.use(express.static(frontendDist,{
     index:'index.html',

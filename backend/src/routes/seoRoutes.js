@@ -170,6 +170,10 @@ function xmlEscape(value){
     .replaceAll("'","&apos;");
 }
 
+// Content Signals (https://contentsignals.org): allow search indexing and use as
+// AI answer context, but not model training.
+const CONTENT_SIGNAL='Content-Signal: search=yes, ai-input=yes, ai-train=no';
+
 router.get('/robots.txt',(req,res)=>{
   const origin=safeOrigin(req);
   res.type('text/plain');
@@ -177,6 +181,7 @@ router.get('/robots.txt',(req,res)=>{
   res.send([
     'User-agent: OAI-SearchBot',
     'Allow: /',
+    CONTENT_SIGNAL,
     'Disallow: /admin/',
     'Disallow: /dashboard',
     'Disallow: /professionals',
@@ -192,6 +197,7 @@ router.get('/robots.txt',(req,res)=>{
     '',
     'User-agent: ChatGPT-User',
     'Allow: /',
+    CONTENT_SIGNAL,
     'Disallow: /admin/',
     'Disallow: /dashboard',
     'Disallow: /professionals',
@@ -207,6 +213,7 @@ router.get('/robots.txt',(req,res)=>{
     '',
     'User-agent: *',
     'Allow: /',
+    CONTENT_SIGNAL,
     'Disallow: /admin/',
     'Disallow: /dashboard',
     'Disallow: /professionals',
