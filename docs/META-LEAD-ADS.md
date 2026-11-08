@@ -23,10 +23,12 @@ one account at a time.
 | `META_LEADS_WEBHOOK_VERIFY_TOKEN` | Any random text, 16+ characters |
 | `META_TOKEN_ENCRYPTION_KEY` | 32 random bytes, base64 — `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
 
-Optional: `META_GRAPH_API_VERSION` (default `v23.0`),
+Optional: `META_GRAPH_API_VERSION` (default `v25.0`),
 `META_LEADS_LOGIN_CONFIG_ID` (Facebook Login for Business configuration ID;
 if set it replaces the scope list), `META_LEADS_PUBLIC_ORIGIN` (only if the
 site is not `https://propulsetechnologies.online`).
+
+If the earlier integration's names are already set on Hostinger (`META_LEADS_APP_ID`, `META_LEADS_APP_SECRET`, `META_LEADS_VERIFY_TOKEN`, `META_LEADS_ENCRYPTION_KEY`, `META_LEADS_GRAPH_VERSION`), they are used automatically.
 
 Keep `META_TOKEN_ENCRYPTION_KEY` safe and unchanged — changing it means
 everyone must reconnect Meta.

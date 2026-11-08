@@ -1,6 +1,23 @@
 -- Meta (Facebook/Instagram) Lead Ads as a real-time lead source for admin and
 -- lead partners. Meta pushes a webhook per new lead; no polling job exists.
 
+-- This replaces an earlier direct Meta integration (PRs #507/#508) whose
+-- migration already ran in production and created a different
+-- meta_lead_connections table. Keep its data, but move it out of the way.
+DO $$
+BEGIN
+  IF to_regclass('public.meta_lead_connections') IS NOT NULL
+     AND NOT EXISTS (
+       SELECT 1 FROM information_schema.columns
+        WHERE table_schema='public' AND table_name='meta_lead_connections' AND column_name='meta_page_id'
+     ) THEN
+    ALTER TABLE meta_lead_connections RENAME TO meta_lead_connections_legacy_direct;
+  END IF;
+  IF to_regclass('public.meta_ads_leads') IS NOT NULL THEN
+    ALTER TABLE meta_ads_leads RENAME TO meta_ads_leads_legacy_direct;
+  END IF;
+END $$;
+
 -- Facebook Pages an owner authorised through Facebook Login. Page access
 -- tokens are encrypted at rest (AES-256-GCM, META_TOKEN_ENCRYPTION_KEY).
 CREATE TABLE IF NOT EXISTS meta_lead_pages (

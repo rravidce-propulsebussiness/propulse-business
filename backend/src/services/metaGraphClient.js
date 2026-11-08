@@ -7,14 +7,18 @@ const crypto = require('crypto');
 
 const GRAPH_ORIGIN = 'https://graph.facebook.com';
 const DIALOG_ORIGIN = 'https://www.facebook.com';
-const DEFAULT_VERSION = 'v23.0';
+const DEFAULT_VERSION = 'v25.0';
 const DEFAULT_SCOPES = ['pages_show_list', 'pages_read_engagement', 'pages_manage_metadata', 'leads_retrieval', 'business_management'];
 const REQUEST_TIMEOUT_MS = 12000;
 
 function clean(value) { return String(value ?? '').trim(); }
 
+// Read a setting by its name, falling back to the earlier direct integration's
+// META_LEADS_* names so settings already entered on Hostinger keep working.
+function env(...names) { for (const name of names) { const value = clean(process.env[name]); if (value) return value; } return ''; }
+
 function encryptionKey() {
-  const raw = clean(process.env.META_TOKEN_ENCRYPTION_KEY);
+  const raw = env('META_TOKEN_ENCRYPTION_KEY', 'META_LEADS_ENCRYPTION_KEY');
   if (!raw) return null;
   const key = /^[0-9a-f]{64}$/i.test(raw) ? Buffer.from(raw, 'hex') : Buffer.from(raw, 'base64');
   return key.length === 32 ? key : null;
@@ -32,13 +36,13 @@ function publicOrigin() {
 }
 
 function config() {
-  const version = clean(process.env.META_GRAPH_API_VERSION);
+  const version = env('META_GRAPH_API_VERSION', 'META_LEADS_GRAPH_VERSION');
   const scopes = clean(process.env.META_LEADS_OAUTH_SCOPES);
   return {
-    appId: clean(process.env.META_APP_ID),
-    appSecret: clean(process.env.META_APP_SECRET),
+    appId: env('META_APP_ID', 'META_LEADS_APP_ID'),
+    appSecret: env('META_APP_SECRET', 'META_LEADS_APP_SECRET'),
     version: /^v\d{1,3}\.\d{1,2}$/.test(version) ? version : DEFAULT_VERSION,
-    verifyToken: clean(process.env.META_LEADS_WEBHOOK_VERIFY_TOKEN),
+    verifyToken: env('META_LEADS_WEBHOOK_VERIFY_TOKEN', 'META_LEADS_VERIFY_TOKEN'),
     loginConfigId: clean(process.env.META_LEADS_LOGIN_CONFIG_ID),
     scopes: scopes ? scopes.split(/[\s,]+/).filter(Boolean) : DEFAULT_SCOPES,
     key: encryptionKey(),
