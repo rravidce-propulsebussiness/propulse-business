@@ -592,14 +592,6 @@
   font-size:13px;
   font-weight:950;
 }
-.coupon-loading-ring{
-  width:25px;
-  height:25px;
-  border:3px solid #dce7f2;
-  border-top-color:#1c5d9f;
-  border-radius:50%;
-  animation:couponSpin .8s linear infinite;
-}
 @keyframes couponSpin{to{transform:rotate(360deg)}}
 
 /* Modal */

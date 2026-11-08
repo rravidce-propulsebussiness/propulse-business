@@ -565,6 +565,23 @@ async function getPublicExpert(expertId){
   // Official ProPulse services are independent of marketplace memberships and
   // directory filters; other profiles still obey every directory requirement.
   addProjectEligibilityConditions(settings,params,conditions);
+  // Every detail query is keyed by the profile id, so start them together with
+  // the profile lookup instead of waiting for it (each round trip is ~250ms).
+  // Projects/videos/plans visibility normally comes from directory settings;
+  // only official profiles can widen it, handled in a second pass below.
+  const projectsQuery=flags=>pool.query(`SELECT id,seo_slug,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,${flags.showVideos?publicProjectVideoColumn('business_profile_projects'):'NULL::text AS video_url'},${flags.showVideos?publicProjectVideoStatusColumn('business_profile_projects'):"'disabled'::text AS video_publication_status"},video_published_at,${flags.showPlans?'plan_url':'NULL::text AS plan_url'},brochure_url,sort_order FROM business_profile_projects WHERE business_profile_id=$1 AND is_published=TRUE AND completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE) ORDER BY sort_order,id`,[id]);
+  const plansQuery=()=>pool.query(`SELECT id,title,industry,description,price_from,price_unit,duration_label,inclusions,spec_sections,brochure_url,sort_order FROM business_profile_service_plans WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id`,[id]);
+  const emptyRows=Promise.resolve({rows:[]});
+  const settingsFlags={showProjects:settings.showProjects,showVideos:settings.showVideos,showPlans:settings.showPlans};
+  const servicesPromise=pool.query(`SELECT bps.industry_id AS "industryId",i.name AS "industryName",bps.service_id AS "serviceId",s.name AS "serviceName",bps.subservice_id AS "subserviceId",ss.name AS "subserviceName" FROM business_profile_services bps JOIN industries i ON i.id=bps.industry_id JOIN services s ON s.id=bps.service_id LEFT JOIN subservices ss ON ss.id=bps.subservice_id WHERE bps.business_profile_id=$1 AND bps.is_active=TRUE ORDER BY i.name,s.name,ss.name`,[id]);
+  const locationsPromise=pool.query(`SELECT bpl.state_id AS "stateId",st.name AS "stateName",bpl.city_id AS "cityId",c.name AS "cityName",bpl.subcity_id AS "subcityId",sc.name AS "subcityName" FROM business_profile_locations bpl JOIN states st ON st.id=bpl.state_id JOIN cities c ON c.id=bpl.city_id LEFT JOIN subcities sc ON sc.id=bpl.subcity_id WHERE bpl.business_profile_id=$1 AND bpl.is_active=TRUE ORDER BY st.name,c.name`,[id]);
+  const earlyProjects=settingsFlags.showProjects?projectsQuery(settingsFlags):emptyRows;
+  const earlyPlans=settingsFlags.showPlans?plansQuery():emptyRows;
+  const brochuresPromise=brochureService.listPublic(id);
+  // Attach handlers now so an early failure is never an unhandled rejection
+  // while the profile lookup is still running.
+  const pending=[servicesPromise,locationsPromise,earlyProjects,earlyPlans,brochuresPromise];
+  pending.forEach(promise=>promise.catch(()=>{}));
   const base=(await pool.query(
     `SELECT u.id AS user_id,bp.id AS business_profile_id,bp.business_name,
             bp.public_headline,COALESCE(NULLIF(bp.public_summary,''),'') AS public_summary,bp.years_experience,
@@ -584,15 +601,19 @@ async function getPublicExpert(expertId){
   const showProjects=settings.showProjects||base.is_official;
   const showVideos=settings.showVideos||base.is_official;
   const showPlans=settings.showPlans||base.is_official;
-  const [services,locations,projects,plans]=await Promise.all([
-    pool.query(`SELECT bps.industry_id AS "industryId",i.name AS "industryName",bps.service_id AS "serviceId",s.name AS "serviceName",bps.subservice_id AS "subserviceId",ss.name AS "subserviceName" FROM business_profile_services bps JOIN industries i ON i.id=bps.industry_id JOIN services s ON s.id=bps.service_id LEFT JOIN subservices ss ON ss.id=bps.subservice_id WHERE bps.business_profile_id=$1 AND bps.is_active=TRUE ORDER BY i.name,s.name,ss.name`,[id]),
-    pool.query(`SELECT bpl.state_id AS "stateId",st.name AS "stateName",bpl.city_id AS "cityId",c.name AS "cityName",bpl.subcity_id AS "subcityId",sc.name AS "subcityName" FROM business_profile_locations bpl JOIN states st ON st.id=bpl.state_id JOIN cities c ON c.id=bpl.city_id LEFT JOIN subcities sc ON sc.id=bpl.subcity_id WHERE bpl.business_profile_id=$1 AND bpl.is_active=TRUE ORDER BY st.name,c.name`,[id]),
-    showProjects?pool.query(`SELECT id,seo_slug,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,${showVideos?publicProjectVideoColumn('business_profile_projects'):'NULL::text AS video_url'},${showVideos?publicProjectVideoStatusColumn('business_profile_projects'):"'disabled'::text AS video_publication_status"},video_published_at,${showPlans?'plan_url':'NULL::text AS plan_url'},brochure_url,sort_order FROM business_profile_projects WHERE business_profile_id=$1 AND is_published=TRUE AND completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE) ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
-    showPlans?pool.query(`SELECT id,title,industry,description,price_from,price_unit,duration_label,inclusions,spec_sections,brochure_url,sort_order FROM business_profile_service_plans WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
+  // Official profiles may show more than the directory settings allow; if the
+  // effective flags differ from what was fetched early, re-query those parts.
+  const flags={showProjects,showVideos,showPlans};
+  const projectsMatch=flags.showProjects===settingsFlags.showProjects&&flags.showVideos===settingsFlags.showVideos&&flags.showPlans===settingsFlags.showPlans;
+  const [services,locations,projects,plans,brochures]=await Promise.all([
+    servicesPromise,
+    locationsPromise,
+    projectsMatch?earlyProjects:(flags.showProjects?projectsQuery(flags):emptyRows),
+    flags.showPlans===settingsFlags.showPlans?earlyPlans:(flags.showPlans?plansQuery():emptyRows),
+    brochuresPromise,
   ]);
-  const [renderedProjects,brochures,renderedPlans]=await Promise.all([
+  const [renderedProjects,renderedPlans]=await Promise.all([
     materializeProjectMedia(projects.rows),
-    brochureService.listPublic(id),
     Promise.all(plans.rows.map(async plan=>({...plan,brochure_url:await projectPlanService.displayUrl(plan.brochure_url)}))),
   ]);
   return {...base,services:services.rows,locations:locations.rows,projects:renderedProjects,brochures,service_plans:renderedPlans,directory_settings:{showProjects,showVideos,showPlans}};

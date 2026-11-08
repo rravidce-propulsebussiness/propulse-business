@@ -1,6 +1,6 @@
 import BootLoader from '../components/BootLoader'
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { authRequest, saveSession, getUser } from '../utils/auth'
 import UserHeader from '../components/UserHeader'
 import {PACKAGE_PRICE_UNITS,formatPublishedPackagePrice} from '../utils/packagePricing'
@@ -120,7 +120,6 @@ function ProfileRoofline(){
 }
 
 export default function Profile(){
-  const navigate=useNavigate()
   const location=useLocation()
   const [form,setForm]=useState({name:'',email:'',phone:'',businessName:'',businessDetails:'',yearsExperience:'',publicProfileEnabled:true})
   const [industries,setIndustries]=useState([])

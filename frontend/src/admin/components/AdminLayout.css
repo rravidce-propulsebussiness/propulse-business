@@ -44,21 +44,6 @@
   text-decoration:none;
 }
 
-.admin-sidebar-mark{
-  flex:0 0 46px;
-  width:46px;
-  height:46px;
-  display:grid;
-  place-items:center;
-  border-radius:15px;
-  background:linear-gradient(145deg,#0b4c99,#1675d5);
-  color:#fff;
-  box-shadow:0 13px 28px rgba(2,13,26,.25),inset 0 1px 0 rgba(255,255,255,.22);
-  font-size:25px;
-  font-weight:950;
-  font-style:italic;
-}
-
 .admin-sidebar-brand>span:last-child{min-width:0}
 .admin-sidebar-brand b{
   display:block;
@@ -510,7 +495,6 @@
 .admin-sidebar-brand{color:#1b2e42}
 .admin-sidebar-brand b{color:#17273c}
 .admin-sidebar-brand small{color:#c05a2a}
-.admin-sidebar-mark{background:linear-gradient(145deg,#ff7e36,#ed4e1d);box-shadow:0 8px 20px #ec5b2830}
 .admin-sidebar-close{border-color:#eee3dd;background:#fff8f3;color:#d95926}
 .admin-nav-label{color:#a4a8b0}
 .admin-nav>a,.admin-nav-group-toggle{color:#314154;font-size:12px}

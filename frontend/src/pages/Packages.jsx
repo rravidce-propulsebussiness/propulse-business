@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { CONSTRUCTION_PACKAGE_CATALOG } from '../data/constructionPackageCatalog'
 import { INTERIOR_PACKAGES } from '../data/interiorPackageCatalog'
 import './Packages.css'

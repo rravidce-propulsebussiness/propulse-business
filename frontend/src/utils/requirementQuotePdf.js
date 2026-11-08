@@ -840,6 +840,8 @@ export async function downloadProfessionalPackageQuotePdf({quotation,customerNam
     ['Professional',quotation.professionalName],
     ['Customer',customerName||'Customer'],
     ['Location',city||'To be confirmed'],
+    ['Mobile',phone?'+91 '+String(phone).replace(/\D/g,'').slice(-10):'—'],
+    ['Email',email||'Not provided'],
   ]);
   drawSectionHeading(first,'Project pricing','Calculated from the professional’s published package rate.');
   drawKeyValueRows(first,[

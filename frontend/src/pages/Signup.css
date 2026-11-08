@@ -34,7 +34,6 @@
 .signup-google-label{margin:0 0 8px;text-align:center;color:#39516d;font-size:12px;font-weight:900}
 .signup-google .google-button-wrap{min-height:46px;display:flex;align-items:center;justify-content:center;border-radius:10px;overflow:hidden}
 .signup-google .google-button-wrap>div{width:100%;display:flex;justify-content:center}
-.signup-google .google-unconfigured{padding:12px;border:1px solid var(--signup-line);border-radius:10px;background:#f7f9fb;color:var(--signup-muted);font-size:12px;text-align:center}
 .signup-bottom-login{text-align:center;margin:22px 0 0;color:#74869a;font-size:12px}
 .signup-bottom-login a{color:#e94e22;font-weight:900;text-decoration:none}
 

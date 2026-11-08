@@ -70,9 +70,6 @@
 .expert-v2-detail-tabs button{border:0;border-bottom:3px solid transparent;background:transparent;color:#687c91;font-size:11px;font-weight:800;padding:15px 7px 12px;white-space:nowrap;cursor:pointer}
 .expert-v2-detail-tabs button.active{color:#f06027;border-color:#ff6a26}
 .expert-v2-profile-content{min-height:260px;padding:17px}
-.expert-v2-profile-footer{border-top:1px solid #edf0f3;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.expert-v2-profile-footer a{color:#f06327;text-decoration:none;font-weight:850;font-size:12px}
-.expert-v2-profile-footer span{color:#98a3ad;font-size:10px}
 .expert-v2-info{display:grid;gap:15px;color:#617487;font-size:13px}
 .expert-v2-info h3{margin:0;font-size:17px;color:#203349}
 .expert-v2-info p{margin:0;line-height:1.6}

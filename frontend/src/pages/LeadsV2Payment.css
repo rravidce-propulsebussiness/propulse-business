@@ -7,9 +7,6 @@
 .lv2-pay-amount-card>div:first-child{display:flex;flex-direction:column;gap:2px}
 .lv2-pay-amount-card span{font-weight:900;color:#173b70}
 .lv2-pay-amount-card strong{line-height:1;color:#f0441d}
-.lv2-pay-amount-note{display:flex;align-items:center;gap:8px;color:#58708f}
-.lv2-pay-amount-note>span{width:27px;height:27px;border-radius:50%;display:grid;place-items:center;background:#e9f1fb;color:#315d92;font-weight:900}
-.lv2-pay-amount-note small{font-size:12px;line-height:1.35;font-weight:800}
 .lv2-pay-breakdown{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #dce6f2;border-radius:10px;background:#f8fbfe;margin-bottom:7px;overflow:hidden}
 .lv2-pay-breakdown>div{padding:8px 9px;border-right:1px solid #dce6f2}
 .lv2-pay-breakdown>div:last-child{border-right:0}

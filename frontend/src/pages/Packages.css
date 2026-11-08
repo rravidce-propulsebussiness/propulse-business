@@ -28,7 +28,6 @@
 .pkg-page button{font:inherit}
 
 /* Header dimensions/colors come from PublicMarketingHeader.css. */
-.pkg-header-actions{justify-self:end}
 
 /* Compact premium quote hero — shared by Construction and Interior packages. */
 .pkg-page .premium-page-intro.pkg-quote-intro{
@@ -712,31 +711,6 @@
 .pkg-table-package b{font-size:9px}
 .pkg-table-package strong{font-size:8px}
 
-.pkg-bottom-note{
-  width:min(1370px,calc(100% - 72px));
-  margin:0 auto 26px;
-  display:flex;
-  align-items:flex-start;
-  justify-content:center;
-  gap:8px;
-  padding:10px 13px;
-  border:1px solid #eee5df;
-  border-radius:9px;
-  background:#fffaf7;
-  color:#728493;
-}
-.pkg-bottom-note svg{
-  flex:0 0 auto;
-  margin-top:1px;
-  color:var(--pkg-orange);
-}
-.pkg-bottom-note p{
-  margin:0;
-  font-size:8.3px;
-  line-height:1.45;
-  text-align:center;
-}
-
 @keyframes pkgCompareReveal{
   from{opacity:0;transform:translateY(7px)}
   to{opacity:1;transform:none}
@@ -753,7 +727,6 @@
 @media(max-width:1180px){
   .pkg-category-nav,
   .pkg-premium-section{width:calc(100% - 40px)}
-  .pkg-bottom-note{width:calc(100% - 40px)}
     .pkg-section-benefits{justify-content:center}
 }
 @media(max-width:900px){
@@ -766,8 +739,7 @@
 }
 @media(max-width:640px){
   .pkg-category-nav,
-  .pkg-premium-section,
-  .pkg-bottom-note{width:calc(100% - 24px)}
+  .pkg-premium-section{width:calc(100% - 24px)}
     .pkg-section-benefits{gap:6px}
   .pkg-premium-grid.construction,
   .pkg-premium-grid.interior{grid-template-columns:1fr}
