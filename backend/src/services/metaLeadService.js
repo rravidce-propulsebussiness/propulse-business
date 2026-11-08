@@ -122,8 +122,8 @@ async function disconnect(user,id) {
 async function capture(payload) {
   if (!payload || payload.object !== 'page' || !Array.isArray(payload.entry)) return {accepted:0};
   let accepted = 0;
-  for (const entry of payload.entry.slice(0,100)) {
-    for (const change of (Array.isArray(entry.changes) ? entry.changes : []).slice(0,100)) {
+  for (const entry of payload.entry) {
+    for (const change of (Array.isArray(entry.changes) ? entry.changes : [])) {
       if (change.field !== 'leadgen') continue;
       const data = change.value || {};
       const pageId = safeId(data.page_id || entry.id);
