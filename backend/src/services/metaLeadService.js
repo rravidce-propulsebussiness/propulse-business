@@ -201,6 +201,7 @@ async function processPending(batchSize=5) {
     try {
       const lead=await graph(job.meta_leadgen_id,decrypt(job.encrypted_page_token),{params:{fields:'id,created_time,ad_id,form_id,field_data'}});
       if(String(lead.id)!==String(job.meta_leadgen_id))throw new Error('Meta lead ID mismatch');
+      if(!Array.isArray(lead.field_data)||!lead.field_data.length)throw Object.assign(new Error('Meta did not return lead form answers'),{code:'META_FIELDS_UNAVAILABLE'});
       const field=extractFields(lead);
       await pool.query(
         "UPDATE meta_ads_leads SET status='received',fields=$2::jsonb,lead_data=$3::jsonb,customer_name=$4,customer_phone=$5,customer_email=$6,received_at=NOW(),lease_until=NULL,last_error=NULL,updated_at=NOW() WHERE id=$1",
