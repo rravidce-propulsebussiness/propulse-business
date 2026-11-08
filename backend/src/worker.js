@@ -3,6 +3,7 @@ const pool = require('./config/database');
 const { runMigrations } = require('./database/runMigrations');
 const { startLeadPartnerSheetAutoSync } = require('./services/leadPartnerSheetSyncScheduler');
 const { startAdminGoogleSheetAutoSync } = require('./services/adminGoogleSheetSyncScheduler');
+const { startMetaLeadSync } = require('./services/metaLeadScheduler');
 const { startFinancialReconciliationScheduler } = require('./services/financialReconciliationScheduler');
 const { startNotificationScheduler } = require('./services/notificationScheduler');
 const { startPrivateStorageBackupScheduler } = require('./services/privateStorageBackupScheduler');
@@ -13,6 +14,7 @@ const operationalMonitoringService = require('./services/operationalMonitoringSe
 
 let stopLeadPartnerAutoSync = () => {};
 let stopAdminAutoSync = () => {};
+let stopMetaSync = () => {};
 let stopHeartbeat = async () => {};
 let stopFinancialReconciliation = async () => {};
 let stopNotifications = async () => {};
@@ -46,6 +48,7 @@ async function shutdown(signal, exitCode = 0) {
   try {
     stopLeadPartnerAutoSync();
     stopAdminAutoSync();
+    stopMetaSync();
     await stopFinancialReconciliation();
     await stopNotifications();
     await stopPrivateStorageBackup();
@@ -74,6 +77,7 @@ async function start() {
 
   stopLeadPartnerAutoSync = startLeadPartnerSheetAutoSync({ unref: false, runImmediately: true });
   stopAdminAutoSync = startAdminGoogleSheetAutoSync({ unref: false, runImmediately: true });
+  stopMetaSync = startMetaLeadSync({unref:false,runImmediately:true});
   stopFinancialReconciliation = startFinancialReconciliationScheduler({ unref: false, runImmediately: true });
   stopNotifications = startNotificationScheduler({ unref:false, runImmediately:true });
   stopPrivateStorageBackup = startPrivateStorageBackupScheduler({ unref:false, runImmediately:true });
