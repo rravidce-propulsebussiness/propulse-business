@@ -14,7 +14,7 @@ function OfferDisclaimer({event}){
 
 function StatusTag({event}){
   const status=campaignStatus(event)
-  return <span className={'fc-status fc-status--'+status}>{status==='active'?'Festival campaign live':status==='upcoming'?'Coming up': 'Campaign window finished'}</span>
+  return <span className={'fc-status fc-status--'+status}>{event.kind==='remembrance'?(status==='active'?'Remembrance today':status==='upcoming'?'Upcoming remembrance':'Observance completed'):(status==='active'?'Festival campaign live':status==='upcoming'?'Coming up': 'Campaign window finished')}</span>
 }
 
 function ServiceCard({event,service,compact=false}){
@@ -42,7 +42,54 @@ function Faq({event,service}){
   </section>
 }
 
+
+function MemorialLanding({event,service}){
+  const other=CAMPAIGN_SERVICES[service.key==='construction'?'interiors':'construction']
+  return <div className="fc-page fc-memorial"><PublicHeader/><main>
+    <section className="fc-memorial-hero"><div className="fc-container">
+      <nav className="fc-breadcrumb" aria-label="Breadcrumb"><Link to="/">Home</Link><span>/</span><Link to="/offers">Occasions and commemorations</Link><span>/</span>{event.name} · {service.label}</nav>
+      <p className="fc-memorial-overline">IN RESPECTFUL REMEMBRANCE · HYDERABAD</p>
+      <h1>{event.icon} {event.name} <span>{event.date.slice(0,4)}</span></h1>
+      <p className="fc-memorial-lead">{event.inspiration}</p>
+      <p className="fc-memorial-date">Observed {prettyDate(event.date)} · Displayed {prettyDate(event.start)}–{prettyDate(event.end)} (IST)</p>
+    </div></section>
+    <section className="fc-container fc-memorial-content">
+      <p className="fc-overline">REMEMBER WITH DIGNITY</p>
+      <h2>We remember. We honour. We reflect.</h2>
+      <p>ProPulse pays its respects to the people and families remembered on this day. This page is a commemorative message, not a festive sale or a promotional announcement.</p>
+      <div className="fc-memorial-service">
+        <h2>{service.name}: spaces designed with responsibility</h2>
+        <p>{service.key==='construction'?'Thoughtful home construction prioritises structural safety, dependable materials, long-term durability and accessibility.':'Thoughtful home interiors prioritise safe circulation, useful lighting, durable materials and inclusive living spaces.'} These are general commitments to responsible design; they are not offers associated with this observance.</p>
+        <p>Learn about ProPulse independently of this remembrance day through our main website and service information.</p>
+        <div className="fc-memorial-links"><Link to={festivalPath(event,other.key)}>Read the {other.label.toLowerCase()} remembrance page ↗</Link><Link to="/about">About ProPulse ↗</Link><Link to="/offers">All important dates ↗</Link></div>
+      </div>
+      <section className="fc-memorial-faq" aria-label="Frequently asked questions"><h2>Frequently asked questions</h2>
+        <h3>What does {event.name} commemorate?</h3><p>{event.inspiration}</p>
+        <h3>Are there promotions connected to this day?</h3><p>No. This page is solely a respectful observance. ProPulse does not present remembrance days as festival sales.</p>
+      </section>
+    </section>
+  </main><PublicFooter/></div>
+}
+
+function MemorialHome({event}){
+  return <div className="fc-page fc-home fc-memorial"><PublicHeader/><main>
+    <section className="fc-memorial-hero fc-memorial-hero--home"><div className="fc-container">
+      <p className="fc-memorial-overline">PROPULSE · REMEMBRANCE</p>
+      <h1>{event.icon} {event.name} <span>{event.date.slice(0,4)}</span></h1>
+      <p className="fc-memorial-lead">{event.inspiration}</p>
+      <p className="fc-memorial-date">Remembering with dignity · {prettyDate(event.date)}</p>
+    </div></section>
+    <section className="fc-container fc-memorial-content">
+      <h2>A moment for reflection, not promotion.</h2>
+      <p>On this occasion, ProPulse pauses commercial festival messaging to offer a respectful tribute. There are no promotional offers linked to this remembrance day.</p>
+      <div className="fc-memorial-links"><Link to={festivalPath(event,'construction')}>Construction remembrance page ↗</Link><Link to={festivalPath(event,'interiors')}>Interiors remembrance page ↗</Link></div>
+      <p className="fc-memorial-date">Homepage remembrance: {prettyDate(event.start)}–{prettyDate(event.end)} (IST).</p>
+    </section>
+  </main><PublicFooter/></div>
+}
+
 function SingleOffer({event,service}){
+  if(event.kind==='remembrance')return <MemorialLanding event={event} service={service}/>
   const status=campaignStatus(event)
   const other=CAMPAIGN_SERVICES[service.key==='construction'?'interiors':'construction']
   return <div className="fc-page">
@@ -81,6 +128,7 @@ function SingleOffer({event,service}){
 }
 
 function FestivalHome({event}){
+  if(event.kind==='remembrance')return <MemorialHome event={event}/>
   const additional=activeFestivals().filter(item=>item.slug!==event.slug)
   return <div className="fc-page fc-home">
     <PublicHeader/>
@@ -105,11 +153,11 @@ export function FestivalHub(){
   const today=indiaToday()
   const events=useMemo(()=>FESTIVAL_EVENTS.filter(event=>filter==='all'||campaignStatus(event,today)===filter),[filter,today])
   return <div className="fc-page"><PublicHeader/><main>
-    <section className="fc-hub-hero"><div className="fc-container"><nav aria-label="Breadcrumb" className="fc-breadcrumb"><Link to="/">Home</Link><span>/</span>Festival campaigns</nav><p className="fc-eyebrow">PROPULSE · HYDERABAD</p><h1>A year of celebrations. <em>A home for every chapter.</em></h1><p>Explore festival-themed home construction and interior design campaigns for Hyderabad. Every occasion has its own two service pages, planning checklist and quotation route.</p></div></section>
-    <section className="fc-container fc-hub-list"><div className="fc-hub-heading"><div><p className="fc-overline">FESTIVE CAMPAIGN CALENDAR</p><h2>November 2026 – November 2027 · {FESTIVAL_EVENTS.length} occasions</h2></div><div className="fc-filters" role="group" aria-label="Filter campaigns">{[['all','All dates'],['active','Live'],['upcoming','Upcoming']].map(([value,label])=><button type="button" key={value} className={filter===value?'selected':''} onClick={()=>setFilter(value)} aria-pressed={filter===value}>{label}</button>)}</div></div>
+    <section className="fc-hub-hero"><div className="fc-container"><nav aria-label="Breadcrumb" className="fc-breadcrumb"><Link to="/">Home</Link><span>/</span>Festivals and important dates</nav><p className="fc-eyebrow">PROPULSE · HYDERABAD</p><h1>Festivals and important dates. <em>A year to remember.</em></h1><p>Explore cultural festivals, national days and remembrance observances for Hyderabad. Each has two distinct pages for Construction and Interiors. Memorial pages are respectful, non-commercial tributes.</p></div></section>
+    <section className="fc-container fc-hub-list"><div className="fc-hub-heading"><div><p className="fc-overline">FESTIVALS & IMPORTANT DATES</p><h2>November 2026 – November 2027 · {FESTIVAL_EVENTS.length} occasions</h2></div><div className="fc-filters" role="group" aria-label="Filter campaigns">{[['all','All dates'],['active','Live'],['upcoming','Upcoming']].map(([value,label])=><button type="button" key={value} className={filter===value?'selected':''} onClick={()=>setFilter(value)} aria-pressed={filter===value}>{label}</button>)}</div></div>
     <div className="fc-hub-grid">{events.map(event=><article key={event.slug} className="fc-event-card"><div className="fc-event-top"><span className="fc-event-icon">{event.icon}</span><StatusTag event={event}/></div><h3>{event.name} <small>{event.date.slice(0,4)}</small></h3><p className="fc-event-date">{event.tentative?'Indicative: ':''}{prettyDate(event.date)}</p><p className="fc-window">Featured {prettyDate(event.start)}–{prettyDate(event.end)}</p><p>{event.inspiration}</p><div className="fc-event-links"><Link to={festivalPath(event,'construction')}>Construction ↗</Link><Link to={festivalPath(event,'interiors')}>Interiors ↗</Link></div></article>)}</div>
     {events.length===0&&<p>No campaign in this group. Browse all dates to explore the calendar.</p>}
-    <p className="fc-terms">Festival dates use Hyderabad/IST. Moon-dependent and region-specific observances can change. Published campaigns do not imply an automatic discount; written quotation terms apply.</p>
+    <p className="fc-terms">Celebrations and important dates use Hyderabad/IST. Memorial pages carry no sales promotions. Festival dates use Hyderabad/IST. Moon-dependent and region-specific observances can change. Published campaigns do not imply an automatic discount; written quotation terms apply.</p>
     </section>
   </main><PublicFooter/></div>
 }
