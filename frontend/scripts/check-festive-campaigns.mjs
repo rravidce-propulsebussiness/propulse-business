@@ -10,7 +10,7 @@ import {
 const here=path.dirname(fileURLToPath(import.meta.url))
 const frontend=path.resolve(here,'..')
 const ids=FESTIVAL_EVENTS.map(item=>item.slug)
-assert.ok(ids.length>=90,'Expected an extensive cross-cultural festival calendar')
+assert.ok(ids.length>=120,'Expected inclusive cultural, national and remembrance calendar')
 assert.equal(new Set(ids).size,ids.length,'Campaign slugs must be unique')
 assert.equal(FESTIVE_SEO_ROUTES.length,ids.length*2+1)
 const seoPaths=FESTIVE_SEO_ROUTES.map(item=>item.path)
@@ -42,6 +42,22 @@ assert.ok(activeFestivals('2026-11-06').some(item=>item.slug==='dhanteras-2026')
 assert.equal(festivalPath(festivalBySlug('diwali-2026'),'construction'),'/offers/diwali-2026/construction')
 assert.equal(festivalPath(festivalBySlug('diwali-2026'),'interiors'),'/offers/diwali-2026/interiors')
 assert.equal(activeFestival('2027-01-26')?.slug,'republic-day-2027')
+assert.equal(activeFestival('2027-02-12')?.slug,'pulwama-black-day-2027')
+assert.equal(activeFestival('2027-02-13')?.slug,'pulwama-black-day-2027')
+assert.equal(activeFestival('2027-02-14')?.slug,'pulwama-black-day-2027')
+assert.equal(campaignStatus(festivalBySlug('pulwama-black-day-2027'),'2027-02-15'),'past')
+assert.equal(festivalBySlug('pulwama-black-day-2027').kind,'remembrance')
+for(const service of ['construction','interiors']){
+  const url=festivalPath(festivalBySlug('pulwama-black-day-2027'),service)
+  const route=FESTIVE_SEO_ROUTES.find(item=>item.path===url)
+  assert.equal(route.campaignKind,'remembrance')
+  assert.ok(!route.title.includes('Offers'),'Remembrance must not advertise offers')
+  assert.ok(!route.description.includes('Request a scope-based quote'),'Remembrance must not advertise quotes')
+}
+assert.equal(activeFestival('2027-07-26')?.slug,'kargil-vijay-diwas-2027')
+assert.ok(festivalBySlug('mumbai-attacks-remembrance-2026'))
+assert.ok(festivalBySlug('army-day-2027'))
+assert.ok(festivalBySlug('navy-day-2026'))
 assert.equal(activeFestival('2027-04-07')?.slug,'ugadi-2027')
 assert.equal(activeFestival('2027-10-29')?.slug,'diwali-2027')
 assert.equal(activeFestival('2027-11-30'),null,'After calendar completion normal homepage returns')
@@ -66,6 +82,10 @@ if(fs.existsSync(path.join(dist,'offers'))){
     assert.ok(html.includes('application/ld+json'),'Missing JSON-LD: '+route.path)
     assert.ok(html.includes('canonical'),'Missing canonical: '+route.path)
     if(route.type==='festive-offer')assert.ok(html.includes('Frequently asked questions'),'Missing crawlable FAQ: '+route.path)
+    if(route.campaignKind==='remembrance'){
+      assert.ok(html.includes('respectful memorial')||html.includes('IN RESPECTFUL REMEMBRANCE'),'Missing commemorative content')
+      assert.ok(!html.includes('guaranteed '+route.festivalName+' discount'),'Memorial page must avoid sale copy')
+    }
   }
 }
 console.log('Festival campaigns verified:',FESTIVAL_EVENTS.length,'occasions,',FESTIVE_SEO_ROUTES.length,'SEO routes.')
