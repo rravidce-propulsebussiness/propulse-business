@@ -11,6 +11,7 @@ import {interiorNeeds,interiorChecklist} from '../src/seo/interiorSeo.js'
 import {HYDERABAD_HOMEOWNER_TOPIC_GROUPS} from '../src/seo/hyderabadHomeownerTopics.js'
 import {INTERIOR_HOMEOWNER_TOPIC_GROUPS} from '../src/seo/interiorHomeownerTopics.js'
 import {PUBLISHED_HOMEOWNER_ANSWERS} from '../src/seo/homeownerPublishedAnswers.js'
+import {FESTIVAL_EVENTS,CAMPAIGN_SERVICES,festivalBySlug,festivalPath} from '../src/seo/festiveCampaigns.js'
 
 const here=path.dirname(fileURLToPath(import.meta.url))
 const dist=path.resolve(here,'../dist')
@@ -314,11 +315,63 @@ function fallback(route){
   return '<main data-seo-static-fallback="true" style="font-family:Arial,sans-serif;max-width:1100px;margin:0 auto;padding:32px;color:#173f5e">'+
     '<header style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap"><a href="/" aria-label="'+escapeHtml(SITE_NAME)+' home"><img src="/brand/propulse-logo.svg" alt="'+escapeHtml(SITE_NAME)+'" width="180" height="48"></a><nav aria-label="Primary">'+nav+'</nav></header>'+
     '<section style="padding:72px 0 34px"><p style="font-weight:700;color:#f05b24">PROPULSE BUSINESS</p><h1 style="max-width:850px;font-size:44px;line-height:1.08;margin:12px 0">'+escapeHtml(route.heading)+'</h1><p style="max-width:780px;font-size:18px;line-height:1.6">'+escapeHtml(route.summary)+'</p><p style="max-width:780px;line-height:1.6">'+escapeHtml(route.description)+'</p><p><a href="/quote" style="font-weight:700;color:#d94f22">Start your requirement</a> · <a href="/experts" style="font-weight:700;color:#173f5e">Find professionals</a></p></section>'+
-    businessIdentityContent(route)+trustGuideContent(route)+blogHubContent(route)+homepageSeoContent(route)+cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+guideContent(route)+regionalConstructionContent(route)+interiorLandingContent(route)+homeownerFaqContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
+    businessIdentityContent(route)+trustGuideContent(route)+blogHubContent(route)+homepageSeoContent(route)+cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+guideContent(route)+regionalConstructionContent(route)+interiorLandingContent(route)+homeownerFaqContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+festiveContent(route)+'</main>'
+}
+
+
+function festiveContent(route){
+  if(route.type==='festival-hub'){
+    return '<section style="padding:24px 0 56px"><h2>Festival calendar for home construction and interiors in Hyderabad</h2>'+
+      '<p>Each occasion has two separately written service pages: one for residential construction planning and one for home interior design. Festival dates are based on Hyderabad/India Standard Time; moon-sighting and temple-specific dates remain provisional.</p>'+
+      '<ul>'+FESTIVAL_EVENTS.map(event=>
+        '<li style="padding:10px 0"><strong>'+escapeHtml(event.name)+' '+escapeHtml(event.date.slice(0,4))+'</strong> · '+
+        escapeHtml(event.date)+(event.tentative?' (indicative)':'')+' — '+
+        '<a href="'+escapeHtml(festivalPath(event,'construction'))+'">Construction planning</a> | '+
+        '<a href="'+escapeHtml(festivalPath(event,'interiors'))+'">Interior design ideas</a></li>'
+      ).join('')+'</ul>'+
+      '<p>Promotional pricing, discounts or additional benefits apply only if agreed in a written quote. Browse <a href="/packages">current project packages</a> or <a href="/quote">start a project enquiry</a>.</p></section>'
+  }
+  if(route.type!=='festive-offer')return ''
+  const event=festivalBySlug(route.festivalSlug)
+  const service=CAMPAIGN_SERVICES[route.serviceType]
+  if(!event||!service)return ''
+  const year=event.date.slice(0,4)
+  const heading=event.name+' '+year+' '+service.name+' project planning in Hyderabad'
+  const materialIntro=service.key==='construction'
+    ? 'A house-construction proposal should cover site conditions, structural drawings, the built-up area, floors, steel and cement specifications, waterproofing, mechanical and electrical work, finishes and scope exclusions. Site measurements and permission requirements influence the final quotation.'
+    : 'An interior-design proposal should start with the floor plan and room-wise needs: modular kitchens, wardrobes, living-room storage, lighting, false ceilings, work areas and installation constraints. Choose materials, hardware and finishes only after reviewing usage, budget and maintenance needs.'
+  const promiseNote='This festival page is a project-planning invitation, not a promise of an automatic discount. Any promotional benefit, price, eligibility, period, tax or extra inclusion must be expressly stated in a current written ProPulse quotation.'
+  const availability='ProPulse discusses selected construction and interior projects in Hyderabad, subject to a location and scope review. Independent marketplace professionals, where featured, operate separately from ProPulse direct execution.'
+  const sibling=service.key==='construction'?'interiors':'construction'
+  const siblingName=CAMPAIGN_SERVICES[sibling].name
+  return '<section style="padding:28px 0 54px;max-width:940px">'+
+    '<p style="color:#8b5d3c;font-weight:700">'+escapeHtml(event.theme)+' · '+escapeHtml(event.date)+' · Hyderabad, Telangana'+(event.tentative?' · indicative date':'' )+'</p>'+
+    '<h2>'+escapeHtml(heading)+'</h2>'+
+    '<p>'+escapeHtml(event.inspiration)+'</p>'+
+    '<p>Considering '+escapeHtml(service.core)+'? This '+escapeHtml(event.name)+' season is an opportunity to organize ideas into an actionable brief, rather than rush into materials or pricing before the project requirements are clear.</p>'+
+    '<p>'+escapeHtml(materialIntro)+'</p>'+
+    '<h2>Ideas to take from the '+escapeHtml(event.name)+' season</h2>'+
+    '<p>'+escapeHtml(event.inspiration)+' The best result comes from matching these ideas to the property's actual dimensions, local conditions and everyday routines.</p>'+
+    '<ul>'+service.benefits.map(([name,details])=>'<li><strong>'+escapeHtml(name)+':</strong> '+escapeHtml(details)+'</li>').join('')+'</ul>'+
+    '<h2>Checklist before asking for a '+escapeHtml(event.name)+' quote</h2>'+
+    '<ol>'+service.checklist.map(text=>'<li>'+escapeHtml(text)+'</li>').join('')+'</ol>'+
+    '<p>'+escapeHtml(availability)+'</p>'+
+    '<h2>Frequently asked questions</h2>'+
+    '<h3>'+escapeHtml(service.question)+'</h3><p>'+escapeHtml(service.answer)+'</p>'+
+    '<h3>Is there a guaranteed '+escapeHtml(event.name)+' discount?</h3><p>No. '+escapeHtml(promiseNote)+'</p>'+
+    '<h3>Can I ask for an estimate after '+escapeHtml(event.name)+'?</h3><p>Yes. Share the relevant project details for a current quote. Campaign dates do not limit ordinary project enquiries.</p>'+
+    '<h3>How does ProPulse handle projects in Hyderabad?</h3><p>'+escapeHtml(availability)+'</p>'+
+    '<p><a href="'+escapeHtml(service.to)+'">Request a '+escapeHtml(service.name.toLowerCase())+' quotation</a> · '+
+    '<a href="'+escapeHtml(festivalPath(event,sibling))+'">Explore '+escapeHtml(event.name)+' '+escapeHtml(siblingName.toLowerCase())+'</a> · '+
+    '<a href="/offers">See all festival campaigns</a></p>'+
+    '<p><small>Campaign dates: '+escapeHtml(event.start)+' through '+escapeHtml(event.end)+' (IST). '+escapeHtml(promiseNote)+'</small></p>'+
+  '</section>'
 }
 
 function breadcrumbItems(route){
   const items=[{'@type':'ListItem',position:1,name:'Home',item:absolute('/')}]
+  if(route.type==='festival-hub')return [...items,{'@type':'ListItem',position:2,name:'Festival offers',item:absolute('/offers')}];
+  if(route.type==='festive-offer')return [...items,{'@type':'ListItem',position:2,name:'Festival offers',item:absolute('/offers')},{'@type':'ListItem',position:3,name:route.festivalName+' '+route.serviceName,item:absolute(route.path)}];
   if(route.type==='blog-hub')return [...items,{'@type':'ListItem',position:2,name:'Blog',item:absolute('/blog')}];
   if(route.type==='construction-blog'||route.type==='interior-blog')return [...items,{'@type':'ListItem',position:2,name:'Blog',item:absolute('/blog')},{'@type':'ListItem',position:3,name:route.type==='interior-blog'?'Interior Blog':'Construction Blog',item:absolute(route.path)}];
   if(route.type==='construction-trust-guide'||route.type==='interior-trust-guide')return [...items,{'@type':'ListItem',position:2,name:'Hyderabad',item:absolute('/hyderabad')},{'@type':'ListItem',position:3,name:route.heading,item:absolute(route.path)}]
@@ -351,12 +404,18 @@ function staticJsonLd(route){
     isPartOf:{'@type':'WebSite',name:SITE_NAME,url:absolute('/')},
   }
   if(route.type==='construction-guide'||['construction-trust-guide','interior-trust-guide'].includes(route.type)){page.headline=route.heading;page.articleSection='Home construction and interiors';page.publisher={'@type':'Organization',name:SITE_NAME,url:absolute('/')};page.mainEntityOfPage=absolute(route.path)}
+  if(route.type==='festive-offer')page.about={'@type':'Service',name:route.serviceName+' planning',serviceType:route.serviceName,areaServed:{'@type':'City',name:'Hyderabad, Telangana, India'}};
   if(route.type==='cost-guide')page.about={'@type':'Service',name:'House construction cost planning',areaServed:{'@type':'City',name:'Hyderabad, Telangana, India'}}
   if(['interior-hub','interior-locality','interior-state-hub','interior-district'].includes(route.type))page.about={'@type':'Service',name:'Interior design and execution',areaServed:route.type==='interior-locality'?{'@type':'Place',name:route.localityName+', Hyderabad, Telangana, India'}:route.type==='interior-district'?{'@type':'AdministrativeArea',name:route.districtName+' district, '+route.stateName+', India'}:route.type==='interior-state-hub'?{'@type':'AdministrativeArea',name:route.stateName+', India'}:{'@type':'City',name:'Hyderabad, Telangana, India'}}
   if(route.type==='city-service'||route.type==='local-service')page.about={'@type':'Service',name:route.serviceSlug==='construction'?'Home construction':route.serviceSlug==='interior-designers'?'Interior design':'Real estate services',areaServed:route.type==='local-service'?{'@type':'Place',name:route.localityName+', Hyderabad, Telangana, India'}:{'@type':'City',name:'Hyderabad, Telangana, India'}}
   if(route.type==='state-construction-hub'||route.type==='district-construction')page.about={'@type':'Service',name:'Home construction',areaServed:route.type==='district-construction'?{'@type':'AdministrativeArea',name:route.districtName+' district, '+route.stateName+', India'}:{'@type':'AdministrativeArea',name:route.stateName+', India'}}
   const organization={'@context':'https://schema.org','@type':'Organization',name:SITE_NAME,url:absolute('/'),logo:absolute('/brand/propulse-logo.png')}
   const website={'@context':'https://schema.org','@type':'WebSite',name:SITE_NAME,url:absolute('/'),inLanguage:'en-IN',description:route.path==='/'?route.description:undefined}
+  const faqGraph=route.type==='festive-offer'?{'@context':'https://schema.org','@type':'FAQPage',mainEntity:[
+    {'@type':'Question',name:CAMPAIGN_SERVICES[route.serviceType].question,acceptedAnswer:{'@type':'Answer',text:CAMPAIGN_SERVICES[route.serviceType].answer}},
+    {'@type':'Question',name:'Is there a guaranteed '+route.festivalName+' discount?',acceptedAnswer:{'@type':'Answer',text:'No automatic discount is guaranteed. Any promotion must be confirmed in a written quotation.'}},
+    {'@type':'Question',name:'Can I ask for an estimate after '+route.festivalName+'?',acceptedAnswer:{'@type':'Answer',text:'Yes, project enquiries remain available beyond a campaign period.'}},
+  ]}:null
   const data=route.path==='/'?[
     organization,
     website,
@@ -364,6 +423,7 @@ function staticJsonLd(route){
     {'@context':'https://schema.org','@type':'Service',name:'House and villa construction',serviceType:'Residential house construction',description:'Plan residential house and villa construction in Hyderabad with a defined project scope, material preferences and estimate request.',areaServed:{'@type':'City',name:'Hyderabad',containedInPlace:{'@type':'State',name:'Telangana'}},provider:{'@type':'Organization',name:SITE_NAME,url:absolute('/')},url:absolute('/')},
 
   ]:[organization,page,{'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:breadcrumbItems(route)}]
+  if(faqGraph)data.push(faqGraph)
   return JSON.stringify(data).replaceAll('</script','<\\/script')
 }
 
