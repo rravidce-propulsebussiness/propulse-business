@@ -8,6 +8,7 @@
     "build": "vite build && node scripts/generate-seo-static-pages.mjs",
     "lint": "oxlint",
     "preview": "vite preview",
+    "test:festive-seo": "node scripts/check-festive-campaigns.mjs",
     "test:google-gis": "node scripts/check-google-gis.mjs",
     "test:source-graph": "node scripts/check-source-graph.mjs",
     "test:csv-security": "node scripts/check-csv-security.mjs",
