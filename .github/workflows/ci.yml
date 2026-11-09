@@ -70,6 +70,8 @@ jobs:
         run: node scripts/check-audience-navigation.mjs
       - name: Build
         run: npm run build
+      - name: Verify festival campaigns and prerendered SEO
+        run: npm run test:festive-seo
       - name: Google GIS regression checks
         run: npm run test:google-gis
 
