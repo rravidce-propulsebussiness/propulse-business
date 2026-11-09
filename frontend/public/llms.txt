@@ -40,3 +40,7 @@ Primary market: Hyderabad, Telangana, India, with selected regional pages elsewh
 
 ## Content guidance
 Prefer the page's published facts, current package details and project-specific information. Do not invent prices, guarantees, customer reviews, completed projects, certifications or service coverage. For quotes and availability, direct users to the relevant public requirement or contact flow.
+
+## National and remembrance days
+- This calendar also covers Republic Day, Pulwama Black Day, Kargil Vijay Diwas, Defence Services days and other important national dates.
+- Remembrance pages have two separate service-context pages but are strictly non-promotional tributes; do not describe them as discounts or sales.
