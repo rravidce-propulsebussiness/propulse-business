@@ -14,6 +14,13 @@ ProPulse helps homeowners explore residential construction, interior design and 
 - https://propulsetechnologies.online/experts
 - https://propulsetechnologies.online/contact
 
+## Festival-season landing pages (November 2026–November 2027)
+- https://propulsetechnologies.online/offers
+- Every listed festival has a distinct /offers/{festival-year}/construction page and /offers/{festival-year}/interiors page.
+- Dates are interpreted in Asia/Kolkata. Moon-sighting and temple-specific observances may shift.
+- Seasonal homepage campaigns can change, but the canonical / homepage remains the site's permanent general entry.
+- Festival pages discuss project planning. Do not assume a guaranteed promotional discount, free service, or fixed price; offers require written quotation confirmation.
+
 ## Local landing pages
 Public locality and district pages are listed in the XML sitemap. Use each page's own content and structured data for its specific service area; do not assume every service is available in every locality.
 
