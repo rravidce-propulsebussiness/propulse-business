@@ -98,6 +98,37 @@ const EVENTS = [
   ["karthika-pournami-2027","Karthika Pournami","2027-11-14","🪔","Light and reflection","Create a calm atmosphere with careful lighting, ventilation and practical rooms.",65],
   ["childrens-day-2027","Children's Day","2027-11-14","🎈","Growing together","Plan safe play areas, useful storage and adaptable study spaces.",58],
   ["constitution-day-2027","Constitution Day","2027-11-26","📜","Equality and responsibility","Explore accessible spaces and transparent decision-making for home projects.",52],
+  ["national-education-day-2026","National Education Day","2026-11-11","📚","Education and opportunity","Recognise the importance of learning and inclusive opportunities for every household.",53],
+  ["childrens-day-2026","Children's Day","2026-11-14","🎈","Children's wellbeing","Reflect on safe, accessible homes where children have space to learn and play.",54],
+  ["birsa-munda-jayanti-2026","Birsa Munda Jayanti","2026-11-15","🌿","Indigenous heritage and courage","Honour India's Adivasi heritage and the legacy of Birsa Munda.",51],
+  ["constitution-day-2026","Constitution Day","2026-11-26","📜","Rights and responsibilities","Remember India's constitutional values and the importance of equality and accessibility.",65],
+  ["mumbai-attacks-remembrance-2026","26/11 Mumbai Attacks Remembrance","2026-11-26","🕯️","In memory of the victims","Remember those who lost their lives in the 2008 Mumbai terrorist attacks and honour the responders.",94],
+  ["navy-day-2026","Indian Navy Day","2026-12-04","⚓","Service and dedication","Recognise the dedication of the Indian Navy and those protecting the nation's maritime interests.",64],
+  ["armed-forces-flag-day-2026","Armed Forces Flag Day","2026-12-07","🇮🇳","Service and solidarity","Acknowledge the service and sacrifice of India's armed forces and their families.",65],
+  ["human-rights-day-2026","Human Rights Day","2026-12-10","🕊️","Dignity for everyone","Reflect on dignity, inclusion and accessible homes and communities.",57],
+  ["vijay-diwas-2026","Vijay Diwas","2026-12-16","🇮🇳","Honouring our armed forces","Remember the service and sacrifice of the armed forces during the 1971 war.",75],
+  ["national-mathematics-day-2026","National Mathematics Day","2026-12-22","📐","Learning and problem-solving","Celebrate mathematical thinking, careful measurement and thoughtful design.",51],
+  ["veer-baal-diwas-2026","Veer Baal Diwas","2026-12-26","🕯️","Courage and remembrance","Honour the courage and sacrifice commemorated on Veer Baal Diwas.",66],
+  ["armed-forces-veterans-day-2027","Armed Forces Veterans' Day","2027-01-14","🇮🇳","Honouring veterans","Recognise the service and sacrifices of veterans and their families.",63],
+  ["army-day-2027","Indian Army Day","2027-01-15","🇮🇳","Commitment and service","Recognise the courage, service and dedication of the Indian Army.",68],
+  ["national-girl-child-day-2027","National Girl Child Day","2027-01-24","🎓","Equality and opportunity","Reflect on equal opportunity, education and safer spaces for girls.",56],
+  ["national-voters-day-2027","National Voters' Day","2027-01-25","🗳️","Civic participation","Recognise the importance of democratic participation and informed citizenship.",62],
+  ["pulwama-black-day-2027","Pulwama Black Day (Remembrance)","2027-02-14","🕯️","In memory of the CRPF personnel","On 14 February, remember the 40 CRPF personnel killed in the Pulwama attack on 14 February 2019, and honour their service.",110],
+  ["national-science-day-2027","National Science Day","2027-02-28","🔬","Science and discovery","Recognise the role of scientific thinking, practical engineering and responsible innovation.",59],
+  ["shaheed-diwas-march-2027","Shaheed Diwas (Bhagat Singh, Rajguru and Sukhdev)","2027-03-23","🕯️","Remembering India's freedom fighters","Honour Bhagat Singh, Shivaram Rajguru and Sukhdev Thapar and their sacrifice for India's freedom.",88],
+  ["jallianwala-bagh-remembrance-2027","Jallianwala Bagh Remembrance","2027-04-13","🕯️","In memory of the victims","Remember the victims of the Jallianwala Bagh massacre of 13 April 1919.",93],
+  ["panchayati-raj-day-2027","National Panchayati Raj Day","2027-04-24","🏡","Communities and local governance","Highlight the importance of effective local institutions and community development.",50],
+  ["national-technology-day-2027","National Technology Day","2027-05-11","💻","Innovation and engineering","Celebrate thoughtful innovation, building technology and practical improvements to homes.",67],
+  ["kargil-vijay-diwas-2027","Kargil Vijay Diwas","2027-07-26","🇮🇳","Honouring courage and service","Remember the soldiers who served and gave their lives during the 1999 Kargil conflict.",88],
+  ["national-handloom-day-2027","National Handloom Day","2027-08-07","🧵","Indian craft and textiles","Recognise India's weaving traditions and the role of durable, locally made textiles in homes.",56],
+  ["partition-horrors-remembrance-2027","Partition Horrors Remembrance Day","2027-08-14","🕯️","Remembering lives affected by Partition","Reflect on the loss and suffering experienced during the Partition of India in 1947.",101],
+  ["national-sports-day-2027","National Sports Day","2027-08-29","🏑","Sport and wellbeing","Consider flexible spaces that encourage movement, play and family fitness.",56],
+  ["hindi-diwas-2027","Hindi Diwas","2027-09-14","📖","Language and culture","Recognise India's language traditions and accessible communication.",50],
+  ["indian-air-force-day-2027","Indian Air Force Day","2027-10-08","✈️","Courage and service","Recognise the contribution of the Indian Air Force and its personnel.",70],
+  ["police-commemoration-day-2027","Police Commemoration Day","2027-10-21","🕯️","Honouring officers lost in service","Remember police personnel who have lost their lives in the line of duty.",88],
+  ["rashtriya-ekta-diwas-2027","Rashtriya Ekta Diwas (National Unity Day)","2027-10-31","🇮🇳","Unity and shared responsibility","Reflect on national unity and the importance of inclusive communities.",55],
+  ["birsa-munda-jayanti-2027","Birsa Munda Jayanti","2027-11-15","🌿","Indigenous heritage and courage","Honour India's Adivasi heritage and the legacy of Birsa Munda.",52],
+  ["mumbai-attacks-remembrance-2027","26/11 Mumbai Attacks Remembrance","2027-11-26","🕯️","In memory of the victims","Remember those who lost their lives in the 2008 Mumbai terrorist attacks and honour the responders.",94],
 ]
 
 // Exactly three inclusive IST calendar dates: the two days before the observance and the observance day.
@@ -108,8 +139,14 @@ export function dateOffset(isoDate,days){
   value.setUTCDate(value.getUTCDate()+days)
   return value.toISOString().slice(0,10)
 }
+const MEMORIAL_IDS=new Set([
+  'pulwama-black-day-2027','mumbai-attacks-remembrance-2026','mumbai-attacks-remembrance-2027',
+  'partition-horrors-remembrance-2027','jallianwala-bagh-remembrance-2027',
+  'shaheed-diwas-march-2027','national-martyrs-day-2027','police-commemoration-day-2027',
+])
 export const FESTIVAL_EVENTS = EVENTS.map(([slug,name,date,icon,theme,inspiration,priority,tentative=false])=>({
   slug,name,date,start:dateOffset(date,-2),end:date,icon,theme,inspiration,priority,tentative,
+  kind:MEMORIAL_IDS.has(slug)?'remembrance':'occasion',
 })).sort((a,b)=>a.date.localeCompare(b.date)||b.priority-a.priority)
 
 
@@ -179,15 +216,19 @@ export function activeFestival(date=indiaToday()){
 export function festivalSeoRoutes(){
   return FESTIVAL_EVENTS.flatMap(event=>Object.values(CAMPAIGN_SERVICES).map(service=>{
     const year=event.date.slice(0,4)
-    const title=event.name+' '+year+' '+service.title+' in Hyderabad | ProPulse'
-    const description='Explore '+event.name+' '+year+' '+service.name.toLowerCase()+' planning in Hyderabad with ProPulse. '+event.inspiration+' Request a scope-based quote; promotional terms require written confirmation.'
+    const title=event.kind==='remembrance'
+      ?event.name+' '+year+' | '+service.name+' & Responsible Spaces | ProPulse'
+      :event.name+' '+year+' '+service.title+' in Hyderabad | ProPulse'
+    const description=event.kind==='remembrance'
+      ?'A respectful remembrance of '+event.name+' '+year+' by ProPulse, Hyderabad. '+event.inspiration+' Learn how '+service.name.toLowerCase()+' can support safe, functional and inclusive communities, without promotional claims.'
+      :'Explore '+event.name+' '+year+' '+service.name.toLowerCase()+' planning in Hyderabad with ProPulse. '+event.inspiration+' Request a scope-based quote; promotional terms require written confirmation.'
     return {
       path:festivalPath(event,service.key),
       type:'festive-offer',title,description,
       heading:event.name+' '+year+' — '+service.name+' in Hyderabad',
       summary:'A '+event.name+'-inspired way to plan '+service.core+' in Hyderabad. Explore practical ideas and request a written project-specific estimate.',
       festivalSlug:event.slug,festivalName:event.name,festivalDate:event.date,
-      campaignStart:event.start,campaignEnd:event.end,campaignTentative:event.tentative,
+      campaignStart:event.start,campaignEnd:event.end,campaignTentative:event.tentative,campaignKind:event.kind,
       festivalTheme:event.theme,festivalInspiration:event.inspiration,
       serviceType:service.key,serviceName:service.name,
     }
