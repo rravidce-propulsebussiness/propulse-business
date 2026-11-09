@@ -126,4 +126,10 @@ export function festivalSeoRoutes(){
     }
   }))
 }
-export const FESTIVE_SEO_ROUTES=festivalSeoRoutes()
+export const FESTIVE_SEO_ROUTES=[{
+  path:'/offers',type:'festival-hub',
+  title:'Festival Construction & Interior Offers Calendar Hyderabad 2026–27 | ProPulse',
+  description:'Browse 2026–2027 festival-themed home construction and interior design campaigns in Hyderabad. Explore Diwali, Sankranti, Republic Day, Ugadi, Bathukamma, Dussehra and more.',
+  heading:'Festival construction and interior offers calendar for Hyderabad',
+  summary:'Explore more than a year of festival-inspired planning pages for independent houses, villas, modular kitchens and full home interiors in Hyderabad.',
+},...festivalSeoRoutes()]
