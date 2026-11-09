@@ -1,7 +1,7 @@
 import {useMemo,useState} from 'react'
 import {Link,Navigate,useParams} from 'react-router-dom'
 import {PublicHeader,PublicFooter} from '../components/PublicSiteChrome'
-import {activeFestival,campaignStatus,CAMPAIGN_SERVICES,FESTIVAL_EVENTS,festivalBySlug,festivalPath,indiaToday} from '../seo/festiveCampaigns'
+import {activeFestival,activeFestivals,campaignStatus,CAMPAIGN_SERVICES,FESTIVAL_EVENTS,festivalBySlug,festivalPath,indiaToday} from '../seo/festiveCampaigns'
 import './FestiveLanding.css'
 
 const prettyDate=value=>new Intl.DateTimeFormat('en-IN',{day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Kolkata'}).format(new Date(value+'T12:00:00+05:30'))
@@ -81,6 +81,7 @@ function SingleOffer({event,service}){
 }
 
 function FestivalHome({event}){
+  const additional=activeFestivals().filter(item=>item.slug!==event.slug)
   return <div className="fc-page fc-home">
     <PublicHeader/>
     <main>
@@ -89,8 +90,9 @@ function FestivalHome({event}){
         <p className="fc-eyebrow">PROPULSE CONSTRUCTION SOLUTIONS &amp; INTERIOR SOLUTIONS</p><h1>Celebrate {event.name}. <em>Make space for a new beginning.</em></h1>
         <p className="fc-lead">{event.inspiration} Explore our festival-season construction and interior planning pages, created for Hyderabad homeowners.</p>
         <div className="fc-actions"><Link className="fc-button fc-button--gold" to={festivalPath(event,'construction')}>Explore Construction ↗</Link><Link className="fc-button fc-button--outline" to={festivalPath(event,'interiors')}>Explore Interiors ↗</Link></div>
-        <p className="fc-festival-date">{event.name} {prettyDate(event.date)} · Hyderabad, India{event.tentative?' · Date subject to local confirmation':''}</p>
+        <p className="fc-festival-date">Homepage runs {prettyDate(event.start)}–{prettyDate(event.end)} (2 days before + festival day) · Hyderabad, India{event.tentative?' · Date subject to local confirmation':''}</p>
       </div></section>
+      {additional.length>0&&<section className="fc-container fc-also" aria-label="Other active festival campaigns"><p className="fc-overline">ALSO CELEBRATING IN HYDERABAD</p><h2>Explore other festival campaigns active today</h2><div className="fc-also-grid">{additional.map(item=><article key={item.slug}><strong>{item.icon} {item.name}</strong><span>{prettyDate(item.date)}</span><div><Link to={festivalPath(item,'construction')}>Construction ↗</Link><Link to={festivalPath(item,'interiors')}>Interiors ↗</Link></div></article>)}</div></section>}
       <section className="fc-container fc-home-options"><div className="fc-section-heading"><p className="fc-overline">TWO WAYS TO START</p><h2>Your home, your next chapter.</h2><p>Choose your project to see festival-themed inspiration, practical planning points and the next step for a quotation.</p></div><div className="fc-card-grid">{Object.values(CAMPAIGN_SERVICES).map(service=><ServiceCard key={service.key} event={event} service={service}/>)}</div></section>
       <section className="fc-container fc-home-principles"><div><b>01</b><h3>Define your requirements</h3><p>Tell us about the plot or rooms and the scope you have in mind.</p></div><div><b>02</b><h3>Discuss specifications</h3><p>Compare materials, finishes, inclusions, exclusions and project stages.</p></div><div><b>03</b><h3>Get a written proposal</h3><p>Promotional terms, if any, are confirmed before you commit.</p></div></section>
       <section className="fc-cta"><div className="fc-container"><p className="fc-overline">EXPLORE PROPULSE</p><h2>A celebration today. A home planned for years.</h2><p>Construction, interiors and technology support from one ProPulse platform.</p><div className="fc-actions"><Link className="fc-button fc-button--gold" to="/quote">Start your project ↗</Link><Link className="fc-button fc-button--outline" to="/offers">See upcoming festivals</Link></div><OfferDisclaimer event={event}/></div></section>
@@ -104,8 +106,8 @@ export function FestivalHub(){
   const events=useMemo(()=>FESTIVAL_EVENTS.filter(event=>filter==='all'||campaignStatus(event,today)===filter),[filter,today])
   return <div className="fc-page"><PublicHeader/><main>
     <section className="fc-hub-hero"><div className="fc-container"><nav aria-label="Breadcrumb" className="fc-breadcrumb"><Link to="/">Home</Link><span>/</span>Festival campaigns</nav><p className="fc-eyebrow">PROPULSE · HYDERABAD</p><h1>A year of celebrations. <em>A home for every chapter.</em></h1><p>Explore festival-themed home construction and interior design campaigns for Hyderabad. Every occasion has its own two service pages, planning checklist and quotation route.</p></div></section>
-    <section className="fc-container fc-hub-list"><div className="fc-hub-heading"><div><p className="fc-overline">FESTIVE CAMPAIGN CALENDAR</p><h2>November 2026 – November 2027</h2></div><div className="fc-filters" role="group" aria-label="Filter campaigns">{[['all','All dates'],['active','Live'],['upcoming','Upcoming']].map(([value,label])=><button type="button" key={value} className={filter===value?'selected':''} onClick={()=>setFilter(value)} aria-pressed={filter===value}>{label}</button>)}</div></div>
-    <div className="fc-hub-grid">{events.map(event=><article key={event.slug} className="fc-event-card"><div className="fc-event-top"><span className="fc-event-icon">{event.icon}</span><StatusTag event={event}/></div><h3>{event.name} <small>{event.date.slice(0,4)}</small></h3><p className="fc-event-date">{event.tentative?'Indicative: ':''}{prettyDate(event.date)}</p><p>{event.inspiration}</p><div className="fc-event-links"><Link to={festivalPath(event,'construction')}>Construction ↗</Link><Link to={festivalPath(event,'interiors')}>Interiors ↗</Link></div></article>)}</div>
+    <section className="fc-container fc-hub-list"><div className="fc-hub-heading"><div><p className="fc-overline">FESTIVE CAMPAIGN CALENDAR</p><h2>November 2026 – November 2027 · {FESTIVAL_EVENTS.length} occasions</h2></div><div className="fc-filters" role="group" aria-label="Filter campaigns">{[['all','All dates'],['active','Live'],['upcoming','Upcoming']].map(([value,label])=><button type="button" key={value} className={filter===value?'selected':''} onClick={()=>setFilter(value)} aria-pressed={filter===value}>{label}</button>)}</div></div>
+    <div className="fc-hub-grid">{events.map(event=><article key={event.slug} className="fc-event-card"><div className="fc-event-top"><span className="fc-event-icon">{event.icon}</span><StatusTag event={event}/></div><h3>{event.name} <small>{event.date.slice(0,4)}</small></h3><p className="fc-event-date">{event.tentative?'Indicative: ':''}{prettyDate(event.date)}</p><p className="fc-window">Featured {prettyDate(event.start)}–{prettyDate(event.end)}</p><p>{event.inspiration}</p><div className="fc-event-links"><Link to={festivalPath(event,'construction')}>Construction ↗</Link><Link to={festivalPath(event,'interiors')}>Interiors ↗</Link></div></article>)}</div>
     {events.length===0&&<p>No campaign in this group. Browse all dates to explore the calendar.</p>}
     <p className="fc-terms">Festival dates use Hyderabad/IST. Moon-dependent and region-specific observances can change. Published campaigns do not imply an automatic discount; written quotation terms apply.</p>
     </section>
