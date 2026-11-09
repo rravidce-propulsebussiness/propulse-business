@@ -335,6 +335,28 @@ function festiveContent(route){
   const event=festivalBySlug(route.festivalSlug)
   const service=CAMPAIGN_SERVICES[route.serviceType]
   if(!event||!service)return ''
+  if(event.kind==='remembrance'){
+    const sibling=service.key==='construction'?'interiors':'construction'
+    const focus=service.key==='construction'
+      ?'Safety-conscious house construction begins with documented drawings, structural specifications, durable materials, waterproofing and inclusive access.'
+      :'Responsible interior design considers accessibility, safe circulation, natural light, indoor comfort, durable finishes and practical storage.'
+    return '<section style="padding:30px 0 60px;max-width:960px">'+
+      '<p style="font-weight:700">IN RESPECTFUL REMEMBRANCE · HYDERABAD</p>'+
+      '<h2>'+escapeHtml(event.name)+' '+escapeHtml(event.date.slice(0,4))+' — '+escapeHtml(service.name)+'</h2>'+
+      '<p>'+escapeHtml(event.inspiration)+'</p>'+
+      '<p>Observed '+escapeHtml(event.date)+'. This is a solemn commemorative page by ProPulse, Hyderabad. It does not advertise a festival sale, discount or promotional benefit.</p>'+
+      '<h2>We remember, honour and reflect</h2>'+
+      '<p>Our thoughts are with the people and families remembered on this occasion. This message is intended to honour their memory with dignity and respect.</p>'+
+      '<h2>'+escapeHtml(service.name)+' and responsible spaces</h2>'+
+      '<p>'+escapeHtml(focus)+' This is general educational information, separate from the remembrance observance; it is not a commercial offer.</p>'+
+      '<h2>Frequently asked questions</h2>'+
+      '<h3>What does '+escapeHtml(event.name)+' commemorate?</h3><p>'+escapeHtml(event.inspiration)+'</p>'+
+      '<h3>Are there promotions connected with this day?</h3><p>No. ProPulse does not link promotional offers to days of remembrance.</p>'+
+      '<p><a href="'+escapeHtml(festivalPath(event,sibling))+'">Visit the separate '+escapeHtml(CAMPAIGN_SERVICES[sibling].name)+' remembrance page</a> · '+
+      '<a href="/offers">Browse other important dates</a> · <a href="/about">About ProPulse</a></p>'+
+      '<p><small>Displayed '+escapeHtml(event.start)+' through '+escapeHtml(event.end)+' (IST), two days before and on the day of remembrance.</small></p>'+
+      '</section>'
+  }
   const year=event.date.slice(0,4)
   const heading=event.name+' '+year+' '+service.name+' project planning in Hyderabad'
   const materialIntro=service.key==='construction'
@@ -411,7 +433,10 @@ function staticJsonLd(route){
   if(route.type==='state-construction-hub'||route.type==='district-construction')page.about={'@type':'Service',name:'Home construction',areaServed:route.type==='district-construction'?{'@type':'AdministrativeArea',name:route.districtName+' district, '+route.stateName+', India'}:{'@type':'AdministrativeArea',name:route.stateName+', India'}}
   const organization={'@context':'https://schema.org','@type':'Organization',name:SITE_NAME,url:absolute('/'),logo:absolute('/brand/propulse-logo.png')}
   const website={'@context':'https://schema.org','@type':'WebSite',name:SITE_NAME,url:absolute('/'),inLanguage:'en-IN',description:route.path==='/'?route.description:undefined}
-  const faqGraph=route.type==='festive-offer'?{'@context':'https://schema.org','@type':'FAQPage',mainEntity:[
+  const faqGraph=route.type==='festive-offer'&&route.campaignKind==='remembrance'?{'@context':'https://schema.org','@type':'FAQPage',mainEntity:[
+    {'@type':'Question',name:'What does '+route.festivalName+' commemorate?',acceptedAnswer:{'@type':'Answer',text:route.festivalInspiration}},
+    {'@type':'Question',name:'Are there promotions associated with this observance?',acceptedAnswer:{'@type':'Answer',text:'No. This is a respectful memorial, not a festival discount campaign.'}},
+  ]}:route.type==='festive-offer'?{'@context':'https://schema.org','@type':'FAQPage',mainEntity:[
     {'@type':'Question',name:CAMPAIGN_SERVICES[route.serviceType].question,acceptedAnswer:{'@type':'Answer',text:CAMPAIGN_SERVICES[route.serviceType].answer}},
     {'@type':'Question',name:'Is there a guaranteed '+route.festivalName+' discount?',acceptedAnswer:{'@type':'Answer',text:'No automatic discount is guaranteed. Any promotion must be confirmed in a written quotation.'}},
     {'@type':'Question',name:'Can I ask for an estimate after '+route.festivalName+'?',acceptedAnswer:{'@type':'Answer',text:'Yes, project enquiries remain available beyond a campaign period.'}},
