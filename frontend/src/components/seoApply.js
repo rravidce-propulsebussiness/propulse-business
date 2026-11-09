@@ -1,4 +1,5 @@
 import {HOME_SEO,SITE_NAME,isIndexablePath,seoForPath} from '../seo/seoConfig'
+import {CAMPAIGN_SERVICES} from '../seo/festiveCampaigns'
 
 const SERVICE_LABELS={
   construction:'Construction',
@@ -75,6 +76,9 @@ function pageJsonLd(route,origin){
     page.publisher={'@type':'Organization',name:SITE_NAME,url:home}
     page.mainEntityOfPage=origin+route.path
   }
+  if(route.type==='festive-offer'){
+    page.about={'@type':'Service',name:route.serviceName+' planning',serviceType:route.serviceName,areaServed:{'@type':'City',name:'Hyderabad, Telangana, India'}}
+  }
   if(route.type==='cost-guide'){
     page.about={
       '@type':'Service',
@@ -110,6 +114,15 @@ function pageJsonLd(route,origin){
 function breadcrumbItems(route,origin){
   const home=origin+'/'
   const items=[{'@type':'ListItem',position:1,name:'Home',item:home}]
+  if(route.type==='festival-hub'){
+    items.push({'@type':'ListItem',position:2,name:'Festival offers',item:origin+'/offers'})
+    return items
+  }
+  if(route.type==='festive-offer'){
+    items.push({'@type':'ListItem',position:2,name:'Festival offers',item:origin+'/offers'})
+    items.push({'@type':'ListItem',position:3,name:route.festivalName+' '+route.serviceName,item:origin+route.path})
+    return items
+  }
   if(route.type==='state-construction-hub'){
     items.push({'@type':'ListItem',position:2,name:route.stateName,item:origin+'/'+route.stateSlug+'/construction'})
     return items
@@ -195,6 +208,14 @@ function jsonLdFor(route,origin){
       itemListElement:breadcrumbItems(route,origin),
     },
   ]
+  if(route.type==='festive-offer'){
+    const service=CAMPAIGN_SERVICES[route.serviceType]
+    data.push({'@context':'https://schema.org','@type':'FAQPage',mainEntity:[
+      {'@type':'Question',name:service.question,acceptedAnswer:{'@type':'Answer',text:service.answer}},
+      {'@type':'Question',name:'Is there a guaranteed '+route.festivalName+' discount?',acceptedAnswer:{'@type':'Answer',text:'No automatic discount is guaranteed. Any promotion must be confirmed in a written quotation.'}},
+      {'@type':'Question',name:'Can I ask for an estimate after '+route.festivalName+'?',acceptedAnswer:{'@type':'Answer',text:'Yes, project enquiries remain available beyond a campaign period.'}},
+    ]})
+  }
   return data
 }
 
