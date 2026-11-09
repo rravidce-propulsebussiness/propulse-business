@@ -3,51 +3,115 @@
 // panchang sources. Moon-sighting dates and temple-specific Bonalu dates are provisional.
 // No percentage discounts or free services are asserted without an approved offer.
 const EVENTS = [
-  ['diwali-2026','Diwali','2026-11-08','2026-11-05','2026-11-12','🪔','Festival of lights','Warm lighting, welcoming living rooms and thoughtfully planned spaces make celebrations more comfortable.',95],
-  ['chhath-puja-2026','Chhath Puja','2026-11-15','2026-11-13','2026-11-17','🌅','Gratitude and togetherness','Plan safe, practical access, ventilation and easy-to-maintain family spaces for gatherings.',61],
-  ['guru-nanak-jayanti-2026','Guru Nanak Jayanti','2026-11-24','2026-11-22','2026-11-25','✨','Community and service','Consider inclusive shared areas and durable, low-maintenance finishes for a welcoming home.',64],
-  ['christmas-2026','Christmas','2026-12-25','2026-12-21','2026-12-28','🎄','Season of giving','Create comfortable gathering spaces with practical lighting, storage and family-friendly finishes.',70],
-  ['new-year-2027','New Year','2027-01-01','2026-12-29','2027-01-04','🎇','A fresh start','Turn the plan for a new home or refreshed interior into a measured scope, budget and timeline.',82],
-  ['bhogi-2027','Bhogi','2027-01-14','2027-01-12','2027-01-14','🌾','Renewal and fresh beginnings','Use the season to declutter and rethink storage, ventilation and practical room layouts.',66],
-  ['makar-sankranti-2027','Makar Sankranti','2027-01-15','2027-01-14','2027-01-18','🪁','Harvest and homecoming','Plan airy courtyards, terraces and family spaces with safety and day-to-day use in mind.',88],
-  ['republic-day-2027','Republic Day','2027-01-26','2027-01-23','2027-01-27','🇮🇳','Building for tomorrow','Choose transparent specifications, structural planning and long-term value for your next home.',78],
-  ['vasant-panchami-2027','Vasant Panchami','2027-02-11','2027-02-09','2027-02-12','🌼','Learning and renewal','Explore calm study corners, natural light and purposeful home office layouts.',61],
-  ['valentines-day-2027',"Valentine's Day",'2027-02-14','2027-02-12','2027-02-16','❤️','Spaces made for two','Think about comfortable shared living, relaxed bedrooms and personalized finishes.',59],
-  ['maha-shivaratri-2027','Maha Shivaratri','2027-03-06','2027-03-04','2027-03-07','🕉️','Reflection and calm','Consider uncluttered prayer areas and balanced space planning within your broader home brief.',74],
-  ['womens-day-2027',"International Women's Day",'2027-03-08','2027-03-07','2027-03-09','🌷','Homes designed for everyone','Prioritize accessibility, reliable storage, safe kitchens and flexible work-from-home areas.',57],
-  ['eid-al-fitr-2027','Eid al-Fitr','2027-03-10','2027-03-09','2027-03-12','🌙','Celebration and hospitality','Design welcoming seating areas, convenient dining circulation and easy-care finishes.',79,true],
-  ['holi-2027','Holi','2027-03-22','2027-03-20','2027-03-24','🎨','Colour and fresh energy','Explore washable surfaces, cheerful accents and resilient indoor-outdoor finishes.',81],
-  ['good-friday-2027','Good Friday','2027-03-26','2027-03-25','2027-03-28','🕊️','Reflection and care','Consider quiet corners, natural light and comfortable spaces for family connection.',55],
-  ['ugadi-2027','Ugadi','2027-04-07','2027-04-04','2027-04-09','🌿','Telugu New Year','Make room for a new chapter with considered plans for construction, kitchen functionality and family life.',91],
-  ['ambedkar-jayanti-2027','Ambedkar Jayanti','2027-04-14','2027-04-13','2027-04-15','📘','Equality and opportunity','Create accessible, adaptable and well-planned homes that support daily independence.',54],
-  ['sri-rama-navami-2027','Sri Rama Navami','2027-04-15','2027-04-14','2027-04-17','🏵️','Family and tradition','Discuss comfortable family gathering areas and a prayer niche when it suits your preferences.',72],
-  ['earth-day-2027','Earth Day','2027-04-22','2027-04-21','2027-04-23','🌎','Build with care','Ask about daylight, ventilation, water use and material durability at the design stage.',56],
-  ['labour-day-2027','Labour Day','2027-05-01','2027-04-29','2027-05-02','🛠️','Respect the makers','Plan with realistic work schedules, clear milestones and safe site practices.',58],
-  ['akshaya-tritiya-2027','Akshaya Tritiya','2027-05-09','2027-05-07','2027-05-11','🌟','New beginnings','Prepare the groundwork for a home project with clarity on approvals, materials and budgets.',80],
-  ['eid-al-adha-2027','Eid al-Adha','2027-05-17','2027-05-16','2027-05-19','🌙','Gathering and generosity','Give shared rooms and dining spaces thoughtful circulation, storage and lighting.',75,true],
-  ['telangana-formation-day-2027','Telangana Formation Day','2027-06-02','2027-05-31','2027-06-04','🏛️','Celebrating Telangana','Explore practical home construction and interiors tailored to Hyderabad climate and lifestyles.',76],
-  ['environment-day-2027','World Environment Day','2027-06-05','2027-06-04','2027-06-07','🌱','Thoughtful materials','Discuss sensible material selection, daylight, ventilation and water-saving priorities.',58],
-  ['international-yoga-day-2027','International Yoga Day','2027-06-21','2027-06-19','2027-06-22','🧘','Wellness at home','Find a quiet and flexible space for movement, daylight and comfortable air flow.',53],
-  ['bonalu-2027','Bonalu Season','2027-07-04','2027-07-04','2027-08-01','🌺','Telangana heritage','Make room for hospitality, family visits and welcoming entrances with easy maintenance.',76,true],
-  ['guru-purnima-2027','Guru Purnima','2027-07-18','2027-07-17','2027-07-20','📚','Learning and gratitude','Create study and reading spaces that adapt as family needs change.',58],
-  ['varalakshmi-vratam-2027','Varalakshmi Vratam','2027-08-13','2027-08-11','2027-08-14','🪷','Tradition and prosperity','Plan practical puja storage, gathering spaces and light where they fit your needs.',71],
-  ['independence-day-2027','Independence Day','2027-08-15','2027-08-12','2027-08-16','🇮🇳','A vision for the future','Explore well-built homes with detailed specifications and transparent project decisions.',85],
-  ['raksha-bandhan-2027','Raksha Bandhan','2027-08-17','2027-08-16','2027-08-19','🎁','Family connections','Design comfortable shared rooms and purposeful storage for family life.',68],
-  ['janmashtami-2027','Krishna Janmashtami','2027-08-25','2027-08-23','2027-08-27','🦚','Joy and celebration','Bring warmth to family spaces, safe décor arrangements and accessible storage.',73],
-  ['ganesh-chaturthi-2027','Ganesh Chaturthi','2027-09-04','2027-09-01','2027-09-07','🐘','Welcoming beginnings','Plan space for family gathering, adaptable furniture and a flexible pooja area.',89],
-  ['teachers-day-2027',"Teachers' Day",'2027-09-05','2027-09-04','2027-09-06','✏️','Spaces that encourage learning','Consider efficient workstations, comfortable lighting and sound-aware study areas.',52],
-  ['navratri-2027','Navratri','2027-09-30','2027-09-28','2027-10-05','🌸','Nine nights of celebration','Think through flexible gathering space, festive lighting and easy-to-refresh décor.',76],
-  ['gandhi-jayanti-2027','Gandhi Jayanti','2027-10-02','2027-10-01','2027-10-03','🕊️','Simplicity and purpose','Prioritize functional spaces, responsible resource use and straightforward plans.',55],
-  ['bathukamma-2027','Saddula Bathukamma','2027-10-07','2027-10-05','2027-10-08','💐','Floral traditions of Telangana','Consider welcoming verandas, usable courtyards and durable spaces for family festivities.',83],
-  ['dussehra-2027','Dussehra','2027-10-09','2027-10-07','2027-10-12','🏹','A season of new projects','Compare home-building scopes and reimagine the rooms that matter most.',90],
-  ['diwali-2027','Diwali','2027-10-29','2027-10-25','2027-11-02','🪔','Festival of lights','Warm lighting, welcoming living rooms and thoughtfully planned spaces make celebrations more comfortable.',96],
-  ['bhai-dooj-2027','Bhai Dooj','2027-10-31','2027-10-30','2027-11-02','🪔','Together at home','Design spaces that make family visits easy, comfortable and memorable.',63],
-  ['chhath-puja-2027','Chhath Puja','2027-11-04','2027-11-03','2027-11-06','🌅','Gratitude and togetherness','Consider convenient outdoor access, simple upkeep and shared family areas.',66],
+  ['diwali-2026','Diwali','2026-11-08','🪔','Festival of lights','Warm lighting, welcoming living rooms and thoughtfully planned spaces make celebrations more comfortable.',95],
+  ['chhath-puja-2026','Chhath Puja','2026-11-15','🌅','Gratitude and togetherness','Plan safe, practical access, ventilation and easy-to-maintain family spaces for gatherings.',61],
+  ['guru-nanak-jayanti-2026','Guru Nanak Jayanti','2026-11-24','✨','Community and service','Consider inclusive shared areas and durable, low-maintenance finishes for a welcoming home.',64],
+  ['christmas-2026','Christmas','2026-12-25','🎄','Season of giving','Create comfortable gathering spaces with practical lighting, storage and family-friendly finishes.',70],
+  ['new-year-2027','New Year','2027-01-01','🎇','A fresh start','Turn the plan for a new home or refreshed interior into a measured scope, budget and timeline.',82],
+  ['bhogi-2027','Bhogi','2027-01-14','🌾','Renewal and fresh beginnings','Use the season to declutter and rethink storage, ventilation and practical room layouts.',66],
+  ['makar-sankranti-2027','Makar Sankranti','2027-01-15','🪁','Harvest and homecoming','Plan airy courtyards, terraces and family spaces with safety and day-to-day use in mind.',88],
+  ['republic-day-2027','Republic Day','2027-01-26','🇮🇳','Building for tomorrow','Choose transparent specifications, structural planning and long-term value for your next home.',78],
+  ['vasant-panchami-2027','Vasant Panchami','2027-02-11','🌼','Learning and renewal','Explore calm study corners, natural light and purposeful home office layouts.',61],
+  ['valentines-day-2027',"Valentine's Day",'2027-02-14','❤️','Spaces made for two','Think about comfortable shared living, relaxed bedrooms and personalized finishes.',59],
+  ['maha-shivaratri-2027','Maha Shivaratri','2027-03-06','🕉️','Reflection and calm','Consider uncluttered prayer areas and balanced space planning within your broader home brief.',74],
+  ['womens-day-2027',"International Women's Day",'2027-03-08','🌷','Homes designed for everyone','Prioritize accessibility, reliable storage, safe kitchens and flexible work-from-home areas.',57],
+  ['eid-al-fitr-2027','Eid al-Fitr','2027-03-10','🌙','Celebration and hospitality','Design welcoming seating areas, convenient dining circulation and easy-care finishes.',79,true],
+  ['holi-2027','Holi','2027-03-22','🎨','Colour and fresh energy','Explore washable surfaces, cheerful accents and resilient indoor-outdoor finishes.',81],
+  ['good-friday-2027','Good Friday','2027-03-26','🕊️','Reflection and care','Consider quiet corners, natural light and comfortable spaces for family connection.',55],
+  ['ugadi-2027','Ugadi','2027-04-07','🌿','Telugu New Year','Make room for a new chapter with considered plans for construction, kitchen functionality and family life.',91],
+  ['ambedkar-jayanti-2027','Ambedkar Jayanti','2027-04-14','📘','Equality and opportunity','Create accessible, adaptable and well-planned homes that support daily independence.',54],
+  ['sri-rama-navami-2027','Sri Rama Navami','2027-04-15','🏵️','Family and tradition','Discuss comfortable family gathering areas and a prayer niche when it suits your preferences.',72],
+  ['earth-day-2027','Earth Day','2027-04-22','🌎','Build with care','Ask about daylight, ventilation, water use and material durability at the design stage.',56],
+  ['labour-day-2027','Labour Day','2027-05-01','🛠️','Respect the makers','Plan with realistic work schedules, clear milestones and safe site practices.',58],
+  ['akshaya-tritiya-2027','Akshaya Tritiya','2027-05-08','🌟','New beginnings','Prepare the groundwork for a home project with clarity on approvals, materials and budgets.',80],
+  ['eid-al-adha-2027','Eid al-Adha','2027-05-17','🌙','Gathering and generosity','Give shared rooms and dining spaces thoughtful circulation, storage and lighting.',75,true],
+  ['telangana-formation-day-2027','Telangana Formation Day','2027-06-02','🏛️','Celebrating Telangana','Explore practical home construction and interiors tailored to Hyderabad climate and lifestyles.',76],
+  ['environment-day-2027','World Environment Day','2027-06-05','🌱','Thoughtful materials','Discuss sensible material selection, daylight, ventilation and water-saving priorities.',58],
+  ['international-yoga-day-2027','International Yoga Day','2027-06-21','🧘','Wellness at home','Find a quiet and flexible space for movement, daylight and comfortable air flow.',53],
+  ['bonalu-2027','Bonalu Celebrations (indicative)','2027-07-11','🌺','Telangana heritage','Make room for hospitality, family visits and welcoming entrances with easy maintenance.',76,true],
+  ['guru-purnima-2027','Guru Purnima','2027-07-18','📚','Learning and gratitude','Create study and reading spaces that adapt as family needs change.',58],
+  ['varalakshmi-vratam-2027','Varalakshmi Vratam','2027-08-13','🪷','Tradition and prosperity','Plan practical puja storage, gathering spaces and light where they fit your needs.',71],
+  ['independence-day-2027','Independence Day','2027-08-15','🇮🇳','A vision for the future','Explore well-built homes with detailed specifications and transparent project decisions.',85],
+  ['raksha-bandhan-2027','Raksha Bandhan','2027-08-17','🎁','Family connections','Design comfortable shared rooms and purposeful storage for family life.',68],
+  ['janmashtami-2027','Krishna Janmashtami','2027-08-25','🦚','Joy and celebration','Bring warmth to family spaces, safe décor arrangements and accessible storage.',73],
+  ['ganesh-chaturthi-2027','Ganesh Chaturthi','2027-09-04','🐘','Welcoming beginnings','Plan space for family gathering, adaptable furniture and a flexible pooja area.',89],
+  ['teachers-day-2027',"Teachers' Day",'2027-09-05','✏️','Spaces that encourage learning','Consider efficient workstations, comfortable lighting and sound-aware study areas.',52],
+  ['navratri-2027','Navratri','2027-09-30','🌸','Nine nights of celebration','Think through flexible gathering space, festive lighting and easy-to-refresh décor.',76],
+  ['gandhi-jayanti-2027','Gandhi Jayanti','2027-10-02','🕊️','Simplicity and purpose','Prioritize functional spaces, responsible resource use and straightforward plans.',55],
+  ['bathukamma-2027','Saddula Bathukamma','2027-10-07','💐','Floral traditions of Telangana','Consider welcoming verandas, usable courtyards and durable spaces for family festivities.',83],
+  ['dussehra-2027','Dussehra','2027-10-09','🏹','A season of new projects','Compare home-building scopes and reimagine the rooms that matter most.',90],
+  ['diwali-2027','Diwali','2027-10-29','🪔','Festival of lights','Warm lighting, welcoming living rooms and thoughtfully planned spaces make celebrations more comfortable.',96],
+  ['bhai-dooj-2027','Bhai Dooj','2027-10-31','🪔','Together at home','Design spaces that make family visits easy, comfortable and memorable.',63],
+  ['chhath-puja-2027','Chhath Puja','2027-11-04','🌅','Gratitude and togetherness','Consider convenient outdoor access, simple upkeep and shared family areas.',66],
+  ["dhanteras-2026","Dhanteras","2026-11-06","🪙","New beginnings and preparation","Plan a lasting home project with a thoughtful budget, written inclusions and clear decisions.",72],
+  ["govardhan-puja-2026","Govardhan Puja","2026-11-10","🌿","Family and gratitude","Explore comfortable family spaces that are designed around everyday living.",68],
+  ["bhai-dooj-2026","Bhai Dooj","2026-11-11","🎁","Family connections","Imagine welcoming rooms with generous seating and storage for relatives visiting.",64],
+  ["devutthana-ekadashi-2026","Devutthana Ekadashi","2026-11-20","🪷","An auspicious new chapter","Review your project goals, permissions and budget before committing to construction.",52],
+  ["tulsi-vivah-2026","Tulsi Vivah","2026-11-21","🌿","Home and tradition","Explore practical courtyard, balcony and prayer-area layouts for your household.",57],
+  ["kartika-pournami-2026","Kartika Pournami","2026-11-24","🪔","Light and reflection","Plan a calm home with comfortable lighting, ventilation and easy-to-use rooms.",63],
+  ["christmas-eve-2026","Christmas Eve","2026-12-24","⭐","Celebration preparations","Make entertaining comfortable with flexible dining layouts and simple festive styling.",48],
+  ["new-years-eve-2026","New Year's Eve","2026-12-31","🎆","Looking ahead","Review the improvements you want for your home in the coming year.",56],
+  ["national-youth-day-2027","National Youth Day","2027-01-12","📚","Ideas and ambition","Build more adaptable study and workspaces with efficient lighting and storage.",51],
+  ["lohri-2027","Lohri","2027-01-14","🔥","Winter gathering","Plan practical outdoor seating and welcoming indoor spaces for family celebrations.",59],
+  ["pongal-2027","Pongal","2027-01-15","🌾","Harvest celebrations","Create practical kitchens, welcoming dining rooms and flexible family spaces.",67],
+  ["kanuma-2027","Kanuma","2027-01-16","🐄","Rural roots and gratitude","Plan durable entries, outdoor areas and family gathering zones.",65],
+  ["guru-gobind-singh-jayanti-2027","Guru Gobind Singh Jayanti","2027-01-15","✨","Courage and service","Consider welcoming shared areas and accessible spaces for friends and family.",60],
+  ["netaji-jayanti-2027","Netaji Subhas Chandra Bose Jayanti","2027-01-23","🇮🇳","Commitment and leadership","Plan a home project responsibly with transparent scope and documented decisions.",54],
+  ["national-martyrs-day-2027","Martyrs' Day","2027-01-30","🕊️","Remembrance and reflection","Create peaceful, functional rooms that support everyday family life.",40],
+  ["shivaji-jayanti-2027","Chhatrapati Shivaji Maharaj Jayanti","2027-02-19","🏛️","Heritage and resilience","Choose durable materials, thoughtful plans and long-term value.",54],
+  ["guru-ravidas-jayanti-2027","Guru Ravidas Jayanti","2027-02-20","🪷","Equality and dignity","Consider accessible homes with flexible spaces for changing needs.",54],
+  ["jamat-ul-vida-2027","Jumat-ul-Vida","2027-03-05","🌙","Community and reflection","Plan welcoming shared spaces and practical room circulation.",43,true],
+  ["holika-dahan-2027","Holika Dahan","2027-03-21","🔥","Renewal and hope","Choose durable surfaces and easy-to-maintain family spaces.",61],
+  ["nowruz-2027","Nowruz","2027-03-21","🌷","Spring new beginnings","Refresh indoor lighting, finishes and family room layouts.",61],
+  ["easter-2027","Easter","2027-03-28","🐣","Hope and renewal","Explore brighter dining spaces, welcoming living rooms and flexible family layouts.",70],
+  ["gudi-padwa-2027","Gudi Padwa","2027-04-07","🌿","New year and renewal","Use the season to plan thoughtfully for better storage and comfortable rooms.",62],
+  ["cheti-chand-2027","Cheti Chand","2027-04-08","🌊","New beginnings","Create a project brief that balances tradition, comfort and modern everyday needs.",57],
+  ["baisakhi-2027","Baisakhi","2027-04-14","🌾","Harvest and togetherness","Consider welcoming family areas, natural ventilation and practical dining spaces.",66],
+  ["mahavir-jayanti-2027","Mahavir Jayanti","2027-04-19","🪷","Mindful living","Explore uncluttered spaces, natural light and materials selected for durability.",61],
+  ["tagore-jayanti-2027","Rabindranath Tagore Jayanti","2027-05-07","📖","Art and imagination","Plan inspiring reading corners and creative rooms for the family.",51],
+  ["mothers-day-2027","Mother's Day","2027-05-09","💐","Family appreciation","Think of ergonomic kitchens, useful storage and relaxing corners for family time.",63],
+  ["buddha-purnima-2027","Buddha Purnima","2027-05-20","🪷","Peace and balance","Explore restful layouts, quiet corners and natural daylight.",64],
+  ["islamic-new-year-2027","Islamic New Year","2027-06-06","🌙","A time for reflection","Consider comfortable family gathering areas with thoughtful circulation.",50,true],
+  ["muharram-2027","Muharram / Ashura","2027-06-15","🕊️","Commemoration and respect","Focus on calm, practical and welcoming interiors for daily life.",42,true],
+  ["kabir-jayanti-2027","Kabir Das Jayanti","2027-06-18","📚","Simplicity and wisdom","Prioritize clear plans, useful rooms and long-lasting specifications.",50],
+  ["fathers-day-2027","Father's Day","2027-06-20","💙","Family connection","Explore shared living areas, reading corners and spaces for togetherness.",57],
+  ["jagannath-rath-yatra-2027","Jagannath Rath Yatra","2027-07-05","🛕","Community and devotion","Plan accessible entrances, gathering spaces and practical storage.",63],
+  ["tholi-ekadashi-2027","Tholi Ekadashi","2027-07-14","🪷","Auspicious season","Plan a home with clarity around layout, construction stages and materials.",51],
+  ["friendship-day-2027","Friendship Day","2027-08-01","🤝","Connection and warmth","Create inviting living and dining rooms for friends and family.",55],
+  ["eid-milad-un-nabi-2027","Eid Milad-un-Nabi","2027-08-15","🌙","Community and gratitude","Consider warm shared spaces and comfortable lighting.",54,true],
+  ["hartalika-teej-2027","Hartalika Teej","2027-09-03","🌼","Tradition and celebration","Plan thoughtful prayer storage, welcoming rooms and practical finishes.",59],
+  ["onam-2027","Onam","2027-09-12","🌸","Harvest and hospitality","Imagine spacious dining arrangements and flexible gathering areas.",68],
+  ["engineers-day-2027","Engineers' Day","2027-09-15","📐","Engineering and quality","Ask detailed questions about structure, specifications, scope and project supervision.",65],
+  ["bathukamma-begins-2027","Bathukamma Celebrations Begin","2027-09-30","💐","Telangana flower festival","Plan welcoming courtyards and airy family spaces for seasonal gatherings.",71],
+  ["durga-ashtami-2027","Durga Ashtami","2027-10-07","🌺","Strength and celebration","Design flexible rooms and warm lighting for family gatherings.",70],
+  ["maha-navami-2027","Maha Navami","2027-10-08","🪷","Celebration and reflection","Explore thoughtful home layouts, finishes and storage ideas.",67],
+  ["saraswati-puja-2027","Saraswati Puja","2027-10-08","📚","Learning and creativity","Make room for study, inspiration and organized home working.",60],
+  ["karwa-chauth-2027","Karwa Chauth","2027-10-18","🌙","Family and togetherness","Plan welcoming balconies, calm bedrooms and functional storage.",59],
+  ["dhanteras-2027","Dhanteras","2027-10-27","🪙","Planning for prosperity","Put long-term value first with a transparent materials and project-cost brief.",72],
+  ["naraka-chaturdashi-2027","Naraka Chaturdashi","2027-10-28","🪔","Fresh light","Consider useful lighting layers and comfortable, safe family spaces.",60],
+  ["govardhan-puja-2027","Govardhan Puja","2027-10-30","🌿","Gratitude and family","Explore convenient dining spaces and easy-to-maintain finishes.",67],
+  ["nagula-chavithi-2027","Nagula Chavithi","2027-11-02","🌿","Telugu tradition","Explore safe outdoor circulation, practical entrance spaces and easy maintenance.",58],
+  ["skanda-sashti-2027","Skanda Sashti","2027-11-04","🛕","Devotion and resilience","Plan quiet family spaces and durable, thoughtful interiors.",52],
+  ["devutthana-ekadashi-2027","Devutthana Ekadashi","2027-11-10","🪷","New beginnings","Set out the plot, floor plan and budget before requesting a quote.",55],
+  ["tulsi-vivah-2027","Tulsi Vivah","2027-11-11","🌱","Home tradition","Consider natural light and practical balconies or courtyard arrangements.",60],
+  ["guru-nanak-jayanti-2027","Guru Nanak Jayanti","2027-11-14","✨","Community and service","Create inclusive shared spaces with easy access and comfortable finishes.",69],
+  ["karthika-pournami-2027","Karthika Pournami","2027-11-14","🪔","Light and reflection","Create a calm atmosphere with careful lighting, ventilation and practical rooms.",65],
+  ["childrens-day-2027","Children's Day","2027-11-14","🎈","Growing together","Plan safe play areas, useful storage and adaptable study spaces.",58],
+  ["constitution-day-2027","Constitution Day","2027-11-26","📜","Equality and responsibility","Explore accessible spaces and transparent decision-making for home projects.",52],
 ]
 
-export const FESTIVAL_EVENTS = EVENTS.map(([slug,name,date,start,end,icon,theme,inspiration,priority,tentative=false])=>({
-  slug,name,date,start,end,icon,theme,inspiration,priority,tentative,
-}))
+// Exactly three inclusive IST calendar dates: the two days before the observance and the observance day.
+// UTC-only arithmetic avoids daylight-saving and local-machine timezone drift.
+export function dateOffset(isoDate,days){
+  const value=new Date(isoDate+'T00:00:00.000Z')
+  if(Number.isNaN(value.getTime())||value.toISOString().slice(0,10)!==isoDate)throw Error('Invalid festival date: '+isoDate)
+  value.setUTCDate(value.getUTCDate()+days)
+  return value.toISOString().slice(0,10)
+}
+export const FESTIVAL_EVENTS = EVENTS.map(([slug,name,date,icon,theme,inspiration,priority,tentative=false])=>({
+  slug,name,date,start:dateOffset(date,-2),end:date,icon,theme,inspiration,priority,tentative,
+})).sort((a,b)=>a.date.localeCompare(b.date)||b.priority-a.priority)
+
 
 export const CAMPAIGN_SERVICES={
   construction:{
@@ -105,9 +169,12 @@ export function campaignStatus(event,date=indiaToday()){
   if(date>event.end)return 'past'
   return 'active'
 }
+export function activeFestivals(date=indiaToday()){
+  return FESTIVAL_EVENTS.filter(event=>campaignStatus(event,date)==='active')
+    .sort((a,b)=>b.priority-a.priority||a.date.localeCompare(b.date))
+}
 export function activeFestival(date=indiaToday()){
-  return [...FESTIVAL_EVENTS].filter(event=>campaignStatus(event,date)==='active')
-    .sort((a,b)=>b.priority-a.priority||a.date.localeCompare(b.date))[0]||null
+  return activeFestivals(date)[0]||null
 }
 export function festivalSeoRoutes(){
   return FESTIVAL_EVENTS.flatMap(event=>Object.values(CAMPAIGN_SERVICES).map(service=>{
