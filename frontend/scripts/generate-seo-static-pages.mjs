@@ -351,7 +351,7 @@ function festiveContent(route){
     '<p>Considering '+escapeHtml(service.core)+'? This '+escapeHtml(event.name)+' season is an opportunity to organize ideas into an actionable brief, rather than rush into materials or pricing before the project requirements are clear.</p>'+
     '<p>'+escapeHtml(materialIntro)+'</p>'+
     '<h2>Ideas to take from the '+escapeHtml(event.name)+' season</h2>'+
-    '<p>'+escapeHtml(event.inspiration)+' The best result comes from matching these ideas to the property's actual dimensions, local conditions and everyday routines.</p>'+
+    '<p>'+escapeHtml(event.inspiration)+' The best result comes from matching these ideas to the actual property dimensions, local conditions and everyday routines.</p>'+
     '<ul>'+service.benefits.map(([name,details])=>'<li><strong>'+escapeHtml(name)+':</strong> '+escapeHtml(details)+'</li>').join('')+'</ul>'+
     '<h2>Checklist before asking for a '+escapeHtml(event.name)+' quote</h2>'+
     '<ol>'+service.checklist.map(text=>'<li>'+escapeHtml(text)+'</li>').join('')+'</ol>'+
