@@ -221,7 +221,7 @@ export function festivalSeoRoutes(){
       :event.name+' '+year+' '+service.title+' in Hyderabad | ProPulse'
     const description=event.kind==='remembrance'
       ?'A respectful remembrance of '+event.name+' '+year+' by ProPulse, Hyderabad. '+event.inspiration+' Learn how '+service.name.toLowerCase()+' can support safe, functional and inclusive communities, without promotional claims.'
-      :'Explore '+event.name+' '+year+' '+service.name.toLowerCase()+' planning in Hyderabad with ProPulse. '+event.inspiration+' Construction benefits up to ₹5 lakh; interiors 10% off for eligible projects. Written quotation terms apply.'
+      :'Explore '+event.name+' '+year+' '+service.name.toLowerCase()+' planning in Hyderabad with ProPulse. '+event.inspiration+' '+(service.key==='construction'?'Construction benefits up to ₹5 lakh':'10% off interiors')+' for eligible projects. Written quotation terms apply.'
     return {
       path:festivalPath(event,service.key),
       type:'festive-offer',title,description,
