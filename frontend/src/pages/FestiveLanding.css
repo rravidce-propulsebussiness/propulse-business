@@ -255,3 +255,72 @@
 @media(max-width:720px){.fc-hero-visual{margin-top:0}.fc-hero-grid{gap:28px}.fc-hero h1{font-size:clamp(36px,9vw,52px)}.fc-search-row{flex-direction:column;align-items:stretch;gap:15px}.fc-search-row p{margin:0}.fc-home-offers .fc-offer-copy{padding:20px}.fc-home .fc-hero--home{padding-top:36px}.fc-home-offers{width:100%}}
 @keyframes fc-photo-reveal{from{opacity:.65}to{opacity:1}}
 .fc-event-top .fc-status{max-width:180px;line-height:1.5}
+
+/* Occasion pages use layered CSS 3D motion, keeping copy and SEO in normal HTML. */
+.fc-hero,.fc-memorial-hero,.fc-hub-hero,.fc-cta{perspective:1400px;transform-style:preserve-3d}
+.fc-hero-grid,.fc-home-hero,.fc-hub-hero .fc-container,.fc-memorial-hero .fc-container{transform-style:preserve-3d}
+.fc-page .public-site-header__inner{perspective:1200px;transform-style:preserve-3d}
+.fc-page .public-site-nav a,.fc-page .public-site-actions>a,.fc-page .public-site-menu-toggle{transform-style:preserve-3d;transition:transform .3s ease,box-shadow .3s ease}
+.fc-page .public-site-nav a:hover,.fc-page .public-site-actions>a:hover{transform:perspective(650px) translate3d(0,-3px,8px) rotateX(-3deg)}
+.fc-artwork{transform-style:preserve-3d;will-change:transform}
+.fc-artwork svg{transform-origin:50% 50%;transform-style:preserve-3d;animation:fc-art-drift 34s ease-in-out infinite}
+.fc-art-lines{filter:drop-shadow(0 0 7px #f2c77a66)}
+.fc-hero-orb--one{transform-style:preserve-3d;animation:fc-orb-float 11s ease-in-out infinite}
+.fc-hero-orb--two{transform-style:preserve-3d;animation:fc-orb-float 9s ease-in-out infinite reverse}
+.fc-hero-visual,.fc-offer-panel,.fc-service-card,.fc-event-card,.fc-feature-strip>span,.fc-home-principles>*,.fc-benefit-grid>article,.fc-faq-grid>details{transform-style:preserve-3d;backface-visibility:hidden;transition:transform .55s cubic-bezier(.2,.75,.25,1),box-shadow .55s cubic-bezier(.2,.75,.25,1)}
+.fc-hero-visual{transform:perspective(1100px) rotateX(var(--fc-tilt-x,0deg)) rotateY(var(--fc-tilt-y,0deg)) translateZ(0);box-shadow:0 34px 75px #07051188,0 0 0 1px #fff3 inset}
+.fc-hero-visual>img{transform:translateZ(15px) scale(1.015);animation:fc-image-breathe 12s ease-in-out infinite alternate;will-change:transform}
+.fc-visual-shine{transform:translateZ(30px);background:linear-gradient(120deg,#fff3,transparent 27%,transparent 72%,#f3c17a22);mix-blend-mode:screen}
+.fc-floating-badge{transform:perspective(700px) translateZ(44px) rotateX(-3deg);animation:fc-badge-hover 5s ease-in-out infinite}
+.fc-offer-panel{transform:perspective(900px) rotateX(var(--fc-tilt-x,0deg)) rotateY(var(--fc-tilt-y,0deg));box-shadow:0 16px 38px #25131d24}
+.fc-offer-panel:hover,.fc-service-card:hover,.fc-event-card:hover,.fc-feature-strip>span:hover,.fc-home-principles>*:hover,.fc-benefit-grid>article:hover,.fc-faq-grid>details:hover{transform:perspective(900px) rotateX(var(--fc-tilt-x,-2deg)) rotateY(var(--fc-tilt-y,3deg)) translate3d(0,-8px,18px);box-shadow:0 26px 60px #26172030}
+.fc-offer-photo{transform:translateZ(12px) scale(1.01);transform-origin:center;will-change:transform}
+.fc-offer-copy{transform:translateZ(18px)}
+.fc-feature-strip--construction{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:20px}
+.fc-feature-strip--construction>span{display:grid;place-items:center;min-height:66px;padding:12px;border:1px solid #f0ded0;border-radius:12px;background:linear-gradient(145deg,#fff,#fff8ef);line-height:1.45;color:#5f4357;box-shadow:0 7px 18px #50301c0d}
+.fc-feature-strip--construction>span+span{border-left:1px solid #f0ded0}
+.fc-feature-strip--construction>span:hover{border-color:#d4a268}
+.fc-button,.fc-text-link,.fc-card-link,.fc-event-links a,.fc-filters button,.fc-memorial-links a{position:relative;isolation:isolate;transform-style:preserve-3d;transition:transform .32s cubic-bezier(.2,.75,.25,1),box-shadow .32s,border-color .32s,background-color .32s}
+.fc-button:before,.fc-text-link:before,.fc-event-links a:before,.fc-filters button:before,.fc-memorial-links a:before{position:absolute;inset:5px;border-radius:inherit;content:'';z-index:-1;background:#ffffff20;transform:translateZ(-9px);filter:blur(7px);opacity:.4;transition:opacity .3s,transform .3s}
+.fc-button:hover,.fc-text-link:hover,.fc-card-link:hover,.fc-event-links a:hover,.fc-filters button:hover,.fc-memorial-links a:hover{transform:perspective(650px) translate3d(0,-5px,12px) rotateX(-4deg) rotateY(2deg);box-shadow:0 18px 32px #1c14253b}
+.fc-button:hover:before,.fc-text-link:hover:before,.fc-event-links a:hover:before,.fc-filters button:hover:before,.fc-memorial-links a:hover:before{opacity:.85;transform:translateZ(-16px)}
+.fc-button span{transform:translateZ(12px)}
+.fc-3d-reveal{opacity:0;transform:perspective(1100px) translate3d(0,44px,-90px) rotateX(-9deg);transform-origin:50% 0;transition:opacity .75s ease,transform .9s cubic-bezier(.19,.75,.25,1);transition-delay:var(--fc-reveal-delay,0ms);will-change:opacity,transform}
+.fc-3d-reveal.fc-3d-visible{opacity:1;transform:perspective(1100px) translate3d(0,0,0) rotateX(0)}
+.fc-hero h1,.fc-memorial-hero h1,.fc-hub-hero h1{animation:fc-title-depth .9s cubic-bezier(.2,.75,.25,1) both;transform-origin:50% 100%;text-shadow:0 14px 34px #140b2238}
+.fc-hero .fc-eyebrow,.fc-hero .fc-lead,.fc-hero .fc-actions,.fc-hero-content>.fc-offer-panel{animation:fc-copy-rise .8s both;animation-delay:.12s}
+.fc-hero .fc-lead{animation-delay:.2s}
+.fc-hero .fc-actions{animation-delay:.26s}
+.fc-hero-content>.fc-offer-panel{animation-delay:.32s}
+.fc-home-offers .fc-offer-panel:nth-child(2){animation-delay:.14s}
+.fc-service-image,.fc-home-photo{transform-style:preserve-3d;perspective:900px}
+.fc-service-image img{transform:translateZ(13px);will-change:transform}
+.fc-service-card:hover .fc-service-image img{transform:translate3d(0,0,22px) scale(1.045)}
+.fc-search-row input{transform:perspective(700px) translateZ(0);transition:transform .3s ease,box-shadow .3s ease,border-color .3s ease}
+.fc-search-row input:focus{transform:perspective(700px) translateZ(8px);box-shadow:0 10px 24px #35232618}
+.fc-event-icon,.fc-floating-badge>span{display:inline-block;transform:translateZ(24px);animation:fc-icon-hover 4.2s ease-in-out infinite}
+.fc-whatsapp{position:fixed;right:22px;bottom:22px;z-index:3900;display:flex;align-items:center;justify-content:center;gap:10px;min-width:64px;height:64px;padding:0 19px;border:1px solid #baf6d1;border-radius:22px;background:linear-gradient(145deg,#31df83,#079d53 62%,#087a45);color:#fff;box-shadow:0 18px 35px #075d3d55,inset 0 2px 0 #ffffff6b,inset 0 -5px 0 #005e3852;transform:perspective(700px) rotateX(-4deg) rotateY(-5deg) translateZ(0);transform-style:preserve-3d;animation:fc-wa-float 4.3s ease-in-out infinite;transition:transform .35s cubic-bezier(.2,.75,.25,1),box-shadow .35s}
+.fc-whatsapp svg{position:relative;z-index:2;width:29px;height:29px;fill:currentColor;transform:translateZ(12px);filter:drop-shadow(0 3px 2px #00542f55)}
+.fc-whatsapp-label{position:relative;z-index:2;font:800 13px/1 Inter,system-ui,sans-serif;letter-spacing:.01em;transform:translateZ(10px)}
+.fc-whatsapp-orbit,.fc-whatsapp-pulse{position:absolute;inset:-7px;border:1px solid #30ce7c88;border-radius:26px;transform:translateZ(-8px);pointer-events:none}
+.fc-whatsapp-orbit{animation:fc-wa-orbit 7s linear infinite}
+.fc-whatsapp-pulse{inset:-3px;border-color:#d5ffe644;animation:fc-wa-pulse 2.6s ease-out infinite}
+.fc-whatsapp:hover,.fc-whatsapp:focus-visible{color:#fff;transform:perspective(700px) rotateX(-9deg) rotateY(8deg) translate3d(0,-8px,20px) scale(1.04);box-shadow:0 26px 45px #075d3d66,inset 0 2px 0 #ffffff88,inset 0 -5px 0 #005e3852}
+.fc-whatsapp:focus-visible{outline:3px solid #fff;outline-offset:5px}
+.fc-memorial .fc-whatsapp{filter:saturate(.8);animation-duration:6s}
+body:has(.fc-page) .support-chat{bottom:110px}
+body:has(.fc-page) .support-chat-panel{bottom:58px}
+@keyframes fc-art-drift{0%,100%{transform:rotateY(-4deg) rotateX(2deg) translateZ(0)}50%{transform:rotateY(5deg) rotateX(-2deg) translateZ(24px)}}
+@keyframes fc-orb-float{0%,100%{transform:rotateX(0deg) rotateY(0deg) translate3d(0,0,0)}50%{transform:rotateX(20deg) rotateY(30deg) translate3d(0,-18px,24px)}}
+@keyframes fc-image-breathe{0%{transform:translateZ(15px) scale(1.015)}100%{transform:translate3d(-8px,-5px,28px) scale(1.06)}}
+@keyframes fc-badge-hover{0%,100%{transform:perspective(700px) translate3d(0,0,44px) rotateX(-3deg)}50%{transform:perspective(700px) translate3d(0,-9px,54px) rotateX(3deg)}}
+@keyframes fc-icon-hover{0%,100%{transform:translate3d(0,0,24px) rotateY(-8deg)}50%{transform:translate3d(0,-5px,32px) rotateY(8deg)}}
+@keyframes fc-title-depth{from{opacity:0;transform:perspective(700px) translate3d(0,22px,-50px) rotateX(-8deg)}to{opacity:1;transform:perspective(700px) translate3d(0,0,0) rotateX(0)}}
+@keyframes fc-copy-rise{from{opacity:0;transform:perspective(700px) translate3d(0,18px,-20px)}to{opacity:1;transform:perspective(700px) translate3d(0,0,0)}}
+@keyframes fc-wa-float{0%,100%{transform:perspective(700px) rotateX(-4deg) rotateY(-5deg) translate3d(0,0,0)}50%{transform:perspective(700px) rotateX(4deg) rotateY(5deg) translate3d(0,-8px,10px)}}
+@keyframes fc-wa-orbit{0%{transform:perspective(700px) rotateX(0) rotateY(0) translateZ(-8px)}50%{transform:perspective(700px) rotateX(180deg) rotateY(180deg) translateZ(-8px)}100%{transform:perspective(700px) rotateX(360deg) rotateY(360deg) translateZ(-8px)}}
+@keyframes fc-wa-pulse{0%{transform:scale(.92) translateZ(-8px);opacity:.8}100%{transform:scale(1.24) translateZ(-8px);opacity:0}}
+@media(max-width:720px){.fc-feature-strip--construction{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.fc-feature-strip--construction>span{min-height:62px;padding:10px;font-size:11px}.fc-whatsapp{right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));min-width:58px;height:58px;padding:0 15px;border-radius:19px}.fc-whatsapp svg{width:27px;height:27px}.fc-whatsapp-label{font-size:12px}.fc-hero-visual{transform:perspective(800px) rotateX(var(--fc-tilt-x,0deg)) rotateY(var(--fc-tilt-y,0deg))}.fc-hero-visual>img{animation-duration:16s}}
+@media(max-width:720px){body:has(.fc-page) .support-chat{bottom:calc(88px + env(safe-area-inset-bottom,0px))}}
+@media(max-width:430px){.fc-whatsapp{min-width:56px;height:56px;padding:0 14px;gap:8px}.fc-whatsapp-label{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.fc-3d-reveal{opacity:1;transform:none;transition:none}.fc-whatsapp,.fc-whatsapp-orbit,.fc-whatsapp-pulse,.fc-artwork svg,.fc-hero-orb,.fc-floating-badge,.fc-hero-visual>img,.fc-hero h1,.fc-memorial-hero h1,.fc-hub-hero h1,.fc-hero .fc-eyebrow,.fc-hero .fc-lead,.fc-hero .fc-actions,.fc-hero-content>.fc-offer-panel,.fc-event-icon,.fc-floating-badge>span{animation:none!important}.fc-whatsapp{transform:none}.fc-page .fc-button:hover,.fc-page .fc-text-link:hover,.fc-page .fc-event-links a:hover,.fc-page .fc-filters button:hover,.fc-page .fc-memorial-links a:hover{transform:none}}
