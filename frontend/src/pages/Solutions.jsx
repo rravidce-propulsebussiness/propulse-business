@@ -65,6 +65,12 @@ export default function Solutions(){
   return <main className="quote-page">
     <PublicHeader />
 
+    {!completed&&<header className="quote-page-intro">
+      <span>START WITH A CLEAR BRIEF</span>
+      <h1>Plan your next project with ProPulse</h1>
+      <p>Choose construction, interiors or real estate, then share the details that matter for your project.</p>
+    </header>}
+
     {!completed&&<section className="quote-flow-switcher" aria-label="Choose quote type">
       <div className="quote-flow-switcher-inner">
         {Object.entries(FLOWS).map(([key,item])=><button

@@ -1,5 +1,6 @@
 import {Link} from 'react-router-dom'
 import {PublicFooter,PublicHeader} from '../components/PublicSiteChrome'
+import './HyderabadSeoLanding.css'
 
 const content={
 construction:{

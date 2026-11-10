@@ -166,7 +166,7 @@
 .ps-section-kicker span{display:block;width:42px;height:2px;border-radius:10px;background:#ff8d5d}
 .ps-section-heading h2{margin:9px 0 4px;font-size:28px;font-weight:900}
 .ps-section-heading>p{margin:0;color:#65798a;font-size:13px;line-height:1.6}
-.ps-service-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px}
+.ps-service-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
 .ps-service-card{
   position:relative;min-height:212px;padding:17px 16px 15px;border:1px solid #e5ebee;border-radius:14px;
   background:linear-gradient(145deg,#fff,#fffafa);box-shadow:0 7px 21px rgba(24,50,69,.055);overflow:hidden;
@@ -183,8 +183,9 @@
 .ps-icon-search{color:#3c8be6}.ps-icon-megaphone{color:#e95c2b}.ps-icon-design{color:#d97b35}.ps-icon-video{color:#e74d3d}.ps-icon-server{color:#315d85}.ps-icon-whatsapp{color:#16b95f}
 .ps-service-card h3{position:relative;z-index:1;min-height:36px;text-align:center;font-size:13px;line-height:1.2;font-weight:900}
 .ps-service-card>p{position:relative;z-index:1;min-height:36px;margin:8px 0 12px;color:#6a7d8c;text-align:center;font-size:10px;line-height:1.5}
-.ps-learn-more{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:5px;color:var(--ps-orange);text-decoration:none;font-size:10px;font-weight:900;transition:gap .2s ease}
-.ps-learn-more:hover{gap:9px}
+.ps-learn-more{position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;max-width:100%;flex-wrap:wrap;min-height:44px;margin-top:4px;padding:6px 12px;border:1px solid #f2c5b2;border-radius:9px;background:linear-gradient(135deg,#fff8f4,#fff);color:#b8461f;text-decoration:none;text-align:center;line-height:1.25;font-size:11px;font-weight:850;transition:gap .2s ease,transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.ps-learn-more:hover{gap:13px;transform:translateY(-2px);border-color:#f0936e;box-shadow:0 8px 18px rgba(160,71,37,.12)}
+.ps-learn-more:focus-visible,.ps-primary-btn:focus-visible,.ps-secondary-btn:focus-visible{outline:3px solid #e67b4f;outline-offset:3px}
 
 .ps-products{position:relative;overflow:hidden;background:linear-gradient(115deg,#fff0e7 0%,#fff6f1 53%,#ffe8dc 100%);border-top:1px solid #f7d8ca}
 .ps-products::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 78% 20%,rgba(255,255,255,.78),transparent 34%);pointer-events:none}

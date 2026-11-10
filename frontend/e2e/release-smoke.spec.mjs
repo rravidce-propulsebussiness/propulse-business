@@ -79,6 +79,53 @@ test('public homepage presents homeowner acquisition journeys',async({page})=>{
   await expect(page.getByRole('heading',{name:/construction/i}).first()).toBeVisible()
 })
 
+test('public route catalogue renders directly without a missing-page fallback',async({page})=>{
+  const routes=[
+    '/','/quote','/experts','/packages','/projects','/how-it-works','/about','/technology','/contact','/faq',
+    '/best-construction-company-hyderabad','/best-interior-designers-hyderabad','/offers',
+    '/offers/diwali-2026/construction','/offers/diwali-2026/interiors','/hyderabad','/hyderabad/construction-cost',
+    '/hyderabad/construction','/hyderabad/interior-designers','/telangana/interior-designers',
+    '/blog','/construction-blog','/interior-blog','/guides','/guides/best-steel-for-house-construction','/telangana/construction/hyderabad',
+  ]
+  for(const route of routes){
+    const response=await page.goto(route)
+    expect(response?.status(),route+' should return successfully').toBeLessThan(400)
+    await expect(page.locator('main h1').first(),route+' should render its page heading').toBeVisible()
+    await expect(page.getByRole('navigation',{name:/main navigation/i}),route+' should render public navigation').toBeVisible()
+  }
+})
+
+test('service enquiries and occasion links are styled, named and destination-accurate',async({page})=>{
+  await page.goto('/technology')
+  const serviceActions=page.locator('.ps-service-card .ps-learn-more')
+  await expect(serviceActions).toHaveCount(6)
+  const labels=await serviceActions.evaluateAll(links=>links.map(link=>link.getAttribute('aria-label')))
+  expect(new Set(labels).size).toBe(6)
+  for(const action of await serviceActions.all()){
+    await expect(action).toHaveAttribute('href','/contact')
+    const size=await action.evaluate(element=>({height:element.getBoundingClientRect().height,border: getComputedStyle(element).borderTopWidth}))
+    expect(size.height).toBeGreaterThanOrEqual(44)
+    expect(parseFloat(size.border)).toBeGreaterThan(0)
+  }
+  await expect(page.getByRole('link',{name:/explore business os/i})).toHaveAttribute('href','#products')
+
+  await page.goto('/best-construction-company-hyderabad')
+  await expect(page.locator('.local-seo-hero')).toBeVisible()
+  expect(await page.locator('.local-seo-hero').evaluate(element=>getComputedStyle(element).backgroundImage)).not.toBe('none')
+  await expect(page.locator('.local-seo-actions a.primary')).toBeVisible()
+
+  await page.goto('/packages#construction')
+  await page.locator('.pkg-category-nav button').filter({hasText:'Interior Packages'}).click()
+  await expect(page).toHaveURL(/\/packages#interior$/)
+  await expect(page.locator('.pkg-active-panel')).toHaveClass(/pkg-interior-section/)
+
+  await page.goto('/offers/diwali-2026/construction')
+  for(const link of await page.locator('.fc-card-link,.fc-text-link,.fc-also-grid a').all()){
+    const height=await link.evaluate(element=>element.getBoundingClientRect().height)
+    expect(height).toBeGreaterThanOrEqual(44)
+  }
+})
+
 test('occasion homepage and direct service links work on desktop and mobile',async({page})=>{
   await page.clock.setFixedTime(new Date('2026-11-08T12:00:00+05:30'))
   await page.goto('/')

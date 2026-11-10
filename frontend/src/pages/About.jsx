@@ -84,7 +84,7 @@ export default function About() {
           <p><strong>Construction &amp; Interiors:</strong> ProPulse directly undertakes construction, renovation and interior execution under its own agreed project scope and contract.</p>
           <p><strong>Professional Marketplace:</strong> Customers can compare and engage independent contractors. The selected third-party provider is responsible under its own agreement.</p>
           <p><strong>Technology:</strong> ProPulse develops software including Business OS. <Link to="/technology">Explore technology products</Link>.</p>
-          <p><Link to="/contact">Contact ProPulse for direct construction or interior projects</Link>.</p>
+          <p className="ab-contact-action"><Link to="/contact">Discuss a construction or interior project <span aria-hidden="true">→</span></Link></p>
         </div>
       </div>
     </section>

@@ -2,12 +2,12 @@ import { PublicHeader, PublicFooter } from '../components/PublicSiteChrome'
 import './Technology.css'
 
 const serviceGroups = [
-  { icon: 'code', title: 'Website & Software Development', description: 'Modern websites, web apps and business portals.' },
-  { icon: 'search', title: 'SEO & AI Search', description: 'Rank higher on Google and AI search.' },
-  { icon: 'megaphone', title: 'Digital Marketing & Lead Generation', description: 'Get more leads and grow your business.' },
-  { icon: 'design', title: 'Creative & Graphic Design', description: 'Stunning designs for your brand.' },
-  { icon: 'video', title: 'Video & Media', description: 'Professional video editing and content creation.' },
-  { icon: 'server', title: 'Hosting & Digital Infrastructure', description: 'Reliable hosting, domains and cloud solutions.' },
+  { icon: 'code', title: 'Website & Software Development', shortTitle: 'web development', description: 'Modern websites, web apps and business portals.' },
+  { icon: 'search', title: 'SEO & AI Search', shortTitle: 'SEO and AI search', description: 'Rank higher on Google and AI search.' },
+  { icon: 'megaphone', title: 'Digital Marketing & Lead Generation', shortTitle: 'digital marketing', description: 'Get more leads and grow your business.' },
+  { icon: 'design', title: 'Creative & Graphic Design', shortTitle: 'graphic design', description: 'Stunning designs for your brand.' },
+  { icon: 'video', title: 'Video & Media', shortTitle: 'video and media', description: 'Professional video editing and content creation.' },
+  { icon: 'server', title: 'Hosting & Digital Infrastructure', shortTitle: 'hosting and infrastructure', description: 'Reliable hosting, domains and cloud solutions.' },
 ]
 
 function Icon({ name, size = 30 }) {
@@ -56,7 +56,7 @@ export default function Technology() {
 
             <div className="ps-hero-actions">
               <a className="ps-primary-btn" href="#services">Explore Our Services <span>→</span></a>
-              <a className="ps-secondary-btn" href="#products"><span className="ps-play">▶</span> Watch Our Work</a>
+              <a className="ps-secondary-btn" href="#products">Explore Business OS <span aria-hidden="true">→</span></a>
             </div>
           </div>
 
@@ -103,7 +103,9 @@ export default function Technology() {
                 <div className={'ps-service-icon ps-icon-' + service.icon}><Icon name={service.icon}/></div>
                 <h3>{service.title}</h3>
                 <p>{service.description}</p>
-                <a href="#products" className="ps-learn-more">Learn More <span>→</span></a>
+                <a href="/contact" className="ps-learn-more" aria-label={'Discuss ' + service.shortTitle}>
+                  Discuss {service.shortTitle} <span aria-hidden="true">→</span>
+                </a>
               </article>
             ))}
           </div>
