@@ -13,7 +13,7 @@ function OccasionArtwork({event,service='construction'}){
   useEffect(()=>{
     const element=ref.current
     const target=element?.closest('.fc-hero')
-    if(!element||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return
+    if(!element||!target||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return
     const move=e=>{const box=element.getBoundingClientRect();element.style.setProperty('--art-x',((e.clientX-box.left)/box.width-.5)*12+'px');element.style.setProperty('--art-y',((e.clientY-box.top)/box.height-.5)*12+'px')}
     const reset=()=>{element.style.setProperty('--art-x','0px');element.style.setProperty('--art-y','0px')}
     target.addEventListener('pointermove',move);target.addEventListener('pointerleave',reset)
@@ -24,26 +24,26 @@ function OccasionArtwork({event,service='construction'}){
 
 const serviceOffer=service=>service.key==='construction'?'Construction benefits up to ₹5 lakh':'10% off interiors'
 
-function OfferPanel({event,service}){
+function OfferPanel({event,service,showImage=true}){
   const status=campaignStatus(event)
   const construction=service.key==='construction'
-  return <div className={'fc-offer-panel fc-offer-panel--'+service.key}>
-    <img className="fc-offer-photo" src={construction?constructionImage:interiorsImage} alt={construction?'Contemporary home construction exterior':'Premium contemporary living room interiors'} loading="lazy"/>
+  return <div className={'fc-offer-panel fc-offer-panel--'+service.key+(showImage?'':' fc-offer-panel--text')}>
+    {showImage&&<img className="fc-offer-photo" src={construction?constructionImage:interiorsImage} alt={construction?'Contemporary home construction exterior':'Premium contemporary living room interiors'} loading="lazy"/>}
     <div className="fc-offer-copy"><span className="fc-offer-name">{event.name} {construction?'Construction':'Interior'} Offer{status==='past'?' · Ended':status==='upcoming'?' · Upcoming':''}</span>
       <strong>{construction?<><small>Construction benefits up to</small>₹5 lakh</>:<>10% <small>off interiors</small></>}</strong>
-      <p>{construction?'Build your dream home this '+event.name+'.':'Transform your interiors this '+event.name+'.'}</p>
-      <small>For eligible projects during {prettyDate(event.start)}–{prettyDate(event.end)}. Scope and offer terms confirmed in your written quotation.</small>
+      <p>{status==='past'?'This '+event.name+' offer has ended. Ask us for a current quotation.':status==='upcoming'?'Plan ahead for '+event.name+'.':construction?'Plan your new home for '+event.name+'.':'Refresh your home for '+event.name+'.'}</p>
+      <small>For eligible projects during {prettyDate(event.start)} – {prettyDate(event.end)}. Scope and offer terms confirmed in your written quotation.</small>
     </div>
   </div>
 }
 
 function OfferDisclaimer({event,service}){
-  return <p className="fc-terms">{event.name} offer window: {prettyDate(event.start)}–{prettyDate(event.end)} (Hyderabad/IST). {event.tentative?'Observance dates are provisional. ':''}{service?serviceOffer(service):'Construction benefits up to ₹5 lakh and 10% off interiors'} apply to eligible projects during the offer window. Scope, eligibility, discount basis, taxes and exclusions are confirmed in your written quotation.</p>
+  return <p className="fc-terms">{event.name} offer window: {prettyDate(event.start)}–{prettyDate(event.end)} (Hyderabad/IST). {event.tentative?'Observance dates are provisional. ':''}Offer: {service?serviceOffer(service):'Construction benefits up to ₹5 lakh and 10% off interiors'}. Available for eligible projects within these dates. Scope, eligibility, discount basis, taxes and exclusions are confirmed in your written quotation.</p>
 }
 
 function StatusTag({event}){
   const status=campaignStatus(event)
-  return <span className={'fc-status fc-status--'+status}>{event.kind==='remembrance'?(status==='active'?'Remembrance today':status==='upcoming'?'Upcoming remembrance':'Observance completed'):(status==='active'?'Festival campaign live':status==='upcoming'?'Coming up': 'Campaign window finished')}</span>
+  return <span className={'fc-status fc-status--'+status}>{event.kind==='remembrance'?(status==='active'?'Remembrance period':status==='upcoming'?'Upcoming remembrance':'Observance completed'):(status==='active'?'Offer live':status==='upcoming'?'Upcoming offer': 'Offer ended')}</span>
 }
 
 function ServiceCard({event,service,compact=false}){
@@ -51,9 +51,9 @@ function ServiceCard({event,service,compact=false}){
   return <article className={'fc-service-card'+(compact?' fc-service-card--compact':'')}>
     <div className="fc-service-image"><img src={image} alt={service.key==='construction'?'Modern family home exterior for construction planning':'Warm modern living room for interior design inspiration'} loading="lazy"/><span>{service.label}</span></div>
     <div className="fc-service-copy"><p className="fc-overline">PROPULSE {service.label.toUpperCase()}</p>
-      <h3>{event.name} {service.title}</h3><OfferPanel event={event} service={service}/>
+      <h3>{event.name} {service.title}</h3><OfferPanel event={event} service={service} showImage={false}/>
       <p>{service.key==='construction'?'Begin with your plot, estimate, material choices and a detailed construction scope.':'Explore room-wise design, modular kitchen, wardrobes, lighting and finishes that work for your household.'}</p>
-      <Link to={festivalPath(event,service.key)} className="fc-card-link">Explore {service.label.toLowerCase()} campaign <span aria-hidden="true">↗</span></Link>
+      <Link to={festivalPath(event,service.key)} className="fc-card-link">View {service.label.toLowerCase()} offer <span aria-hidden="true">↗</span></Link>
     </div>
   </article>
 }
@@ -61,11 +61,11 @@ function ServiceCard({event,service,compact=false}){
 function Faq({event,service}){
   return <section className="fc-faq fc-container" aria-label="Frequently asked questions">
     <p className="fc-overline">GOOD TO KNOW</p>
-    <h2>Questions about the {event.name} {service.name.toLowerCase()} campaign</h2>
+    <h2>Your {event.name} {service.name.toLowerCase()} questions</h2>
     <div className="fc-faq-grid">
       <details open><summary>{service.question}</summary><p>{service.answer}</p></details>
-      <details><summary>Is a discount automatically applied during {event.name}?</summary><p>{serviceOffer(service)} are available for eligible projects during the {event.name} offer window. The final scope, eligibility and offer calculation are confirmed in your written ProPulse quotation.</p></details>
-      <details><summary>Can I request a quote after the festival?</summary><p>Yes. You can still submit a project requirement when the campaign period has ended. The team will review current scope, pricing and availability.</p></details>
+      <details><summary>How does the {event.name} offer apply?</summary><p>{campaignStatus(event)==='past'?'This offer has ended. Request a current quotation for today’s pricing.':'Offer: '+serviceOffer(service)+'. Eligible projects must fall within the published offer dates.'} The final scope, eligibility and offer calculation are confirmed in your written ProPulse quotation.</p></details>
+      <details><summary>Can I request a quote after the festival?</summary><p>Yes. You can request a current quotation after the offer ends. The team will review current scope, pricing and availability.</p></details>
       <details><summary>Does ProPulse work in Hyderabad?</summary><p>ProPulse discusses selected home construction and interior execution projects in Hyderabad, subject to location, scope and availability confirmation. You can also explore independent professionals on the platform.</p></details>
     </div>
   </section>
@@ -80,7 +80,7 @@ function MemorialLanding({event,service}){
       <p className="fc-memorial-overline">IN RESPECTFUL REMEMBRANCE · HYDERABAD</p>
       <h1>{event.icon} {event.name} <span>{event.date.slice(0,4)}</span></h1>
       <p className="fc-memorial-lead">{event.inspiration}</p>
-      <p className="fc-memorial-date">Observed {prettyDate(event.date)} · Displayed {prettyDate(event.start)}–{prettyDate(event.end)} (IST)</p>
+      <p className="fc-memorial-date">Observed on {prettyDate(event.date)} · India Standard Time</p>
     </div></section>
     <section className="fc-container fc-memorial-content">
       <p className="fc-overline">REMEMBER WITH DIGNITY</p>
@@ -112,7 +112,7 @@ function MemorialHome({event}){
       <h2>A moment for reflection, not promotion.</h2>
       <p>On this occasion, ProPulse pauses commercial festival messaging to offer a respectful tribute. There are no promotional offers linked to this remembrance day.</p>
       <div className="fc-memorial-links"><Link to={festivalPath(event,'construction')}>Construction remembrance page ↗</Link><Link to={festivalPath(event,'interiors')}>Interiors remembrance page ↗</Link></div>
-      <p className="fc-memorial-date">Homepage remembrance: {prettyDate(event.start)}–{prettyDate(event.end)} (IST).</p>
+      <p className="fc-memorial-date">In remembrance · {prettyDate(event.date)}.</p>
     </section>
   </main><PublicFooter/></div>
 }
@@ -130,9 +130,9 @@ function SingleOffer({event,service}){
             <nav aria-label="Breadcrumb" className="fc-breadcrumb"><Link to="/">Home</Link><span>/</span><Link to="/offers">Festival offers</Link><span>/</span><span>{event.name} · {service.label}</span></nav>
             <div className="fc-tags"><span className="fc-year">{event.icon} {event.name} {event.date.slice(0,4)}</span><StatusTag event={event}/></div>
             <p className="fc-eyebrow">CELEBRATE NEW POSSIBILITIES · HYDERABAD</p>
-            <h1>{event.name} {service.name} <em>Festival Special</em></h1>
-            <p className="fc-lead">{event.inspiration} ProPulse helps Hyderabad homeowners turn ideas into a measurable {service.name.toLowerCase()} project brief.</p>
-            <OfferPanel event={event} service={service}/><div className="fc-actions"><Link className="fc-button fc-button--gold" to={service.to}>{service.action} <span aria-hidden="true">↗</span></Link><Link className="fc-button fc-button--outline" to="/packages">View packages</Link></div>
+            <h1>{event.name} {service.name} <em>Special Offer</em></h1>
+            <p className="fc-lead">{event.inspiration} ProPulse helps Hyderabad homeowners plan your {service.name.toLowerCase()} project with a clear scope, budget and material choices.</p>
+            <div className="fc-actions"><Link className="fc-button fc-button--gold" to={service.to}>{service.action} <span aria-hidden="true">↗</span></Link><Link className="fc-button fc-button--outline" to="/packages">View packages</Link></div><OfferPanel event={event} service={service}/>
             <p className="fc-festival-date">{event.tentative?'Indicative date / season: ':'Festival date: '}{prettyDate(event.date)} <span>•</span> Timings in India Standard Time</p>
           </div>
           <div className="fc-hero-visual"><img src={service.key==='construction'?constructionImage:interiorsImage} alt={service.key==='construction'?'Modern residential house in warm evening light':'Elegant warm contemporary living space'} fetchPriority="high"/><div className="fc-visual-shine" aria-hidden="true"/><div className="fc-floating-badge"><span>{event.icon}</span><div><b>{event.name} {service.label} Offer</b><small>{event.theme}</small></div></div></div>
@@ -141,15 +141,15 @@ function SingleOffer({event,service}){
       <div className="fc-container"><div className="fc-feature-strip"><span>Hyderabad focused</span><span>Scope-based estimates</span><span>Material &amp; finish clarity</span><span>Written project proposal</span></div></div>
       <section className="fc-intro fc-container">
         <div><p className="fc-overline">MADE FOR YOUR NEXT CHAPTER</p><h2>Celebrate {event.name} with a home plan that lasts beyond the season.</h2></div>
-        <div><p>{event.inspiration} Before committing to {service.core}, it helps to separate inspiration from cost, scope and execution decisions. A good project starts with practical choices and a transparent, written proposal.</p><p>Share what matters to your family and how you use your rooms. ProPulse can discuss a brief tailored to your Hyderabad location, property type and preferred timeline without promising a standard price for every project.</p></div>
+        <div><p>{event.inspiration} Before committing to {service.core}, it helps to separate inspiration from cost, scope and execution decisions. A good project starts with practical choices and a transparent, written proposal.</p><p>Share what matters to your family and how you use your rooms. ProPulse can discuss a brief tailored to your Hyderabad location, property type and preferred timeline with pricing based on the agreed scope and specifications.</p></div>
       </section>
       <section className="fc-plan"><div className="fc-container">
-        <div className="fc-section-heading"><p className="fc-overline">SMART PROJECT PLANNING</p><h2>Three things to get right from the start</h2><p>More than decorations and festive colours: plan what makes the project work day after day.</p></div>
+        <div className="fc-section-heading"><p className="fc-overline">SMART PROJECT PLANNING</p><h2>Three things to get right from the start</h2><p>Plan the layout, specifications and execution stages for a home that works every day.</p></div>
         <div className="fc-benefit-grid">{service.benefits.map(([heading,detail],index)=><article key={heading}><span>0{index+1}</span><h3>{heading}</h3><p>{detail}</p></article>)}</div>
       </div></section>
       <section className="fc-container fc-planning"><div><p className="fc-overline">YOUR REQUIREMENT CHECKLIST</p><h2>Get a clearer {service.name.toLowerCase()} quotation</h2><p>Use these points before submitting an enquiry or comparing quotations. Exact scope, taxes, timing and promotions must be agreed in writing.</p><Link to={service.to} className="fc-text-link">{service.action} ↗</Link></div><ol>{service.checklist.map(item=><li key={item}>{item}</li>)}</ol></section>
       <Faq event={event} service={service}/>
-      <section className="fc-cta"><div className="fc-container"><p className="fc-overline">YOUR NEXT HOME PROJECT</p><h2>{status==='past'?'Your plans can continue after '+event.name+'.':'This '+event.name+', make a plan worth building.'}</h2><p>Send your Hyderabad project requirements to get a scope-based conversation started.</p><div className="fc-actions"><Link className="fc-button fc-button--gold" to={service.to}>Request a project quote ↗</Link><Link className="fc-button fc-button--outline" to="/contact">Talk to ProPulse</Link></div><OfferDisclaimer event={event} service={service}/></div></section>
+      <section className="fc-cta"><div className="fc-container"><p className="fc-overline">YOUR NEXT HOME PROJECT</p><h2>{status==='past'?'Your plans can continue after '+event.name+'.':'This '+event.name+', make a plan worth building.'}</h2><p>Send your Hyderabad project requirements to receive a quotation based on your project scope.</p><div className="fc-actions"><Link className="fc-button fc-button--gold" to={service.to}>Request a project quote ↗</Link><Link className="fc-button fc-button--outline" to="/contact">Talk to ProPulse</Link></div><OfferDisclaimer event={event} service={service}/></div></section>
     </main><PublicFooter/>
   </div>
 }
@@ -163,13 +163,13 @@ function FestivalHome({event}){
       <section className="fc-hero fc-hero--home"><div className="fc-home-photo" aria-hidden="true"><img src={constructionImage} alt="" fetchPriority="high"/></div><OccasionArtwork event={event}/><div className="fc-hero-orb fc-hero-orb--one" aria-hidden="true"/><div className="fc-hero-orb fc-hero-orb--two" aria-hidden="true"/>
       <div className="fc-container fc-home-hero"><div className="fc-tags"><span className="fc-year">{event.icon} {event.name} {event.date.slice(0,4)}</span><StatusTag event={event}/></div>
         <p className="fc-eyebrow">PROPULSE CONSTRUCTION SOLUTIONS &amp; INTERIOR SOLUTIONS</p><h1>Celebrate {event.name}. <em>Make space for a new beginning.</em></h1>
-        <p className="fc-lead">{event.inspiration} Explore our festival-season construction and interior planning pages, created for Hyderabad homeowners.</p>
-        <div className="fc-home-offers">{Object.values(CAMPAIGN_SERVICES).map(service=><OfferPanel key={service.key} event={event} service={service}/>)}</div><div className="fc-actions"><Link className="fc-button fc-button--gold" to={festivalPath(event,'construction')}>Explore Construction ↗</Link><Link className="fc-button fc-button--outline" to={festivalPath(event,'interiors')}>Explore Interiors ↗</Link></div>
-        <p className="fc-festival-date">Homepage runs {prettyDate(event.start)}–{prettyDate(event.end)} (2 days before + festival day) · Hyderabad, India{event.tentative?' · Date subject to local confirmation':''}</p>
+        <p className="fc-lead">{event.inspiration} Explore separate construction and interior offers for your Hyderabad home.</p>
+        <div className="fc-actions"><Link className="fc-button fc-button--gold" to={festivalPath(event,'construction')}>Explore Construction ↗</Link><Link className="fc-button fc-button--outline" to={festivalPath(event,'interiors')}>Explore Interiors ↗</Link></div><div className="fc-home-offers">{Object.values(CAMPAIGN_SERVICES).map(service=><OfferPanel key={service.key} event={event} service={service}/>)}</div>
+        <p className="fc-festival-date">Offer dates: {prettyDate(event.start)} – {prettyDate(event.end)} · Hyderabad, India{event.tentative?' · Date subject to local confirmation':''}</p>
       </div></section>
       {additional.length>0&&<section className="fc-container fc-also" aria-label="Other active festival campaigns"><p className="fc-overline">ALSO CELEBRATING IN HYDERABAD</p><h2>Explore other festival campaigns active today</h2><div className="fc-also-grid">{additional.map(item=><article key={item.slug}><strong>{item.icon} {item.name}</strong><span>{prettyDate(item.date)}</span><div><Link to={festivalPath(item,'construction')}>Construction ↗</Link><Link to={festivalPath(item,'interiors')}>Interiors ↗</Link></div></article>)}</div></section>}
       <section className="fc-container fc-home-options"><div className="fc-section-heading"><p className="fc-overline">TWO WAYS TO START</p><h2>Your home, your next chapter.</h2><p>Choose your project to see festival-themed inspiration, practical planning points and the next step for a quotation.</p></div><div className="fc-card-grid">{Object.values(CAMPAIGN_SERVICES).map(service=><ServiceCard key={service.key} event={event} service={service}/>)}</div></section>
-      <section className="fc-container fc-home-principles"><div><b>01</b><h3>Define your requirements</h3><p>Tell us about the plot or rooms and the scope you have in mind.</p></div><div><b>02</b><h3>Discuss specifications</h3><p>Compare materials, finishes, inclusions, exclusions and project stages.</p></div><div><b>03</b><h3>Get a written proposal</h3><p>Promotional terms, if any, are confirmed before you commit.</p></div></section>
+      <section className="fc-container fc-home-principles"><div><b>01</b><h3>Define your requirements</h3><p>Tell us about the plot or rooms and the scope you have in mind.</p></div><div><b>02</b><h3>Discuss specifications</h3><p>Compare materials, finishes, inclusions, exclusions and project stages.</p></div><div><b>03</b><h3>Get a written proposal</h3><p>Review the offer, inclusions and exclusions before you commit.</p></div></section>
       <section className="fc-cta"><div className="fc-container"><p className="fc-overline">EXPLORE PROPULSE</p><h2>A celebration today. A home planned for years.</h2><p>Construction, interiors and technology support from one ProPulse platform.</p><div className="fc-actions"><Link className="fc-button fc-button--gold" to="/quote">Start your project ↗</Link><Link className="fc-button fc-button--outline" to="/offers">See upcoming festivals</Link></div><OfferDisclaimer event={event}/></div></section>
     </main><PublicFooter/>
   </div>
@@ -177,14 +177,16 @@ function FestivalHome({event}){
 
 export function FestivalHub(){
   const [filter,setFilter]=useState('all')
+  const [search,setSearch]=useState('')
   const today=indiaToday()
-  const events=useMemo(()=>FESTIVAL_EVENTS.filter(event=>filter==='all'||campaignStatus(event,today)===filter),[filter,today])
+  const events=useMemo(()=>FESTIVAL_EVENTS.filter(event=>(filter==='all'||campaignStatus(event,today)===filter)&&[event.name,event.theme,event.date].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[filter,today,search])
   return <div className="fc-page"><PublicHeader/><main>
     <section className="fc-hub-hero"><div className="fc-container"><nav aria-label="Breadcrumb" className="fc-breadcrumb"><Link to="/">Home</Link><span>/</span>Festivals and important dates</nav><p className="fc-eyebrow">PROPULSE · HYDERABAD</p><h1>Festivals and important dates. <em>A year to remember.</em></h1><p>Explore cultural festivals, national days and remembrance observances for Hyderabad. Each has two distinct pages for Construction and Interiors. Memorial pages are respectful, non-commercial tributes.</p></div></section>
-    <section className="fc-container fc-hub-list"><div className="fc-hub-heading"><div><p className="fc-overline">FESTIVALS & IMPORTANT DATES</p><h2>November 2026 – November 2027 · {FESTIVAL_EVENTS.length} occasions</h2></div><div className="fc-filters" role="group" aria-label="Filter campaigns">{[['all','All dates'],['active','Live'],['upcoming','Upcoming']].map(([value,label])=><button type="button" key={value} className={filter===value?'selected':''} onClick={()=>setFilter(value)} aria-pressed={filter===value}>{label}</button>)}</div></div>
+    <section className="fc-container fc-hub-list"><div className="fc-hub-heading"><div><p className="fc-overline">FESTIVALS & IMPORTANT DATES</p><h2>November 2026 – November 2027 · {FESTIVAL_EVENTS.length} occasions</h2></div><div className="fc-filters" role="group" aria-label="Filter campaigns">{[['all','All dates'],['active','Live'],['upcoming','Upcoming'],['past','Ended']].map(([value,label])=><button type="button" key={value} className={filter===value?'selected':''} onClick={()=>setFilter(value)} aria-pressed={filter===value}>{label}</button>)}</div></div>
+    <div className="fc-search-row"><label htmlFor="festival-search">Find a festival or important date<input id="festival-search" type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search Diwali, Ugadi or 2027-01…"/></label><p role="status">{events.length} {events.length===1?'occasion':'occasions'} found</p></div>
     <div className="fc-hub-grid">{events.map(event=><article key={event.slug} className="fc-event-card"><div className="fc-event-top"><span className="fc-event-icon">{event.icon}</span><StatusTag event={event}/></div><h3>{event.name} <small>{event.date.slice(0,4)}</small></h3><p className="fc-event-date">{event.tentative?'Indicative: ':''}{prettyDate(event.date)}</p><p className="fc-window">Featured {prettyDate(event.start)}–{prettyDate(event.end)}</p><p>{event.inspiration}</p>{event.kind!=='remembrance'&&<p className="fc-calendar-offer">Construction benefits up to ₹5 lakh · Interiors 10% off</p>}<div className="fc-event-links"><Link to={festivalPath(event,'construction')}>Construction ↗</Link><Link to={festivalPath(event,'interiors')}>Interiors ↗</Link></div></article>)}</div>
-    {events.length===0&&<p>No campaign in this group. Browse all dates to explore the calendar.</p>}
-    <p className="fc-terms">Celebrations and important dates use Hyderabad/IST. Memorial pages carry no sales promotions. Festival dates use Hyderabad/IST. Moon-dependent and region-specific observances can change. Published campaigns do not imply an automatic discount; written quotation terms apply.</p>
+    {events.length===0&&<div className="fc-empty"><h3>No matching dates</h3><p>Try another name or reset the filters to browse the full calendar.</p><button type="button" className="fc-button fc-button--dark" onClick={()=>{setFilter('all');setSearch('')}}>Reset filters</button></div>}
+    <p className="fc-terms">All dates use India Standard Time (Hyderabad). Remembrance pages carry no sales promotions. Moon-dependent and region-specific observances can change. Published campaigns do not imply an automatic discount; written quotation terms apply.</p>
     </section>
   </main><PublicFooter/></div>
 }

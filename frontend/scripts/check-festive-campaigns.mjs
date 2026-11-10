@@ -107,4 +107,14 @@ for(const [label,source] of [['production',productionServer],['legacy',wrapper]]
   for(const event of FESTIVAL_EVENTS)for(const service of ['construction','interiors'])assert.ok(accepts(festivalPath(event,service)),label+' missing deep link '+festivalPath(event,service))
   for(const route of ['/offers/invalid_slug/construction','/offers/diwali-2026/admin','/offers/diwali-2026/construction/private'])assert.equal(accepts(route),false,label+' must reject malformed occasion paths')
   assert.ok(source.includes('redirect:false'),label+' must not redirect file-backed routes into directories')
+  const slashHandler=source.match(/app.use\(\(req,res,next\)=>\{\s*const clean=req.path.replace[\s\S]+?return next\(\);\s*}\);/)
+  assert.ok(slashHandler,label+' must normalize trailing slashes internally')
+  const handler=new Function('knownSpaFrontendPath','return '+slashHandler[0].slice(8,-2))(p=>p==='/offers'||accepts(p))
+  for(const route of ['/offers/','/offers/diwali-2026/construction/']){
+    const req={method:'GET',path:route,url:route+'?source=audit'}
+    let continued=false
+    handler(req,{redirect(){throw Error(label+' must not redirect trailing-slash requests')}},()=>{continued=true})
+    assert.equal(req.url,route.slice(0,-1)+'?source=audit',label+' must preserve query strings')
+    assert.ok(continued)
+  }
 }

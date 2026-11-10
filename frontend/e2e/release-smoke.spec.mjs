@@ -101,6 +101,35 @@ test('occasion homepage and direct service links work on desktop and mobile',asy
   await expect(page.locator('.fc-hub-heading')).toContainText('126 occasions')
   await page.getByRole('button',{name:'Live',exact:true}).click()
   await expect(page.locator('.fc-event-card').first()).toBeVisible()
+  await page.getByRole('button',{name:'All dates',exact:true}).click()
+  await page.getByRole('searchbox',{name:'Find a festival or important date'}).fill('Diwali')
+  await expect(page.locator('.fc-event-card')).toHaveCount(2)
+  await page.getByRole('searchbox',{name:'Find a festival or important date'}).fill('no-such-festival')
+  await expect(page.getByRole('heading',{name:'No matching dates'})).toBeVisible()
+  await page.getByRole('button',{name:'Reset filters'}).click()
+  await expect(page.locator('.fc-event-card')).toHaveCount(126)
+})
+
+test('occasion catalogue trailing slash serves without a redirect loop',async({request})=>{
+  const backend=globalThis.process?.env?.E2E_API_URL||'http://127.0.0.1:5000'
+  const response=await request.get(backend+'/offers/?audit=1',{maxRedirects:4})
+  expect(response.status()).toBe(200)
+  expect(await response.text()).toContain('ProPulse')
+})
+
+test('long occasion names, ended offers and remembrance remain readable on mobile',async({page})=>{
+  await page.clock.setFixedTime(new Date('2026-11-10T12:00:00+05:30'))
+  await page.setViewportSize({width:390,height:844})
+  for(const route of ['/offers/diwali-2026/construction','/offers/rashtriya-ekta-diwas-2027/interiors','/offers/pulwama-black-day-2027/construction']){
+    await page.goto(route)
+    await expect(page.locator('main h1')).toBeVisible()
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true)
+    if(route.includes('diwali'))await expect(page.locator('.fc-offer-copy')).toContainText('offer has ended')
+    if(route.includes('pulwama')){
+      await expect(page.locator('.fc-offer-panel')).toHaveCount(0)
+      await expect(page.locator('main')).not.toContainText('₹5 lakh')
+    }
+  }
 })
 
 test('protected customer route redirects anonymous users to login',async({page})=>{
