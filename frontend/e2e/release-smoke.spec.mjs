@@ -95,6 +95,20 @@ test('public route catalogue renders directly without a missing-page fallback',a
   }
 })
 
+test('blog hub defers the published-answer library until an article is opened',async({page})=>{
+  let answerChunkRequested=false
+  page.on('request',request=>{
+    if(request.url().includes('homeownerPublishedAnswers'))answerChunkRequested=true
+  })
+  await page.goto('/blog')
+  await expect(page.getByRole('heading',{name:'Practical answers for every home project.'})).toBeVisible()
+  expect(answerChunkRequested).toBe(false)
+
+  await page.goto('/construction-blog')
+  await expect(page.locator('.blog-topic-answer-label').first()).toHaveText('Published answer')
+  expect(answerChunkRequested).toBe(true)
+})
+
 test('service enquiries and occasion links are styled, named and destination-accurate',async({page})=>{
   await page.goto('/technology')
   const serviceActions=page.locator('.ps-service-card .ps-learn-more')
