@@ -380,7 +380,7 @@ function festiveContent(route){
     '<p>'+escapeHtml(availability)+'</p>'+
     '<h2>Frequently asked questions</h2>'+
     '<h3>'+escapeHtml(service.question)+'</h3><p>'+escapeHtml(service.answer)+'</p>'+
-    '<h3>Is there a guaranteed '+escapeHtml(event.name)+' discount?</h3><p>'+escapeHtml(promiseNote)+'</p>'+
+    '<h3>How does the '+escapeHtml(event.name)+' offer apply?</h3><p>'+escapeHtml(promiseNote)+'</p>'+
     '<h3>Can I ask for an estimate after '+escapeHtml(event.name)+'?</h3><p>Yes. Share the relevant project details for a current quote. Campaign dates do not limit ordinary project enquiries.</p>'+
     '<h3>How does ProPulse handle projects in Hyderabad?</h3><p>'+escapeHtml(availability)+'</p>'+
     '<p><a href="'+escapeHtml(service.to)+'">Request a '+escapeHtml(service.name.toLowerCase())+' quotation</a> · '+

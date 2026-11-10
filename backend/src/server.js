@@ -351,7 +351,7 @@ if(serveFrontendFromBackend){
   ])app.get(from,redirectLegacyFrontend(target,hash));
   app.use((req,res,next)=>{
     const clean=req.path.replace(/\/+$/,'')||'/';
-    if(['GET','HEAD'].includes(req.method)&&clean!==req.path&&knownSpaFrontendPath(clean))return res.redirect(308,clean+req.url.slice(req.path.length));
+    if(['GET','HEAD'].includes(req.method)&&clean!==req.path&&knownSpaFrontendPath(clean))req.url=clean+req.url.slice(req.path.length);
     return next();
   });
   app.use(serveExactPrerenderedHtml(frontendDist));

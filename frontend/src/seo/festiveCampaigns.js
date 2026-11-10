@@ -165,7 +165,7 @@ export const CAMPAIGN_SERVICES={
     ],
     benefits:[
       ['Start with your plot','Site location, dimensions, approval status and floors guide the brief.'],
-      ['Compare the whole scope','Discuss structure, masonry, waterproofing, MEP and finishing allowances.'],
+      ['Compare the whole scope','Discuss structure, masonry, waterproofing, electrical and plumbing work, and finishing allowances.'],
       ['Understand the estimate','Request a written quote with materials, inclusions, exclusions and milestone terms.'],
     ],
     question:'What should I share for a festive construction quote?',
@@ -186,7 +186,7 @@ export const CAMPAIGN_SERVICES={
     benefits:[
       ['Plan room by room','Start with kitchen, wardrobes, living spaces and practical storage.'],
       ['Choose materials deliberately','Compare plywood grades, finishes, hardware and lighting before execution.'],
-      ['Know what is included','Review room-wise BOQ, drawings, installation scope and agreed timelines.'],
+      ['Know what is included','Review the item-wise cost breakdown, drawings, installation scope and agreed timelines.'],
     ],
     question:'What details are needed for a festive interior design quote?',
     answer:'Share your home location, 2BHK/3BHK or villa layout, rooms to design, possession date, budget and preferred finishes.',
