@@ -1,7 +1,8 @@
 import {useEffect,useRef,useMemo,useState} from 'react'
-import {Link,Navigate,useParams} from 'react-router-dom'
+import {Link,Navigate,useLocation,useParams} from 'react-router-dom'
 import {PublicHeader,PublicFooter} from '../components/PublicSiteChrome'
 import {activeFestival,activeFestivals,campaignStatus,CAMPAIGN_SERVICES,FESTIVAL_EVENTS,festivalBySlug,festivalPath,indiaToday} from '../seo/festiveCampaigns'
+import {publicRequest} from '../utils/auth'
 import './FestiveLanding.css'
 
 const prettyDate=value=>new Intl.DateTimeFormat('en-IN',{day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Kolkata'}).format(new Date(value+'T12:00:00+05:30'))
@@ -23,6 +24,65 @@ function OccasionArtwork({event,service='construction'}){
 }
 
 const serviceOffer=service=>service.key==='construction'?'Construction benefits up to ₹5 lakh':'10% off interiors'
+
+function useOccasionMotion(enabled=true){
+  const location=useLocation()
+  useEffect(()=>{
+    if(!enabled||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return undefined
+    const root=document.querySelector('.fc-page')
+    if(!root)return undefined
+    const revealSelectors='.fc-hero-content,.fc-hero-visual,.fc-feature-strip,.fc-intro>*,.fc-benefit-grid>article,.fc-planning>*,.fc-faq-grid>details,.fc-cta .fc-container,.fc-service-card,.fc-event-card,.fc-home-principles>*,.fc-also>*,.fc-hub-hero .fc-container,.fc-hub-heading,.fc-search-row,.fc-hub-list>.fc-terms,.fc-memorial-hero .fc-container,.fc-memorial-content>*,.public-site-footer'
+    const revealItems=[...root.querySelectorAll(revealSelectors)]
+    revealItems.forEach((element,index)=>{
+      element.classList.add('fc-3d-reveal')
+      element.style.setProperty('--fc-reveal-delay',Math.min(index%6,5)*65+'ms')
+    })
+    let observer
+    if('IntersectionObserver' in window){
+      observer=new IntersectionObserver(entries=>entries.forEach(entry=>{
+        if(entry.isIntersecting){entry.target.classList.add('fc-3d-visible');observer.unobserve(entry.target)}
+      }),{threshold:.12,rootMargin:'0px 0px -7% 0px'})
+      revealItems.forEach(element=>observer.observe(element))
+    }else revealItems.forEach(element=>element.classList.add('fc-3d-visible'))
+
+    const move=event=>{
+      if(event.pointerType!=='mouse')return
+      const card=event.target.closest('.fc-hero-visual,.fc-offer-panel,.fc-service-card,.fc-event-card,.fc-feature-strip>span,.fc-home-principles>*,.fc-benefit-grid>article,.fc-faq-grid>details')
+      if(!card||!root.contains(card))return
+      const box=card.getBoundingClientRect()
+      const x=(event.clientX-box.left)/box.width-.5
+      const y=(event.clientY-box.top)/box.height-.5
+      card.style.setProperty('--fc-tilt-x',(-y*5).toFixed(2)+'deg')
+      card.style.setProperty('--fc-tilt-y',(x*7).toFixed(2)+'deg')
+    }
+    const reset=event=>{
+      const card=event.target.closest('.fc-hero-visual,.fc-offer-panel,.fc-service-card,.fc-event-card,.fc-feature-strip>span,.fc-home-principles>*,.fc-benefit-grid>article,.fc-faq-grid>details')
+      if(!card||!root.contains(card)||(event.relatedTarget&&card.contains(event.relatedTarget)))return
+      card.style.setProperty('--fc-tilt-x','0deg');card.style.setProperty('--fc-tilt-y','0deg')
+    }
+    root.addEventListener('pointermove',move,{passive:true});root.addEventListener('pointerout',reset,{passive:true})
+    return()=>{observer?.disconnect();root.removeEventListener('pointermove',move);root.removeEventListener('pointerout',reset)}
+  },[enabled,location.pathname])
+}
+
+function OccasionWhatsAppButton({event,service}){
+  const [phone,setPhone]=useState('919000360812')
+  useEffect(()=>{
+    let active=true
+    publicRequest('/contact?audience=website').then(value=>{
+      const raw=String(value?.whatsapp||value?.phone||'').replace(/\D/g,'')
+      const number=raw.length===10?'91'+raw:raw.length===11&&raw.startsWith('0')?'91'+raw.slice(1):raw
+      if(active&&number.length>=10)setPhone(number)
+    }).catch(()=>{})
+    return()=>{active=false}
+  },[])
+  const topic=service?event.name+' '+service.label.toLowerCase()+' project':event.name+' home project'
+  const message=encodeURIComponent('Hi ProPulse, I would like to discuss my '+topic+' in Hyderabad.')
+  return <a className="fc-whatsapp" href={'https://wa.me/'+phone+'?text='+message} target="_blank" rel="noopener noreferrer" aria-label={'Chat with ProPulse about '+topic+' on WhatsApp'}>
+    <span className="fc-whatsapp-orbit" aria-hidden="true"/><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16.02 3.2A12.64 12.64 0 0 0 5.19 22.36L3.5 28.55l6.33-1.66a12.7 12.7 0 1 0 6.19-23.69Zm0 22.8c-1.85 0-3.66-.49-5.25-1.42l-.38-.22-3.76.99 1-3.66-.25-.4a10.1 10.1 0 1 1 8.64 4.71Zm5.55-7.57c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.95 1.17-.18.2-.35.23-.65.08-.3-.15-1.25-.46-2.38-1.47-.88-.79-1.47-1.77-1.64-2.07-.17-.3-.02-.46.13-.61.14-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.38-.03-.53-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.08-.8.38-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.21 5.1 4.5.71.3 1.27.48 1.7.62.71.23 1.36.2 1.87.12.57-.09 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.08-.13-.27-.2-.57-.35Z"/></svg>
+    <span className="fc-whatsapp-label">WhatsApp</span><span className="fc-whatsapp-pulse" aria-hidden="true"/>
+  </a>
+}
 
 function OfferPanel({event,service,showImage=true}){
   const status=campaignStatus(event)
@@ -73,6 +133,7 @@ function Faq({event,service}){
 
 
 function MemorialLanding({event,service}){
+  useOccasionMotion()
   const other=CAMPAIGN_SERVICES[service.key==='construction'?'interiors':'construction']
   return <div className="fc-page fc-memorial"><PublicHeader/><main>
     <section className="fc-memorial-hero"><div className="fc-container">
@@ -97,10 +158,11 @@ function MemorialLanding({event,service}){
         <h3>Are there promotions connected to this day?</h3><p>No. This page is solely a respectful observance. ProPulse does not present remembrance days as festival sales.</p>
       </section>
     </section>
-  </main><PublicFooter/></div>
+  </main><PublicFooter/><OccasionWhatsAppButton event={event} service={service}/></div>
 }
 
 function MemorialHome({event}){
+  useOccasionMotion()
   return <div className="fc-page fc-home fc-memorial"><PublicHeader/><main>
     <section className="fc-memorial-hero fc-memorial-hero--home"><div className="fc-container">
       <p className="fc-memorial-overline">PROPULSE · REMEMBRANCE</p>
@@ -114,10 +176,11 @@ function MemorialHome({event}){
       <div className="fc-memorial-links"><Link to={festivalPath(event,'construction')}>Construction remembrance page ↗</Link><Link to={festivalPath(event,'interiors')}>Interiors remembrance page ↗</Link></div>
       <p className="fc-memorial-date">In remembrance · {prettyDate(event.date)}.</p>
     </section>
-  </main><PublicFooter/></div>
+  </main><PublicFooter/><OccasionWhatsAppButton event={event}/></div>
 }
 
 function SingleOffer({event,service}){
+  useOccasionMotion(event.kind!=='remembrance')
   if(event.kind==='remembrance')return <MemorialLanding event={event} service={service}/>
   const status=campaignStatus(event)
   return <div className="fc-page">
@@ -138,7 +201,16 @@ function SingleOffer({event,service}){
           <div className="fc-hero-visual"><img src={service.key==='construction'?constructionImage:interiorsImage} alt={service.key==='construction'?'Modern residential house in warm evening light':'Elegant warm contemporary living space'} fetchPriority="high"/><div className="fc-visual-shine" aria-hidden="true"/><div className="fc-floating-badge"><span>{event.icon}</span><div><b>{event.name} {service.label} Offer</b><small>{event.theme}</small></div></div></div>
         </div>
       </section>
-      <div className="fc-container"><div className="fc-feature-strip"><span>Hyderabad focused</span><span>Scope-based estimates</span><span>Material &amp; finish clarity</span><span>Written project proposal</span></div></div>
+      <div className="fc-container"><div className={'fc-feature-strip'+(service.key==='construction'?' fc-feature-strip--construction':'')}>
+        {(service.key==='construction'?[
+          '500+ quality checks',
+          '12-year structural warranty',
+          'Dedicated engineer supervision',
+          'On-time delivery',
+          'Branded materials',
+          'Implemented as per ISI standards',
+        ]:['Hyderabad focused','Scope-based estimates','Material & finish clarity','Written project proposal']).map(item=><span key={item}>{item}</span>)}
+      </div></div>
       <section className="fc-intro fc-container">
         <div><p className="fc-overline">MADE FOR YOUR NEXT CHAPTER</p><h2>Celebrate {event.name} with a home plan that lasts beyond the season.</h2></div>
         <div><p>{event.inspiration} Before committing to {service.core}, it helps to separate inspiration from cost, scope and execution decisions. A good project starts with practical choices and a transparent, written proposal.</p><p>Share what matters to your family and how you use your rooms. ProPulse can discuss a brief tailored to your Hyderabad location, property type and preferred timeline with pricing based on the agreed scope and specifications.</p></div>
@@ -150,11 +222,12 @@ function SingleOffer({event,service}){
       <section className="fc-container fc-planning"><div><p className="fc-overline">YOUR REQUIREMENT CHECKLIST</p><h2>Get a clearer {service.name.toLowerCase()} quotation</h2><p>Use these points before submitting an enquiry or comparing quotations. Exact scope, taxes, timing and promotions must be agreed in writing.</p><Link to={service.to} className="fc-text-link">{service.action} ↗</Link></div><ol>{service.checklist.map(item=><li key={item}>{item}</li>)}</ol></section>
       <Faq event={event} service={service}/>
       <section className="fc-cta"><div className="fc-container"><p className="fc-overline">YOUR NEXT HOME PROJECT</p><h2>{status==='past'?'Your plans can continue after '+event.name+'.':'This '+event.name+', make a plan worth building.'}</h2><p>Send your Hyderabad project requirements to receive a quotation based on your project scope.</p><div className="fc-actions"><Link className="fc-button fc-button--gold" to={service.to}>Request a project quote ↗</Link><Link className="fc-button fc-button--outline" to="/contact">Talk to ProPulse</Link></div><OfferDisclaimer event={event} service={service}/></div></section>
-    </main><PublicFooter/>
+    </main><PublicFooter/><OccasionWhatsAppButton event={event} service={service}/>
   </div>
 }
 
 function FestivalHome({event}){
+  useOccasionMotion(event.kind!=='remembrance')
   if(event.kind==='remembrance')return <MemorialHome event={event}/>
   const additional=activeFestivals().filter(item=>item.slug!==event.slug)
   return <div className="fc-page fc-home">
@@ -171,11 +244,12 @@ function FestivalHome({event}){
       <section className="fc-container fc-home-options"><div className="fc-section-heading"><p className="fc-overline">TWO WAYS TO START</p><h2>Your home, your next chapter.</h2><p>Choose your project to see festival-themed inspiration, practical planning points and the next step for a quotation.</p></div><div className="fc-card-grid">{Object.values(CAMPAIGN_SERVICES).map(service=><ServiceCard key={service.key} event={event} service={service}/>)}</div></section>
       <section className="fc-container fc-home-principles"><div><b>01</b><h3>Define your requirements</h3><p>Tell us about the plot or rooms and the scope you have in mind.</p></div><div><b>02</b><h3>Discuss specifications</h3><p>Compare materials, finishes, inclusions, exclusions and project stages.</p></div><div><b>03</b><h3>Get a written proposal</h3><p>Review the offer, inclusions and exclusions before you commit.</p></div></section>
       <section className="fc-cta"><div className="fc-container"><p className="fc-overline">EXPLORE PROPULSE</p><h2>A celebration today. A home planned for years.</h2><p>Construction, interiors and technology support from one ProPulse platform.</p><div className="fc-actions"><Link className="fc-button fc-button--gold" to="/quote">Start your project ↗</Link><Link className="fc-button fc-button--outline" to="/offers">See upcoming festivals</Link></div><OfferDisclaimer event={event}/></div></section>
-    </main><PublicFooter/>
+  </main><PublicFooter/><OccasionWhatsAppButton event={event}/>
   </div>
 }
 
 export function FestivalHub(){
+  useOccasionMotion()
   const [filter,setFilter]=useState('all')
   const [search,setSearch]=useState('')
   const today=indiaToday()
@@ -188,7 +262,7 @@ export function FestivalHub(){
     {events.length===0&&<div className="fc-empty"><h3>No matching dates</h3><p>Try another name or reset the filters to browse the full calendar.</p><button type="button" className="fc-button fc-button--dark" onClick={()=>{setFilter('all');setSearch('')}}>Reset filters</button></div>}
     <p className="fc-terms">All dates use India Standard Time (Hyderabad). Remembrance pages carry no sales promotions. Moon-dependent and region-specific observances can change. Published campaigns do not imply an automatic discount; written quotation terms apply.</p>
     </section>
-  </main><PublicFooter/></div>
+  </main><PublicFooter/><OccasionWhatsAppButton event={{name:'Website enquiry'}}/></div>
 }
 
 export default function FestiveLanding({homeMode=false,event:homeEvent=null}){
