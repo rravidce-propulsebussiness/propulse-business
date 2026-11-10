@@ -433,14 +433,6 @@ function staticJsonLd(route){
   if(route.type==='state-construction-hub'||route.type==='district-construction')page.about={'@type':'Service',name:'Home construction',areaServed:route.type==='district-construction'?{'@type':'AdministrativeArea',name:route.districtName+' district, '+route.stateName+', India'}:{'@type':'AdministrativeArea',name:route.stateName+', India'}}
   const organization={'@context':'https://schema.org','@type':'Organization',name:SITE_NAME,url:absolute('/'),logo:absolute('/brand/propulse-logo.png')}
   const website={'@context':'https://schema.org','@type':'WebSite',name:SITE_NAME,url:absolute('/'),inLanguage:'en-IN',description:route.path==='/'?route.description:undefined}
-  const faqGraph=route.type==='festive-offer'&&route.campaignKind==='remembrance'?{'@context':'https://schema.org','@type':'FAQPage',mainEntity:[
-    {'@type':'Question',name:'What does '+route.festivalName+' commemorate?',acceptedAnswer:{'@type':'Answer',text:route.festivalInspiration}},
-    {'@type':'Question',name:'Are there promotions associated with this observance?',acceptedAnswer:{'@type':'Answer',text:'No. This is a respectful memorial, not a festival discount campaign.'}},
-  ]}:route.type==='festive-offer'?{'@context':'https://schema.org','@type':'FAQPage',mainEntity:[
-    {'@type':'Question',name:CAMPAIGN_SERVICES[route.serviceType].question,acceptedAnswer:{'@type':'Answer',text:CAMPAIGN_SERVICES[route.serviceType].answer}},
-    {'@type':'Question',name:'Is there a guaranteed '+route.festivalName+' discount?',acceptedAnswer:{'@type':'Answer',text:'Construction benefits up to ₹5 lakh and 10% off interiors apply to eligible projects during the campaign window. Scope, eligibility, discount basis, taxes and exclusions are confirmed in your written quotation.'}},
-    {'@type':'Question',name:'Can I ask for an estimate after '+route.festivalName+'?',acceptedAnswer:{'@type':'Answer',text:'Yes, project enquiries remain available beyond a campaign period.'}},
-  ]}:null
   const data=route.path==='/'?[
     organization,
     website,
@@ -448,7 +440,6 @@ function staticJsonLd(route){
     {'@context':'https://schema.org','@type':'Service',name:'House and villa construction',serviceType:'Residential house construction',description:'Plan residential house and villa construction in Hyderabad with a defined project scope, material preferences and estimate request.',areaServed:{'@type':'City',name:'Hyderabad',containedInPlace:{'@type':'State',name:'Telangana'}},provider:{'@type':'Organization',name:SITE_NAME,url:absolute('/')},url:absolute('/')},
 
   ]:[organization,page,{'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:breadcrumbItems(route)}]
-  if(faqGraph)data.push(faqGraph)
   return JSON.stringify(data).replaceAll('</script','<\\/script')
 }
 
