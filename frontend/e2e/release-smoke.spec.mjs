@@ -88,6 +88,9 @@ test('occasion homepage and direct service links work on desktop and mobile',asy
   for(const service of ['construction','interiors']){
     await page.goto('/offers/diwali-2026/'+service)
     await expect(page.locator('.fc-hero-content .fc-offer-panel')).toContainText(service==='construction'?'₹5 lakh':'10%')
+    await expect(page.locator('.fc-hero-content .fc-offer-name')).toContainText(service==='construction'?'Diwali Construction Offer':'Diwali Interior Offer')
+    await expect(page.locator('.fc-page')).not.toContainText(service==='construction'?'10%':'₹5 lakh')
+    await expect(page.locator('.fc-hero-content .fc-offer-photo')).toBeVisible()
     await page.reload()
     await expect(page.locator('.fc-hero h1')).toContainText('Diwali')
     await page.setViewportSize({width:390,height:844})

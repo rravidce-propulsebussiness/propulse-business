@@ -362,7 +362,7 @@ function festiveContent(route){
   const materialIntro=service.key==='construction'
     ? 'A house-construction proposal should cover site conditions, structural drawings, the built-up area, floors, steel and cement specifications, waterproofing, mechanical and electrical work, finishes and scope exclusions. Site measurements and permission requirements influence the final quotation.'
     : 'An interior-design proposal should start with the floor plan and room-wise needs: modular kitchens, wardrobes, living-room storage, lighting, false ceilings, work areas and installation constraints. Choose materials, hardware and finishes only after reviewing usage, budget and maintenance needs.'
-  const promiseNote='Construction benefits up to ₹5 lakh and 10% off interiors apply to eligible projects during the campaign window. Scope, eligibility, discount basis, taxes and exclusions are confirmed in your written ProPulse quotation.'
+  const promiseNote=event.name+' '+(service.key==='construction'?'construction offer: benefits up to ₹5 lakh':'interior offer: 10% off interiors')+' for eligible projects during '+event.start+'–'+event.end+'. Scope, eligibility, discount basis, taxes and exclusions are confirmed in your written ProPulse quotation.'
   const availability='ProPulse discusses selected construction and interior projects in Hyderabad, subject to a location and scope review. Independent marketplace professionals, where featured, operate separately from ProPulse direct execution.'
   const sibling=service.key==='construction'?'interiors':'construction'
   const siblingName=CAMPAIGN_SERVICES[sibling].name

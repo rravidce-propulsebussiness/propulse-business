@@ -82,6 +82,12 @@ if(fs.existsSync(path.join(dist,'offers'))){
     assert.ok(html.includes('application/ld+json'),'Missing JSON-LD: '+route.path)
     assert.ok(html.includes('canonical'),'Missing canonical: '+route.path)
     if(route.type==='festive-offer')assert.ok(html.includes('Frequently asked questions'),'Missing crawlable FAQ: '+route.path)
+    if(route.type==='festive-offer'&&route.campaignKind!=='remembrance'){
+      const ownOffer=route.serviceType==='construction'?'₹5 lakh':'10% off interiors'
+      const otherOffer=route.serviceType==='construction'?'10% off interiors':'₹5 lakh'
+      assert.ok(html.includes(ownOffer),'Missing service offer: '+route.path)
+      assert.ok(!html.includes(otherOffer),'Wrong service offer leaked into '+route.path)
+    }
     if(route.campaignKind==='remembrance'){
       assert.ok(html.includes('respectful memorial')||html.includes('IN RESPECTFUL REMEMBRANCE'),'Missing commemorative content')
       assert.ok(!html.includes('guaranteed '+route.festivalName+' discount'),'Memorial page must avoid sale copy')
