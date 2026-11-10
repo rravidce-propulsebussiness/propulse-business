@@ -89,3 +89,16 @@ if(fs.existsSync(path.join(dist,'offers'))){
   }
 }
 console.log('Festival campaigns verified:',FESTIVAL_EVENTS.length,'occasions,',FESTIVE_SEO_ROUTES.length,'SEO routes.')
+
+// Production backend and legacy wrapper must accept every generated service URL.
+const productionServer=fs.readFileSync(path.resolve(frontend,'../backend/src/server.js'),'utf8')
+for(const [label,source] of [['production',productionServer],['legacy',wrapper]]){
+  assert.ok(source.includes("'/offers'"),label+' must serve the occasion hub directly')
+  const declaration=source.match(/(?:const publicDynamicFrontendPath=requestPath=>|function publicDynamicFrontendPath\(requestPath\)\{return )([^\n]+)/)
+  assert.ok(declaration,label+' dynamic route declaration must be found')
+  const expression=declaration[1].replace(/;?}$/, '').replace(/;$/, '')
+  const accepts=new Function('requestPath','return '+expression)
+  for(const event of FESTIVAL_EVENTS)for(const service of ['construction','interiors'])assert.ok(accepts(festivalPath(event,service)),label+' missing deep link '+festivalPath(event,service))
+  for(const route of ['/offers/invalid_slug/construction','/offers/diwali-2026/admin','/offers/diwali-2026/construction/private'])assert.equal(accepts(route),false,label+' must reject malformed occasion paths')
+  assert.ok(source.includes('redirect:false'),label+' must not redirect file-backed routes into directories')
+}
