@@ -217,7 +217,7 @@ function jsonLdFor(route,origin){
       ]})
     }else data.push({'@context':'https://schema.org','@type':'FAQPage',mainEntity:[
       {'@type':'Question',name:service.question,acceptedAnswer:{'@type':'Answer',text:service.answer}},
-      {'@type':'Question',name:'Is there a guaranteed '+route.festivalName+' discount?',acceptedAnswer:{'@type':'Answer',text:'No automatic discount is guaranteed. Any promotion must be confirmed in a written quotation.'}},
+      {'@type':'Question',name:'Is there a guaranteed '+route.festivalName+' discount?',acceptedAnswer:{'@type':'Answer',text:'Construction benefits up to ₹5 lakh and 10% off interiors apply to eligible projects during the campaign window. Scope, eligibility, discount basis, taxes and exclusions are confirmed in your written quotation.'}},
       {'@type':'Question',name:'Can I ask for an estimate after '+route.festivalName+'?',acceptedAnswer:{'@type':'Answer',text:'Yes, project enquiries remain available beyond a campaign period.'}},
     ]})
   }

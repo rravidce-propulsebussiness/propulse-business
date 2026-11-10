@@ -168,3 +168,34 @@
 .fc-memorial-faq{margin:30px 0}
 .fc-memorial-faq h3{font-size:18px;margin:22px 0 7px}
 @media(max-width:720px){.fc-memorial-hero,.fc-memorial-hero--home{padding:60px 0 70px}.fc-memorial-content{padding-top:45px;padding-bottom:65px}}
+
+/* Photo-led occasion collection and interactive architectural line art. */
+.fc-artwork{position:absolute;right:-7%;top:0;width:min(62%,780px);color:#f8d397;opacity:.26;pointer-events:none;z-index:-1;transform:translate(var(--art-x,0px),var(--art-y,0px));transition:transform .4s ease}
+.fc-artwork svg{width:100%;height:auto;overflow:visible}
+.fc-art-lines{stroke-dasharray:1800;stroke-dashoffset:1800;animation:fc-draw 4s ease forwards}
+.fc-hero-grid,.fc-home-hero{position:relative;z-index:1}
+.fc-home-photo{position:absolute;inset:0;z-index:-2}
+.fc-home-photo img{width:100%;height:100%;object-fit:cover;object-position:center 56%}
+.fc-home-photo:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#160e19ed,#21141ad9 50%,#26141a99),linear-gradient(0deg,#20121a,transparent 65%)}
+.fc-home .fc-hero--home{text-align:left;padding:76px 0 88px}
+.fc-home .fc-home-hero{align-items:flex-start}
+.fc-home .fc-home-hero h1{max-width:850px}
+.fc-home-offers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;width:min(720px,100%);margin:18px 0 0}
+.fc-offer-panel{position:relative;padding:22px 25px;border:1px solid #eac78970;border-radius:16px;background:linear-gradient(125deg,#fff3d71a,#e5a65a09);text-align:left;overflow:hidden}
+.fc-offer-panel:after{content:'';position:absolute;inset:-100% -30%;background:linear-gradient(110deg,transparent 45%,#ffe4af12 50%,transparent 55%);transform:translateX(-80%);animation:fc-offer-shine 9s ease-in-out infinite;pointer-events:none}
+.fc-offer-panel>span{display:block;font-size:10px;letter-spacing:.17em;color:#edc88e;font-weight:800;margin-bottom:10px}
+.fc-offer-panel strong{display:block;font-family:Georgia,serif;font-size:clamp(34px,4vw,53px);font-weight:500;color:#ffdea1;line-height:1.05}
+.fc-offer-panel strong small{display:inline;font:500 17px/1.5 Inter,system-ui,sans-serif;color:inherit;margin-right:9px}
+.fc-offer-panel>p{color:#fff1da!important;font-size:14px;margin:12px 0 8px;line-height:1.5}
+.fc-offer-panel>small{display:block;color:#e7d6c8;font-size:11px;line-height:1.6;max-width:460px}
+.fc-hero-content>.fc-offer-panel{max-width:490px;margin:24px 0}
+.fc-service-copy .fc-offer-panel{background:linear-gradient(120deg,#352028,#5e3431);margin:18px 0 22px}
+.fc-service-card{transition:transform .35s ease,box-shadow .35s ease}
+.fc-service-card:hover{transform:translateY(-6px);box-shadow:0 24px 60px #42231524}
+.fc-service-image img,.fc-hero-visual>img{transition:transform 1s ease}
+.fc-service-card:hover img,.fc-hero-visual:hover>img{transform:scale(1.045)}
+.fc-calendar-offer{font-weight:800!important;color:#88352b!important;border-top:1px solid #e7d6ca;padding-top:14px;font-size:13px!important}
+@keyframes fc-draw{to{stroke-dashoffset:0}}
+@keyframes fc-offer-shine{0%,65%{transform:translateX(-80%)}100%{transform:translateX(80%)}}
+@media(max-width:700px){.fc-home-offers{grid-template-columns:1fr}.fc-home .fc-hero--home{padding:42px 0 60px}.fc-artwork{width:110%;right:-40%;opacity:.15}.fc-offer-panel{padding:19px 20px}.fc-home-photo img{object-position:65% center}}
+@media(prefers-reduced-motion:reduce){.fc-page *,.fc-page *:before,.fc-page *:after{animation:none!important;transition:none!important}.fc-art-lines{stroke-dashoffset:0}}
