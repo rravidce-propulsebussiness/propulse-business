@@ -1,7 +1,7 @@
 // Public, date-specific ProPulse campaign catalogue, Hyderabad (Asia/Kolkata).
 // Dates checked against the NFC Hyderabad 2027 holiday calendar and city-specific
 // panchang sources. Moon-sighting dates and temple-specific Bonalu dates are provisional.
-// No percentage discounts or free services are asserted without an approved offer.
+// Owner-approved campaigns: construction benefits up to ₹5 lakh; interiors 10% off.
 const EVENTS = [
   ['diwali-2026','Diwali','2026-11-08','🪔','Festival of lights','Warm lighting, welcoming living rooms and thoughtfully planned spaces make celebrations more comfortable.',95],
   ['chhath-puja-2026','Chhath Puja','2026-11-15','🌅','Gratitude and togetherness','Plan safe, practical access, ventilation and easy-to-maintain family spaces for gatherings.',61],
@@ -221,7 +221,7 @@ export function festivalSeoRoutes(){
       :event.name+' '+year+' '+service.title+' in Hyderabad | ProPulse'
     const description=event.kind==='remembrance'
       ?'A respectful remembrance of '+event.name+' '+year+' by ProPulse, Hyderabad. '+event.inspiration+' Learn how '+service.name.toLowerCase()+' can support safe, functional and inclusive communities, without promotional claims.'
-      :'Explore '+event.name+' '+year+' '+service.name.toLowerCase()+' planning in Hyderabad with ProPulse. '+event.inspiration+' Request a scope-based quote; promotional terms require written confirmation.'
+      :'Explore '+event.name+' '+year+' '+service.name.toLowerCase()+' planning in Hyderabad with ProPulse. '+event.inspiration+' Construction benefits up to ₹5 lakh; interiors 10% off for eligible projects. Written quotation terms apply.'
     return {
       path:festivalPath(event,service.key),
       type:'festive-offer',title,description,

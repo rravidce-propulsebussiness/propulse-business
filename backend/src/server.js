@@ -90,8 +90,8 @@ const workerHeartbeatMaxAgeSeconds=Math.min(600,Math.max(30,Math.floor(Number(pr
 const trustProxy=String(process.env.TRUST_PROXY||'').trim();
 const backendOnlyPath=requestPath=>requestPath.startsWith('/project-video-thumbnail/')||requestPath.startsWith('/project-video-stream/')||requestPath.startsWith('/project-cover/')||requestPath==='/robots.txt'||requestPath==='/sitemap.xml'||requestPath==='/video-sitemap.xml'||requestPath==='/release.json'||requestPath==='/health'||requestPath.startsWith('/health/')||requestPath.startsWith('/api')||requestPath.startsWith('/uploads');
 const privateFrontendPath=requestPath=>/^\/(admin|login|signup|forgot-password|reset-password|profile|wallet|membership|notifications|purchased-leads|my-leads|investment|lead-partner|requirements|estimate|professional-contact|professional-faq|professional-upcoming-features|professional-requests|professionals|upcoming-features|dashboard)(\/|$)/.test(requestPath);
-const publicSpaFrontendPaths=new Set(['/','/quote','/solutions','/experts','/packages','/projects','/how-it-works','/about','/contact','/faq','/blog','/hyderabad','/guides','/interior-estimator','/interior-cost-estimator','/construction-estimator','/construction-cost-estimator']);
-const publicDynamicFrontendPath=requestPath=>/^\/hyderabad\/[a-z0-9-]+(?:\/(?:compare-options|[a-z0-9-]+))?$/.test(requestPath)||/^\/experts\/[0-9]+(?:\/quote)?\/?$/.test(requestPath)||/^\/guides\/[a-z0-9-]+$/.test(requestPath)||/^\/projects\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/quote)?\/?$/.test(requestPath)||/^\/[a-z0-9-]+\/(?:construction|interior-designers)(?:\/[a-z0-9-]+)?$/.test(requestPath);
+const publicSpaFrontendPaths=new Set(['/','/quote','/solutions','/experts','/packages','/projects','/how-it-works','/about','/contact','/faq','/blog','/hyderabad','/guides','/interior-estimator','/interior-cost-estimator','/construction-estimator','/construction-cost-estimator','/offers','/technology']);
+const publicDynamicFrontendPath=requestPath=>/^\/offers\/[a-z0-9-]+\/(?:construction|interiors)$/.test(requestPath)||/^\/hyderabad\/[a-z0-9-]+(?:\/(?:compare-options|[a-z0-9-]+))?$/.test(requestPath)||/^\/experts\/[0-9]+(?:\/quote)?\/?$/.test(requestPath)||/^\/guides\/[a-z0-9-]+$/.test(requestPath)||/^\/projects\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/quote)?\/?$/.test(requestPath)||/^\/[a-z0-9-]+\/(?:construction|interior-designers)(?:\/[a-z0-9-]+)?$/.test(requestPath);
 const knownSpaFrontendPath=requestPath=>privateFrontendPath(requestPath)||publicSpaFrontendPaths.has(requestPath)||publicDynamicFrontendPath(requestPath);
 if(trustProxy) app.set('trust proxy',trustProxy==='false'?false:trustProxy==='true'?true:Number.isNaN(Number(trustProxy))?trustProxy:Number(trustProxy));
 app.disable('x-powered-by');
@@ -349,10 +349,16 @@ if(serveFrontendFromBackend){
     ['/pricing','/','#pricing'],
     ['/industries','/',''],
   ])app.get(from,redirectLegacyFrontend(target,hash));
+  app.use((req,res,next)=>{
+    const clean=req.path.replace(/\/+$/,'')||'/';
+    if(['GET','HEAD'].includes(req.method)&&clean!==req.path&&knownSpaFrontendPath(clean))return res.redirect(308,clean+req.url.slice(req.path.length));
+    return next();
+  });
   app.use(serveExactPrerenderedHtml(frontendDist));
   app.use(express.static(frontendDist,{
     index:'index.html',
     extensions:['html'],
+    redirect:false,
     fallthrough:true,
     setHeaders(res,filePath){
       // Vite emits content-hashed files under assets/: safe to cache for a year.

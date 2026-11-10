@@ -1,5 +1,4 @@
 import {HOME_SEO,SITE_NAME,isIndexablePath,seoForPath} from '../seo/seoConfig'
-import {CAMPAIGN_SERVICES} from '../seo/festiveCampaigns'
 
 const SERVICE_LABELS={
   construction:'Construction',
@@ -208,19 +207,6 @@ function jsonLdFor(route,origin){
       itemListElement:breadcrumbItems(route,origin),
     },
   ]
-  if(route.type==='festive-offer'){
-    const service=CAMPAIGN_SERVICES[route.serviceType]
-    if(route.campaignKind==='remembrance'){
-      data.push({'@context':'https://schema.org','@type':'FAQPage',mainEntity:[
-        {'@type':'Question',name:'What does '+route.festivalName+' commemorate?',acceptedAnswer:{'@type':'Answer',text:route.festivalInspiration}},
-        {'@type':'Question',name:'Are promotions associated with this observance?',acceptedAnswer:{'@type':'Answer',text:'No. This is a respectful memorial, not a festival sales campaign.'}},
-      ]})
-    }else data.push({'@context':'https://schema.org','@type':'FAQPage',mainEntity:[
-      {'@type':'Question',name:service.question,acceptedAnswer:{'@type':'Answer',text:service.answer}},
-      {'@type':'Question',name:'Is there a guaranteed '+route.festivalName+' discount?',acceptedAnswer:{'@type':'Answer',text:'No automatic discount is guaranteed. Any promotion must be confirmed in a written quotation.'}},
-      {'@type':'Question',name:'Can I ask for an estimate after '+route.festivalName+'?',acceptedAnswer:{'@type':'Answer',text:'Yes, project enquiries remain available beyond a campaign period.'}},
-    ]})
-  }
   return data
 }
 

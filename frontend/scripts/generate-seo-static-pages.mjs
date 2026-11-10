@@ -362,7 +362,7 @@ function festiveContent(route){
   const materialIntro=service.key==='construction'
     ? 'A house-construction proposal should cover site conditions, structural drawings, the built-up area, floors, steel and cement specifications, waterproofing, mechanical and electrical work, finishes and scope exclusions. Site measurements and permission requirements influence the final quotation.'
     : 'An interior-design proposal should start with the floor plan and room-wise needs: modular kitchens, wardrobes, living-room storage, lighting, false ceilings, work areas and installation constraints. Choose materials, hardware and finishes only after reviewing usage, budget and maintenance needs.'
-  const promiseNote='This festival page is a project-planning invitation, not a promise of an automatic discount. Any promotional benefit, price, eligibility, period, tax or extra inclusion must be expressly stated in a current written ProPulse quotation.'
+  const promiseNote='Construction benefits up to ₹5 lakh and 10% off interiors apply to eligible projects during the campaign window. Scope, eligibility, discount basis, taxes and exclusions are confirmed in your written ProPulse quotation.'
   const availability='ProPulse discusses selected construction and interior projects in Hyderabad, subject to a location and scope review. Independent marketplace professionals, where featured, operate separately from ProPulse direct execution.'
   const sibling=service.key==='construction'?'interiors':'construction'
   const siblingName=CAMPAIGN_SERVICES[sibling].name
@@ -380,7 +380,7 @@ function festiveContent(route){
     '<p>'+escapeHtml(availability)+'</p>'+
     '<h2>Frequently asked questions</h2>'+
     '<h3>'+escapeHtml(service.question)+'</h3><p>'+escapeHtml(service.answer)+'</p>'+
-    '<h3>Is there a guaranteed '+escapeHtml(event.name)+' discount?</h3><p>No. '+escapeHtml(promiseNote)+'</p>'+
+    '<h3>Is there a guaranteed '+escapeHtml(event.name)+' discount?</h3><p>'+escapeHtml(promiseNote)+'</p>'+
     '<h3>Can I ask for an estimate after '+escapeHtml(event.name)+'?</h3><p>Yes. Share the relevant project details for a current quote. Campaign dates do not limit ordinary project enquiries.</p>'+
     '<h3>How does ProPulse handle projects in Hyderabad?</h3><p>'+escapeHtml(availability)+'</p>'+
     '<p><a href="'+escapeHtml(service.to)+'">Request a '+escapeHtml(service.name.toLowerCase())+' quotation</a> · '+
@@ -433,14 +433,6 @@ function staticJsonLd(route){
   if(route.type==='state-construction-hub'||route.type==='district-construction')page.about={'@type':'Service',name:'Home construction',areaServed:route.type==='district-construction'?{'@type':'AdministrativeArea',name:route.districtName+' district, '+route.stateName+', India'}:{'@type':'AdministrativeArea',name:route.stateName+', India'}}
   const organization={'@context':'https://schema.org','@type':'Organization',name:SITE_NAME,url:absolute('/'),logo:absolute('/brand/propulse-logo.png')}
   const website={'@context':'https://schema.org','@type':'WebSite',name:SITE_NAME,url:absolute('/'),inLanguage:'en-IN',description:route.path==='/'?route.description:undefined}
-  const faqGraph=route.type==='festive-offer'&&route.campaignKind==='remembrance'?{'@context':'https://schema.org','@type':'FAQPage',mainEntity:[
-    {'@type':'Question',name:'What does '+route.festivalName+' commemorate?',acceptedAnswer:{'@type':'Answer',text:route.festivalInspiration}},
-    {'@type':'Question',name:'Are there promotions associated with this observance?',acceptedAnswer:{'@type':'Answer',text:'No. This is a respectful memorial, not a festival discount campaign.'}},
-  ]}:route.type==='festive-offer'?{'@context':'https://schema.org','@type':'FAQPage',mainEntity:[
-    {'@type':'Question',name:CAMPAIGN_SERVICES[route.serviceType].question,acceptedAnswer:{'@type':'Answer',text:CAMPAIGN_SERVICES[route.serviceType].answer}},
-    {'@type':'Question',name:'Is there a guaranteed '+route.festivalName+' discount?',acceptedAnswer:{'@type':'Answer',text:'No automatic discount is guaranteed. Any promotion must be confirmed in a written quotation.'}},
-    {'@type':'Question',name:'Can I ask for an estimate after '+route.festivalName+'?',acceptedAnswer:{'@type':'Answer',text:'Yes, project enquiries remain available beyond a campaign period.'}},
-  ]}:null
   const data=route.path==='/'?[
     organization,
     website,
@@ -448,7 +440,6 @@ function staticJsonLd(route){
     {'@context':'https://schema.org','@type':'Service',name:'House and villa construction',serviceType:'Residential house construction',description:'Plan residential house and villa construction in Hyderabad with a defined project scope, material preferences and estimate request.',areaServed:{'@type':'City',name:'Hyderabad',containedInPlace:{'@type':'State',name:'Telangana'}},provider:{'@type':'Organization',name:SITE_NAME,url:absolute('/')},url:absolute('/')},
 
   ]:[organization,page,{'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:breadcrumbItems(route)}]
-  if(faqGraph)data.push(faqGraph)
   return JSON.stringify(data).replaceAll('</script','<\\/script')
 }
 

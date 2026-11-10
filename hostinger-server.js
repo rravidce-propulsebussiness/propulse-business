@@ -233,11 +233,17 @@ app.use((req,res,next)=>{
 // Give it a deterministic public redirect instead of relying on webroot fallback.
 app.get('/favicon.ico',(req,res)=>res.redirect(308,'/favicon.svg'));
 
+app.use((req,res,next)=>{
+  const clean=req.path.replace(/\/+$/,'')||'/';
+  if(['GET','HEAD'].includes(req.method)&&clean!==req.path&&knownSpaFrontendPath(clean))return res.redirect(308,clean+req.url.slice(req.path.length));
+  return next();
+});
 app.use(serveExactPrerenderedHtml(frontendDist));
 
 app.use(express.static(frontendDist,{
   index:'index.html',
   extensions:['html'],
+  redirect:false,
   fallthrough:true,
   dotfiles:'ignore',
   setHeaders(res,filePath){

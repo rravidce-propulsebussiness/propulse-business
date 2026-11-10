@@ -51,6 +51,7 @@ async function findFixtureLead(page,requirement){
 const TINY_PNG='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6S0sAAAAASUVORK5CYII='
 
 test('public homepage presents homeowner acquisition journeys',async({page})=>{
+  await page.clock.setFixedTime(new Date('2026-11-01T12:00:00+05:30'))
   await page.goto('/')
   const hero=page.locator('#home')
   await expect(hero.getByRole('heading',{name:'Build Your Dream Home in Hyderabad.'})).toBeVisible()
@@ -76,6 +77,27 @@ test('public homepage presents homeowner acquisition journeys',async({page})=>{
   await page.getByRole('link',{name:/get construction estimate/i}).first().click()
   await expect(page).toHaveURL(/\/quote#construction$/)
   await expect(page.getByRole('heading',{name:/construction/i}).first()).toBeVisible()
+})
+
+test('occasion homepage and direct service links work on desktop and mobile',async({page})=>{
+  await page.clock.setFixedTime(new Date('2026-11-08T12:00:00+05:30'))
+  await page.goto('/')
+  await expect(page.locator('.fc-home-hero h1')).toContainText('Diwali')
+  await expect(page.locator('.fc-home-offers')).toContainText('₹5 lakh')
+  await expect(page.locator('.fc-home-offers')).toContainText('10%')
+  for(const service of ['construction','interiors']){
+    await page.goto('/offers/diwali-2026/'+service)
+    await expect(page.locator('.fc-hero-content .fc-offer-panel')).toContainText(service==='construction'?'₹5 lakh':'10%')
+    await page.reload()
+    await expect(page.locator('.fc-hero h1')).toContainText('Diwali')
+    await page.setViewportSize({width:390,height:844})
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true)
+    await expect(page.locator('.fc-artwork svg')).toHaveCount(1)
+  }
+  await page.goto('/offers')
+  await expect(page.locator('.fc-hub-heading')).toContainText('126 occasions')
+  await page.getByRole('button',{name:'Live',exact:true}).click()
+  await expect(page.locator('.fc-event-card').first()).toBeVisible()
 })
 
 test('protected customer route redirects anonymous users to login',async({page})=>{
@@ -375,7 +397,7 @@ test('contact page shows direct channels without duplicated marketing panels',as
   await expect(page.getByRole('heading',{name:/Happy to help you/})).toBeVisible()
   await expect(page.locator('.contact-methods a[href="tel:+919876543210"]')).toBeVisible()
   await expect(page.locator('.contact-methods a[href="mailto:hello@example.com"]')).toBeVisible()
-  await expect(page.locator('.contact-methods a[href="https://wa.me/919876543210"]')).toBeVisible()
+  await expect(page.locator('.contact-methods a[href^="https://wa.me/"]')).toHaveCount(0)
   await expect(page.locator('.contact-service-strip,.contact-map,.contact-direct-links')).toHaveCount(0)
   await expect(page.getByRole('heading',{name:/Request construction or interior services/})).toBeVisible()
   await expect(page.getByRole('button',{name:/Send Direct Enquiry/})).toBeVisible()

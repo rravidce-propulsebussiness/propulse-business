@@ -53,7 +53,7 @@ global.fetch = async (url, init = {}) => {
   const json = body => ({ ok: true, status: 200, json: async () => body });
   if (u.pathname.endsWith('/oauth/access_token')) return json({ access_token: u.searchParams.get('grant_type') ? 'long-user-token' : 'short-user-token' });
   if (u.pathname.endsWith('/me')) return json({ id: '55500' });
-  if (u.pathname.endsWith('/me/accounts')) return json({ data: [{ id: '111222333', name: 'ProPulse Interiors', access_token: 'PAGE-TOKEN-SECRET' }] });
+  if (u.pathname.endsWith('/me/accounts')) return json({ data: [{ id: '111222333', name: 'ProPulse Interiors', access_token: 'test-token' }] });
   if (u.pathname.endsWith('/5550001112223')) {
     assert.ok(u.searchParams.get('appsecret_proof'), 'Every token call must include appsecret_proof');
     return json({ id: '5550001112223', created_time: '2026-11-08T10:00:00+0000', ad_name: 'Diwali offer', campaign_name: 'Interiors Q4', platform: 'ig',
@@ -71,9 +71,9 @@ const service = require(src('services/metaLeadAdsService'));
   assert.deepStrictEqual(graph.missingConfig(), [], 'Complete configuration reports nothing missing');
 
   // Token encryption: round trip, ciphertext hides the token, tampering fails
-  const sealed = graph.encryptToken('PAGE-TOKEN-SECRET');
-  assert.ok(!sealed.includes('PAGE-TOKEN-SECRET'));
-  assert.strictEqual(graph.decryptToken(sealed), 'PAGE-TOKEN-SECRET');
+  const sealed = graph.encryptToken('test-token');
+  assert.ok(!sealed.includes('test-token'));
+  assert.strictEqual(graph.decryptToken(sealed), 'test-token');
   const parts = sealed.split(':'); parts[3] = Buffer.from('tampered').toString('base64');
   assert.throws(() => graph.decryptToken(parts.join(':')), 'Tampered ciphertext must not decrypt');
 
@@ -111,8 +111,8 @@ const service = require(src('services/metaLeadAdsService'));
   const target = await service.finishOauth({ code: 'AUTHCODE', state: dialog.searchParams.get('state') });
   assert.strictEqual(target, '/lead-partner/inventory?meta=connected');
   assert.strictEqual(db.pages.length, 1);
-  assert.ok(!db.pages[0].token.includes('PAGE-TOKEN-SECRET'), 'Page tokens must be stored encrypted');
-  assert.strictEqual(graph.decryptToken(db.pages[0].token), 'PAGE-TOKEN-SECRET');
+  assert.ok(!db.pages[0].token.includes('test-token'), 'Page tokens must be stored encrypted');
+  assert.strictEqual(graph.decryptToken(db.pages[0].token), 'test-token');
   assert.match(await service.finishOauth({ code: 'X', state: 'forged.state.value' }), /meta=error/, 'Forged state must be rejected');
   assert.match(await service.finishOauth({ state: dialog.searchParams.get('state'), error: 'access_denied' }), /meta=cancelled/);
 
