@@ -16,7 +16,7 @@ const HOME_TRUST_HEADLINES = [
   { lead: 'Smart Technology.', accent: ' Updates at Key Milestones.' },
   { lead: 'Clear Scope.', accent: ' Transparent Estimates.' },
 ]
-const DEFAULT_HERO = 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=2200&q=92'
+const DEFAULT_HERO = 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1600&q=80'
 const unsplash = (id, width = 1200) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${width}&q=85`
 
 const PILLARS = [
@@ -195,25 +195,66 @@ export default function Home() {
   const [publishedProjects, setPublishedProjects] = useState([])
   const typed = useTypewriter(reduced)
   const heroRef = useRef(null)
+  const ctaRef = useRef(null)
+  const projectsRef = useRef(null)
   const [stepsRef, stepsIn] = useInView({ once: true, threshold: 0.3 })
 
   useEffect(() => {
     let active = true
-    Promise.allSettled([
-      publicRequest('/contact?audience=website'),
-      publicRequest('/homepage-media'),
-      publicRequest('/experts/projects?page=1&pageSize=4'),
-    ]).then(([contactResult, mediaResult, projectsResult]) => {
-      if (!active) return
-      if (contactResult.status === 'fulfilled') setContactData(contactResult.value || {})
-      if (mediaResult.status === 'fulfilled') setHomepageMedia({ hero_image_url: mediaResult.value?.hero_image_url || '' })
-      if (projectsResult.status === 'fulfilled') {
-        const value = projectsResult.value
-        const rows = Array.isArray(value) ? value : Array.isArray(value?.data) ? value.data : []
-        setPublishedProjects(rows.slice(0, 4))
-      }
-    })
+    publicRequest('/contact?audience=website')
+      .then(value => { if (active) setContactData(value || {}) })
+      .catch(() => {})
     return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    const section = projectsRef.current
+    if (!section) return undefined
+    let active = true
+    const loadProjects = () => {
+      publicRequest('/experts/projects?page=1&pageSize=4')
+        .then(value => {
+          if (!active) return
+          const rows = Array.isArray(value) ? value : Array.isArray(value?.data) ? value.data : []
+          setPublishedProjects(rows.slice(0, 4))
+        })
+        .catch(() => {})
+    }
+    if (!('IntersectionObserver' in window)) {
+      loadProjects()
+      return () => { active = false }
+    }
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) {
+        observer.disconnect()
+        loadProjects()
+      }
+    }, { rootMargin: '500px 0px' })
+    observer.observe(section)
+    return () => { active = false; observer.disconnect() }
+  }, [])
+
+  useEffect(() => {
+    const section = ctaRef.current
+    if (!section) return undefined
+    let active = true
+    const loadMedia = () => {
+      publicRequest('/homepage-media')
+        .then(value => { if (active) setHomepageMedia({ hero_image_url: value?.hero_image_url || '' }) })
+        .catch(() => {})
+    }
+    if (!('IntersectionObserver' in window)) {
+      loadMedia()
+      return () => { active = false }
+    }
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) {
+        observer.disconnect()
+        loadMedia()
+      }
+    }, { rootMargin: '500px 0px' })
+    observer.observe(section)
+    return () => { active = false; observer.disconnect() }
   }, [])
 
   // Soft spotlight that follows the pointer across the hero (mouse only).
@@ -393,7 +434,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="hc-section ph-section hc-projects" aria-labelledby="ph-projects-title">
+      <section className="hc-section ph-section hc-projects" aria-labelledby="ph-projects-title" ref={projectsRef}>
         <div className="hc-container">
           <div className="ph-head">
             <span className="ph-eyebrow">{hasPublishedProjects ? 'PROJECTS' : 'INSPIRATION'}</span>
@@ -422,7 +463,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="hc-slim-cta ph-cta" data-no-scroll-reveal>
+      <section className="hc-slim-cta ph-cta" data-no-scroll-reveal ref={ctaRef}>
         <div className="hc-container">
           <div className="ph-cta-card">
             <img src={heroImage} alt="" loading="lazy" decoding="async"/>
