@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { CONSTRUCTION_PACKAGE_CATALOG } from '../data/constructionPackageCatalog'
 import { INTERIOR_PACKAGES } from '../data/interiorPackageCatalog'
 import './Packages.css'
@@ -104,10 +104,10 @@ function Icon({ name, size = 20 }) {
 
 export default function Packages() {
   const navigate = useNavigate()
+  const location = useLocation()
   const constructionCompareRef = useRef(null)
   const interiorCompareRef = useRef(null)
-  const initialHash = typeof window !== 'undefined' ? window.location.hash : ''
-  const [activeCategory, setActiveCategory] = useState(initialHash === '#interior' || initialHash === '#interiors' ? 'interior' : 'construction')
+  const activeCategory = location.hash === '#interior' || location.hash === '#interiors' ? 'interior' : 'construction'
   const [compareConstruction, setCompareConstruction] = useState([])
   const [compareInterior, setCompareInterior] = useState([])
   const [compareOpen, setCompareOpen] = useState({ construction: false, interior: false })
@@ -151,9 +151,12 @@ export default function Packages() {
 
   function switchCategory(category) {
     if (!['construction','interior'].includes(category)) return
-    setActiveCategory(category)
     setExpanded({})
-    window.history.replaceState({}, '', category === 'construction' ? '/packages#construction' : '/packages#interior')
+    navigate({
+      pathname: location.pathname,
+      search: location.search,
+      hash: category === 'construction' ? '#construction' : '#interior',
+    }, { replace: true })
   }
 
   function selectedKeys(category) {

@@ -107,6 +107,25 @@ for(const [label,source] of [['Hostinger wrapper',wrapper],['Backend single-proc
 }
 assert(backendServer.includes("'/interior-estimator'")&&backendServer.includes('publicDynamicFrontendPath'),'Backend SPA allowlist must preserve estimator redirects and dynamic SEO routes');
 assert(wrapper.includes("'/interior-estimator'")&&wrapper.includes('publicDynamicFrontendPath'),'Wrapper SPA allowlist must preserve estimator redirects and dynamic SEO routes');
+for(const [label,source] of [['Hostinger wrapper',wrapper],['Backend single-process',backendServer]]){
+  const paths=source.match(/const publicSpaFrontendPaths=new Set\(\[([^\]]+)\]\)/);
+  assert(paths,label+' must declare public route aliases');
+  if(paths){
+    const listed=new Set(Array.from(paths[1].matchAll(/'([^']+)'/g),match=>match[1]));
+    for(const route of ['/blog','/construction-blog','/interior-blog','/best-construction-company-hyderabad','/best-interior-designers-hyderabad']){
+      assert(listed.has(route),label+' must serve public page '+route);
+    }
+  }
+  const declaration=source.match(/(?:const publicDynamicFrontendPath=requestPath=>|function publicDynamicFrontendPath\(requestPath\)\{return )([^\n]+)/);
+  assert(declaration,label+' must declare dynamic public SEO routes');
+  if(declaration){
+    const expression=declaration[1].replace(/;?}$/, '').replace(/;$/, '');
+    const accepts=new Function('requestPath','return '+expression);
+    for(const route of ['/offers/diwali-2026/construction','/telangana/construction/hyderabad','/telangana/interior-designers/hyderabad']){
+      assert(accepts(route),label+' must serve deep link '+route);
+    }
+  }
+}
 for(const source of [wrapper,backendServer]){
   assert(source.includes('function serveExactPrerenderedHtml(root)'),'Runtime must define exact prerendered HTML resolution');
   assert(source.includes("relative+'.html'"),'Runtime must prefer a route-level prerendered .html file');

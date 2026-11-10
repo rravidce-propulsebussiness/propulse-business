@@ -70,7 +70,8 @@
 .fc-planning ol{counter-reset:fc-steps;list-style:none;display:grid;gap:14px;margin:0;padding:0}
 .fc-planning li{counter-increment:fc-steps;position:relative;padding:18px 20px 18px 58px;background:#fff;border-radius:12px;box-shadow:0 5px 20px #3e2e3110;color:#514a53;font-size:14px;line-height:1.6}
 .fc-planning li:before{content:counter(fc-steps);position:absolute;top:17px;left:17px;width:29px;height:29px;display:grid;place-items:center;border-radius:50%;background:#f8e6c5;color:#6d4840;font-size:12px;font-weight:900}
-.fc-text-link{font-weight:850;color:#7b3e50}
+.fc-text-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 17px;border:1px solid #b98c80;border-radius:9px;background:linear-gradient(135deg,#fff,#f9eee7);color:#643348;font-weight:850;transition:transform .2s,box-shadow .2s,border-color .2s}
+.fc-text-link:hover{transform:translateY(-2px);border-color:#956477;box-shadow:0 8px 18px #42243d18}
 .fc-cross-promo{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:28px 36px;background:#f2e2d6;border:1px solid #ead1c4;border-radius:16px}
 .fc-cross-promo span{font-weight:800;color:#7a4157;font-size:12px}
 .fc-cross-promo h2{font-size:30px;margin:7px 0}
@@ -102,7 +103,8 @@
 .fc-service-copy{padding:28px}
 .fc-service-copy h3{font-family:Georgia,serif;font-weight:500;font-size:29px;margin:7px 0 12px}
 .fc-service-copy p:not(.fc-overline){font-size:14px;line-height:1.75;color:var(--fc-muted)}
-.fc-card-link{font-size:14px;font-weight:900;color:#7c3a4b;display:inline-flex;gap:8px;align-items:center}
+.fc-card-link{width:fit-content;min-height:44px;padding:0 16px;border:1px solid #c7a18c;border-radius:9px;background:linear-gradient(135deg,#fff8ed,#f7eadb);font-size:13px;font-weight:900;color:#68364a;display:inline-flex;gap:8px;align-items:center;transition:transform .2s,box-shadow .2s,border-color .2s}
+.fc-card-link:hover{transform:translateY(-2px);border-color:#986a75;box-shadow:0 8px 18px #42243d18}
 .fc-home-principles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;padding-bottom:80px}
 .fc-home-principles>div{padding:24px 28px;border-top:1px solid #d3a568}
 .fc-home-principles b{color:#af7a52;font-family:Georgia,serif;font-size:34px}
@@ -142,7 +144,8 @@
 .fc-also-grid strong{font-size:15px;color:#432a3d}
 .fc-also-grid span{color:#765a66;font-size:12px}
 .fc-also-grid article>div{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
-.fc-also-grid a{font-size:12px;font-weight:850;color:#7c3a4b}
+.fc-also-grid a{min-height:44px;padding:0 12px;border:1px solid #d9c1b4;border-radius:8px;background:#fffaf6;font-size:12px;font-weight:850;color:#69394c;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s,border-color .2s,transform .2s}
+.fc-also-grid a:hover{transform:translateY(-1px);background:#f6eae2;border-color:#b99282}
 .fc-window{color:#80695c!important;font-weight:750;font-size:12px!important;margin-top:-8px!important}
 @media(max-width:850px){.fc-also-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:590px){.fc-also-grid{grid-template-columns:1fr}}
@@ -164,7 +167,8 @@
 .fc-memorial-content .fc-memorial-date{color:#687681}
 .fc-memorial-service{border-top:1px solid #d5dade;border-bottom:1px solid #d5dade;padding:40px 0;margin:35px 0}
 .fc-memorial-links{display:flex;gap:16px 25px;flex-wrap:wrap;margin:28px 0}
-.fc-memorial-links a{font-size:14px;font-weight:750;color:#354960;text-decoration:underline;text-underline-offset:5px}
+.fc-memorial-links a{min-height:44px;display:inline-flex;align-items:center;padding:0 15px;border:1px solid #ccd4da;border-radius:8px;background:#fff;color:#354960;font-size:14px;font-weight:750;text-decoration:none;transition:background-color .2s,border-color .2s}
+.fc-memorial-links a:hover{background:#edf1f3;border-color:#aab8c1}
 .fc-memorial-faq{margin:30px 0}
 .fc-memorial-faq h3{font-size:18px;margin:22px 0 7px}
 @media(max-width:720px){.fc-memorial-hero,.fc-memorial-hero--home{padding:60px 0 70px}.fc-memorial-content{padding-top:45px;padding-bottom:65px}}

@@ -135,6 +135,9 @@
   line-height: 1.95;
 }
 .ab-story-prose p:last-child { margin-bottom: 0; color: #193e57; font-weight: 700; }
+.ab-contact-action a{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:46px;padding:0 17px;border:1px solid #e6b59e;border-radius:10px;background:linear-gradient(135deg,#fff9f5,#ffede4);color:#a64725;text-decoration:none;box-shadow:0 8px 18px rgba(75,43,27,.08);transition:transform .2s,box-shadow .2s,border-color .2s}
+.ab-contact-action a:hover{transform:translateY(-2px);border-color:#cf805f;box-shadow:0 12px 22px rgba(75,43,27,.13)}
+.ab-contact-action a:focus-visible{outline:3px solid #e07a50;outline-offset:3px}
 .ab-reason { padding: 82px 0 91px; background: #f7f9fa; border-block: 1px solid #ebeff0; }
 .ab-reason-heading { max-width: 790px; margin-bottom: 32px; }
 .ab-reason h2 { margin: 13px 0 15px; }
