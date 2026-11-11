@@ -471,3 +471,26 @@ body:has(.fc-page) .support-chat-panel{bottom:58px}
   .fc-scene-slide{width:71%;border-radius:16px}
   .fc-scene-chip--bottom{bottom:22%;left:2%}
 }
+
+
+/* Give mobile photos more vertical presence and let touch or mouse drags advance the coverflow. */
+.fc-scene-gallery{pointer-events:auto;touch-action:pan-y;cursor:grab}
+.fc-scene-gallery:active{cursor:grabbing}
+@media(max-width:720px){
+  .fc-hero-scene{height:clamp(400px,110vw,500px)}
+  .fc-scene-gallery{top:15%;height:57%;width:100%}
+  .fc-scene-slide{width:78%;border-radius:20px}
+  .fc-scene-slide--center{transform:translateX(-50%) translateZ(84px) rotateY(0) scale(1.03)}
+  .fc-scene-slide--left-1{transform:translateX(-50%) translateZ(-32px) rotateY(22deg) scale(.74)}
+  .fc-scene-slide--right-1{transform:translateX(-50%) translateZ(-32px) rotateY(-22deg) scale(.74)}
+  .fc-scene-slide--left-2{transform:translateX(-50%) translateZ(-88px) rotateY(31deg) scale(.58)}
+  .fc-scene-slide--right-2{transform:translateX(-50%) translateZ(-88px) rotateY(-31deg) scale(.58)}
+  .fc-scene-chip--bottom{bottom:14%;left:2%}
+  .fc-scene-caption{bottom:2%}
+}
+@media(max-width:420px){
+  .fc-hero-scene{height:clamp(390px,110vw,470px)}
+  .fc-scene-gallery{top:15%;height:57%}
+  .fc-scene-slide{width:80%;border-radius:18px}
+  .fc-scene-chip--bottom{bottom:14%;left:2%}
+}
