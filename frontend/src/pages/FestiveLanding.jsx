@@ -97,11 +97,67 @@ function OfferPanel({event,service,showImage=true}){
   </div>
 }
 
+function OccasionSceneCanvas({service}){
+  const canvasRef=useRef(null)
+  useEffect(()=>{
+    const canvas=canvasRef.current
+    const context=canvas?.getContext('2d',{alpha:true})
+    if(!canvas||!context)return undefined
+    const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const particles=Array.from({length:22},(_,index)=>({
+      angle:index*2.399963,
+      radiusX:.27+(index%5)*.035,
+      radiusY:.2+(index%4)*.035,
+      size:index%7===0?2.2:1+(index%3)*.35,
+      phase:(index%6)*.18,
+      speed:.55+(index%4)*.12
+    }))
+    let frame=0,width=0,height=0,dpr=1
+    const resize=()=>{
+      const box=canvas.getBoundingClientRect()
+      width=Math.max(1,box.width);height=Math.max(1,box.height)
+      dpr=Math.min(window.devicePixelRatio||1,1.5)
+      canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr)
+      context.setTransform(dpr,0,0,dpr,0,0)
+    }
+    const paint=(time=0)=>{
+      context.clearRect(0,0,width,height)
+      const tint=service.key==='construction'?'255,220,157':'255,235,213'
+      particles.forEach((particle,index)=>{
+        const angle=particle.angle+time*.000075*particle.speed
+        const pulse=reduced ? .62 : (.48+Math.sin(time*.001+particle.phase)*.22)
+        const x=width*.5+Math.cos(angle)*width*particle.radiusX
+        const y=height*.51+Math.sin(angle*.82)*height*particle.radiusY
+        context.beginPath()
+        context.fillStyle='rgba('+tint+','+pulse+')'
+        context.shadowColor='rgba('+tint+',.7)'
+        context.shadowBlur=index%7===0?12:5
+        context.arc(x,y,particle.size,0,Math.PI*2)
+        context.fill()
+      })
+      context.shadowBlur=0
+      context.beginPath()
+      context.ellipse(width*.5,height*.52,width*.37,height*.23,-.12,0,Math.PI*2)
+      context.strokeStyle=service.key==='construction'?'rgba(255,220,157,.09)':'rgba(255,235,213,.1)'
+      context.lineWidth=1
+      context.stroke()
+    }
+    const draw=time=>{paint(time);if(!reduced)frame=window.requestAnimationFrame(draw)}
+    resize()
+    frame=window.requestAnimationFrame(draw)
+    const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(()=>{resize();paint()}):null
+    observer?.observe(canvas)
+    return()=>{window.cancelAnimationFrame(frame);observer?.disconnect()}
+  },[service.key])
+  return <canvas ref={canvasRef} className="fc-scene-canvas" aria-hidden="true"/>
+}
+
 function OccasionHeroScene({event,service}){
   const construction=service.key==='construction'
   const sceneLabel=construction?'Animated isometric 3D home construction scene':'Animated dimensional 3D living room interior scene'
   return <div className={'fc-hero-scene fc-hero-scene--'+service.key} role="img" aria-label={sceneLabel}>
     <div className="fc-scene-halo fc-scene-halo--back" aria-hidden="true"/><div className="fc-scene-halo fc-scene-halo--front" aria-hidden="true"/>
+    <div className="fc-scene-photo" aria-hidden="true"><img src={construction?constructionImage:interiorsImage} alt="" fetchPriority="high" decoding="async"/><span className="fc-scene-photo-shade"/><span className="fc-scene-photo-label">{construction?'SITE · HYDERABAD':'INTERIORS · HYDERABAD'}</span></div>
     <div className="fc-scene-art" aria-hidden="true">
       {construction?<svg viewBox="0 0 600 500" fill="none">
         <defs>
@@ -150,6 +206,7 @@ function OccasionHeroScene({event,service}){
         <g className="fc-scene-spark"><path d="M108 107v18m-9-9h18M498 95v16m-8-8h16M526 235v13m-6.5-6.5h13" stroke="#FFE2A2" strokeWidth="2" strokeLinecap="round"/></g>
       </svg>}
     </div>
+    <OccasionSceneCanvas service={service}/>
     <div className="fc-scene-glass" aria-hidden="true"/>
     <div className="fc-scene-caption"><span>{event.icon} {event.name} · HYDERABAD</span><b>{construction?'A home built for the way you live':'A room shaped around your life'}</b></div>
     {construction?<><div className="fc-scene-chip fc-scene-chip--top"><b>12 YEAR</b><span>STRUCTURAL WARRANTY</span></div><div className="fc-scene-chip fc-scene-chip--bottom"><b>500+</b><span>QUALITY CHECKS</span></div></>:<><div className="fc-scene-chip fc-scene-chip--top"><b>ROOM BY ROOM</b><span>THOUGHTFUL DESIGN</span></div><div className="fc-scene-chip fc-scene-chip--bottom"><b>SELECTED FINISHES</b><span>MADE FOR EVERYDAY LIVING</span></div></>}
