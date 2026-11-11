@@ -47,7 +47,7 @@ function useOccasionMotion(enabled=true){
 
     const move=event=>{
       if(event.pointerType!=='mouse')return
-      const card=event.target.closest('.fc-hero-visual,.fc-home-stage-card,.fc-offer-panel,.fc-service-card,.fc-event-card,.fc-feature-strip>span,.fc-home-principles>*,.fc-benefit-grid>article,.fc-faq-grid>details')
+      const card=event.target.closest('.fc-hero-visual,.fc-hero-scene,.fc-home-stage-card,.fc-offer-panel,.fc-service-card,.fc-event-card,.fc-feature-strip>span,.fc-home-principles>*,.fc-benefit-grid>article,.fc-faq-grid>details')
       if(!card||!root.contains(card))return
       const box=card.getBoundingClientRect()
       const x=(event.clientX-box.left)/box.width-.5
@@ -56,7 +56,7 @@ function useOccasionMotion(enabled=true){
       card.style.setProperty('--fc-tilt-y',(x*7).toFixed(2)+'deg')
     }
     const reset=event=>{
-      const card=event.target.closest('.fc-hero-visual,.fc-home-stage-card,.fc-offer-panel,.fc-service-card,.fc-event-card,.fc-feature-strip>span,.fc-home-principles>*,.fc-benefit-grid>article,.fc-faq-grid>details')
+      const card=event.target.closest('.fc-hero-visual,.fc-hero-scene,.fc-home-stage-card,.fc-offer-panel,.fc-service-card,.fc-event-card,.fc-feature-strip>span,.fc-home-principles>*,.fc-benefit-grid>article,.fc-faq-grid>details')
       if(!card||!root.contains(card)||(event.relatedTarget&&card.contains(event.relatedTarget)))return
       card.style.setProperty('--fc-tilt-x','0deg');card.style.setProperty('--fc-tilt-y','0deg')
     }
@@ -94,6 +94,65 @@ function OfferPanel({event,service,showImage=true}){
       <p>{status==='past'?'This '+event.name+' offer has ended. Ask us for a current quotation.':status==='upcoming'?'Plan ahead for '+event.name+'.':construction?'Plan your new home for '+event.name+'.':'Refresh your home for '+event.name+'.'}</p>
       <small>For eligible projects during {prettyDate(event.start)} – {prettyDate(event.end)}. Scope and offer terms confirmed in your written quotation.</small>
     </div>
+  </div>
+}
+
+function OccasionHeroScene({event,service}){
+  const construction=service.key==='construction'
+  const sceneLabel=construction?'Animated isometric 3D home construction scene':'Animated dimensional 3D living room interior scene'
+  return <div className={'fc-hero-scene fc-hero-scene--'+service.key} role="img" aria-label={sceneLabel}>
+    <div className="fc-scene-halo fc-scene-halo--back" aria-hidden="true"/><div className="fc-scene-halo fc-scene-halo--front" aria-hidden="true"/>
+    <div className="fc-scene-art" aria-hidden="true">
+      {construction?<svg viewBox="0 0 600 500" fill="none">
+        <defs>
+          <linearGradient id="fcHouseFront" x1="190" y1="190" x2="410" y2="400" gradientUnits="userSpaceOnUse"><stop stopColor="#FFF7E9"/><stop offset="1" stopColor="#D9BFA7"/></linearGradient>
+          <linearGradient id="fcHouseSide" x1="390" y1="198" x2="503" y2="395" gradientUnits="userSpaceOnUse"><stop stopColor="#B98768"/><stop offset="1" stopColor="#704F4C"/></linearGradient>
+          <linearGradient id="fcRoof" x1="192" y1="106" x2="450" y2="246" gradientUnits="userSpaceOnUse"><stop stopColor="#F1C174"/><stop offset="1" stopColor="#A95C43"/></linearGradient>
+          <linearGradient id="fcGlass" x1="207" y1="230" x2="370" y2="322" gradientUnits="userSpaceOnUse"><stop stopColor="#C2EBE9"/><stop offset="1" stopColor="#5A8C99"/></linearGradient>
+          <filter id="fcHouseShadow" x="40" y="65" width="530" height="425" colorInterpolationFilters="sRGB" filterUnits="userSpaceOnUse"><feGaussianBlur stdDeviation="16"/></filter>
+        </defs>
+        <ellipse cx="304" cy="412" rx="214" ry="43" fill="#090713" fillOpacity=".38" filter="url(#fcHouseShadow)"/>
+        <g className="fc-scene-ground"><path d="m87 372 214-124 219 122-217 126L87 372Z" fill="#799285" fillOpacity=".3" stroke="#EBD5B7" strokeOpacity=".48"/><path d="m115 371 186-107 191 106-189 109-188-108Z" fill="#DBCFBA" fillOpacity=".68"/><path d="m140 371 161-92 163 91-162 94-162-93Z" fill="#C49A77" fillOpacity=".45"/></g>
+        <g className="fc-scene-house">
+          <path d="M158 216 299 132l205 83v179l-205 88-141-85V216Z" fill="#2A1E2D" fillOpacity=".35" transform="translate(0 14)"/>
+          <path d="m299 191 150 42v165l-150 65V191Z" fill="url(#fcHouseSide)" stroke="#F8DDB5" strokeOpacity=".7" strokeWidth="2"/>
+          <path d="m157 234 142-43v207l-142-79V234Z" fill="url(#fcHouseFront)" stroke="#FFF1D9" strokeWidth="2"/>
+          <path d="m142 225 157-131 164 106-164 58-157-33Z" fill="url(#fcRoof)" stroke="#FFE6BD" strokeWidth="2"/>
+          <path d="m299 258 164-58v22l-164 61-157-37v-21l157 33Z" fill="#714347" fillOpacity=".75"/>
+          <path d="m174 233 125-102v55l-125 59v-12Z" fill="#FFF0D8" fillOpacity=".18"/>
+          <path d="m180 263 51-16v58l-51-17v-25Z" fill="url(#fcGlass)" stroke="#FFF1D9" strokeWidth="4"/><path d="m188 274 35-11M205 258v42" stroke="#FFF1D9" strokeWidth="3"/>
+          <path d="m250 245 33-10v52l-33-9v-33Z" fill="url(#fcGlass)" stroke="#FFF1D9" strokeWidth="4"/><path d="m256 250 21-6M266 244v42" stroke="#FFF1D9" strokeWidth="3"/>
+          <path d="m231 324 45 18v75l-45-24v-69Z" fill="#765047" stroke="#FFF0D6" strokeWidth="3"/><circle cx="265" cy="371" r="3" fill="#F4C474"/>
+          <path d="m328 263 39-15v57l-39 15v-57Z" fill="url(#fcGlass)" stroke="#EDCBA5" strokeWidth="4"/><path d="m335 268 25-10M348 258v57" stroke="#EDCBA5" strokeWidth="3"/>
+          <path d="m395 239 38-14v56l-38 15v-57Z" fill="url(#fcGlass)" stroke="#EDCBA5" strokeWidth="4"/><path d="m402 245 24-9M414 239v57" stroke="#EDCBA5" strokeWidth="3"/>
+          <path d="M166 392h129M302 412l193-83" stroke="#FFF1D9" strokeOpacity=".5" strokeWidth="2"/>
+        </g>
+        <g className="fc-scene-tree"><path d="M117 334v53" stroke="#593E35" strokeWidth="8" strokeLinecap="round"/><circle cx="117" cy="317" r="28" fill="#83A77C"/><circle cx="98" cy="330" r="19" fill="#557C69"/><circle cx="135" cy="333" r="18" fill="#B1C18A"/></g>
+        <g className="fc-scene-tree fc-scene-tree--small"><path d="M486 366v35" stroke="#593E35" strokeWidth="7" strokeLinecap="round"/><circle cx="486" cy="351" r="22" fill="#769A72"/><circle cx="471" cy="360" r="15" fill="#506F5C"/></g>
+        <g className="fc-scene-spark"><path d="M90 190v20m-10-10h20M465 123v17m-8.5-8.5h17M535 271v14m-7-7h14" stroke="#FFE2A2" strokeWidth="2" strokeLinecap="round"/></g>
+      </svg>:<svg viewBox="0 0 600 500" fill="none">
+        <defs>
+          <linearGradient id="fcRoomBack" x1="183" y1="92" x2="406" y2="322" gradientUnits="userSpaceOnUse"><stop stopColor="#FFF8ED"/><stop offset="1" stopColor="#DCC9B9"/></linearGradient>
+          <linearGradient id="fcRoomSide" x1="408" y1="117" x2="520" y2="367" gradientUnits="userSpaceOnUse"><stop stopColor="#E7D9C9"/><stop offset="1" stopColor="#B39B87"/></linearGradient>
+          <linearGradient id="fcRoomFloor" x1="286" y1="278" x2="300" y2="454" gradientUnits="userSpaceOnUse"><stop stopColor="#D9B995"/><stop offset="1" stopColor="#876A58"/></linearGradient>
+          <linearGradient id="fcRoomSofa" x1="186" y1="283" x2="397" y2="379" gradientUnits="userSpaceOnUse"><stop stopColor="#E9D6C0"/><stop offset="1" stopColor="#A98269"/></linearGradient>
+        </defs>
+        <ellipse cx="310" cy="412" rx="210" ry="38" fill="#090713" fillOpacity=".34"/>
+        <path d="m112 144 179-86 211 88-179 94-211-96Z" fill="#F8EEE1" fillOpacity=".42" stroke="#FFEAD2" strokeOpacity=".5"/>
+        <path d="m112 144 211 96v196l-211-97V144Z" fill="url(#fcRoomBack)" stroke="#FFF1DC" strokeWidth="2"/>
+        <path d="m323 240 179-94v196l-179 94V240Z" fill="url(#fcRoomSide)" stroke="#F4E1CC" strokeWidth="2"/>
+        <path d="m112 339 211 97 179-94-208-99-182 96Z" fill="url(#fcRoomFloor)" stroke="#F5DDC1" strokeWidth="2"/>
+        <g className="fc-room-window"><path d="m151 166 104 47v106l-104-48V166Z" fill="#87B7BD" stroke="#FFF8EA" strokeWidth="9"/><path d="m203 190v105M151 220l104 48" stroke="#FFF8EA" strokeWidth="5"/><path d="m158 172 90 41v16l-90-41v-16Z" fill="#FFF7E8" fillOpacity=".35"/></g>
+        <path d="m373 191 88-47v124l-88 48V191Z" fill="#BBA28C" stroke="#F8EADB" strokeWidth="5"/><path d="m392 202 50-27v80l-50 27v-80Z" fill="#6F5046"/><path d="m398 208 39-21v65l-39 22v-66Z" fill="#D9B99A"/>
+        <g className="fc-room-sofa"><path d="m165 300 116-61 136 64-119 68-133-71Z" fill="#876653"/><path d="m169 279 113-58 129 61-113 59-129-62Z" fill="url(#fcRoomSofa)" stroke="#FFF0D9" strokeWidth="2"/><path d="m169 279 0 53 128 70v-66l-128-57Z" fill="#B28E73"/><path d="m297 336 114-55v54l-114 67v-66Z" fill="#8C6857"/><path d="m215 259 47-24 42 20-48 25-41-21Z" fill="#F0D8BC"/><path d="m278 287 48-24 39 19-50 25-37-20Z" fill="#C47B5D"/><path d="m186 336-1 37m212-37v32" stroke="#5D423B" strokeWidth="9" strokeLinecap="round"/></g>
+        <g className="fc-room-table"><path d="m322 358 59-31 70 31-61 34-68-34Z" fill="#F3E2CB"/><path d="m334 360 57 27v35l-57-28v-34Zm57 27 48-27v33l-48 29v-35Z" fill="#815D4A"/><path d="m329 352 54-29 66 30-57 31-63-32Z" fill="#D3A77B" stroke="#FFEAD2" strokeWidth="2"/></g>
+        <g className="fc-room-plant"><path d="m462 313 7 65" stroke="#7A5948" strokeWidth="8"/><path d="m449 378 42-2-6 31-31-1-5-28Z" fill="#B76F50"/><path d="M467 317c-22-20-16-42-2-53 13 15 14 32 2 53Zm8 0c2-31 18-44 31-42 1 22-11 39-31 42Zm-11-3c-20-4-31-19-29-35 17 2 28 13 29 35Z" fill="#66836C"/></g>
+        <g className="fc-scene-spark"><path d="M108 107v18m-9-9h18M498 95v16m-8-8h16M526 235v13m-6.5-6.5h13" stroke="#FFE2A2" strokeWidth="2" strokeLinecap="round"/></g>
+      </svg>}
+    </div>
+    <div className="fc-scene-glass" aria-hidden="true"/>
+    <div className="fc-scene-caption"><span>{event.icon} {event.name} · HYDERABAD</span><b>{construction?'A home built for the way you live':'A room shaped around your life'}</b></div>
+    {construction?<><div className="fc-scene-chip fc-scene-chip--top"><b>12 YEAR</b><span>STRUCTURAL WARRANTY</span></div><div className="fc-scene-chip fc-scene-chip--bottom"><b>500+</b><span>QUALITY CHECKS</span></div></>:<><div className="fc-scene-chip fc-scene-chip--top"><b>ROOM BY ROOM</b><span>THOUGHTFUL DESIGN</span></div><div className="fc-scene-chip fc-scene-chip--bottom"><b>SELECTED FINISHES</b><span>MADE FOR EVERYDAY LIVING</span></div></>}
   </div>
 }
 
@@ -198,7 +257,7 @@ function SingleOffer({event,service}){
             <div className="fc-actions"><Link className="fc-button fc-button--gold" to={service.to}>{service.action} <span aria-hidden="true">↗</span></Link><Link className="fc-button fc-button--outline" to="/packages">View packages</Link></div><OfferPanel event={event} service={service}/>
             <p className="fc-festival-date">{event.tentative?'Indicative date / season: ':'Festival date: '}{prettyDate(event.date)} <span>•</span> Timings in India Standard Time</p>
           </div>
-          <div className="fc-hero-visual"><img src={service.key==='construction'?constructionImage:interiorsImage} alt={service.key==='construction'?'Modern residential house in warm evening light':'Elegant warm contemporary living space'} fetchPriority="high"/><div className="fc-visual-shine" aria-hidden="true"/><div className="fc-floating-badge"><span>{event.icon}</span><div><b>{event.name} {service.label} Offer</b><small>{event.theme}</small></div></div></div>
+          <OccasionHeroScene event={event} service={service}/>
         </div>
       </section>
       <div className="fc-container"><div className={'fc-feature-strip'+(service.key==='construction'?' fc-feature-strip--construction':'')}>
