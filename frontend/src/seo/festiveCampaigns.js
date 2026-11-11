@@ -153,7 +153,7 @@ const FEATURED_EVENT_IDS=new Set([
   'akshaya-tritiya-2027','eid-al-adha-2027','telangana-formation-day-2027','bonalu-2027',
   'independence-day-2027','ganesh-chaturthi-2027','bathukamma-2027','dussehra-2027','diwali-2027',
   'mumbai-attacks-remembrance-2026','pulwama-black-day-2027','shaheed-diwas-march-2027',
-  'jallianwala-bagh-remembrance-2027','kargil-vijay-diwas-2027',
+  'jallianwala-bagh-remembrance-2027','kargil-vijay-diwas-2027','navy-day-2026','army-day-2027',
 ])
 const HOMEPAGE_EVENT_IDS=new Set([
   'diwali-2026','christmas-2026','makar-sankranti-2027','republic-day-2027','maha-shivaratri-2027',
