@@ -112,9 +112,9 @@ test('blog hub defers the published-answer library until an article is opened',a
 test('service enquiries and occasion links are styled, named and destination-accurate',async({page})=>{
   await page.goto('/technology')
   const serviceActions=page.locator('.ps-service-card .ps-learn-more')
-  await expect(serviceActions).toHaveCount(6)
+  await expect(serviceActions).toHaveCount(24)
   const labels=await serviceActions.evaluateAll(links=>links.map(link=>link.getAttribute('aria-label')))
-  expect(new Set(labels).size).toBe(6)
+  expect(new Set(labels).size).toBe(24)
   for(const action of await serviceActions.all()){
     await expect(action).toHaveAttribute('href','/contact')
     const size=await action.evaluate(element=>({height:element.getBoundingClientRect().height,border: getComputedStyle(element).borderTopWidth}))
