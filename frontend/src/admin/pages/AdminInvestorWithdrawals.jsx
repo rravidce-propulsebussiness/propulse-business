@@ -84,7 +84,12 @@ export default function AdminInvestorWithdrawals() {
   }, [load])
 
   useEffect(() => {
-    const refresh = () => { if (document.visibilityState === 'visible') load(true, page) }
+    const refreshState={lastRun:Date.now(),inFlight:false}
+    const refresh = () => {
+      if(document.visibilityState!=='visible'||refreshState.inFlight||Date.now()-refreshState.lastRun<5000)return
+      refreshState.lastRun=Date.now();refreshState.inFlight=true
+      Promise.resolve().then(()=>load(true,page)).finally(()=>{refreshState.inFlight=false})
+    }
     const timer = window.setInterval(refresh, 60000)
     document.addEventListener('visibilitychange', refresh)
     window.addEventListener('focus', refresh)
