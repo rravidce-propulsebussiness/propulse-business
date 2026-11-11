@@ -18,6 +18,11 @@ function GoogleButton({ onCredential, disabled = false }) {
 
   useEffect(() => {
     credentialRef.current = onCredential
+    // Google keeps one global callback, so it must follow the latest handler;
+    // otherwise options chosen after the button rendered (e.g. "Remember me")
+    // are ignored.
+    const googleState = getGoogleState()
+    if (googleState.initialized) googleState.callback = onCredential
   }, [onCredential])
 
   useEffect(() => {
@@ -43,14 +48,16 @@ function GoogleButton({ onCredential, disabled = false }) {
           googleState.clientId = clientId
         }
 
-        containerRef.current.innerHTML = ''
-        googleId.renderButton(containerRef.current, {
+        const slot = document.createElement('div')
+        const width = Math.min(360, Math.max(260, containerRef.current.clientWidth || 360))
+        containerRef.current.replaceChildren(slot)
+        googleId.renderButton(slot, {
           type: 'standard',
           theme: 'outline',
           size: 'large',
           text: 'continue_with',
           shape: 'rectangular',
-          width: Math.min(360, Math.max(260, containerRef.current.clientWidth || 360)),
+          width,
         })
         setReady(true)
         setLoadError('')

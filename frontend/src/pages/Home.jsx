@@ -16,26 +16,26 @@ const HOME_TRUST_HEADLINES = [
   { lead: 'Clear Scope.', accent: ' Transparent Estimates.' },
 ]
 const DEFAULT_HERO = 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1600&q=80'
-const unsplash = (id, width = 1200) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${width}&q=85`
+const unsplash = (id, width = 1200) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${width}&q=72`
 
 const PILLARS = [
   {
     key: 'build', tone: 'construction', eyebrow: 'Direct Home Construction', title: 'Construction',
     text: 'Independent houses, villas and turnkey builds, planned around your plot, specifications and budget.',
     points: ['Plot, soil and approvals reviewed first', 'Drawings, BOQ and specifications agreed', 'Milestone-based execution and quality checks'],
-    image: unsplash('1541888946425-d81bb19240f5', 1000), cta: { to: '/quote#construction', label: 'Get estimate' },
+    image: unsplash('1541888946425-d81bb19240f5', 800), cta: { to: '/quote#construction', label: 'Get estimate' },
   },
   {
     key: 'design', tone: 'interiors', eyebrow: 'Direct Interior Execution', title: 'Interiors',
     text: 'Residential and commercial interiors, with room-wise scope, finishes and fittings agreed in writing.',
     points: ['Modular kitchens and wardrobes', 'False ceiling, lighting and wall finishes', 'Turnkey interior execution'],
-    image: unsplash('1631679706909-1844bbd07221', 1000), cta: { to: '/packages#interior', label: 'Interior packages' },
+    image: unsplash('1631679706909-1844bbd07221', 800), cta: { to: '/packages#interior', label: 'Interior packages' },
   },
   {
     key: 'tech', tone: 'technology', eyebrow: 'Digital Services & Software', title: 'Technology',
     text: 'Websites, mobile apps, CRM, SEO, digital marketing and social media management for businesses of every kind.',
     points: ['Websites, mobile apps and custom software', 'SEO, digital marketing and social media', 'CRM, WhatsApp and business automation'],
-    image: unsplash('1460925895917-afdab827c52f', 1000), cta: { to: '/technology', label: 'Explore services' },
+    image: unsplash('1460925895917-afdab827c52f', 800), cta: { to: '/technology', label: 'Explore services' },
   },
 ]
 
