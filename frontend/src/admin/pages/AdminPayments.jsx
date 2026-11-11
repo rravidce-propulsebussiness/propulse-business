@@ -79,7 +79,12 @@ export default function AdminPayments() {
   }, [load])
 
   useEffect(() => {
-    const refresh = () => { if (document.visibilityState === 'visible') load(1, true) }
+    const refreshState={lastRun:Date.now(),inFlight:false}
+    const refresh = () => {
+      if(document.visibilityState!=='visible'||refreshState.inFlight||Date.now()-refreshState.lastRun<5000)return
+      refreshState.lastRun=Date.now();refreshState.inFlight=true
+      Promise.resolve().then(()=>load(1,true)).finally(()=>{refreshState.inFlight=false})
+    }
     const timer = window.setInterval(refresh, 60000)
     document.addEventListener('visibilitychange', refresh)
     window.addEventListener('focus', refresh)
