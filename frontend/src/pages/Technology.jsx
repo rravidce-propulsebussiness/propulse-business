@@ -13,6 +13,18 @@ const serviceGroups = [
   { icon: 'design', title: 'Branding & Graphic Design', shortTitle: 'branding and design', description: 'Logos, brand identity, brochures and creatives for every channel.' },
   { icon: 'video', title: 'Video & Media Production', shortTitle: 'video and media', description: 'Reels, ad films, walkthroughs and professional video editing.' },
   { icon: 'cart', title: 'E-commerce Solutions', shortTitle: 'e-commerce', description: 'Online stores with catalogue, payments and order management.' },
+  { icon: 'ux', title: 'UI/UX Design', shortTitle: 'UI/UX design', description: 'User research, wireframes and app or website designs people enjoy using.' },
+  { icon: 'pin', title: 'Google Business Profile & Local SEO', shortTitle: 'local SEO', description: 'Show up on Google Maps and local searches in your area.' },
+  { icon: 'pen', title: 'Content Writing & Copywriting', shortTitle: 'content writing', description: 'Website copy, blogs, ad copy and captions that sell.' },
+  { icon: 'mail', title: 'Email & SMS Marketing', shortTitle: 'email and SMS marketing', description: 'Newsletters, offers and automated follow-up campaigns.' },
+  { icon: 'star', title: 'Online Reputation Management', shortTitle: 'reputation management', description: 'Grow reviews, respond to feedback and protect your brand online.' },
+  { icon: 'users', title: 'Influencer Marketing', shortTitle: 'influencer marketing', description: 'Collaborations with creators to reach the right audience.' },
+  { icon: 'bot', title: 'AI Chatbots & AI Automation', shortTitle: 'AI automation', description: 'AI assistants, chatbots and smart workflows for your business.' },
+  { icon: 'camera', title: 'Photography & Product Shoots', shortTitle: 'photography', description: 'Product, property and brand photography for web and social.' },
+  { icon: 'chart', title: 'Analytics & Reporting', shortTitle: 'analytics and reporting', description: 'Tracking setup, dashboards and clear monthly performance reports.' },
+  { icon: 'plug', title: 'Payment Gateway & Integrations', shortTitle: 'integrations', description: 'Payments, APIs and connections between the tools you already use.' },
+  { icon: 'tools', title: 'Website Maintenance & Support', shortTitle: 'maintenance and support', description: 'Updates, backups, security fixes and ongoing technical support.' },
+  { icon: 'compass', title: 'Digital Strategy & Consulting', shortTitle: 'digital strategy', description: 'A clear roadmap for your brand, channels, budget and growth.' },
   { icon: 'server', title: 'Hosting & Digital Infrastructure', shortTitle: 'hosting and infrastructure', description: 'Reliable hosting, domains, business email and cloud setup.' },
 ]
 
@@ -30,6 +42,18 @@ function Icon({ name, size = 30 }) {
   }
 
   if (name === 'code') return <svg {...common}><rect x="7" y="8" width="34" height="28" rx="5"/><path d="m17 19-5 5 5 5M31 19l5 5-5 5M27 16l-6 16"/></svg>
+  if (name === 'ux') return <svg {...common}><rect x="6" y="8" width="36" height="28" rx="4"/><path d="M6 15h36M12 22h10v8H12zM27 22h9M27 28h6M18 42h12"/></svg>
+  if (name === 'pin') return <svg {...common}><path d="M24 43s-13-12.4-13-23a13 13 0 0 1 26 0c0 10.6-13 23-13 23Z"/><circle cx="24" cy="20" r="5"/></svg>
+  if (name === 'pen') return <svg {...common}><path d="M10 38h28M14 32l3-9 16-16 6 6-16 16-9 3Z"/><path d="m29 11 6 6"/></svg>
+  if (name === 'mail') return <svg {...common}><rect x="6" y="11" width="36" height="26" rx="4"/><path d="m7 13 17 13 17-13"/></svg>
+  if (name === 'star') return <svg {...common}><path d="m24 6 5.4 11.2 12.3 1.6-9 8.6 2.3 12.2L24 33.7l-11 5.9 2.3-12.2-9-8.6 12.3-1.6Z"/></svg>
+  if (name === 'users') return <svg {...common}><circle cx="18" cy="17" r="6"/><circle cx="33" cy="19" r="5"/><path d="M6 38c1.3-6.5 6-10 12-10s10.7 3.5 12 10M29 29c5.5-.4 10 2.8 12 8"/></svg>
+  if (name === 'bot') return <svg {...common}><rect x="9" y="15" width="30" height="24" rx="7"/><path d="M24 15V8M20 8h8"/><circle cx="18" cy="26" r="2.5"/><circle cx="30" cy="26" r="2.5"/><path d="M19 33h10M5 25v6M43 25v6"/></svg>
+  if (name === 'camera') return <svg {...common}><path d="M6 16a4 4 0 0 1 4-4h6l3-4h10l3 4h6a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4Z"/><circle cx="24" cy="25" r="8"/></svg>
+  if (name === 'chart') return <svg {...common}><path d="M7 7v34h34"/><path d="M14 33v-8M22 33V17M30 33v-12M38 33V11"/></svg>
+  if (name === 'plug') return <svg {...common}><path d="M17 6v9M31 6v9M12 15h24v8a12 12 0 0 1-24 0Z"/><path d="M24 35v7"/></svg>
+  if (name === 'tools') return <svg {...common}><path d="M29 8a9 9 0 0 0-8.5 12L8 32.5a3.5 3.5 0 0 0 5 5L25.5 25A9 9 0 0 0 38 16l-6 2-4-4 2-6Z"/></svg>
+  if (name === 'compass') return <svg {...common}><circle cx="24" cy="24" r="17"/><path d="m31 17-4.5 9.5L17 31l4.5-9.5Z"/></svg>
   if (name === 'mobile') return <svg {...common}><rect x="14" y="5" width="20" height="38" rx="5"/><path d="M21 10h6M22 37h4"/><path d="m19 24 4 4 7-8"/></svg>
   if (name === 'apps') return <svg {...common}><rect x="7" y="7" width="14" height="14" rx="3"/><rect x="27" y="7" width="14" height="14" rx="3"/><rect x="7" y="27" width="14" height="14" rx="3"/><path d="M34 27v14M27 34h14"/></svg>
   if (name === 'crm') return <svg {...common}><circle cx="17" cy="16" r="6"/><path d="M6 37c1.5-7 6-10 11-10s9.5 3 11 10"/><path d="M30 13h12M30 21h12M33 29h9"/></svg>
@@ -105,7 +129,7 @@ export default function Technology() {
           <div className="ps-section-heading">
             <div className="ps-section-kicker"><span/> Our Services <span/></div>
             <h2>Comprehensive Digital Services</h2>
-            <p>From websites and apps to CRM, marketing and social media, we provide end-to-end digital solutions for businesses of every kind.</p>
+            <p>24 services under one roof: development, design, marketing, social media, content, CRM, AI automation and support for businesses of every kind.</p>
           </div>
 
           <div className="ps-service-grid">
