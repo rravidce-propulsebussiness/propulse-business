@@ -124,10 +124,10 @@ export default function AdminLayout(){
     }
     const onHealth=event=>applyStatus(event?.detail?.status)
     window.addEventListener('propulse:system-health',onHealth)
-    refresh()
-    const timer=setInterval(refresh,30000)
-    return()=>{active=false;clearInterval(timer);window.removeEventListener('propulse:system-health',onHealth)}
-  },[])
+    const timer=location.pathname==='/admin/system-health'?null:setInterval(refresh,30000)
+    if(location.pathname!=='/admin/system-health')refresh()
+    return()=>{active=false;if(timer)clearInterval(timer);window.removeEventListener('propulse:system-health',onHealth)}
+  },[location.pathname])
 
   useEffect(()=>{
     document.body.classList.toggle('admin-nav-open',mobileNavOpen)
