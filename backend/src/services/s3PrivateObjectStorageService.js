@@ -71,9 +71,9 @@ function canonicalHeaders(headers){
   const entries=Object.entries(headers).map(([k,v])=>[k.toLowerCase(),String(v).trim().replace(/\s+/g,' ')]).sort((a,b)=>a[0].localeCompare(b[0]));
   return{canonical:entries.map(([k,v])=>k+':'+v+'\n').join(''),signed:entries.map(([k])=>k).join(';')};
 }
-function authorizationHeaders(method,url,{body=Buffer.alloc(0),contentType,now=new Date(),cfg=config()}={}){
+function authorizationHeaders(method,url,{body=Buffer.alloc(0),contentType,headers:extraHeaders={},now=new Date(),cfg=config()}={}){
   const payload=Buffer.isBuffer(body)?body:Buffer.from(body||''),payloadHash=sha(payload),t=timestamp(now);
-  const headers={host:url.host,'x-amz-content-sha256':payloadHash,'x-amz-date':t.amzDate};
+  const headers={host:url.host,'x-amz-content-sha256':payloadHash,'x-amz-date':t.amzDate,...Object.fromEntries(Object.entries(extraHeaders||{}).map(([key,value])=>[String(key).toLowerCase(),String(value)]))};
   if(cfg.sessionToken)headers['x-amz-security-token']=cfg.sessionToken;
   if(contentType)headers['content-type']=contentType;
   const c=canonicalHeaders(headers);
@@ -108,14 +108,14 @@ function buildPresignedUploadUrl(key,{query={},contentType,expiresSeconds=900,no
   const signature=hmac(signingKey(cfg.secretAccessKey,t.dateStamp,cfg.region),[ALGORITHM,t.amzDate,scope,sha(canonical)].join('\n'),'hex');
   return url.origin+url.pathname+'?'+canonicalQuery(params)+'&X-Amz-Signature='+signature;
 }
-async function startMultipartUpload(key,contentType){
-  const response=await signedFetch('POST',key,{query:{uploads:''},contentType,timeoutMs:30000});
+async function startMultipartUpload(key,contentType,{configOverride,headers}={}){
+  const response=await signedFetch('POST',key,{query:{uploads:''},contentType,configOverride,headers,timeoutMs:30000});
   const result=await response.text();
   const uploadId=/<UploadId>([^<]+)<\/UploadId>/.exec(result)?.[1]?.replace(/&amp;/g,'&');
   if(!uploadId)throw Object.assign(new Error('R2 did not return a multipart upload identifier'),{code:'MULTIPART_START_FAILED'});
   return uploadId;
 }
-async function completeMultipartUpload(key,uploadId,parts){
+async function completeMultipartUpload(key,uploadId,parts,{configOverride}={}){
   if(!Array.isArray(parts)||parts.length===0||parts.length>10000)throw Error('Invalid multipart upload manifest');
   const xml='<?xml version="1.0" encoding="UTF-8"?><CompleteMultipartUpload>'+
     parts.map(({partNumber,etag})=>{
@@ -123,13 +123,40 @@ async function completeMultipartUpload(key,uploadId,parts){
       if(!Number.isInteger(partNumber)||partNumber<1||partNumber>10000||!/^[a-fA-F0-9]{32}$/.test(clean))throw Error('Invalid multipart part');
       return '<Part><PartNumber>'+partNumber+'</PartNumber><ETag>"'+clean+'"</ETag></Part>';
     }).join('')+'</CompleteMultipartUpload>';
-  const response=await signedFetch('POST',key,{query:{uploadId},contentType:'application/xml',body:Buffer.from(xml),timeoutMs:120000});
+  const response=await signedFetch('POST',key,{query:{uploadId},contentType:'application/xml',body:Buffer.from(xml),configOverride,timeoutMs:120000});
   const result=await response.text();
   if(/<Error>/.test(result))throw Object.assign(new Error('R2 could not complete video upload'),{code:'MULTIPART_COMPLETE_FAILED'});
   return true;
 }
-async function abortMultipartUpload(key,uploadId){
-  return signedFetch('DELETE',key,{query:{uploadId},timeoutMs:30000});
+async function abortMultipartUpload(key,uploadId,{configOverride}={}){
+  return signedFetch('DELETE',key,{query:{uploadId},configOverride,timeoutMs:30000});
+}
+
+function copySourceHeader(key,sourceConfig){
+  return '/'+enc(sourceConfig.bucket)+'/'+normalizeKey(key).split('/').map(enc).join('/');
+}
+async function copyObject(sourceKey,destinationKey,{sourceConfigOverride,configOverride,contentType='application/octet-stream',sourceEtag}={}){
+  const sourceConfig=config(sourceConfigOverride||{}),destinationConfig=config(configOverride||{});
+  if(sourceConfig.endpointUrl.origin!==destinationConfig.endpointUrl.origin)throw Object.assign(new Error('Server-side private object copy requires the same R2 endpoint'),{code:'PRIVATE_STORAGE_COPY_ENDPOINT_MISMATCH'});
+  const headers={'x-amz-copy-source':copySourceHeader(sourceKey,sourceConfig),'x-amz-metadata-directive':'REPLACE'};
+  if(sourceEtag)headers['x-amz-copy-source-if-match']='"'+String(sourceEtag).replace(/^"|"$/g,'')+'"';
+  if(sourceEtag)headers['x-amz-meta-source-etag']=String(sourceEtag);
+  const response=await signedFetch('PUT',destinationKey,{contentType,configOverride,headers,timeoutMs:120000});
+  const result=await response.text();
+  if(/<Error>/.test(result))throw Object.assign(new Error('R2 could not copy the private object'),{code:'PRIVATE_STORAGE_COPY_FAILED'});
+  return true;
+}
+async function uploadPartCopy(sourceKey,destinationKey,uploadId,partNumber,start,end,{sourceConfigOverride,configOverride,sourceEtag}={}){
+  const sourceConfig=config(sourceConfigOverride||{}),destinationConfig=config(configOverride||{});
+  if(sourceConfig.endpointUrl.origin!==destinationConfig.endpointUrl.origin)throw Object.assign(new Error('Multipart private object copy requires the same R2 endpoint'),{code:'PRIVATE_STORAGE_COPY_ENDPOINT_MISMATCH'});
+  if(typeof uploadId!=='string'||!uploadId||!Number.isInteger(partNumber)||partNumber<1||partNumber>10000||!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||start<0||end<start)throw Error('Invalid private object copy part');
+  const headers={'x-amz-copy-source':copySourceHeader(sourceKey,sourceConfig),'x-amz-copy-source-range':`bytes=${start}-${end}`};
+  if(sourceEtag)headers['x-amz-copy-source-if-match']='"'+String(sourceEtag).replace(/^"|"$/g,'')+'"';
+  const response=await signedFetch('PUT',destinationKey,{query:{partNumber:String(partNumber),uploadId},configOverride,headers,timeoutMs:120000});
+  const result=await response.text();
+  const etag=/<ETag>([^<]+)<\/ETag>/.exec(result)?.[1]?.replace(/^"|"$/g,'');
+  if(!etag||!/^[a-fA-F0-9]{32}$/.test(etag))throw Object.assign(new Error('R2 did not return a valid copied part checksum'),{code:'PRIVATE_STORAGE_COPY_PART_FAILED'});
+  return etag;
 }
 
 async function readLimited(response,maxBytes){
@@ -146,13 +173,13 @@ async function readLimited(response,maxBytes){
     }
   }finally{reader.releaseLock()}
 }
-async function signedFetch(method,key,{body=Buffer.alloc(0),contentType,configOverride,timeoutMs=TIMEOUT_MS,query}={}){
+async function signedFetch(method,key,{body=Buffer.alloc(0),contentType,configOverride,timeoutMs=TIMEOUT_MS,query,headers:extraHeaders}={}){
   const cfg=config(configOverride||{}),url=objectUrl(key,cfg),payload=Buffer.isBuffer(body)?body:Buffer.from(body||'');
   if(query)url.search=canonicalQuery(query);
   const safeTimeout=Math.min(120000,Math.max(1000,Number(timeoutMs)||TIMEOUT_MS));
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),safeTimeout);timer.unref?.();
   try{
-    const response=await fetch(url,{method,headers:authorizationHeaders(method,url,{body:payload,contentType,cfg}),body:['GET','HEAD','DELETE'].includes(method)?undefined:payload,signal:controller.signal});
+    const response=await fetch(url,{method,headers:authorizationHeaders(method,url,{body:payload,contentType,headers:extraHeaders,cfg}),body:['GET','HEAD','DELETE'].includes(method)?undefined:payload,signal:controller.signal});
     if(!response.ok){
       const errorBody=await readLimited(response,MAX_ERROR_BYTES).catch(()=>Buffer.alloc(0));
       const error=new Error('Private object storage request failed (HTTP '+response.status+')');
@@ -173,7 +200,7 @@ async function headObject(key,{configOverride,timeoutMs}={}){
     const response=await signedFetch('HEAD',key,{configOverride,timeoutMs});
     const size=Number(response.headers.get('content-length')||0);
     const etag=String(response.headers.get('etag')||'').replace(/^\"|\"$/g,'');
-    return{size:Number.isFinite(size)?size:0,etag,contentType:String(response.headers.get('content-type')||'').split(';')[0].trim().toLowerCase()||null};
+    return{size:Number.isFinite(size)?size:0,etag,contentType:String(response.headers.get('content-type')||'').split(';')[0].trim().toLowerCase()||null,sourceEtag:String(response.headers.get('x-amz-meta-source-etag')||'').trim()||null};
   }catch(error){if(error.providerStatus===404)return null;throw error}
 }
 async function getObjectBuffer(key,{maxBytes=6*1024*1024,configOverride,timeoutMs=TIMEOUT_MS}={}){
@@ -217,4 +244,4 @@ async function probe(){
   }catch(error){await deleteObject(key).catch(()=>{});throw error}
 }
 
-module.exports={PREFIX,driver,isEnabled,assertWriteStorage,config,normalizeKey,makeReference,parseReference,isReference,putObject,deleteObject,headObject,getObjectBuffer,getObjectPrefix,getSignedGetUrl,getMediaGetUrl,buildPresignedGetUrl,buildPresignedUploadUrl,startMultipartUpload,completeMultipartUpload,abortMultipartUpload,authorizationHeaders,probe,enc};
+module.exports={PREFIX,driver,isEnabled,assertWriteStorage,config,normalizeKey,makeReference,parseReference,isReference,putObject,deleteObject,headObject,getObjectBuffer,getObjectPrefix,getSignedGetUrl,getMediaGetUrl,buildPresignedGetUrl,buildPresignedUploadUrl,startMultipartUpload,completeMultipartUpload,abortMultipartUpload,copyObject,uploadPartCopy,authorizationHeaders,probe,enc};

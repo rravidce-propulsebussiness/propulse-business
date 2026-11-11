@@ -212,9 +212,15 @@ async function getSystemHealth(){
     issues.push(createIssue({severity:'attention',code:'financial_reconciliation_attention',title:'Financial reconciliation needs attention',message:financialIntegrity.status==='warning'?`${financialIntegrity.warningAlerts||0} warning${Number(financialIntegrity.warningAlerts||0)===1?' is':'s are'} active.`:financialIntegrity.status==='stale'?'The latest automated reconciliation is older than the configured freshness limit.':'No automated reconciliation has completed yet.',actionUrl:'/admin/financial-integrity',actionLabel:'Open Financial Integrity',source:'financial'}));
   }
 
-  if(backups.required&&['failed','unavailable'].includes(backups.status)){
-    issues.push(createIssue({severity:'degraded',code:'backup_verification_failed',title:'Backup verification failed',message:'A required backup/restore verification is failed or unavailable.',actionUrl:'/admin/jobs',actionLabel:'Open background jobs',source:'backups'}));
-  }else if(backups.required&&['stale','not_run'].includes(backups.status)){
+  if(['failed','unavailable'].includes(backups.status)){
+    issues.push(createIssue({
+      severity:backups.required?'degraded':'attention',
+      code:'backup_verification_failed',
+      title:'Backup verification failed',
+      message:backups.required?'A required backup/restore verification is failed or unavailable.':'A backup/restore verification failed or is unavailable. Review it before relying on the latest backups.',
+      actionUrl:'/admin/jobs',actionLabel:'Open background jobs',source:'backups'
+    }));
+  }else if(backups.status==='stale'||(backups.required&&backups.status==='not_run')){
     issues.push(createIssue({severity:'attention',code:'backup_verification_attention',title:'Backup verification needs attention',message:backups.status==='stale'?'The latest restore verification is older than the configured freshness limit.':'Required backup verification has not completed yet.',actionUrl:'/admin/jobs',actionLabel:'Open background jobs',source:'backups'}));
   }
 
