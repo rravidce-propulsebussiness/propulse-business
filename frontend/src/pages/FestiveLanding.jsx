@@ -31,7 +31,7 @@ function useOccasionMotion(enabled=true){
     if(!enabled||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return undefined
     const root=document.querySelector('.fc-page')
     if(!root)return undefined
-    const revealSelectors='.fc-hero-content,.fc-hero-visual,.fc-feature-strip,.fc-intro>*,.fc-benefit-grid>article,.fc-planning>*,.fc-faq-grid>details,.fc-cta .fc-container,.fc-service-card,.fc-event-card,.fc-home-principles>*,.fc-also>*,.fc-hub-hero .fc-container,.fc-hub-heading,.fc-search-row,.fc-hub-list>.fc-terms,.fc-memorial-hero .fc-container,.fc-memorial-content>*,.public-site-footer'
+    const revealSelectors='.fc-hero-content,.fc-hero-visual,.fc-home-stage,.fc-feature-strip,.fc-intro>*,.fc-benefit-grid>article,.fc-planning>*,.fc-faq-grid>details,.fc-cta .fc-container,.fc-service-card,.fc-event-card,.fc-home-principles>*,.fc-also>*,.fc-hub-hero .fc-container,.fc-hub-heading,.fc-search-row,.fc-hub-list>.fc-terms,.fc-memorial-hero .fc-container,.fc-memorial-content>*,.public-site-footer'
     const revealItems=[...root.querySelectorAll(revealSelectors)]
     revealItems.forEach((element,index)=>{
       element.classList.add('fc-3d-reveal')
@@ -47,7 +47,7 @@ function useOccasionMotion(enabled=true){
 
     const move=event=>{
       if(event.pointerType!=='mouse')return
-      const card=event.target.closest('.fc-hero-visual,.fc-offer-panel,.fc-service-card,.fc-event-card,.fc-feature-strip>span,.fc-home-principles>*,.fc-benefit-grid>article,.fc-faq-grid>details')
+      const card=event.target.closest('.fc-hero-visual,.fc-home-stage-card,.fc-offer-panel,.fc-service-card,.fc-event-card,.fc-feature-strip>span,.fc-home-principles>*,.fc-benefit-grid>article,.fc-faq-grid>details')
       if(!card||!root.contains(card))return
       const box=card.getBoundingClientRect()
       const x=(event.clientX-box.left)/box.width-.5
@@ -56,7 +56,7 @@ function useOccasionMotion(enabled=true){
       card.style.setProperty('--fc-tilt-y',(x*7).toFixed(2)+'deg')
     }
     const reset=event=>{
-      const card=event.target.closest('.fc-hero-visual,.fc-offer-panel,.fc-service-card,.fc-event-card,.fc-feature-strip>span,.fc-home-principles>*,.fc-benefit-grid>article,.fc-faq-grid>details')
+      const card=event.target.closest('.fc-hero-visual,.fc-home-stage-card,.fc-offer-panel,.fc-service-card,.fc-event-card,.fc-feature-strip>span,.fc-home-principles>*,.fc-benefit-grid>article,.fc-faq-grid>details')
       if(!card||!root.contains(card)||(event.relatedTarget&&card.contains(event.relatedTarget)))return
       card.style.setProperty('--fc-tilt-x','0deg');card.style.setProperty('--fc-tilt-y','0deg')
     }
@@ -233,12 +233,22 @@ function FestivalHome({event}){
   return <div className="fc-page fc-home">
     <PublicHeader/>
     <main>
-      <section className="fc-hero fc-hero--home"><div className="fc-home-photo" aria-hidden="true"><img src={constructionImage} alt="" fetchPriority="high"/></div><OccasionArtwork event={event}/><div className="fc-hero-orb fc-hero-orb--one" aria-hidden="true"/><div className="fc-hero-orb fc-hero-orb--two" aria-hidden="true"/>
-      <div className="fc-container fc-home-hero"><div className="fc-tags"><span className="fc-year">{event.icon} {event.name} {event.date.slice(0,4)}</span><StatusTag event={event}/></div>
-        <p className="fc-eyebrow">PROPULSE CONSTRUCTION SOLUTIONS &amp; INTERIOR SOLUTIONS</p><h1>Celebrate {event.name}. <em>Make space for a new beginning.</em></h1>
-        <p className="fc-lead">{event.inspiration} Explore separate construction and interior offers for your Hyderabad home.</p>
-        <div className="fc-actions"><Link className="fc-button fc-button--gold" to={festivalPath(event,'construction')}>Explore Construction ↗</Link><Link className="fc-button fc-button--outline" to={festivalPath(event,'interiors')}>Explore Interiors ↗</Link></div><div className="fc-home-offers">{Object.values(CAMPAIGN_SERVICES).map(service=><OfferPanel key={service.key} event={event} service={service}/>)}</div>
-        <p className="fc-festival-date">Offer dates: {prettyDate(event.start)} – {prettyDate(event.end)} · Hyderabad, India{event.tentative?' · Date subject to local confirmation':''}</p>
+      <section className="fc-hero fc-hero--home"><OccasionArtwork event={event}/><div className="fc-hero-orb fc-hero-orb--one" aria-hidden="true"/><div className="fc-hero-orb fc-hero-orb--two" aria-hidden="true"/>
+      <div className="fc-container fc-home-hero">
+        <div className="fc-home-copy"><div className="fc-tags"><span className="fc-year">{event.icon} {event.name} {event.date.slice(0,4)}</span><StatusTag event={event}/></div>
+          <p className="fc-eyebrow">PROPULSE CONSTRUCTION SOLUTIONS &amp; INTERIOR SOLUTIONS</p><h1>Celebrate {event.name}. <em>Make space for a new beginning.</em></h1>
+          <p className="fc-lead">{event.inspiration} Explore separate construction and interior offers for your Hyderabad home.</p>
+          <div className="fc-actions"><Link className="fc-button fc-button--gold" to={festivalPath(event,'construction')}>Explore Construction ↗</Link><Link className="fc-button fc-button--outline" to={festivalPath(event,'interiors')}>Explore Interiors ↗</Link></div>
+          <p className="fc-festival-date">Offer dates: {prettyDate(event.start)} – {prettyDate(event.end)} · Hyderabad, India{event.tentative?' · Date subject to local confirmation':''}</p>
+        </div>
+        <div className="fc-home-stage" aria-label="Animated 3D home design scene">
+          <div className="fc-home-stage-orbit fc-home-stage-orbit--back" aria-hidden="true"/>
+          <div className="fc-home-stage-card"><img src={constructionImage} alt="Modern Hyderabad home shown in the festival campaign" fetchPriority="high"/><div className="fc-home-stage-glass"/><span className="fc-home-stage-caption">A home built around your life</span></div>
+          <div className="fc-home-stage-chip fc-home-stage-chip--quality"><b>500+</b><span>quality checks</span></div>
+          <div className="fc-home-stage-chip fc-home-stage-chip--engineer"><span>ENGINEER LED</span><b>Planned with care</b></div>
+          <div className="fc-home-stage-orbit fc-home-stage-orbit--front" aria-hidden="true"/>
+        </div>
+        <div className="fc-home-offers">{Object.values(CAMPAIGN_SERVICES).map(service=><OfferPanel key={service.key} event={event} service={service}/>)}</div>
       </div></section>
       {additional.length>0&&<section className="fc-container fc-also" aria-label="Other active festival campaigns"><p className="fc-overline">ALSO CELEBRATING IN HYDERABAD</p><h2>Explore other festival campaigns active today</h2><div className="fc-also-grid">{additional.map(item=><article key={item.slug}><strong>{item.icon} {item.name}</strong><span>{prettyDate(item.date)}</span><div><Link to={festivalPath(item,'construction')}>Construction ↗</Link><Link to={festivalPath(item,'interiors')}>Interiors ↗</Link></div></article>)}</div></section>}
       <section className="fc-container fc-home-options"><div className="fc-section-heading"><p className="fc-overline">TWO WAYS TO START</p><h2>Your home, your next chapter.</h2><p>Choose your project to see festival-themed inspiration, practical planning points and the next step for a quotation.</p></div><div className="fc-card-grid">{Object.values(CAMPAIGN_SERVICES).map(service=><ServiceCard key={service.key} event={event} service={service}/>)}</div></section>
@@ -256,7 +266,7 @@ export function FestivalHub(){
   const events=useMemo(()=>FESTIVAL_EVENTS.filter(event=>(filter==='all'||campaignStatus(event,today)===filter)&&[event.name,event.theme,event.date].join(' ').toLowerCase().includes(search.trim().toLowerCase())),[filter,today,search])
   return <div className="fc-page"><PublicHeader/><main>
     <section className="fc-hub-hero"><div className="fc-container"><nav aria-label="Breadcrumb" className="fc-breadcrumb"><Link to="/">Home</Link><span>/</span>Festivals and important dates</nav><p className="fc-eyebrow">PROPULSE · HYDERABAD</p><h1>Festivals and important dates. <em>A year to remember.</em></h1><p>Explore cultural festivals, national days and remembrance observances for Hyderabad. Each has two distinct pages for Construction and Interiors. Memorial pages are respectful, non-commercial tributes.</p></div></section>
-    <section className="fc-container fc-hub-list"><div className="fc-hub-heading"><div><p className="fc-overline">FESTIVALS & IMPORTANT DATES</p><h2>November 2026 – November 2027 · {FESTIVAL_EVENTS.length} occasions</h2></div><div className="fc-filters" role="group" aria-label="Filter campaigns">{[['all','All dates'],['active','Live'],['upcoming','Upcoming'],['past','Ended']].map(([value,label])=><button type="button" key={value} className={filter===value?'selected':''} onClick={()=>setFilter(value)} aria-pressed={filter===value}>{label}</button>)}</div></div>
+    <section className="fc-container fc-hub-list"><div className="fc-hub-heading"><div><p className="fc-overline">IMPORTANT FESTIVALS & OBSERVANCES</p><h2>November 2026 – November 2027 · {FESTIVAL_EVENTS.length} selected dates</h2></div><div className="fc-filters" role="group" aria-label="Filter campaigns">{[['all','All dates'],['active','Live'],['upcoming','Upcoming'],['past','Ended']].map(([value,label])=><button type="button" key={value} className={filter===value?'selected':''} onClick={()=>setFilter(value)} aria-pressed={filter===value}>{label}</button>)}</div></div>
     <div className="fc-search-row"><label htmlFor="festival-search">Find a festival or important date<input id="festival-search" type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search Diwali, Ugadi or 2027-01…"/></label><p role="status">{events.length} {events.length===1?'occasion':'occasions'} found</p></div>
     <div className="fc-hub-grid">{events.map(event=><article key={event.slug} className="fc-event-card"><div className="fc-event-top"><span className="fc-event-icon">{event.icon}</span><StatusTag event={event}/></div><h3>{event.name} <small>{event.date.slice(0,4)}</small></h3><p className="fc-event-date">{event.tentative?'Indicative: ':''}{prettyDate(event.date)}</p><p className="fc-window">Featured {prettyDate(event.start)}–{prettyDate(event.end)}</p><p>{event.inspiration}</p>{event.kind!=='remembrance'&&<p className="fc-calendar-offer">Construction benefits up to ₹5 lakh · Interiors 10% off</p>}<div className="fc-event-links"><Link to={festivalPath(event,'construction')}>Construction ↗</Link><Link to={festivalPath(event,'interiors')}>Interiors ↗</Link></div></article>)}</div>
     {events.length===0&&<div className="fc-empty"><h3>No matching dates</h3><p>Try another name or reset the filters to browse the full calendar.</p><button type="button" className="fc-button fc-button--dark" onClick={()=>{setFilter('all');setSearch('')}}>Reset filters</button></div>}
