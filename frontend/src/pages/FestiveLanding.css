@@ -360,3 +360,40 @@ body:has(.fc-page) .support-chat-panel{bottom:58px}
 @media(max-width:900px){.fc-home .fc-home-hero{grid-template-columns:minmax(0,1fr) minmax(260px,.8fr);gap:24px}.fc-home-stage{min-height:330px}.fc-home-stage-card{height:295px}.fc-home-stage-chip--quality{right:-7px}}
 @media(max-width:700px){.fc-home .fc-hero--home{padding:42px 0 62px}.fc-home .fc-home-hero{grid-template-columns:1fr;gap:18px}.fc-home-copy{order:1}.fc-home-stage{order:2;min-height:305px;width:min(100%,520px);margin:0 auto}.fc-home-offers{order:3}.fc-home-stage-card{width:84%;height:275px;border-radius:28px 28px 85px 28px}.fc-home-stage-orbit{width:100%;height:210px}.fc-home-stage-chip--quality{top:14px;right:0}.fc-home-stage-chip--engineer{bottom:19px;left:0}.fc-home .fc-artwork{width:110%;right:-40%;opacity:.1}.fc-home-copy .fc-actions{align-items:flex-start}.fc-home-copy .fc-actions .fc-button{flex:0 1 auto}.fc-home-offers{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.fc-home-stage-card,.fc-home-stage-card img,.fc-home-stage-orbit,.fc-home-stage-chip{animation:none!important}}
+
+/* Interactive dimensional artwork for each dedicated occasion service page. */
+.fc-hero-scene{--scene-tilt-x:var(--fc-tilt-x,0deg);--scene-tilt-y:var(--fc-tilt-y,0deg);position:relative;isolation:isolate;display:grid;place-items:center;width:100%;height:clamp(350px,38vw,500px);perspective:1250px;transform:perspective(1250px) rotateX(var(--scene-tilt-x)) rotateY(var(--scene-tilt-y));transform-style:preserve-3d;transition:transform .35s cubic-bezier(.2,.75,.25,1);filter:drop-shadow(0 28px 34px #0d071b45)}
+.fc-hero-scene::before{position:absolute;content:"";inset:15% 12%;z-index:-2;border-radius:50%;background:radial-gradient(ellipse,#f4bd7440,transparent 70%);filter:blur(18px);transform:translateZ(-65px) scale(1.08)}
+.fc-scene-art{position:relative;z-index:1;width:min(100%,580px);height:100%;transform-style:preserve-3d;animation:fc-scene-art-float 7s ease-in-out infinite}
+.fc-scene-art svg{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 22px 24px #09071338)}
+.fc-scene-halo{position:absolute;z-index:-1;left:50%;top:50%;width:min(95%,540px);height:62%;border:1px solid #f5cf9b70;border-radius:50%;pointer-events:none;transform-style:preserve-3d}
+.fc-scene-halo--back{transform:translate(-50%,-50%) rotateX(67deg) rotateZ(-16deg) translateZ(-44px);box-shadow:0 0 34px #f3c37a22;animation:fc-scene-orbit 25s linear infinite}
+.fc-scene-halo--front{width:82%;height:52%;border-color:#fff4;transform:translate(-50%,-50%) rotateX(68deg) rotateZ(18deg) translateZ(48px);animation:fc-scene-orbit 32s linear infinite reverse}
+.fc-scene-glass{position:absolute;inset:8% 6%;z-index:2;border-radius:46%;background:linear-gradient(125deg,#fff2 0%,transparent 32%,transparent 71%,#ffe8c51a 100%);transform:translateZ(45px);pointer-events:none;mix-blend-mode:screen}
+.fc-scene-caption{position:absolute;z-index:4;left:50%;bottom:12px;display:grid;gap:5px;width:max-content;max-width:65%;padding:11px 18px;border:1px solid #ffffff70;border-radius:16px;background:linear-gradient(145deg,#fffaf1ed,#f5e6d5d9);color:#402838;box-shadow:0 18px 40px #08061362,inset 0 1px #fff;transform:translate3d(-50%,0,92px);backdrop-filter:blur(12px);text-align:center}
+.fc-scene-caption span{font-size:9px;font-weight:900;letter-spacing:.13em;color:#89654f}
+.fc-scene-caption b{font:600 15px/1.2 Georgia,'Times New Roman',serif}
+.fc-scene-chip{position:absolute;z-index:5;display:grid;gap:3px;padding:12px 15px;border:1px solid #ffffff8a;border-radius:13px;background:linear-gradient(145deg,#fffdf3f2,#f4e6d8e0);color:#432838;box-shadow:0 17px 40px #100a1d66,inset 0 1px #fff;backdrop-filter:blur(12px);transform-style:preserve-3d;animation:fc-scene-chip-float 5s ease-in-out infinite}
+.fc-scene-chip--top{top:9%;right:1%;transform:translateZ(88px) rotateY(8deg)}
+.fc-scene-chip--bottom{bottom:16%;left:0;animation-delay:-2.2s;transform:translateZ(96px) rotateY(-8deg)}
+.fc-scene-chip b{font:500 21px/1 Georgia,'Times New Roman',serif;color:#8b452f}
+.fc-scene-chip span{font-size:8px;font-weight:900;letter-spacing:.1em;color:#684d49}
+.fc-hero-scene--interiors .fc-scene-chip b{font:850 11px/1.2 Inter,system-ui,sans-serif;letter-spacing:.03em}
+.fc-scene-house{transform-box:fill-box;transform-origin:50% 60%;animation:fc-scene-house-lift 6s ease-in-out infinite}
+.fc-scene-tree{transform-box:fill-box;transform-origin:50% 100%;animation:fc-scene-tree-sway 4.4s ease-in-out infinite alternate}
+.fc-scene-tree--small{animation-delay:-1.2s}
+.fc-room-sofa{transform-box:fill-box;transform-origin:50% 70%;animation:fc-room-float 5.7s ease-in-out infinite}
+.fc-room-window{animation:fc-room-window-glow 5s ease-in-out infinite alternate}
+.fc-scene-spark{animation:fc-scene-sparkle 3.4s ease-in-out infinite alternate}
+@keyframes fc-scene-art-float{0%,100%{translate:0 0}50%{translate:0 -8px}}
+@keyframes fc-scene-orbit{from{rotate:0deg}to{rotate:360deg}}
+@keyframes fc-scene-chip-float{0%,100%{translate:0 0}50%{translate:0 -9px}}
+@keyframes fc-scene-house-lift{0%,100%{translate:0 0}50%{translate:0 -3px}}
+@keyframes fc-scene-tree-sway{from{rotate:-2deg}to{rotate:2deg}}
+@keyframes fc-room-float{0%,100%{translate:0 0}50%{translate:0 -3px}}
+@keyframes fc-room-window-glow{from{filter:brightness(.98)}to{filter:brightness(1.14)}}
+@keyframes fc-scene-sparkle{0%,100%{opacity:.65}50%{opacity:1}}
+@media(max-width:900px){.fc-hero-scene{height:clamp(320px,48vw,430px)}.fc-scene-chip--top{right:-1%}.fc-scene-chip--bottom{left:-1%}}
+@media(max-width:720px){.fc-hero-scene{height:340px;max-width:520px;margin:0 auto;perspective:1000px}.fc-scene-art{width:108%}.fc-scene-halo{width:100%;height:58%}.fc-scene-caption{bottom:6px;max-width:76%;padding:10px 13px}.fc-scene-caption b{font-size:13px}.fc-scene-chip--top{top:7%;right:0;padding:10px 12px}.fc-scene-chip--bottom{bottom:17%;left:0;padding:10px 12px}.fc-scene-chip b{font-size:18px}.fc-scene-chip span{font-size:7px}}
+@media(max-width:420px){.fc-hero-scene{height:295px}.fc-scene-art{width:116%}.fc-scene-chip{padding:9px 10px}.fc-scene-chip--top{right:-2%}.fc-scene-chip--bottom{left:-2%}.fc-scene-chip b{font-size:16px}.fc-scene-chip span{font-size:6px}.fc-scene-caption{max-width:79%;padding:8px 10px}}
+@media(prefers-reduced-motion:reduce){.fc-hero-scene,.fc-scene-art,.fc-scene-halo,.fc-scene-chip,.fc-scene-house,.fc-scene-tree,.fc-room-sofa,.fc-room-window,.fc-scene-spark{animation:none!important;transition:none!important}.fc-hero-scene{transform:none}}
