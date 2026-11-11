@@ -73,8 +73,14 @@ export default function ProjectDetail(){
       }finally{if(active&&initial)setLoading(false)}
     }
     refresh(true)
-    const onVisible=()=>{if(document.visibilityState==='visible')refresh(false)}
-    const timer=window.setInterval(()=>{if(document.visibilityState==='visible')refresh(false)},120000)
+    const refreshState={lastRun:Date.now(),inFlight:false}
+    const refreshOnce=()=>{
+      if(document.visibilityState!=='visible'||refreshState.inFlight||Date.now()-refreshState.lastRun<5000)return
+      refreshState.lastRun=Date.now();refreshState.inFlight=true
+      Promise.resolve().then(()=>refresh(false)).finally(()=>{refreshState.inFlight=false})
+    }
+    const onVisible=refreshOnce
+    const timer=window.setInterval(refreshOnce,120000)
     document.addEventListener('visibilitychange',onVisible)
     return()=>{active=false;window.clearInterval(timer);document.removeEventListener('visibilitychange',onVisible)}
   },[realId,archived])
