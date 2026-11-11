@@ -170,12 +170,28 @@ function OccasionSceneCanvas({service}){
 function OccasionSceneGallery({service}){
   const images=service.key==='construction'?constructionSceneImages:interiorsSceneImages
   const [activeIndex,setActiveIndex]=useState(0)
+  const swipeStart=useRef(null)
   useEffect(()=>{
     if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return undefined
     const timer=window.setInterval(()=>setActiveIndex(index=>(index+1)%images.length),4600)
     return()=>window.clearInterval(timer)
   },[images.length])
-  return <div className={'fc-scene-gallery fc-scene-gallery--'+service.key} aria-hidden="true">
+  const beginSwipe=event=>{
+    if(event.pointerType==='mouse'&&event.button!==0)return
+    swipeStart.current={x:event.clientX,y:event.clientY}
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+  }
+  const finishSwipe=event=>{
+    const start=swipeStart.current
+    swipeStart.current=null
+    if(!start)return
+    const deltaX=event.clientX-start.x
+    const deltaY=event.clientY-start.y
+    if(Math.abs(deltaX)>38&&Math.abs(deltaX)>Math.abs(deltaY)*1.2){
+      setActiveIndex(index=>(index+(deltaX<0?1:-1)+images.length)%images.length)
+    }
+  }
+  return <div className={'fc-scene-gallery fc-scene-gallery--'+service.key} aria-hidden="true" onPointerDown={beginSwipe} onPointerUp={finishSwipe} onPointerCancel={()=>{swipeStart.current=null}}>
     {images.map((image,index)=>{
       let offset=index-activeIndex
       if(offset>Math.floor(images.length/2))offset-=images.length
