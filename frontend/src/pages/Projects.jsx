@@ -188,6 +188,7 @@ export default function Projects() {
   useEffect(()=>{
     if(page!==1)return undefined
     let active=true
+    const refreshState={lastRun:Date.now(),inFlight:false}
     const refresh=async()=>{
       if(document.visibilityState==='hidden')return
       try{
@@ -198,8 +199,13 @@ export default function Projects() {
         setHasNext(Boolean(value?.pagination?.hasNextPage))
       }catch{/* Keep existing portfolio while the network reconnects. */}
     }
-    const onVisible=()=>{if(document.visibilityState==='visible')refresh()}
-    const timer=window.setInterval(refresh,120000)
+    const refreshOnce=()=>{
+      if(document.visibilityState!=='visible'||refreshState.inFlight||Date.now()-refreshState.lastRun<5000)return
+      refreshState.lastRun=Date.now();refreshState.inFlight=true
+      Promise.resolve().then(refresh).finally(()=>{refreshState.inFlight=false})
+    }
+    const timer=window.setInterval(refreshOnce,120000)
+    const onVisible=refreshOnce
     document.addEventListener('visibilitychange',onVisible)
     return()=>{active=false;window.clearInterval(timer);document.removeEventListener('visibilitychange',onVisible)}
   },[page])
