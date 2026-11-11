@@ -223,6 +223,35 @@ function setJsonLd(route,origin){
 
 // Applies title, meta, canonical and JSON-LD for in-app navigation. Loaded on
 // demand by SeoManager so the large SEO route tables stay out of the main bundle.
+const UTILITY_TITLES=[
+  ['/login','Sign in'],
+  ['/signup','Create an account'],
+  ['/forgot-password','Forgot password'],
+  ['/reset-password','Reset password'],
+  ['/professionals','For Professionals'],
+  ['/professional-contact','Contact for Professionals'],
+  ['/admin','Admin'],
+  ['/lead-partner','Lead Partner'],
+  ['/investment','Investments'],
+  ['/dashboard','Dashboard'],
+  ['/leads','Leads'],
+  ['/purchased-leads','Purchased leads'],
+  ['/my-leads','My leads'],
+  ['/wallet','Wallet'],
+  ['/membership','Membership'],
+  ['/notifications','Notifications'],
+  ['/profile','Profile'],
+  ['/professional-requests','Requests'],
+]
+// Pages without public SEO metadata (sign-in, portals, admin) used to show the
+// homepage title in the tab and browser history.
+function utilitySeo(pathname){
+  const path=String(pathname||'/').replace(/\/+$/,'')||'/'
+  if(path==='/'||path==='/home')return HOME_SEO
+  const match=UTILITY_TITLES.find(([prefix])=>path===prefix||path.startsWith(prefix+'/'))
+  return {...HOME_SEO,title:match?match[1]+' | ProPulse':'ProPulse'}
+}
+
 export function applySeo(location){
     const route=seoForPath(location.pathname)
     const origin=siteOrigin()
@@ -263,7 +292,7 @@ export function applySeo(location){
     document.head.querySelector('script[data-propulse-project-seo]')?.remove()
     document.head.querySelector('script[data-propulse-expert-seo]')?.remove()
     const indexable=isIndexablePath(location.pathname)
-    const effective=route||HOME_SEO
+    const effective=route||utilitySeo(location.pathname)
     const canonical=origin+(route?.path||location.pathname||'/')
     const robots=indexable
       ?'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'

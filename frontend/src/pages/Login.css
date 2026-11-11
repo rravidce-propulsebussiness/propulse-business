@@ -167,6 +167,7 @@
 .login-premium .auth-card.login-premium-card .check {
   display:inline-flex!important;align-items:center;gap:8px!important;
   margin:0;color:#727b83!important;font-size:12px!important;font-weight:600!important;
+  white-space:nowrap;width:auto!important;
 }
 .login-premium .check input{width:15px;height:15px;margin:0;accent-color:var(--login-orange)}
 .login-premium .auth-secondary-links{display:flex;justify-content:flex-end}
