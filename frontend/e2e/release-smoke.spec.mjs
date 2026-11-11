@@ -144,6 +144,8 @@ test('occasion homepage and direct service links work on desktop and mobile',asy
   await page.clock.setFixedTime(new Date('2026-11-08T12:00:00+05:30'))
   await page.goto('/')
   await expect(page.locator('.fc-home-hero h1')).toContainText('Diwali')
+  await expect(page.locator('.fc-home-stage')).toBeVisible()
+  await expect(page.locator('.fc-home-stage-orbit')).toHaveCount(2)
   await expect(page.locator('.fc-home-offers')).toContainText('₹5 lakh')
   await expect(page.locator('.fc-home-offers')).toContainText('10%')
   for(const service of ['construction','interiors']){
@@ -159,7 +161,7 @@ test('occasion homepage and direct service links work on desktop and mobile',asy
     await expect(page.locator('.fc-artwork svg')).toHaveCount(1)
   }
   await page.goto('/offers')
-  await expect(page.locator('.fc-hub-heading')).toContainText('126 occasions')
+  await expect(page.locator('.fc-hub-heading')).toContainText('26 selected dates')
   await page.getByRole('button',{name:'Live',exact:true}).click()
   await expect(page.locator('.fc-event-card').first()).toBeVisible()
   await page.getByRole('button',{name:'All dates',exact:true}).click()
@@ -168,7 +170,7 @@ test('occasion homepage and direct service links work on desktop and mobile',asy
   await page.getByRole('searchbox',{name:'Find a festival or important date'}).fill('no-such-festival')
   await expect(page.getByRole('heading',{name:'No matching dates'})).toBeVisible()
   await page.getByRole('button',{name:'Reset filters'}).click()
-  await expect(page.locator('.fc-event-card')).toHaveCount(126)
+  await expect(page.locator('.fc-event-card')).toHaveCount(26)
 })
 
 test('occasion catalogue trailing slash serves without a redirect loop',async({request})=>{
