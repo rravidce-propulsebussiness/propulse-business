@@ -13,7 +13,7 @@ import { useInView, useReducedMotion } from '../components/home/useHomeMotion'
 const HOME_TRUST_HEADLINES = [
   { lead: 'Home Construction.', accent: ' Built Around Your Plot.' },
   { lead: 'Premium Interiors.', accent: ' Designed Room by Room.' },
-  { lead: 'Smart Technology.', accent: ' Updates at Key Milestones.' },
+  { lead: 'Digital Growth.', accent: ' Websites, Apps & Marketing.' },
   { lead: 'Clear Scope.', accent: ' Transparent Estimates.' },
 ]
 const DEFAULT_HERO = 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1600&q=80'
@@ -33,14 +33,14 @@ const PILLARS = [
     image: unsplash('1631679706909-1844bbd07221', 1000), cta: { to: '/packages#interior', label: 'Interior packages' },
   },
   {
-    key: 'tech', tone: 'technology', eyebrow: 'Technology & Business OS', title: 'Technology',
-    text: 'Software to run construction and interior businesses: leads, quotations, projects and client updates in one place.',
-    points: ['CRM, quotations and contracts', 'Project, finance and billing tools', 'Client portal and WhatsApp updates'],
-    cta: { to: '/technology', label: 'Explore products' },
+    key: 'tech', tone: 'technology', eyebrow: 'Digital Services & Software', title: 'Technology',
+    text: 'Websites, mobile apps, CRM, SEO, digital marketing and social media management for businesses of every kind, plus our Business OS.',
+    points: ['Websites, mobile apps and custom software', 'SEO, digital marketing and social media', 'CRM, automation and Business OS'],
+    cta: { to: '/technology', label: 'Explore services' },
   },
 ]
 
-const MARQUEE = ['Independent houses', 'Villas', 'Turnkey construction', 'Modular kitchens', 'Wardrobes', 'False ceilings', 'Renovation', 'Business OS', 'CRM & quotations', 'Client portal', 'Verified professionals', 'Hyderabad']
+const MARQUEE = ['Independent houses', 'Villas', 'Turnkey construction', 'Modular kitchens', 'Wardrobes', 'False ceilings', 'Renovation', 'Websites & apps', 'Digital marketing', 'Social media', 'CRM & automation', 'Verified professionals', 'Hyderabad']
 
 const SERVICES = [
   { key: 'build', eyebrow: 'House Construction', title: 'Independent House Construction', text: 'Plan your home around your plot, built-up area, specifications and budget.', image: unsplash('1600566753190-17f0baa2a6c3'), icon: 'home' },
@@ -440,10 +440,10 @@ export default function Home() {
         <div className="hc-container ph-split ph-split-reverse">
           <div className="ph-split-copy">
             <span className="ph-eyebrow">TECHNOLOGY</span>
-            <h2 id="ph-tech-title">See every milestone, <em>as it happens.</em></h2>
-            <p>The ProPulse Business OS keeps enquiries, quotations, site progress and payments in one place, so owners and teams always know what is done and what is next.</p>
+            <h2 id="ph-tech-title">Grow your business <em>online.</em></h2>
+            <p>From your website and mobile app to SEO, ads, social media and CRM, our technology team builds and runs the digital side of any business. Construction and interior firms can also run projects on the ProPulse Business OS.</p>
             <div className="ph-tech-grid">
-              {[['clipboard', 'CRM & quotations'], ['layers', 'Project tracking'], ['shield', 'Finance & billing'], ['chip', 'Client portal']].map(([icon, label]) => <span key={label}><Icon name={icon} size={18}/>{label}</span>)}
+              {[['chip', 'Websites & mobile apps'], ['layers', 'SEO & digital marketing'], ['people', 'Social media management'], ['clipboard', 'CRM & Business OS']].map(([icon, label]) => <span key={label}><Icon name={icon} size={18}/>{label}</span>)}
             </div>
             <div className="ph-inline-actions"><Link className="ph-btn ph-btn-light" to="/technology"><span>Explore Products &amp; Services</span><Icon name="arrow" size={16}/></Link></div>
           </div>
@@ -499,7 +499,7 @@ export default function Home() {
             <article><span>02</span><h3>Design Your Space</h3><p><strong>Direct Interior Execution</strong> for homeowners planning interiors, finishes and space improvements.</p><button type="button" onClick={() => openRequirement('design')}>Explore interiors <span aria-hidden="true">→</span></button></article>
             <article><span>03</span><h3>Find a Property</h3><p>Buy or sell the right property, or compare independent professionals through the ProPulse marketplace.</p><Link to="/experts">Find Professionals <span aria-hidden="true">→</span></Link></article>
           </div>
-          <p className="hc-secondary-path-note">Our Construction, Interiors, Marketplace &amp; Technology Divisions serve different needs. Technology tools support construction businesses; service availability and scope are confirmed for each enquiry.</p>
+          <p className="hc-secondary-path-note">Our Construction, Interiors, Marketplace &amp; Technology Divisions serve different needs. Technology covers websites, apps, digital marketing, social media and CRM for any business; service availability and scope are confirmed for each enquiry.</p>
         </div>
       </section>
 

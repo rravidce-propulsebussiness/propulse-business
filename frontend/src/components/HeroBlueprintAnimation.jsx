@@ -8,7 +8,7 @@ import { useInView, useReducedMotion } from './home/useHomeMotion'
 const PILLARS = [
   { key: 'construction', label: 'Construction', caption: 'Plot to handover', steps: HOUSE_STAGES, Scene: HouseScene },
   { key: 'interiors', label: 'Interiors', caption: 'Shell to styled home', steps: ROOM_STAGES, Scene: RoomScene },
-  { key: 'technology', label: 'Technology', caption: 'Software that runs projects', steps: TECH_STAGES, Scene: TechScene },
+  { key: 'technology', label: 'Technology', caption: 'Websites, apps & marketing', steps: TECH_STAGES, Scene: TechScene },
 ]
 const STEP_MS = 950
 const HOLD_MS = 2800

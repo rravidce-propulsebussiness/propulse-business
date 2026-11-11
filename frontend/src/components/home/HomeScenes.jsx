@@ -178,7 +178,7 @@ export function RoomScene({ stage = 4, idPrefix = 'rs' }) {
 export function TechScene({ stage = 4 }) {
   const bars = [46, 62, 54, 78, 70, 92, 84]
   return (
-    <svg className={'ph-scene ph-tech stage-' + stage} viewBox="0 0 560 440" role="img" aria-label={'Business software illustration: ' + TECH_STAGES[stage]}>
+    <svg className={'ph-scene ph-tech stage-' + stage} viewBox="0 0 560 440" role="img" aria-label={'Digital services illustration: ' + TECH_STAGES[stage]}>
       <rect width="560" height="440" fill="#0f2233"/>
       <g opacity=".14" stroke="#5aa6ff">{Array.from({ length: 15 }, (_, i) => <path key={i} d={`M${i * 40} 0v440`}/>)}{Array.from({ length: 12 }, (_, i) => <path key={'h' + i} d={`M0 ${i * 40}h560`}/>)}</g>
       {/* App frame */}
@@ -190,17 +190,17 @@ export function TechScene({ stage = 4 }) {
         <rect x="50" y="80" width="30" height="30" rx="8" fill="#e65b26"/>
         <path d="m57 98 8-8 8 8M60 96v8h10v-8" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         {[132, 170, 208, 246].map(y => <rect key={y} x="54" y={y} width="22" height="22" rx="6" fill="#fff" opacity=".18"/>)}
-        <text x="112" y="92" className="ph-svg-title">Project workspace</text>
-        <text x="112" y="108" className="ph-svg-muted">Villa · Gachibowli · G+1</text>
+        <text x="112" y="92" className="ph-svg-title">Digital growth workspace</text>
+        <text x="112" y="108" className="ph-svg-muted">Website · App · Social · CRM</text>
       </g>
       {/* KPI cards */}
       <g className={'ph-layer ph-kpis' + on(stage, 1)}>
-        {[{ x: 112, t: 'Enquiries', v: 'New', c: '#e65b26' }, { x: 228, t: 'Quotations', v: 'Sent', c: '#2f6fed' }, { x: 344, t: 'Contracts', v: 'Signed', c: '#2fb36b' }].map((k, i) => <g key={k.t} className="ph-pop" style={{ '--d': i * 110 + 'ms' }}><rect x={k.x} y="122" width="104" height="58" rx="10" fill="#fff" stroke="#e1e7ee"/><circle cx={k.x + 16} cy="140" r="5" fill={k.c}/><text x={k.x + 28} y="144" className="ph-svg-muted">{k.t}</text><text x={k.x + 14} y="168" className="ph-svg-kpi">{k.v}</text></g>)}
+        {[{ x: 112, t: 'Website', v: 'Live', c: '#e65b26' }, { x: 228, t: 'Leads', v: 'In CRM', c: '#2f6fed' }, { x: 344, t: 'Social', v: 'Posted', c: '#2fb36b' }].map((k, i) => <g key={k.t} className="ph-pop" style={{ '--d': i * 110 + 'ms' }}><rect x={k.x} y="122" width="104" height="58" rx="10" fill="#fff" stroke="#e1e7ee"/><circle cx={k.x + 16} cy="140" r="5" fill={k.c}/><text x={k.x + 28} y="144" className="ph-svg-muted">{k.t}</text><text x={k.x + 14} y="168" className="ph-svg-kpi">{k.v}</text></g>)}
       </g>
       {/* Chart */}
       <g className={'ph-layer ph-chart' + on(stage, 2)}>
         <rect x="112" y="192" width="220" height="156" rx="10" fill="#fff" stroke="#e1e7ee"/>
-        <text x="126" y="214" className="ph-svg-muted">Budget vs progress</text>
+        <text x="126" y="214" className="ph-svg-muted">Leads vs ad spend</text>
         {bars.map((h, i) => <rect key={i} className="ph-bar" style={{ '--d': i * 70 + 'ms' }} x={130 + i * 27} y={334 - h} width="15" height={h} rx="4" fill={i === bars.length - 1 ? '#e65b26' : '#c9d8ea'}/>)}
         <path className="ph-draw ph-line" d="M137 300 164 286 191 292 218 262 245 270 272 240 299 248" fill="none" stroke="#2f6fed" strokeWidth="2.5" strokeLinecap="round"/>
       </g>
@@ -208,15 +208,15 @@ export function TechScene({ stage = 4 }) {
       <g className={'ph-layer ph-milestones' + on(stage, 3)}>
         <rect x="344" y="192" width="104" height="156" rx="10" fill="#fff" stroke="#e1e7ee"/>
         <text x="356" y="214" className="ph-svg-muted">Milestones</text>
-        {['Footing', 'Slab 1', 'Slab 2', 'Finish'].map((m, i) => <g key={m} className="ph-pop" style={{ '--d': i * 160 + 'ms' }}><circle cx="362" cy={236 + i * 28} r="8" fill={i < 3 ? '#2fb36b' : '#e1e7ee'}/>{i < 3 && <path d={`m358 ${236 + i * 28} 3 3 5-6`} fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>}<text x="376" y={240 + i * 28} className="ph-svg-small">{m}</text></g>)}
+        {['Website', 'SEO', 'Ads live', 'Reels'].map((m, i) => <g key={m} className="ph-pop" style={{ '--d': i * 160 + 'ms' }}><circle cx="362" cy={236 + i * 28} r="8" fill={i < 3 ? '#2fb36b' : '#e1e7ee'}/>{i < 3 && <path d={`m358 ${236 + i * 28} 3 3 5-6`} fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>}<text x="376" y={240 + i * 28} className="ph-svg-small">{m}</text></g>)}
       </g>
       {/* Phone notification */}
       <g transform="translate(30 0)"><g className={'ph-layer ph-phone' + on(stage, 4)}>
         <rect x="394" y="178" width="132" height="236" rx="22" fill="#1b2b3a" stroke="#41566a" strokeWidth="2"/>
         <rect x="404" y="192" width="112" height="208" rx="14" fill="#eef3f8"/>
         <rect x="440" y="184" width="40" height="5" rx="2.5" fill="#41566a"/>
-        <g className="ph-toast"><rect x="410" y="220" width="100" height="58" rx="10" fill="#fff" stroke="#dbe3ec"/><circle cx="424" cy="236" r="7" fill="#2fb36b"/><text x="436" y="240" className="ph-svg-small">Site update</text><rect x="418" y="250" width="84" height="20" rx="4" fill="#ffd8b8"/><path d="m428 266 10-10 8 7 6-4 10 7" fill="none" stroke="#e65b26" strokeWidth="1.5"/></g>
-        <g className="ph-toast ph-toast-2"><rect x="410" y="288" width="100" height="40" rx="10" fill="#fff" stroke="#dbe3ec"/><circle cx="424" cy="303" r="7" fill="#2f6fed"/><text x="436" y="307" className="ph-svg-small">Invoice ready</text><rect x="418" y="315" width="60" height="5" rx="2.5" fill="#dbe3ec"/></g>
+        <g className="ph-toast"><rect x="410" y="220" width="100" height="58" rx="10" fill="#fff" stroke="#dbe3ec"/><circle cx="424" cy="236" r="7" fill="#2fb36b"/><text x="436" y="240" className="ph-svg-small">New lead</text><rect x="418" y="250" width="84" height="20" rx="4" fill="#ffd8b8"/><path d="m428 266 10-10 8 7 6-4 10 7" fill="none" stroke="#e65b26" strokeWidth="1.5"/></g>
+        <g className="ph-toast ph-toast-2"><rect x="410" y="288" width="100" height="40" rx="10" fill="#fff" stroke="#dbe3ec"/><circle cx="424" cy="303" r="7" fill="#2f6fed"/><text x="436" y="307" className="ph-svg-small">Post published</text><rect x="418" y="315" width="60" height="5" rx="2.5" fill="#dbe3ec"/></g>
         <circle className="ph-ping" cx="510" cy="220" r="7" fill="#e65b26"/>
       </g></g>
     </svg>

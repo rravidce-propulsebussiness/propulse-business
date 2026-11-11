@@ -26,7 +26,7 @@ export default function About() {
         <div className="ab-story-intro">
           <span className="ab-eyebrow"><span aria-hidden="true" className="ab-eyebrow-line" /> OUR STORY</span>
           <h1>Why we started <em>ProPulse.</em></h1>
-          <p>ProPulse directly provides construction and interior design and execution, connects customers with independent professionals, and develops technology for construction and interior businesses.</p>
+          <p>ProPulse directly provides construction and interior design and execution, connects customers with independent professionals, and delivers technology services: websites, mobile apps, software, CRM, digital marketing and social media management.</p>
           <div className="ab-story-caption"><span aria-hidden="true" /> Built from real industry experience</div>
         </div>
         <aside className="ab-story-quote" aria-label="The idea behind ProPulse">
@@ -83,7 +83,7 @@ export default function About() {
         <div className="ab-story-prose">
           <p><strong>Construction &amp; Interiors:</strong> ProPulse directly undertakes construction, renovation and interior execution under its own agreed project scope and contract.</p>
           <p><strong>Professional Marketplace:</strong> Customers can compare and engage independent contractors. The selected third-party provider is responsible under its own agreement.</p>
-          <p><strong>Technology:</strong> ProPulse develops software including Business OS. <Link to="/technology">Explore technology products</Link>.</p>
+          <p><strong>Technology:</strong> ProPulse builds websites, mobile apps and custom software, and provides CRM, SEO, digital marketing, social media management, branding and video services for businesses of every kind. We also develop Business OS for construction and interior companies. <Link to="/technology">Explore products &amp; services</Link>.</p>
           <p className="ab-contact-action"><Link to="/contact">Discuss a construction or interior project <span aria-hidden="true">→</span></Link></p>
         </div>
       </div>
