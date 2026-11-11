@@ -43,8 +43,8 @@ export const CORE_PUBLIC_SEO_ROUTES=[
   {
     path:'/technology',
     type:'services-hub',
-    title:'Digital Services | Websites, Apps, Marketing, Social Media & CRM | ProPulse',
-    description:'Explore ProPulse digital services including website, mobile app and custom software development, CRM and automation, SEO and AI search, digital marketing and lead generation, social media management, WhatsApp, email and influencer marketing, local SEO, content writing, UI/UX, branding, video, photography, AI chatbots, e-commerce, hosting and maintenance, plus Business OS for construction, interior and real-estate companies.',
+    title:'Digital Services | Websites, Apps, Chrome Extensions, Marketing, Social Media & CRM | ProPulse',
+    description:'Explore ProPulse digital services including website, mobile app, Chrome extension and custom software development, CRM and automation, SEO and AI search, digital marketing and lead generation, social media management, WhatsApp, email and influencer marketing, local SEO, content writing, UI/UX, branding, video, photography, AI chatbots, e-commerce, hosting and maintenance, plus Business OS for construction, interior and real-estate companies.',
     heading:'Products & Services for modern businesses',
     summary:'Build websites and apps, manage customers with CRM, get found in search and AI answers, generate leads, grow on social media, create content, stay online and run your construction or interior business with ProPulse Business OS.',
   },
@@ -86,14 +86,14 @@ export const CORE_PUBLIC_SEO_ROUTES=[
   {
     path:'/about',
     title:'Our Story & Vision | Why We Started ProPulse',
-    description:'Learn about ProPulse direct construction and interiors, its professional lead marketplace and technology for construction businesses.',
+    description:'Learn about ProPulse direct construction and interiors, its professional lead marketplace and its digital services: websites, apps, Chrome extensions, digital marketing, social media management and CRM.',
     heading:'Why we started ProPulse',
     summary:'Our founding story, the challenges faced by homeowners and professionals, and our vision for easier business and quality-led execution.',
   },
   {
     path:'/contact',
     title:'Contact ProPulse | Construction, Interiors & Real Estate',
-    description:'Contact ProPulse for direct construction and interior execution in Hyderabad, technology products and professional marketplace assistance.',
+    description:'Contact ProPulse for direct construction and interior execution in Hyderabad, websites, apps, digital marketing, social media and CRM services, and professional marketplace assistance.',
     heading:'Contact ProPulse',
     summary:'Get in touch with ProPulse for requirement support, platform questions or help with your customer journey.',
   },

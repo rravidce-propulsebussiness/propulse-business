@@ -11,7 +11,7 @@ const serviceGroups = [
   { icon: 'social', title: 'Social Media Management', shortTitle: 'social media management', description: 'Content calendars, posting, reels and community management.' },
   { icon: 'whatsapp', title: 'WhatsApp Marketing & Automation', shortTitle: 'WhatsApp marketing', description: 'Broadcasts, chatbots and instant replies on WhatsApp Business.' },
   { icon: 'design', title: 'Branding & Graphic Design', shortTitle: 'branding and design', description: 'Logos, brand identity, brochures and creatives for every channel.' },
-  { icon: 'video', title: 'Video & Media Production', shortTitle: 'video and media', description: 'Reels, ad films, walkthroughs and professional video editing.' },
+  { icon: 'video', title: 'Video, Photography & Media', shortTitle: 'video and photography', description: 'Reels, ad films, product and brand shoots, and professional editing.' },
   { icon: 'cart', title: 'E-commerce Solutions', shortTitle: 'e-commerce', description: 'Online stores with catalogue, payments and order management.' },
   { icon: 'ux', title: 'UI/UX Design', shortTitle: 'UI/UX design', description: 'User research, wireframes and app or website designs people enjoy using.' },
   { icon: 'pin', title: 'Google Business Profile & Local SEO', shortTitle: 'local SEO', description: 'Show up on Google Maps and local searches in your area.' },
@@ -20,7 +20,7 @@ const serviceGroups = [
   { icon: 'star', title: 'Online Reputation Management', shortTitle: 'reputation management', description: 'Grow reviews, respond to feedback and protect your brand online.' },
   { icon: 'users', title: 'Influencer Marketing', shortTitle: 'influencer marketing', description: 'Collaborations with creators to reach the right audience.' },
   { icon: 'bot', title: 'AI Chatbots & AI Automation', shortTitle: 'AI automation', description: 'AI assistants, chatbots and smart workflows for your business.' },
-  { icon: 'camera', title: 'Photography & Product Shoots', shortTitle: 'photography', description: 'Product, property and brand photography for web and social.' },
+  { icon: 'puzzle', title: 'Chrome Extension Development', shortTitle: 'Chrome extensions', description: 'Custom Chrome and browser extensions for lead capture, productivity and automation.' },
   { icon: 'chart', title: 'Analytics & Reporting', shortTitle: 'analytics and reporting', description: 'Tracking setup, dashboards and clear monthly performance reports.' },
   { icon: 'plug', title: 'Payment Gateway & Integrations', shortTitle: 'integrations', description: 'Payments, APIs and connections between the tools you already use.' },
   { icon: 'tools', title: 'Website Maintenance & Support', shortTitle: 'maintenance and support', description: 'Updates, backups, security fixes and ongoing technical support.' },
@@ -49,7 +49,7 @@ function Icon({ name, size = 30 }) {
   if (name === 'star') return <svg {...common}><path d="m24 6 5.4 11.2 12.3 1.6-9 8.6 2.3 12.2L24 33.7l-11 5.9 2.3-12.2-9-8.6 12.3-1.6Z"/></svg>
   if (name === 'users') return <svg {...common}><circle cx="18" cy="17" r="6"/><circle cx="33" cy="19" r="5"/><path d="M6 38c1.3-6.5 6-10 12-10s10.7 3.5 12 10M29 29c5.5-.4 10 2.8 12 8"/></svg>
   if (name === 'bot') return <svg {...common}><rect x="9" y="15" width="30" height="24" rx="7"/><path d="M24 15V8M20 8h8"/><circle cx="18" cy="26" r="2.5"/><circle cx="30" cy="26" r="2.5"/><path d="M19 33h10M5 25v6M43 25v6"/></svg>
-  if (name === 'camera') return <svg {...common}><path d="M6 16a4 4 0 0 1 4-4h6l3-4h10l3 4h6a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4Z"/><circle cx="24" cy="25" r="8"/></svg>
+  if (name === 'puzzle') return <svg {...common}><path d="M10 14h8v-1a4 4 0 0 1 8 0v1h8v8h1a4 4 0 0 1 0 8h-1v8h-8v-1a4 4 0 0 0-8 0v1h-8v-8h1a4 4 0 0 0 0-8h-1Z"/></svg>
   if (name === 'chart') return <svg {...common}><path d="M7 7v34h34"/><path d="M14 33v-8M22 33V17M30 33v-12M38 33V11"/></svg>
   if (name === 'plug') return <svg {...common}><path d="M17 6v9M31 6v9M12 15h24v8a12 12 0 0 1-24 0Z"/><path d="M24 35v7"/></svg>
   if (name === 'tools') return <svg {...common}><path d="M29 8a9 9 0 0 0-8.5 12L8 32.5a3.5 3.5 0 0 0 5 5L25.5 25A9 9 0 0 0 38 16l-6 2-4-4 2-6Z"/></svg>
@@ -81,7 +81,7 @@ export default function Technology() {
           <div className="ps-hero-copy">
             <span className="ps-pill"><span className="ps-pill-icon">✦</span> Digital Solutions for a Growing Business</span>
             <h1>Build. <span>Grow.</span> Create. <strong>Manage.</strong></h1>
-            <p>Websites, mobile apps, software, CRM, SEO, digital marketing, social media management, branding and video, everything your business needs to build a strong digital presence, reach more customers and operate more efficiently.</p>
+            <p>Websites, mobile apps, Chrome extensions, software, CRM, SEO, digital marketing, social media management, branding and video, everything your business needs to build a strong digital presence, reach more customers and operate more efficiently.</p>
 
             <div className="ps-trust-row">
               <div><span className="ps-trust-icon">ϟ</span><span><b>Expert Team</b><small>Skilled Professionals</small></span></div>
@@ -117,7 +117,7 @@ export default function Technology() {
             <div className="ps-float ps-float-web"><Icon name="code" size={19}/><span>Website<br/>Development</span></div>
             <div className="ps-float ps-float-seo"><Icon name="search" size={19}/><span>SEO &amp;<br/>AEO</span></div>
             <div className="ps-float ps-float-marketing"><Icon name="megaphone" size={19}/><span>Digital<br/>Marketing</span></div>
-            <div className="ps-float ps-float-video"><Icon name="mobile" size={19}/><span>Mobile<br/>Apps</span></div>
+            <div className="ps-float ps-float-video"><Icon name="mobile" size={19}/><span>Apps &amp;<br/>Extensions</span></div>
             <div className="ps-float ps-float-design"><Icon name="social" size={19}/><span>Social Media<br/>Management</span></div>
             <div className="ps-arrow">↗</div>
           </div>
@@ -129,7 +129,7 @@ export default function Technology() {
           <div className="ps-section-heading">
             <div className="ps-section-kicker"><span/> Our Services <span/></div>
             <h2>Comprehensive Digital Services</h2>
-            <p>24 services under one roof: development, design, marketing, social media, content, CRM, AI automation and support for businesses of every kind.</p>
+            <p>24 services under one roof: websites, apps, Chrome extensions, design, marketing, social media, content, CRM, AI automation and support for businesses of every kind.</p>
           </div>
 
           <div className="ps-service-grid">

@@ -33,8 +33,8 @@ const PILLARS = [
   },
   {
     key: 'tech', tone: 'technology', eyebrow: 'Digital Services & Software', title: 'Technology',
-    text: 'Websites, mobile apps, CRM, SEO, digital marketing and social media management for businesses of every kind.',
-    points: ['Websites, mobile apps and custom software', 'SEO, digital marketing and social media', 'CRM, WhatsApp and business automation'],
+    text: 'Websites, mobile apps, Chrome extensions, CRM, SEO, digital marketing and social media management for businesses of every kind.',
+    points: ['Websites, mobile apps and Chrome extensions', 'SEO, digital marketing and social media', 'CRM, WhatsApp and business automation'],
     image: unsplash('1460925895917-afdab827c52f', 1000), cta: { to: '/technology', label: 'Explore services' },
   },
 ]
@@ -437,9 +437,9 @@ export default function Home() {
           <div className="ph-split-copy">
             <span className="ph-eyebrow">TECHNOLOGY</span>
             <h2 id="ph-tech-title">Grow your business <em>online.</em></h2>
-            <p>From your website and mobile app to SEO, ads, social media and CRM, our technology team builds and runs the digital side of any business. We also build software products, including Business OS for construction and interior firms.</p>
+            <p>From your website, mobile app and Chrome extension to SEO, ads, social media and CRM, our technology team builds and runs the digital side of any business. We also build software products, including Business OS for construction and interior firms.</p>
             <div className="ph-tech-grid">
-              {[['chip', 'Websites & mobile apps'], ['layers', 'SEO & digital marketing'], ['people', 'Social media management'], ['clipboard', 'CRM & automation']].map(([icon, label]) => <span key={label}><Icon name={icon} size={18}/>{label}</span>)}
+              {[['chip', 'Websites, apps & extensions'], ['layers', 'SEO & digital marketing'], ['people', 'Social media management'], ['clipboard', 'CRM & automation']].map(([icon, label]) => <span key={label}><Icon name={icon} size={18}/>{label}</span>)}
             </div>
             <div className="ph-inline-actions"><Link className="ph-btn ph-btn-light" to="/technology"><span>Explore Products &amp; Services</span><Icon name="arrow" size={16}/></Link></div>
           </div>
@@ -495,7 +495,7 @@ export default function Home() {
             <article><span>02</span><h3>Design Your Space</h3><p><strong>Direct Interior Execution</strong> for homeowners planning interiors, finishes and space improvements.</p><button type="button" onClick={() => openRequirement('design')}>Explore interiors <span aria-hidden="true">→</span></button></article>
             <article><span>03</span><h3>Find a Property</h3><p>Buy or sell the right property, or compare independent professionals through the ProPulse marketplace.</p><Link to="/experts">Find Professionals <span aria-hidden="true">→</span></Link></article>
           </div>
-          <p className="hc-secondary-path-note">Our Construction, Interiors, Marketplace &amp; Technology Divisions serve different needs. Technology covers websites, apps, digital marketing, social media and CRM for any business; service availability and scope are confirmed for each enquiry.</p>
+          <p className="hc-secondary-path-note">Our Construction, Interiors, Marketplace &amp; Technology Divisions serve different needs. Technology covers websites, apps, Chrome extensions, digital marketing, social media and CRM for any business; service availability and scope are confirmed for each enquiry.</p>
         </div>
       </section>
 

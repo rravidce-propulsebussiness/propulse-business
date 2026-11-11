@@ -88,7 +88,7 @@ export function PublicHeader() {
   </>
 }
 
-export function PublicFooter({ phone = '', email = '', address = 'Hyderabad, India', description = 'ProPulse directly delivers construction and interiors, operates a professional lead marketplace and provides websites, apps, digital marketing, social media and CRM services.' }) {
+export function PublicFooter({ phone = '', email = '', address = 'Hyderabad, India', description = 'ProPulse directly delivers construction and interiors, operates a professional lead marketplace and provides websites, apps, Chrome extensions, digital marketing, social media and CRM services.' }) {
   const displayPhone = phone || '+91 9000360812'
   const displayEmail = email || 'info@propulsetechnologies.online'
   const phoneHref = 'tel:' + String(displayPhone).replace(/[^+\d]/g, '')
