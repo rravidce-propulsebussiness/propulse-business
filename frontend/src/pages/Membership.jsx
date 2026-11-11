@@ -126,14 +126,17 @@ export default function Membership() {
         return
       }
       try {
-        const [planData, membership, access, options] = await Promise.all([
-          apiRequest('/membership-plans'),
+        const accountData = Promise.all([
           authRequest('/payments/membership/current').catch(() => null),
           authRequest('/investments/access').catch(() => null),
           loadPaymentOptions().catch(() => ({offlineEnabled:true,onlineEnabled:false,onlineDisplayMode:'coming_soon'}))
         ])
+        const planData = await apiRequest('/membership-plans')
         if (!active) return
         setPlans(asArray(planData).filter((item) => item?.is_active !== false))
+        setLoading(false)
+        const [membership, access, options] = await accountData
+        if (!active) return
         setCurrentMembership(membershipRecord(membership))
         setInvestmentAccess(access || null)
         setPaymentOptions(options || {})
@@ -144,9 +147,10 @@ export default function Membership() {
         const latestUser = getUser()
         if (latestUser && access && typeof access.isPro === 'boolean' && latestUser.is_pro_member !== access.isPro) saveSession({ user: { ...latestUser, is_pro_member: access.isPro } })
       } catch (err) {
-        if (active) setError(err?.message || 'Unable to load membership options.')
-      } finally {
-        if (active) setLoading(false)
+        if (active) {
+          setError(err?.message || 'Unable to load membership options.')
+          setLoading(false)
+        }
       }
     }
     load()
