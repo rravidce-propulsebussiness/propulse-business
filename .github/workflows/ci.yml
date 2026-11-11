@@ -68,6 +68,8 @@ jobs:
         run: npm run test:scroll-preservation
       - name: Professional vs homeowner portal navigation regression
         run: node scripts/check-audience-navigation.mjs
+      - name: Technology services regression
+        run: npm run test:technology-services
       - name: Build
         run: npm run build
       - name: Verify festival campaigns and prerendered SEO
