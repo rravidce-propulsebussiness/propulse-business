@@ -35,7 +35,7 @@ export default function TechDashboard() {
   return (
     <div className={'ph-dash' + (seen ? ' is-in' : '')} ref={seenRef}>
       <div ref={ref}>
-      <div className="ph-dash-top"><i/><i/><i/><span>ProPulse Digital Services</span><em>Sample data</em></div>
+      <div className="ph-dash-top"><i/><i/><i/><span>ProPulse Digital Services</span></div>
       <div className="ph-dash-body">
         <nav className="ph-dash-nav" aria-label="Digital service modules (demo)">
           {MODULES.map((item, index) => <button key={item.label} type="button" aria-pressed={index === module} className={index === module ? 'is-active' : ''} onClick={() => setModule(index)}>{item.label}</button>)}

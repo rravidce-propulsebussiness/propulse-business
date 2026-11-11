@@ -70,13 +70,11 @@ const FAQS = [
   { q: 'Can I compare independent construction professionals?', a: 'Explore published professional profiles and project information on ProPulse. Check credentials, relevant work, references and written commercial terms before appointing a provider.' },
 ]
 
-// These are explicitly labelled as illustrative inspiration. They are never presented
-// as completed ProPulse work when no public project has been published.
 const INSPIRATION = [
-  { title: 'Independent House Inspiration', image: unsplash('1600585152915-d208bec867a1') },
-  { title: 'Living Room Interior Inspiration', image: unsplash('1600210492486-724fe5c67fb0') },
-  { title: 'Apartment Design Inspiration', image: unsplash('1545324418-cc1a3fa10c00') },
-  { title: 'Modular Kitchen Inspiration', image: unsplash('1556911220-bff31c812dba') },
+  { title: 'Independent House', image: unsplash('1600585152915-d208bec867a1') },
+  { title: 'Living Room Interior', image: unsplash('1600210492486-724fe5c67fb0') },
+  { title: 'Apartment Design', image: unsplash('1545324418-cc1a3fa10c00') },
+  { title: 'Modular Kitchen', image: unsplash('1556911220-bff31c812dba') },
 ]
 
 function clean(value) { return typeof value === 'string' ? value.trim() : value == null ? '' : String(value).trim() }
@@ -186,7 +184,7 @@ function HomeProjectGallery({ items, reduced }) {
   }
   const move = delta => setActiveIndex(index => (index + delta + items.length) % items.length)
   return <div className="hc-project-gallery-wrap">
-    <div className="hc-project-coverflow" role="region" aria-label="Published and design inspiration projects" aria-roledescription="carousel" tabIndex={0} onPointerDown={beginDrag} onPointerUp={finishDrag} onPointerCancel={() => { dragStart.current = null }} onKeyDown={event => {
+    <div className="hc-project-coverflow" role="region" aria-label="Projects and design ideas" aria-roledescription="carousel" tabIndex={0} onPointerDown={beginDrag} onPointerUp={finishDrag} onPointerCancel={() => { dragStart.current = null }} onKeyDown={event => {
       if (event.key === 'ArrowRight') { event.preventDefault(); move(1) }
       if (event.key === 'ArrowLeft') { event.preventDefault(); move(-1) }
     }}>
@@ -197,7 +195,7 @@ function HomeProjectGallery({ items, reduced }) {
         const position = offset === 0 ? 'center' : offset < 0 ? 'left-' + Math.abs(offset) : 'right-' + offset
         const left = 'calc(50% ' + (offset < 0 ? '-' : '+') + ' ' + Math.abs(offset * 24) + '%)'
         const content = <>
-          <span className={'hc-project-kind hc-project-kind--' + item.kind}>{item.kind === 'published' ? 'PUBLISHED PROJECT' : 'DESIGN INSPIRATION'}</span>
+          {item.kind === 'published' && <span className="hc-project-kind hc-project-kind--published">PUBLISHED PROJECT</span>}
           {item.image ? <img src={item.image} alt={item.title} loading={Math.abs(offset) < 2 ? 'eager' : 'lazy'} decoding="async"/> : <div className="hc-project-placeholder" aria-hidden="true">Project image coming soon</div>}
           <div className="hc-project-caption"><h3>{item.title}</h3><p>{item.meta}</p></div>
         </>
@@ -238,7 +236,6 @@ function JourneyVideo({ reduced }) {
   }
   return <div className="ph-video" ref={ref}>
     <video ref={videoRef} src="/media/propulse-home-reel.mp4" poster="/media/propulse-home-reel-poster.jpg" muted loop playsInline preload="none" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} aria-label="Animated walkthrough of a modern home exterior and its finished interior"/>
-    <span className="ph-video-tag"><i/>Concept walkthrough</span>
     <button type="button" className="ph-video-toggle" onClick={toggle} aria-label={playing ? 'Pause video' : 'Play video'}><Icon name={playing ? 'pause' : 'play'} size={16}/></button>
   </div>
 }
@@ -337,7 +334,7 @@ export default function Home() {
   const inspirationItems = INSPIRATION.map(project => ({
     id: project.title,
     title: project.title,
-    meta: 'Illustrative inspiration · not completed ProPulse work',
+    meta: 'Design idea',
     image: project.image,
     href: '',
     kind: 'inspiration',
@@ -512,9 +509,9 @@ export default function Home() {
       <section className="hc-section ph-section hc-projects" aria-labelledby="ph-projects-title" ref={projectsRef}>
         <div className="hc-container">
           <div className="ph-head">
-            <span className="ph-eyebrow">{hasPublishedProjects ? 'PROJECTS' : 'INSPIRATION'}</span>
-            <h2 id="ph-projects-title">{hasPublishedProjects ? (publishedProjects.length >= 5 ? 'Published Construction & Interior Projects' : 'Projects & Design Inspiration') : 'Home Design Inspiration'}</h2>
-            <p>{hasPublishedProjects ? 'Browse published ProPulse work and additional illustrative references. Inspiration slides are labelled and are not completed ProPulse projects.' : 'Illustrative design inspiration only. These images are not presented as completed ProPulse projects.'}</p>
+            <span className="ph-eyebrow">{hasPublishedProjects ? 'PROJECTS' : 'DESIGN IDEAS'}</span>
+            <h2 id="ph-projects-title">{hasPublishedProjects ? (publishedProjects.length >= 5 ? 'Published Construction & Interior Projects' : 'Projects & Design Ideas') : 'Home Design Ideas'}</h2>
+            <p>{hasPublishedProjects ? 'Browse published ProPulse work alongside design ideas for your own home.' : 'Browse design ideas for houses, interiors and kitchens, then tell us what you like.'}</p>
           </div>
           <HomeProjectGallery items={projectItems} reduced={reduced}/>
           {hasPublishedProjects && <p className="hc-projects-more"><Link to="/projects">View all published projects →</Link></p>}

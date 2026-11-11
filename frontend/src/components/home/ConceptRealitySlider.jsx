@@ -27,7 +27,7 @@ export default function ConceptRealitySlider() {
   return (
     <div className="ph-compare-wrap">
       <div className="ph-compare" ref={boxRef} style={{ '--split': split + '%' }} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={stopDrag} onPointerCancel={stopDrag}>
-        <img className="ph-compare-real" src={current.image} alt={current.label + ' interior, illustrative design reference'} loading="lazy" decoding="async"/>
+        <img className="ph-compare-real" src={current.image} alt={current.label + ' interior'} loading="lazy" decoding="async"/>
         <div className="ph-compare-concept" aria-hidden="true">
           <img src={current.image} alt="" loading="lazy" decoding="async"/>
           <span className="ph-compare-grid"/>
@@ -40,7 +40,7 @@ export default function ConceptRealitySlider() {
       <div className="ph-room-tabs" role="group" aria-label="Choose a room">
         {INTERIOR_ROOMS.map((item, index) => <button key={item.key} type="button" aria-pressed={index === room} className={index === room ? 'is-active' : ''} onClick={() => { setRoom(index); setSplit(52) }}>{item.label}</button>)}
       </div>
-      <p className="ph-room-note">{current.note} <em>Images are illustrative design references.</em></p>
+      <p className="ph-room-note">{current.note}</p>
     </div>
   )
 }
