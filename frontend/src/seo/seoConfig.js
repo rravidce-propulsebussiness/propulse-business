@@ -43,10 +43,10 @@ export const CORE_PUBLIC_SEO_ROUTES=[
   {
     path:'/technology',
     type:'services-hub',
-    title:'Digital Products & Services | Websites, SEO, Marketing & Business OS | ProPulse',
-    description:'Explore ProPulse digital services including website and software development, SEO and AI search optimization, digital marketing and lead generation, graphic design, video editing, hosting, plus Business OS for construction, interior and real-estate companies.',
+    title:'Digital Services | Websites, Apps, Marketing, Social Media & CRM | ProPulse',
+    description:'Explore ProPulse digital services including website, mobile app and custom software development, CRM and automation, SEO and AI search, digital marketing and lead generation, social media management, WhatsApp marketing, branding, video, e-commerce and hosting, plus Business OS for construction, interior and real-estate companies.',
     heading:'Products & Services for modern businesses',
-    summary:'Build your digital presence, get found in search and AI answers, generate leads, create content, stay online and run your construction or interior business with ProPulse Business OS.',
+    summary:'Build websites and apps, manage customers with CRM, get found in search and AI answers, generate leads, grow on social media, create content, stay online and run your construction or interior business with ProPulse Business OS.',
   },
   {
     path:'/quote',

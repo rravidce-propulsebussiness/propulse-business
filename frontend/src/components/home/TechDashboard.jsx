@@ -1,21 +1,21 @@
 import { useEffect, useState } from 'react'
 import { useInView, useReducedMotion } from './useHomeMotion'
 
-// Illustrative product mock-up of the ProPulse Business OS. Values are sample
-// data for the demo, not company metrics.
+// Illustrative mock-up of ProPulse digital services (websites, apps, marketing,
+// social media, CRM and Business OS). Values are sample data, not company metrics.
 const FEED = [
-  { tone: 'green', title: 'Slab casting photos shared', meta: 'Site team · Villa project' },
-  { tone: 'blue', title: 'Quotation v2 sent to client', meta: 'Quotes · Interiors' },
-  { tone: 'orange', title: 'New enquiry: G+1 house, 200 sq yd', meta: 'CRM · Lead captured' },
-  { tone: 'green', title: 'Milestone payment received', meta: 'Finance · Invoice paid' },
-  { tone: 'blue', title: 'Kitchen design approved', meta: 'Client portal' },
+  { tone: 'green', title: 'New website launched', meta: 'Web development · Client site' },
+  { tone: 'orange', title: 'Lead from Google Ads added to CRM', meta: 'Marketing · CRM' },
+  { tone: 'blue', title: 'Instagram reel scheduled', meta: 'Social media · Content calendar' },
+  { tone: 'green', title: 'Android app update released', meta: 'Mobile apps' },
+  { tone: 'blue', title: 'Keyword moved to Google page 1', meta: 'SEO & AI search' },
 ]
 const MODULES = [
-  { label: 'CRM & leads', title: 'Enquiry pipeline', bars: [['Qualified', 68], ['Site visits', 45], ['Converted', 22]] },
-  { label: 'Quotations', title: 'Quotes this month', bars: [['Drafted', 90], ['Sent', 64], ['Approved', 38]] },
-  { label: 'Projects', title: 'Villa, Gachibowli', bars: [['Structure', 82], ['Electrical', 56], ['Interiors', 24]] },
-  { label: 'Finance', title: 'Milestone billing', bars: [['Billed', 72], ['Collected', 61], ['Overdue', 8]] },
-  { label: 'Client portal', title: 'Shared with client', bars: [['Photos', 88], ['Approvals', 54], ['Documents', 70]] },
+  { label: 'Websites & apps', title: 'Builds in progress', bars: [['Design', 90], ['Development', 64], ['Launched', 40]] },
+  { label: 'SEO', title: 'Search visibility', bars: [['Pages indexed', 86], ['Top-10 keywords', 52], ['AI answers', 30]] },
+  { label: 'Digital ads', title: 'Lead campaigns', bars: [['Reach', 82], ['Clicks', 56], ['Leads', 28]] },
+  { label: 'Social media', title: 'Monthly calendar', bars: [['Planned', 92], ['Published', 70], ['Engagement', 46]] },
+  { label: 'CRM', title: 'Lead pipeline', bars: [['Contacted', 74], ['Follow-up', 48], ['Converted', 22]] },
 ]
 
 export default function TechDashboard() {
@@ -23,7 +23,7 @@ export default function TechDashboard() {
   const [ref, inView] = useInView({ threshold: 0.25 })
   const [seenRef, seen] = useInView({ once: true, threshold: 0.25 })
   const [tick, setTick] = useState(0)
-  const [module, setModule] = useState(2)
+  const [module, setModule] = useState(0)
 
   useEffect(() => {
     if (!inView || reduced) return undefined
@@ -35,9 +35,9 @@ export default function TechDashboard() {
   return (
     <div className={'ph-dash' + (seen ? ' is-in' : '')} ref={seenRef}>
       <div ref={ref}>
-      <div className="ph-dash-top"><i/><i/><i/><span>ProPulse Business OS</span><em>Sample data</em></div>
+      <div className="ph-dash-top"><i/><i/><i/><span>ProPulse Digital Services</span><em>Sample data</em></div>
       <div className="ph-dash-body">
-        <nav className="ph-dash-nav" aria-label="Software modules (demo)">
+        <nav className="ph-dash-nav" aria-label="Digital service modules (demo)">
           {MODULES.map((item, index) => <button key={item.label} type="button" aria-pressed={index === module} className={index === module ? 'is-active' : ''} onClick={() => setModule(index)}>{item.label}</button>)}
         </nav>
         <div className="ph-dash-main">

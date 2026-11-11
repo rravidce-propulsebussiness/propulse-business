@@ -2,12 +2,18 @@ import { PublicHeader, PublicFooter } from '../components/PublicSiteChrome'
 import './Technology.css'
 
 const serviceGroups = [
-  { icon: 'code', title: 'Website & Software Development', shortTitle: 'web development', description: 'Modern websites, web apps and business portals.' },
-  { icon: 'search', title: 'SEO & AI Search', shortTitle: 'SEO and AI search', description: 'Rank higher on Google and AI search.' },
-  { icon: 'megaphone', title: 'Digital Marketing & Lead Generation', shortTitle: 'digital marketing', description: 'Get more leads and grow your business.' },
-  { icon: 'design', title: 'Creative & Graphic Design', shortTitle: 'graphic design', description: 'Stunning designs for your brand.' },
-  { icon: 'video', title: 'Video & Media', shortTitle: 'video and media', description: 'Professional video editing and content creation.' },
-  { icon: 'server', title: 'Hosting & Digital Infrastructure', shortTitle: 'hosting and infrastructure', description: 'Reliable hosting, domains and cloud solutions.' },
+  { icon: 'code', title: 'Website Development', shortTitle: 'website development', description: 'Business websites, landing pages and portals that convert visitors into enquiries.' },
+  { icon: 'mobile', title: 'Mobile App Development', shortTitle: 'mobile apps', description: 'Android and iOS apps for your customers, teams and operations.' },
+  { icon: 'apps', title: 'Custom Software & Web Apps', shortTitle: 'custom software', description: 'Dashboards, booking systems and tools built around your workflow.' },
+  { icon: 'crm', title: 'CRM & Business Automation', shortTitle: 'CRM and automation', description: 'Lead tracking, follow-ups, quotations and automated workflows.' },
+  { icon: 'search', title: 'SEO & AI Search', shortTitle: 'SEO and AI search', description: 'Rank higher on Google, Maps and AI search answers.' },
+  { icon: 'megaphone', title: 'Digital Marketing & Lead Generation', shortTitle: 'digital marketing', description: 'Google, Meta and performance ads that bring qualified leads.' },
+  { icon: 'social', title: 'Social Media Management', shortTitle: 'social media management', description: 'Content calendars, posting, reels and community management.' },
+  { icon: 'whatsapp', title: 'WhatsApp Marketing & Automation', shortTitle: 'WhatsApp marketing', description: 'Broadcasts, chatbots and instant replies on WhatsApp Business.' },
+  { icon: 'design', title: 'Branding & Graphic Design', shortTitle: 'branding and design', description: 'Logos, brand identity, brochures and creatives for every channel.' },
+  { icon: 'video', title: 'Video & Media Production', shortTitle: 'video and media', description: 'Reels, ad films, walkthroughs and professional video editing.' },
+  { icon: 'cart', title: 'E-commerce Solutions', shortTitle: 'e-commerce', description: 'Online stores with catalogue, payments and order management.' },
+  { icon: 'server', title: 'Hosting & Digital Infrastructure', shortTitle: 'hosting and infrastructure', description: 'Reliable hosting, domains, business email and cloud setup.' },
 ]
 
 function Icon({ name, size = 30 }) {
@@ -24,6 +30,11 @@ function Icon({ name, size = 30 }) {
   }
 
   if (name === 'code') return <svg {...common}><rect x="7" y="8" width="34" height="28" rx="5"/><path d="m17 19-5 5 5 5M31 19l5 5-5 5M27 16l-6 16"/></svg>
+  if (name === 'mobile') return <svg {...common}><rect x="14" y="5" width="20" height="38" rx="5"/><path d="M21 10h6M22 37h4"/><path d="m19 24 4 4 7-8"/></svg>
+  if (name === 'apps') return <svg {...common}><rect x="7" y="7" width="14" height="14" rx="3"/><rect x="27" y="7" width="14" height="14" rx="3"/><rect x="7" y="27" width="14" height="14" rx="3"/><path d="M34 27v14M27 34h14"/></svg>
+  if (name === 'crm') return <svg {...common}><circle cx="17" cy="16" r="6"/><path d="M6 37c1.5-7 6-10 11-10s9.5 3 11 10"/><path d="M30 13h12M30 21h12M33 29h9"/></svg>
+  if (name === 'social') return <svg {...common}><circle cx="34" cy="12" r="5"/><circle cx="14" cy="24" r="5"/><circle cx="34" cy="36" r="5"/><path d="m18.5 21.5 11-7M18.5 26.5l11 7"/></svg>
+  if (name === 'cart') return <svg {...common}><path d="M6 9h6l4 22h22l4-15H14"/><circle cx="19" cy="39" r="2.5"/><circle cx="35" cy="39" r="2.5"/></svg>
   if (name === 'search') return <svg {...common}><circle cx="21" cy="21" r="11"/><path d="m30 30 9 9"/><path d="M16 25c2.5 2 6.5 2.2 9.2-.3"/></svg>
   if (name === 'megaphone') return <svg {...common}><path d="m8 24 24-11v22L8 24Z"/><path d="M32 20h5a5 5 0 0 1 0 10h-5"/><path d="m12 30 3 10h7l-3-13"/></svg>
   if (name === 'design') return <svg {...common}><path d="M8 34 31 11a5 5 0 0 1 7 7L15 41H8v-7Z"/><path d="m27 15 7 7M20 22l6 6"/><path d="M8 41h32"/></svg>
@@ -46,7 +57,7 @@ export default function Technology() {
           <div className="ps-hero-copy">
             <span className="ps-pill"><span className="ps-pill-icon">✦</span> Digital Solutions for a Growing Business</span>
             <h1>Build. <span>Grow.</span> Create. <strong>Manage.</strong></h1>
-            <p>Everything your business needs to build a strong digital presence, reach more customers and operate more efficiently.</p>
+            <p>Websites, mobile apps, software, CRM, SEO, digital marketing, social media management, branding and video, everything your business needs to build a strong digital presence, reach more customers and operate more efficiently.</p>
 
             <div className="ps-trust-row">
               <div><span className="ps-trust-icon">ϟ</span><span><b>Expert Team</b><small>Skilled Professionals</small></span></div>
@@ -82,8 +93,8 @@ export default function Technology() {
             <div className="ps-float ps-float-web"><Icon name="code" size={19}/><span>Website<br/>Development</span></div>
             <div className="ps-float ps-float-seo"><Icon name="search" size={19}/><span>SEO &amp;<br/>AEO</span></div>
             <div className="ps-float ps-float-marketing"><Icon name="megaphone" size={19}/><span>Digital<br/>Marketing</span></div>
-            <div className="ps-float ps-float-video"><Icon name="video" size={19}/><span>Video Editing<br/>&amp; Media</span></div>
-            <div className="ps-float ps-float-design"><Icon name="design" size={19}/><span>Graphic<br/>Design</span></div>
+            <div className="ps-float ps-float-video"><Icon name="mobile" size={19}/><span>Mobile<br/>Apps</span></div>
+            <div className="ps-float ps-float-design"><Icon name="social" size={19}/><span>Social Media<br/>Management</span></div>
             <div className="ps-arrow">↗</div>
           </div>
         </div>
@@ -94,7 +105,7 @@ export default function Technology() {
           <div className="ps-section-heading">
             <div className="ps-section-kicker"><span/> Our Services <span/></div>
             <h2>Comprehensive Digital Services</h2>
-            <p>From development to marketing, we provide end-to-end solutions for your business success.</p>
+            <p>From websites and apps to CRM, marketing and social media, we provide end-to-end digital solutions for businesses of every kind.</p>
           </div>
 
           <div className="ps-service-grid">
@@ -117,9 +128,9 @@ export default function Technology() {
         <div className="ps-product-orb ps-product-orb-two" aria-hidden="true" />
         <div className="ps-wrap ps-products-inner">
           <div className="ps-products-copy">
-            <span className="ps-product-pill">Our Powerful Products</span>
-            <h2>ProPulse Business Products</h2>
-            <p>Run your construction, interior or real estate business with our powerful Business OS and integrated tools.</p>
+            <span className="ps-product-pill">Industry Product</span>
+            <h2>ProPulse Business OS</h2>
+            <p>Alongside our digital services, we build ready-to-use software for construction, interior and real estate businesses.</p>
             <a className="ps-primary-btn" href="https://sghomesinterior.in/" target="_blank" rel="noopener noreferrer">Explore ProPulse Business OS <span>→</span></a>
           </div>
 
