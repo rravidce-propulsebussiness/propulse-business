@@ -69,26 +69,22 @@ export default function Wallet(){
   const [couponChecking,setCouponChecking]=useState(false)
   const [paymentOptions,setPaymentOptions]=useState({offlineEnabled:true,onlineEnabled:false,onlineDisplayMode:'coming_soon'})
   const [paymentMode,setPaymentMode]=useState('offline')
+  const [paymentSetupLoading,setPaymentSetupLoading]=useState(()=>new URLSearchParams(window.location.search).get('add')==='1')
 
   const load=async({silent=false}={})=>{
     if(!silent)setLoading(true)
     setError('')
     try{
-      const [w,h,t,r,options]=await Promise.all([
+      const [w,h,t]=await Promise.all([
         authRequest('/wallet?summary=1'),
         authRequest('/wallet/history?page=1&limit=50'),
-        authRequest('/wallet/topups/history?summary=1'),
-        authRequest('/payment-receiving-details'),
-        loadPaymentOptions().catch(()=>({offlineEnabled:true,onlineEnabled:false,onlineDisplayMode:'coming_soon'}))
+        authRequest('/wallet/topups/history?summary=1')
       ])
       setWallet(w)
       setHistory({combined:Array.isArray(h?.combined)?h.combined:[],leadPurchases:Array.isArray(h?.leadPurchases)?h.leadPurchases:[]})
       setHistoryPage(Number(h?.page||1))
       setHistoryHasMore(Boolean(h?.has_more))
       setPendingTopupCount(Number(t?.pending_count||0))
-      setReceiving(Array.isArray(r)?r:[])
-      setPaymentOptions(options||{})
-      setPaymentMode(current=>current||(options?.onlineEnabled&&options?.onlineDisplayMode==='live'?'online':options?.offlineEnabled!==false?'offline':''))
     }catch(e){
       if(!silent)setError(e.message||'Failed to load wallet')
     }finally{
@@ -98,7 +94,13 @@ export default function Wallet(){
 
   useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[])
   useEffect(()=>{
-    const refresh=()=>{if(document.visibilityState==='visible')load({silent:true})}
+    const refreshState={lastRun:Date.now(),inFlight:false}
+    const refresh=()=>{
+      if(document.visibilityState!=='visible'||refreshState.inFlight||Date.now()-refreshState.lastRun<5000)return
+      refreshState.lastRun=Date.now()
+      refreshState.inFlight=true
+      Promise.resolve(load({silent:true})).finally(()=>{refreshState.inFlight=false})
+    }
     const timer=setInterval(refresh,60000)
     document.addEventListener('visibilitychange',refresh)
     window.addEventListener('focus',refresh)
@@ -108,9 +110,27 @@ export default function Wallet(){
   useEffect(()=>{
     if(!showAdd)return
     let active=true
+    setPaymentSetupLoading(true)
     queueMicrotask(()=>{
       if(!active)return
       setOffersLoading(true)
+      Promise.all([
+        authRequest('/payment-receiving-details'),
+        loadPaymentOptions().catch(()=>({offlineEnabled:true,onlineEnabled:false,onlineDisplayMode:'coming_soon'}))
+      ]).then(([details,options])=>{
+        if(!active)return
+        setReceiving(Array.isArray(details)?details:[])
+        setPaymentOptions(options||{})
+        setPaymentMode(current=>{
+          const onlineAvailable=Boolean(options?.onlineEnabled&&options?.onlineDisplayMode==='live')
+          const offlineAvailable=options?.offlineEnabled!==false
+          if(current==='online'&&onlineAvailable)return current
+          if(current==='offline'&&offlineAvailable)return current
+          return onlineAvailable?'online':offlineAvailable?'offline':''
+        })
+      }).catch(()=>{
+        if(active){setReceiving([]);setPaymentOptions({offlineEnabled:true,onlineEnabled:false,onlineDisplayMode:'coming_soon'});setPaymentMode('offline')}
+      }).finally(()=>{if(active)setPaymentSetupLoading(false)})
       authRequest('/coupons/offers?purchaseType=wallet_topup')
         .then(data=>{if(active)setPublicOffers(Array.isArray(data)?data:[])})
         .catch(()=>{if(active)setPublicOffers([])})
@@ -126,6 +146,8 @@ export default function Wallet(){
   const payable=appliedCoupon&&validAmount?Math.max(0,Number(appliedCoupon.finalAmount??numericAmount-discount)||0):(validAmount?numericAmount:0)
   const walletCredit=validAmount?numericAmount+bonus:0
   const fullyDiscounted=Boolean(appliedCoupon&&validAmount&&payable===0)
+
+  const openAdd=()=>{setPaymentSetupLoading(true);setShowAdd(true)}
 
   const resetAppliedCoupon=()=>{
     setAppliedCoupon(null)
@@ -297,7 +319,7 @@ export default function Wallet(){
       {loading?<BootLoader contained message="Loading wallet" />:<>
         <section className="wallet-summary-grid">
           <article className="wallet-summary-card balance"><div className="wallet-summary-icon">▣</div><div><small>AVAILABLE BALANCE</small><strong>{money(wallet?.balance)}</strong></div></article>
-          <article className="wallet-summary-card add"><div className="wallet-summary-icon">+</div><div><small>ADD BALANCE</small><strong>Fund your wallet</strong><p>Top up your wallet to buy leads.</p><button className="wallet-add-button" onClick={()=>setShowAdd(true)}>Add Balance</button></div></article>
+          <article className="wallet-summary-card add"><div className="wallet-summary-icon">+</div><div><small>ADD BALANCE</small><strong>Fund your wallet</strong><p>Top up your wallet to buy leads.</p><button className="wallet-add-button" onClick={openAdd}>Add Balance</button></div></article>
           <article className="wallet-summary-card pending"><div className="wallet-summary-icon">◷</div><div><small>PENDING REQUESTS</small><strong>{pendingTopups.length}</strong><p>Top-up requests awaiting approval</p></div></article>
         </section>
 
@@ -310,7 +332,7 @@ export default function Wallet(){
 
         {tab==='membership'?<MembershipPayments/>:<section className="wallet-history-premium">
           <div className="wallet-history-heading"><div><span>TRANSACTION HISTORY</span><h2>{tabLabel}</h2><p>{tab==='all'?'View all your wallet and lead purchase transactions':tab==='wallet'?'View wallet credits, debits and refunds':'View every lead purchase and its payment split'}</p></div><button className="wallet-download" onClick={downloadHistory}>⇩ Download History</button></div>
-          {!visible.length?<div className="wallet-empty wallet-empty-premium"><div className="wallet-empty-icon">▤</div><strong>No transactions yet</strong><p>Your {tab==='lead'?'lead purchase':'transaction'} history will appear here once you add balance or purchase leads.</p><button onClick={()=>setShowAdd(true)}>▣ Add Balance Now</button></div>:<div className="wallet-history-list">{visible.map((x,index)=><button type="button" className="wallet-history-item" key={`${x.id}-${index}`} onClick={()=>setSelected(x)}><div className={`wallet-history-icon ${x.source==='direct'?'direct':x.type==='debit'?'debit':x.type==='refund'?'refund':'credit'}`}>{x.source==='direct'?'↗':x.type==='debit'?'−':x.type==='refund'?'↩':'+'}</div><div className="wallet-history-copy"><b>{x.displayTitle||transactionTitle(x)}</b><small>{date(x.created_at)} · {x.historyKind||x.source}</small>{x.attemptCount>1&&<small>{x.attemptCount} payment attempts · latest {statusLabel(x).toLowerCase()}</small>}{x.source==='direct'&&x.manual_reference&&<small>UTR: {x.manual_reference}</small>}{x.source==='lead'&&x.leadContext&&<small>{x.leadContext}</small>}{x.source==='lead'&&leadPaymentSplit(x,money)&&<small>{leadPaymentSplit(x,money)}</small>}</div><div className="wallet-history-amount"><strong className={amountClass(x)}>{amountPrefix(x)}{money(x.amount)}</strong>{x.source==='direct'&&<em className={`topup-pill ${statusClass(x)}`}>{statusLabel(x)}</em>}{x.balance_after!=null&&<small>Bal. {money(x.balance_after)}</small>}</div></button>)}</div>}
+          {!visible.length?<div className="wallet-empty wallet-empty-premium"><div className="wallet-empty-icon">▤</div><strong>No transactions yet</strong><p>Your {tab==='lead'?'lead purchase':'transaction'} history will appear here once you add balance or purchase leads.</p><button onClick={openAdd}>▣ Add Balance Now</button></div>:<div className="wallet-history-list">{visible.map((x,index)=><button type="button" className="wallet-history-item" key={`${x.id}-${index}`} onClick={()=>setSelected(x)}><div className={`wallet-history-icon ${x.source==='direct'?'direct':x.type==='debit'?'debit':x.type==='refund'?'refund':'credit'}`}>{x.source==='direct'?'↗':x.type==='debit'?'−':x.type==='refund'?'↩':'+'}</div><div className="wallet-history-copy"><b>{x.displayTitle||transactionTitle(x)}</b><small>{date(x.created_at)} · {x.historyKind||x.source}</small>{x.attemptCount>1&&<small>{x.attemptCount} payment attempts · latest {statusLabel(x).toLowerCase()}</small>}{x.source==='direct'&&x.manual_reference&&<small>UTR: {x.manual_reference}</small>}{x.source==='lead'&&x.leadContext&&<small>{x.leadContext}</small>}{x.source==='lead'&&leadPaymentSplit(x,money)&&<small>{leadPaymentSplit(x,money)}</small>}</div><div className="wallet-history-amount"><strong className={amountClass(x)}>{amountPrefix(x)}{money(x.amount)}</strong>{x.source==='direct'&&<em className={`topup-pill ${statusClass(x)}`}>{statusLabel(x)}</em>}{x.balance_after!=null&&<small>Bal. {money(x.balance_after)}</small>}</div></button>)}</div>}
           {historyHasMore&&<div className="wallet-history-more"><button type="button" onClick={loadMoreHistory} disabled={historyLoadingMore}>{historyLoadingMore?'Loading…':'Load older transactions'}</button></div>}
         </section>}
       </>}
@@ -336,8 +358,10 @@ export default function Wallet(){
         </div>
       </section>
 
-      {!fullyDiscounted&&<PaymentMethodSelector options={paymentOptions} value={paymentMode} onChange={setPaymentMode} disabled={submitting}/>}
-      {paymentMode==='offline'&&receiving.length>0?<div className="wallet-receiving-list">{receiving.map(x=><div className="wallet-receiving-card" key={x.id}><div className="wallet-receiving-head"><b>{x.label}</b><span>{x.method_type==='both'?'UPI + BANK':x.method_type.toUpperCase()}</span></div><div className="wallet-receiving-grid">{x.account_name&&<div><small>ACCOUNT NAME</small><strong>{x.account_name}</strong></div>}{x.upi_id&&<div><small>UPI ID</small><strong>{x.upi_id}</strong></div>}{x.bank_name&&<div><small>BANK</small><strong>{x.bank_name}</strong></div>}{x.account_number&&<div><small>ACCOUNT NUMBER</small><strong>{x.account_number}</strong></div>}{x.ifsc_code&&<div><small>IFSC</small><strong>{x.ifsc_code}</strong></div>}{x.branch_name&&<div><small>BRANCH</small><strong>{x.branch_name}</strong></div>}</div>{x.qr_code&&<img className="wallet-receiving-qr" src={x.qr_code} alt="Payment QR code"/>}{x.instructions&&<p>{x.instructions}</p>}</div>)}</div>:paymentMode==='offline'?<div className="wallet-method"><b>UPI / BANK TRANSFER</b><span>Payment details are not configured yet. Please contact Propulse support.</span></div>:null}
+      {paymentSetupLoading?<div className="wallet-method" role="status">Loading payment methods…</div>:<>
+        {!fullyDiscounted&&<PaymentMethodSelector options={paymentOptions} value={paymentMode} onChange={setPaymentMode} disabled={submitting}/>}
+        {paymentMode==='offline'&&receiving.length>0?<div className="wallet-receiving-list">{receiving.map(x=><div className="wallet-receiving-card" key={x.id}><div className="wallet-receiving-head"><b>{x.label}</b><span>{x.method_type==='both'?'UPI + BANK':x.method_type.toUpperCase()}</span></div><div className="wallet-receiving-grid">{x.account_name&&<div><small>ACCOUNT NAME</small><strong>{x.account_name}</strong></div>}{x.upi_id&&<div><small>UPI ID</small><strong>{x.upi_id}</strong></div>}{x.bank_name&&<div><small>BANK</small><strong>{x.bank_name}</strong></div>}{x.account_number&&<div><small>ACCOUNT NUMBER</small><strong>{x.account_number}</strong></div>}{x.ifsc_code&&<div><small>IFSC</small><strong>{x.ifsc_code}</strong></div>}{x.branch_name&&<div><small>BRANCH</small><strong>{x.branch_name}</strong></div>}</div>{x.qr_code&&<img className="wallet-receiving-qr" src={x.qr_code} alt="Payment QR code"/>}{x.instructions&&<p>{x.instructions}</p>}</div>)}</div>:paymentMode==='offline'?<div className="wallet-method"><b>UPI / BANK TRANSFER</b><span>Payment details are not configured yet. Please contact Propulse support.</span></div>:null}
+      </>}
 
       <form onSubmit={submit}>
         <label>Amount<input type="number" min="1" step="0.01" value={amount} onChange={e=>{setAmount(e.target.value);resetAppliedCoupon()}} placeholder="e.g. 1000"/></label>
@@ -375,7 +399,7 @@ export default function Wallet(){
             }}>Remove</button>
           </div>}
         </div>}
-        <button className="wallet-primary" disabled={submitting||(!fullyDiscounted&&!paymentMode)}>{submitting?'Processing…':fullyDiscounted?'Add to wallet for ₹0':paymentMode==='online'?`Pay ${money(payable)} Online`:'Submit balance request'} <span>→</span></button>
+        <button className="wallet-primary" disabled={paymentSetupLoading||submitting||(!fullyDiscounted&&!paymentMode)}>{paymentSetupLoading?'Loading payment options…':submitting?'Processing…':fullyDiscounted?'Add to wallet for ₹0':paymentMode==='online'?`Pay ${money(payable)} Online`:'Submit balance request'} <span>→</span></button>
       </form>
     </section></div>}
 
