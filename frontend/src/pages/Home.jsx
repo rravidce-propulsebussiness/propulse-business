@@ -198,6 +198,7 @@ function HomeProjectGallery({ items, reduced }) {
         const position = offset === 0 ? 'center' : offset < 0 ? 'left-' + Math.abs(offset) : 'right-' + offset
         const left = 'calc(50% ' + (offset < 0 ? '-' : '+') + ' ' + Math.abs(offset * 24) + '%)'
         const content = <>
+          <span className={'hc-project-kind hc-project-kind--' + item.kind}>{item.kind === 'published' ? 'PUBLISHED PROJECT' : 'DESIGN INSPIRATION'}</span>
           {item.image ? <img src={item.image} alt={item.title} loading={Math.abs(offset) < 2 ? 'eager' : 'lazy'} decoding="async"/> : <div className="hc-project-placeholder" aria-hidden="true">Project image coming soon</div>}
           <div className="hc-project-caption"><h3>{item.title}</h3><p>{item.meta}</p></div>
         </>
@@ -326,9 +327,26 @@ export default function Home() {
   const email = contactData.email || contactData.support_email || ''
   const heroImage = homepageMedia.hero_image_url || DEFAULT_HERO
   const hasPublishedProjects = publishedProjects.length > 0
-  const projectItems = hasPublishedProjects
-    ? publishedProjects.map(project => ({ id: project.project_id || project.id, title: clean(project.title) || 'Published project', meta: clean(project.location_text) || 'Published project', image: projectImage(project), href: projectPath(project) }))
-    : INSPIRATION.map(project => ({ id: project.title, title: project.title, meta: 'Illustrative reference', image: project.image, href: '' }))
+  const publishedProjectItems = publishedProjects.map(project => ({
+    id: project.project_id || project.id,
+    title: clean(project.title) || 'Published project',
+    meta: [clean(project.location_text), project.completion_year].filter(Boolean).join(' · ') || 'Published project',
+    image: projectImage(project),
+    href: projectPath(project),
+    kind: 'published',
+  }))
+  const inspirationItems = INSPIRATION.map(project => ({
+    id: project.title,
+    title: project.title,
+    meta: 'Illustrative inspiration · not completed ProPulse work',
+    image: project.image,
+    href: '',
+    kind: 'inspiration',
+  }))
+  const projectItems = [
+    ...publishedProjectItems,
+    ...inspirationItems.slice(0, Math.max(0, 5 - publishedProjectItems.length)),
+  ]
   const typedLead = typed.phrase.lead.slice(0, typed.length)
   const typedAccent = typed.phrase.accent.slice(0, Math.max(0, typed.length - typed.phrase.lead.length))
 
@@ -496,8 +514,8 @@ export default function Home() {
         <div className="hc-container">
           <div className="ph-head">
             <span className="ph-eyebrow">{hasPublishedProjects ? 'PROJECTS' : 'INSPIRATION'}</span>
-            <h2 id="ph-projects-title">{hasPublishedProjects ? 'Published Construction & Interior Projects' : 'Home Design Inspiration'}</h2>
-            <p>{hasPublishedProjects ? 'Real projects published by eligible ProPulse businesses. Open a project to see its public details and video when available.' : 'Illustrative design inspiration only. These images are not presented as completed ProPulse projects.'}</p>
+            <h2 id="ph-projects-title">{hasPublishedProjects ? (publishedProjects.length >= 5 ? 'Published Construction & Interior Projects' : 'Projects & Design Inspiration') : 'Home Design Inspiration'}</h2>
+            <p>{hasPublishedProjects ? 'Browse published ProPulse work and additional illustrative references. Inspiration slides are labelled and are not completed ProPulse projects.' : 'Illustrative design inspiration only. These images are not presented as completed ProPulse projects.'}</p>
           </div>
           <HomeProjectGallery items={projectItems} reduced={reduced}/>
           {hasPublishedProjects && <p className="hc-projects-more"><Link to="/projects">View all published projects →</Link></p>}
