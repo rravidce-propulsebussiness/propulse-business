@@ -8,6 +8,21 @@ import './FestiveLanding.css'
 const prettyDate=value=>new Intl.DateTimeFormat('en-IN',{day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Kolkata'}).format(new Date(value+'T12:00:00+05:30'))
 const constructionImage='https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=84'
 const interiorsImage='https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=84'
+const scenePhoto=id=>'https://images.unsplash.com/'+id+'?auto=format&fit=crop&w=720&q=76'
+const constructionSceneImages=[
+  {src:scenePhoto('photo-1600585154340-be6161a56a0c'),label:'ARCHITECTURAL FORM'},
+  {src:scenePhoto('photo-1600047509807-ba8f99d2cdde'),label:'CONTEMPORARY HOME'},
+  {src:scenePhoto('photo-1600585154526-990dced4db0d'),label:'EXTERIOR DETAIL'},
+  {src:scenePhoto('photo-1600607687939-ce8a6c25118c'),label:'SPACES TO LIVE IN'},
+  {src:scenePhoto('photo-1511818966892-d7d671e672a2'),label:'FINISHED WITH CARE'}
+]
+const interiorsSceneImages=[
+  {src:scenePhoto('photo-1600607687920-4e2a09cf159d'),label:'LIVING ROOM'},
+  {src:scenePhoto('photo-1600210492486-724fe5c67fb0'),label:'LIGHT & MATERIAL'},
+  {src:scenePhoto('photo-1600566753190-17f0baa2a6c3'),label:'KITCHEN DETAILS'},
+  {src:scenePhoto('photo-1600566753086-00f18fb6b3ea'),label:'WARM FINISHES'},
+  {src:scenePhoto('photo-1616486338812-3dadae4b4ace'),label:'A ROOM TO LIVE IN'}
+]
 
 function OccasionArtwork({event,service='construction'}){
   const ref=useRef(null)
@@ -152,12 +167,37 @@ function OccasionSceneCanvas({service}){
   return <canvas ref={canvasRef} className="fc-scene-canvas" aria-hidden="true"/>
 }
 
+function OccasionSceneGallery({service}){
+  const images=service.key==='construction'?constructionSceneImages:interiorsSceneImages
+  const [activeIndex,setActiveIndex]=useState(0)
+  useEffect(()=>{
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return undefined
+    const timer=window.setInterval(()=>setActiveIndex(index=>(index+1)%images.length),4600)
+    return()=>window.clearInterval(timer)
+  },[images.length])
+  return <div className={'fc-scene-gallery fc-scene-gallery--'+service.key} aria-hidden="true">
+    {images.map((image,index)=>{
+      let offset=index-activeIndex
+      if(offset>Math.floor(images.length/2))offset-=images.length
+      if(offset<-Math.floor(images.length/2))offset+=images.length
+      const positionClass=offset===0?'center':offset<0?'left-'+Math.abs(offset):'right-'+offset
+      const shift=offset*25
+      const horizontal='calc(50% '+(shift<0?'-':'+')+' '+Math.abs(shift)+'%)'
+      return <figure key={image.src} className={'fc-scene-slide fc-scene-slide--'+positionClass} style={{left:horizontal}}>
+        <img src={image.src} alt="" loading={Math.abs(offset)<2?'eager':'lazy'} fetchPriority={offset===0?'high':'low'} decoding="async"/>
+        <span className="fc-scene-slide-shade"/>
+        <figcaption><span>{String(index+1).padStart(2,'0')}</span>{image.label}</figcaption>
+      </figure>
+    })}
+  </div>
+}
+
 function OccasionHeroScene({event,service}){
   const construction=service.key==='construction'
   const sceneLabel=construction?'Animated isometric 3D home construction scene':'Animated dimensional 3D living room interior scene'
   return <div className={'fc-hero-scene fc-hero-scene--'+service.key} role="img" aria-label={sceneLabel}>
     <div className="fc-scene-halo fc-scene-halo--back" aria-hidden="true"/><div className="fc-scene-halo fc-scene-halo--front" aria-hidden="true"/>
-    <div className="fc-scene-photo" aria-hidden="true"><img src={construction?constructionImage:interiorsImage} alt="" fetchPriority="high" decoding="async"/><span className="fc-scene-photo-shade"/><span className="fc-scene-photo-label">{construction?'SITE · HYDERABAD':'INTERIORS · HYDERABAD'}</span></div>
+    <OccasionSceneGallery service={service}/>
     <div className="fc-scene-art" aria-hidden="true">
       {construction?<svg viewBox="0 0 600 500" fill="none">
         <defs>
