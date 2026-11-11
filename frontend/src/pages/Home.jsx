@@ -162,6 +162,61 @@ function PillarCard({ item, index }) {
   </article>
 }
 
+function HomeProjectGallery({ items, reduced }) {
+  const [activeIndex, setActiveIndex] = useState(0)
+  const dragStart = useRef(null)
+  useEffect(() => {
+    if (reduced || items.length < 2) return undefined
+    const timer = window.setInterval(() => setActiveIndex(index => (index + 1) % items.length), 5200)
+    return () => window.clearInterval(timer)
+  }, [items.length, reduced])
+  const beginDrag = event => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return
+    dragStart.current = { x: event.clientX, y: event.clientY }
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+  }
+  const finishDrag = event => {
+    const start = dragStart.current
+    dragStart.current = null
+    if (!start) return
+    const deltaX = event.clientX - start.x
+    const deltaY = event.clientY - start.y
+    if (Math.abs(deltaX) > 38 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+      setActiveIndex(index => (index + (deltaX < 0 ? 1 : -1) + items.length) % items.length)
+    }
+  }
+  const move = delta => setActiveIndex(index => (index + delta + items.length) % items.length)
+  return <div className="hc-project-gallery-wrap">
+    <div className="hc-project-coverflow" role="region" aria-label="Published and design inspiration projects" aria-roledescription="carousel" tabIndex={0} onPointerDown={beginDrag} onPointerUp={finishDrag} onPointerCancel={() => { dragStart.current = null }} onKeyDown={event => {
+      if (event.key === 'ArrowRight') { event.preventDefault(); move(1) }
+      if (event.key === 'ArrowLeft') { event.preventDefault(); move(-1) }
+    }}>
+      {items.map((item, index) => {
+        let offset = index - activeIndex
+        if (offset > Math.floor(items.length / 2)) offset -= items.length
+        if (offset < -Math.floor(items.length / 2)) offset += items.length
+        const position = offset === 0 ? 'center' : offset < 0 ? 'left-' + Math.abs(offset) : 'right-' + offset
+        const left = 'calc(50% ' + (offset < 0 ? '-' : '+') + ' ' + Math.abs(offset * 24) + '%)'
+        const content = <>
+          {item.image ? <img src={item.image} alt={item.title} loading={Math.abs(offset) < 2 ? 'eager' : 'lazy'} decoding="async"/> : <div className="hc-project-placeholder" aria-hidden="true">Project image coming soon</div>}
+          <div className="hc-project-caption"><h3>{item.title}</h3><p>{item.meta}</p></div>
+        </>
+        return <article key={item.id} className={'hc-project-slide hc-project-slide--' + position} style={{ left }}>
+          {item.href ? <Link to={item.href} aria-label={'View ' + item.title}>{content}</Link> : content}
+        </article>
+      })}
+    </div>
+    <div className="hc-project-gallery-controls" role="group" aria-label="Project gallery controls">
+      <button type="button" onClick={() => move(-1)} aria-label="Previous project">←</button>
+      <div className="hc-project-gallery-dots" role="group" aria-label="Choose a project">
+        {items.map((item, index) => <button key={item.id} type="button" className={index === activeIndex ? 'is-active' : ''} onClick={() => setActiveIndex(index)} aria-label={'Show project ' + (index + 1) + ': ' + item.title} aria-pressed={index === activeIndex}/>)}
+      </div>
+      <span aria-live="polite">{String(activeIndex + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}</span>
+      <button type="button" onClick={() => move(1)} aria-label="Next project">→</button>
+    </div>
+  </div>
+}
+
 function JourneyVideo({ reduced }) {
   const [ref, inView] = useInView({ threshold: 0.35 })
   const videoRef = useRef(null)
@@ -212,11 +267,11 @@ export default function Home() {
     if (!section) return undefined
     let active = true
     const loadProjects = () => {
-      publicRequest('/experts/projects?page=1&pageSize=4')
+      publicRequest('/experts/projects?page=1&pageSize=5')
         .then(value => {
           if (!active) return
           const rows = Array.isArray(value) ? value : Array.isArray(value?.data) ? value.data : []
-          setPublishedProjects(rows.slice(0, 4))
+          setPublishedProjects(rows.slice(0, 5))
         })
         .catch(() => {})
     }
@@ -271,6 +326,9 @@ export default function Home() {
   const email = contactData.email || contactData.support_email || ''
   const heroImage = homepageMedia.hero_image_url || DEFAULT_HERO
   const hasPublishedProjects = publishedProjects.length > 0
+  const projectItems = hasPublishedProjects
+    ? publishedProjects.map(project => ({ id: project.project_id || project.id, title: clean(project.title) || 'Published project', meta: clean(project.location_text) || 'Published project', image: projectImage(project), href: projectPath(project) }))
+    : INSPIRATION.map(project => ({ id: project.title, title: project.title, meta: 'Illustrative reference', image: project.image, href: '' }))
   const typedLead = typed.phrase.lead.slice(0, typed.length)
   const typedAccent = typed.phrase.accent.slice(0, Math.max(0, typed.length - typed.phrase.lead.length))
 
@@ -441,12 +499,7 @@ export default function Home() {
             <h2 id="ph-projects-title">{hasPublishedProjects ? 'Published Construction & Interior Projects' : 'Home Design Inspiration'}</h2>
             <p>{hasPublishedProjects ? 'Real projects published by eligible ProPulse businesses. Open a project to see its public details and video when available.' : 'Illustrative design inspiration only. These images are not presented as completed ProPulse projects.'}</p>
           </div>
-          <div className="hc-project-grid">
-            {hasPublishedProjects ? publishedProjects.map(project => {
-              const image = projectImage(project)
-              return <article key={project.project_id || project.id}><Link to={projectPath(project)} aria-label={'View ' + clean(project.title)}>{image ? <img src={image} alt={clean(project.title)} loading="lazy" decoding="async"/> : <div className="hc-project-placeholder" aria-hidden="true">Project video</div>}<div><h3>{clean(project.title) || 'Published project'}</h3><p>{clean(project.location_text) || 'Published project'}</p></div></Link></article>
-            }) : INSPIRATION.map(project => <article key={project.title}><img src={project.image} alt={project.title} loading="lazy" decoding="async"/><div><h3>{project.title}</h3><p>Illustrative reference</p></div></article>)}
-          </div>
+          <HomeProjectGallery items={projectItems} reduced={reduced}/>
           {hasPublishedProjects && <p className="hc-projects-more"><Link to="/projects">View all published projects →</Link></p>}
         </div>
       </section>
