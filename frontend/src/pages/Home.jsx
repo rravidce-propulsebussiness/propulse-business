@@ -7,7 +7,6 @@ import HeroBlueprintAnimation from '../components/HeroBlueprintAnimation'
 import ScrollBuildStory from '../components/home/ScrollBuildStory'
 import ConceptRealitySlider from '../components/home/ConceptRealitySlider'
 import TechDashboard from '../components/home/TechDashboard'
-import { TechScene } from '../components/home/HomeScenes'
 import { useInView, useReducedMotion } from '../components/home/useHomeMotion'
 
 const HOME_TRUST_HEADLINES = [
@@ -34,9 +33,9 @@ const PILLARS = [
   },
   {
     key: 'tech', tone: 'technology', eyebrow: 'Digital Services & Software', title: 'Technology',
-    text: 'Websites, mobile apps, CRM, SEO, digital marketing and social media management for businesses of every kind, plus our Business OS.',
-    points: ['Websites, mobile apps and custom software', 'SEO, digital marketing and social media', 'CRM, automation and Business OS'],
-    cta: { to: '/technology', label: 'Explore services' },
+    text: 'Websites, mobile apps, CRM, SEO, digital marketing and social media management for businesses of every kind.',
+    points: ['Websites, mobile apps and custom software', 'SEO, digital marketing and social media', 'CRM, WhatsApp and business automation'],
+    image: unsplash('1460925895917-afdab827c52f', 1000), cta: { to: '/technology', label: 'Explore services' },
   },
 ]
 
@@ -146,7 +145,7 @@ function PillarCard({ item, index }) {
   const tilt = useTilt()
   return <article className={'ph-pillar ph-pillar-' + item.tone} {...tilt}>
     <div className="ph-pillar-media">
-      {item.image ? <img src={item.image} alt={item.title + ' by ProPulse'} loading="lazy" decoding="async"/> : <TechScene stage={4}/>}
+      {item.image ? <img src={item.image} alt={item.title + ' by ProPulse'} loading="lazy" decoding="async"/> : null}
       <span className="ph-pillar-num">0{index + 1}</span>
     </div>
     <div className="ph-pillar-body">
@@ -368,7 +367,7 @@ export default function Home() {
             <span className="ph-kicker"><i aria-hidden="true"/>HOUSE CONSTRUCTION COMPANY IN HYDERABAD</span>
             <h1>Build Your <em>Dream Home</em> in <strong>Hyderabad.</strong></h1>
             <p className="ph-typewriter">
-              <span className="sr-only">Home construction, premium interiors and smart project technology in Hyderabad, with a clear scope and transparent estimates.</span>
+              <span className="sr-only">Home construction, premium interiors, and websites, apps and digital marketing from Hyderabad, with a clear scope and transparent estimates.</span>
               <span aria-hidden="true"><span className="ph-typed-lead">{typedLead}</span><span className="ph-typed-accent">{typedAccent}</span><span className="ph-caret"/></span>
             </p>
             <p className="ph-hero-intro">Planning an independent house or villa? Share your plot size, built-up area, floors, budget and preferred specifications. ProPulse helps you take the next step with a structured construction brief. Interiors and independent professionals are available too.</p>
@@ -396,7 +395,7 @@ export default function Home() {
           <div className="ph-head">
             <span className="ph-eyebrow">ONE PARTNER · THREE DIVISIONS</span>
             <h2>Construction, interiors and technology, <em>working together.</em></h2>
-            <p>Build the house, design the rooms and track every milestone, without juggling separate vendors.</p>
+            <p>Build the house, design the rooms and grow your business online, without juggling separate vendors.</p>
           </div>
           <div className="ph-pillars">{PILLARS.map((item, index) => <PillarCard key={item.key} item={item} index={index}/>)}</div>
           <div className="ph-market">
@@ -441,9 +440,9 @@ export default function Home() {
           <div className="ph-split-copy">
             <span className="ph-eyebrow">TECHNOLOGY</span>
             <h2 id="ph-tech-title">Grow your business <em>online.</em></h2>
-            <p>From your website and mobile app to SEO, ads, social media and CRM, our technology team builds and runs the digital side of any business. Construction and interior firms can also run projects on the ProPulse Business OS.</p>
+            <p>From your website and mobile app to SEO, ads, social media and CRM, our technology team builds and runs the digital side of any business. We also build software products, including Business OS for construction and interior firms.</p>
             <div className="ph-tech-grid">
-              {[['chip', 'Websites & mobile apps'], ['layers', 'SEO & digital marketing'], ['people', 'Social media management'], ['clipboard', 'CRM & Business OS']].map(([icon, label]) => <span key={label}><Icon name={icon} size={18}/>{label}</span>)}
+              {[['chip', 'Websites & mobile apps'], ['layers', 'SEO & digital marketing'], ['people', 'Social media management'], ['clipboard', 'CRM & automation']].map(([icon, label]) => <span key={label}><Icon name={icon} size={18}/>{label}</span>)}
             </div>
             <div className="ph-inline-actions"><Link className="ph-btn ph-btn-light" to="/technology"><span>Explore Products &amp; Services</span><Icon name="arrow" size={16}/></Link></div>
           </div>
