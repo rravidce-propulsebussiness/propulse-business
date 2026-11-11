@@ -10,17 +10,17 @@ const photo = id => `https://images.unsplash.com/photo-${id}?auto=format&fit=cro
 const PILLARS = [
   {
     key: 'construction', label: 'Construction', caption: 'Plot to handover', steps: HOUSE_STAGES, badge: 'Handover',
-    image: photo('1613490493576-7fde63acd811'), alt: 'Modern two-storey villa (illustrative)',
+    image: photo('1613490493576-7fde63acd811'), alt: 'Modern two-storey villa',
     pins: [[13, 70, 'Plot measured'], [30, 58, 'Footings cast'], [52, 22, 'Columns & slabs'], [70, 46, 'Brickwork & services'], [84, 30, 'Keys ready']],
   },
   {
     key: 'interiors', label: 'Interiors', caption: 'Shell to styled home', steps: ROOM_STAGES, badge: 'Styled',
-    image: photo('1600210492486-724fe5c67fb0'), alt: 'Styled living room (illustrative)',
+    image: photo('1600210492486-724fe5c67fb0'), alt: 'Styled living room',
     pins: [[12, 30, 'Site measured'], [30, 62, 'Layout planned'], [50, 28, 'Custom joinery'], [68, 56, 'Lights & finishes'], [84, 26, 'Ready to live in']],
   },
   {
     key: 'technology', label: 'Technology', caption: 'Websites, apps & marketing', steps: TECH_STAGES, badge: 'Growing',
-    image: photo('1460925895917-afdab827c52f'), alt: 'Laptop showing a business analytics dashboard (illustrative)',
+    image: photo('1460925895917-afdab827c52f'), alt: 'Laptop showing a business analytics dashboard',
     pins: [[12, 26, 'Brand & UI design'], [30, 52, 'Website & mobile app'], [50, 24, 'SEO & AI search'], [68, 56, 'Ads & social media'], [84, 30, 'Leads in your CRM']],
   },
 ]
@@ -61,7 +61,6 @@ function PhotoScene({ item, stage, active }) {
         </span>
       ))}
       <span className={'ph-photo-badge' + (stage === 4 ? ' is-on' : '')} aria-hidden="true"><svg viewBox="0 0 16 16" width="12" height="12"><path d="m3.5 8.5 3 3 6-7" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>{item.badge}</span>
-      <span className="ph-photo-tag" aria-hidden="true">{stage < 4 ? 'Blueprint → Reality' : 'Illustrative image'}</span>
     </div>
   )
 }
