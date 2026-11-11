@@ -397,3 +397,17 @@ body:has(.fc-page) .support-chat-panel{bottom:58px}
 @media(max-width:720px){.fc-hero-scene{height:340px;max-width:520px;margin:0 auto;perspective:1000px}.fc-scene-art{width:108%}.fc-scene-halo{width:100%;height:58%}.fc-scene-caption{bottom:6px;max-width:76%;padding:10px 13px}.fc-scene-caption b{font-size:13px}.fc-scene-chip--top{top:7%;right:0;padding:10px 12px}.fc-scene-chip--bottom{bottom:17%;left:0;padding:10px 12px}.fc-scene-chip b{font-size:18px}.fc-scene-chip span{font-size:7px}}
 @media(max-width:420px){.fc-hero-scene{height:295px}.fc-scene-art{width:116%}.fc-scene-chip{padding:9px 10px}.fc-scene-chip--top{right:-2%}.fc-scene-chip--bottom{left:-2%}.fc-scene-chip b{font-size:16px}.fc-scene-chip span{font-size:6px}.fc-scene-caption{max-width:79%;padding:8px 10px}}
 @media(prefers-reduced-motion:reduce){.fc-hero-scene,.fc-scene-art,.fc-scene-halo,.fc-scene-chip,.fc-scene-house,.fc-scene-tree,.fc-room-sofa,.fc-room-window,.fc-scene-spark{animation:none!important;transition:none!important}.fc-hero-scene{transform:none}}
+
+
+/* Hybrid editorial image, hand-drawn SVG and lightweight canvas glints. */
+.fc-scene-photo{position:absolute;z-index:2;top:13%;right:4%;width:39%;height:34%;overflow:hidden;border:1px solid #fff9;border-radius:22px;background:#33252b;box-shadow:0 22px 45px #09071370,inset 0 1px #fff;transform:translate3d(0,0,62px) rotateY(-9deg) rotateZ(2deg);transform-style:preserve-3d}
+.fc-scene-photo img{display:block;width:100%;height:100%;object-fit:cover;filter:saturate(.82) contrast(1.04);animation:fc-scene-photo-drift 19s ease-in-out infinite alternate}
+.fc-scene-photo-shade{position:absolute;inset:0;background:linear-gradient(155deg,#fff3,transparent 30%,transparent 60%,#21172880),linear-gradient(0deg,#160e2499,transparent 54%);pointer-events:none}
+.fc-scene-photo-label{position:absolute;left:11px;bottom:10px;color:#fff;font:800 8px/1 Inter,system-ui,sans-serif;letter-spacing:.16em;text-shadow:0 2px 8px #120b20}
+.fc-scene-canvas{position:absolute;inset:0;z-index:3;width:100%;height:100%;pointer-events:none;mix-blend-mode:screen}
+.fc-scene-glass{z-index:4}
+.fc-scene-caption,.fc-scene-chip{z-index:5}
+@keyframes fc-scene-photo-drift{from{transform:scale(1.04) translate3d(-1%,0,0)}to{transform:scale(1.13) translate3d(2%,-1%,0)}}
+@media(max-width:720px){.fc-scene-photo{top:8%;right:3%;width:40%;height:30%;border-radius:16px}.fc-scene-photo-label{font-size:7px;left:8px;bottom:8px}.fc-scene-canvas{opacity:.82}}
+@media(max-width:420px){.fc-scene-photo{top:7%;right:2%;width:41%;height:28%;border-radius:13px}.fc-scene-photo-label{font-size:6px;letter-spacing:.12em}}
+@media(prefers-reduced-motion:reduce){.fc-scene-photo img{animation:none!important}.fc-scene-canvas{opacity:.7}}
