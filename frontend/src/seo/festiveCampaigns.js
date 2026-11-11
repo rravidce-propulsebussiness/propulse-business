@@ -144,9 +144,27 @@ const MEMORIAL_IDS=new Set([
   'partition-horrors-remembrance-2027','jallianwala-bagh-remembrance-2027',
   'shaheed-diwas-march-2027','national-martyrs-day-2027','police-commemoration-day-2027',
 ])
-export const FESTIVAL_EVENTS = EVENTS.map(([slug,name,date,icon,theme,inspiration,priority,tentative=false])=>({
+// Keep the public campaign calendar focused on the regional and national dates
+// customers are most likely to plan around. Only the major festive campaigns
+// may temporarily replace the main homepage; remembrance days never do.
+const FEATURED_EVENT_IDS=new Set([
+  'diwali-2026','christmas-2026','new-year-2027','makar-sankranti-2027','republic-day-2027',
+  'maha-shivaratri-2027','eid-al-fitr-2027','holi-2027','ugadi-2027','sri-rama-navami-2027',
+  'akshaya-tritiya-2027','eid-al-adha-2027','telangana-formation-day-2027','bonalu-2027',
+  'independence-day-2027','ganesh-chaturthi-2027','bathukamma-2027','dussehra-2027','diwali-2027',
+  'mumbai-attacks-remembrance-2026','pulwama-black-day-2027','shaheed-diwas-march-2027',
+  'jallianwala-bagh-remembrance-2027','kargil-vijay-diwas-2027',
+])
+const HOMEPAGE_EVENT_IDS=new Set([
+  'diwali-2026','christmas-2026','makar-sankranti-2027','republic-day-2027','maha-shivaratri-2027',
+  'eid-al-fitr-2027','holi-2027','ugadi-2027','sri-rama-navami-2027','akshaya-tritiya-2027',
+  'eid-al-adha-2027','telangana-formation-day-2027','bonalu-2027','independence-day-2027',
+  'ganesh-chaturthi-2027','bathukamma-2027','dussehra-2027','diwali-2027',
+])
+export const FESTIVAL_EVENTS = EVENTS.filter(([slug])=>FEATURED_EVENT_IDS.has(slug)).map(([slug,name,date,icon,theme,inspiration,priority,tentative=false])=>({
   slug,name,date,start:dateOffset(date,-2),end:date,icon,theme,inspiration,priority,tentative,
   kind:MEMORIAL_IDS.has(slug)?'remembrance':'occasion',
+  homepage:HOMEPAGE_EVENT_IDS.has(slug),
 })).sort((a,b)=>a.date.localeCompare(b.date)||b.priority-a.priority)
 
 
@@ -207,7 +225,7 @@ export function campaignStatus(event,date=indiaToday()){
   return 'active'
 }
 export function activeFestivals(date=indiaToday()){
-  return FESTIVAL_EVENTS.filter(event=>campaignStatus(event,date)==='active')
+  return FESTIVAL_EVENTS.filter(event=>event.homepage&&campaignStatus(event,date)==='active')
     .sort((a,b)=>b.priority-a.priority||a.date.localeCompare(b.date))
 }
 export function activeFestival(date=indiaToday()){
