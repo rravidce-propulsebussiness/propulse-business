@@ -624,3 +624,6 @@
 .ph-home .hc-project-kind{position:absolute;z-index:3;top:16px;left:16px;display:inline-flex;align-items:center;min-height:27px;padding:0 11px;border:1px solid #ffffff80;border-radius:999px;background:#0c2031b8;color:#fff;font:800 9px/1 var(--heading);letter-spacing:.1em;backdrop-filter:blur(12px)}
 .ph-home .hc-project-kind--inspiration{background:#fff5e8e8;color:#624332;border-color:#fff}
 .ph-home .hc-project-caption{z-index:2}
+
+.ph-home .hc-project-caption h3{color:#fff!important}
+.ph-home .hc-project-caption p{color:#e4edf2!important}
