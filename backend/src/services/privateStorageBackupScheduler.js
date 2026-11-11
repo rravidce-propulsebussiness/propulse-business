@@ -8,7 +8,10 @@ const releaseIdentity=require('./releaseIdentityService');
 const DEFAULT_INTERVAL_MS=24*60*60*1000;
 const DEFAULT_RECENT_HOURS=20;
 const DEFAULT_STARTUP_DELAY_MS=3*60*1000;
-const MAX_BACKUP_OBJECT_BYTES=64*1024*1024;
+const MAX_BACKUP_OBJECT_BYTES=5*1024**4;
+const MAX_SINGLE_COPY_BYTES=5_000_000_000;
+const COPY_PART_BYTES=1024**3;
+const MAX_BUFFER_COPY_BYTES=64*1024*1024;
 const LOCK_KEY=78134921652731;
 let timer=null;
 let startupRetryTimer=null;
@@ -115,6 +118,39 @@ async function referencedObjects(){
   return rows.map(row=>s3.parseReference(row.ref)).filter(Boolean);
 }
 function sha256(buffer){return crypto.createHash('sha256').update(buffer).digest('hex')}
+async function copyObjectToBackup(sourceKey,backupKey,sourceHead,sourceCfg,backupCfg){
+  const sourceConfig=sourceConfigOverride(sourceCfg);
+  const sourceEndpoint=new URL(sourceConfig.endpoint).origin;
+  const backupEndpoint=new URL(backupCfg.endpoint).origin;
+  if(sourceEndpoint!==backupEndpoint){
+    if(sourceHead.size>MAX_BUFFER_COPY_BYTES)throw Object.assign(new Error('Large private objects require the backup bucket to use the same R2 endpoint'),{code:'PRIVATE_STORAGE_COPY_ENDPOINT_MISMATCH'});
+    const source=await s3.getObjectBuffer(sourceKey,{maxBytes:MAX_BUFFER_COPY_BYTES});
+    if(source.buffer.length!==sourceHead.size)throw Object.assign(new Error('Primary R2 object size changed during backup: '+sourceKey),{code:'PRIVATE_STORAGE_SOURCE_CHANGED'});
+    await s3.putObject(backupKey,source.buffer,{contentType:source.contentType||sourceHead.contentType||'application/octet-stream',configOverride:backupCfg});
+    return{mode:'buffer',sourceBuffer:source.buffer};
+  }
+
+  const contentType=sourceHead.contentType||'application/octet-stream';
+  if(sourceHead.size<=MAX_SINGLE_COPY_BYTES){
+    await s3.copyObject(sourceKey,backupKey,{sourceConfigOverride:sourceConfig,configOverride:backupCfg,contentType,sourceEtag:sourceHead.etag});
+    return{mode:'server'};
+  }
+
+  const uploadId=await s3.startMultipartUpload(backupKey,contentType,{configOverride:backupCfg,headers:sourceHead.etag?{'x-amz-meta-source-etag':sourceHead.etag}:{}});
+  try{
+    const parts=[];
+    for(let start=0,partNumber=1;start<sourceHead.size;start+=COPY_PART_BYTES,partNumber+=1){
+      const end=Math.min(sourceHead.size-1,start+COPY_PART_BYTES-1);
+      const etag=await s3.uploadPartCopy(sourceKey,backupKey,uploadId,partNumber,start,end,{sourceConfigOverride:sourceConfig,configOverride:backupCfg,sourceEtag:sourceHead.etag});
+      parts.push({partNumber,etag});
+    }
+    await s3.completeMultipartUpload(backupKey,uploadId,parts,{configOverride:backupCfg});
+    return{mode:'server_multipart'};
+  }catch(error){
+    await s3.abortMultipartUpload(backupKey,uploadId,{configOverride:backupCfg}).catch(()=>{});
+    throw error;
+  }
+}
 async function latestVerifiedAgeHours(){
   const row=(await pool.query(
     `SELECT EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP-completed_at))/3600.0 AS age_hours
@@ -180,18 +216,20 @@ async function runPrivateStorageBackupCore({force=false}={}){
       if(sourceHead.size<=0||sourceHead.size>MAX_BACKUP_OBJECT_BYTES)throw Object.assign(new Error('Primary R2 object has an invalid backup size: '+key),{code:'PRIVATE_STORAGE_SOURCE_SIZE_INVALID'});
       const backupKey=targetKey(`snapshots/${day}/${key}`);
       let backupHead=await s3.headObject(backupKey,{configOverride:backupCfg});
-      if(backupHead&&backupHead.size===sourceHead.size&&backupHead.etag&&sourceHead.etag&&backupHead.etag===sourceHead.etag){
+      if(backupHead&&backupHead.size===sourceHead.size&&sourceHead.etag&&(backupHead.sourceEtag===sourceHead.etag||backupHead.etag===sourceHead.etag)){
         reused+=1;
       }else{
         if(backupHead)throw Object.assign(new Error('Existing backup object does not match primary R2 object: '+key),{code:'PRIVATE_STORAGE_BACKUP_MISMATCH'});
-        const source=await s3.getObjectBuffer(key,{maxBytes:MAX_BACKUP_OBJECT_BYTES});
-        if(source.buffer.length!==sourceHead.size)throw Object.assign(new Error('Primary R2 object size changed during backup: '+key),{code:'PRIVATE_STORAGE_SOURCE_CHANGED'});
-        await s3.putObject(backupKey,source.buffer,{contentType:source.contentType||sourceHead.contentType||'application/octet-stream',configOverride:backupCfg});
+        if(!Number.isSafeInteger(sourceHead.size)||sourceHead.size<=0||sourceHead.size>MAX_BACKUP_OBJECT_BYTES)throw Object.assign(new Error('Primary R2 object has an invalid backup size: '+key),{code:'PRIVATE_STORAGE_SOURCE_SIZE_INVALID'});
+        const copiedResult=await copyObjectToBackup(key,backupKey,sourceHead,sourceCfg,backupCfg);
         backupHead=await s3.headObject(backupKey,{configOverride:backupCfg});
         if(!backupHead||backupHead.size!==sourceHead.size)throw Object.assign(new Error('Backup object size verification failed: '+key),{code:'PRIVATE_STORAGE_BACKUP_VERIFY_FAILED'});
-        if(sourceHead.etag&&backupHead.etag&&sourceHead.etag!==backupHead.etag){
-          const restored=await s3.getObjectBuffer(backupKey,{maxBytes:MAX_BACKUP_OBJECT_BYTES,configOverride:backupCfg});
-          if(restored.buffer.length!==source.buffer.length||sha256(restored.buffer)!==sha256(source.buffer)){
+        if(sourceHead.etag&&copiedResult.mode!=='buffer'&&backupHead.sourceEtag!==sourceHead.etag&&backupHead.etag!==sourceHead.etag){
+          throw Object.assign(new Error('Backup object source identity verification failed: '+key),{code:'PRIVATE_STORAGE_BACKUP_VERIFY_FAILED'});
+        }
+        if(sourceHead.etag&&backupHead.etag&&sourceHead.etag!==backupHead.etag&&copiedResult.mode==='buffer'){
+          const restored=await s3.getObjectBuffer(backupKey,{maxBytes:MAX_BUFFER_COPY_BYTES,configOverride:backupCfg});
+          if(restored.buffer.length!==copiedResult.sourceBuffer.length||sha256(restored.buffer)!==sha256(copiedResult.sourceBuffer)){
             throw Object.assign(new Error('Backup object checksum verification failed: '+key),{code:'PRIVATE_STORAGE_BACKUP_VERIFY_FAILED'});
           }
         }
