@@ -237,7 +237,7 @@ async function listEvents(query={}){
   const currentEnvironment=releaseIdentity.deploymentEnvironment().slice(0,30);
   const requestedEnvironment=String(query.environment||'').trim().slice(0,30);
   const environment=requestedEnvironment==='all'?'all':requestedEnvironment||currentEnvironment;
-  if(environment!=='all'){params.push(environment);where.push(`environment=${params.length}`)}
+  if(environment!=='all'){params.push(environment);where.push(`environment=$${params.length}`)}
   const status=String(query.status||'open').toLowerCase();
   if(status==='open')where.push('resolved_at IS NULL');
   else if(status==='resolved')where.push('resolved_at IS NOT NULL');
@@ -258,7 +258,7 @@ async function listEvents(query={}){
   )).rows;
   const summaryParams=[];
   const summaryWhere=[];
-  if(environment!=='all'){summaryParams.push(environment);summaryWhere.push(`environment=${summaryParams.length}`)}
+  if(environment!=='all'){summaryParams.push(environment);summaryWhere.push(`environment=$${summaryParams.length}`)}
   const summaryClause=summaryWhere.length?'WHERE '+summaryWhere.join(' AND '):'';
   const summary=(await pool.query(
     `SELECT
