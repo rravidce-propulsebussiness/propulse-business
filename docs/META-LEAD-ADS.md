@@ -18,8 +18,8 @@ one account at a time.
 
 | Setting | Value |
 |---|---|
-| `META_APP_ID` | Same Meta app ID Business OS uses |
-| `META_APP_SECRET` | Same Meta app secret Business OS uses |
+| `META_APP_ID` | Propulse Business app ID (`1468410082144751`) |
+| `META_APP_SECRET` | Propulse Business app secret (keep private; separate from Business OS) |
 | `META_LEADS_WEBHOOK_VERIFY_TOKEN` | Any random text, 16+ characters |
 | `META_TOKEN_ENCRYPTION_KEY` | 32 random bytes, base64 — `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
 
@@ -33,7 +33,7 @@ If the earlier integration's names are already set on Hostinger (`META_LEADS_APP
 Keep `META_TOKEN_ENCRYPTION_KEY` safe and unchanged — changing it means
 everyone must reconnect Meta.
 
-## 2. Meta app (developers.facebook.com → the Business OS app)
+## 2. Meta app (developers.facebook.com → Propulse Business)
 
 1. **Facebook Login for Business** → Settings → Valid OAuth Redirect URIs:
    `https://propulsetechnologies.online/api/meta-leads/oauth/callback`
@@ -47,7 +47,7 @@ everyone must reconnect Meta.
    `business_management`. Until approved, only people with a role on the
    app (admins/developers/testers) can connect; partners can connect after.
 4. In Meta **Leads Access Manager** (Business Settings → Integrations →
-   Leads Access), make sure the ProPulse app is allowed for each Page.
+   Leads Access), allow the Propulse Business app for each Page.
 
 ## 3. Connecting a form
 
