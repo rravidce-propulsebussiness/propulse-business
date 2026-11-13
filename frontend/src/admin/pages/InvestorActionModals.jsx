@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
+import { formatRupees } from '../../utils/formatRupees'
 
-const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+const money = value => formatRupees(value || 0)
 
 export default function InvestorActionModals({ spendOpen, transferOpen, availableForAds, transferable, payoutAccount, onCloseSpend, onCloseTransfer, onSpend, onTransfer }) {
   const [spendAmount, setSpendAmount] = useState('')

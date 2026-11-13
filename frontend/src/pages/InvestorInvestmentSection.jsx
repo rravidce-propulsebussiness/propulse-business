@@ -4,8 +4,9 @@ import { Link } from 'react-router-dom'
 import { authRequest } from '../utils/auth'
 import '../components/InvestorPayoutTransfers.css'
 import './InvestorInvestmentSection.css'
+import { formatRupees } from '../utils/formatRupees'
 
-const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+const money = value => formatRupees(value || 0)
 const date = value => value ? new Date(value).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—'
 const rows = value => Array.isArray(value) ? value : Array.isArray(value?.leads) ? value.leads : Array.isArray(value?.data) ? value.data : Array.isArray(value?.rows) ? value.rows : []
 const hasValue = value => value !== null && value !== undefined && String(value).trim() !== '' && String(value).trim() !== '—'

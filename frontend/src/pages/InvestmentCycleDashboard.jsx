@@ -5,8 +5,9 @@ import { authRequest } from '../utils/auth'
 import PaymentMethodSelector from '../components/PaymentMethodSelector'
 import { loadPaymentOptions, runRazorpayCheckout } from '../utils/paymentGateway'
 import './InvestmentWithGeneratedFunds.css'
+import { formatRupees } from '../utils/formatRupees'
 
-const money = v => `₹${Number(v || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+const money = v => formatRupees(v || 0)
 const dt = v => v ? new Date(v).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
 const st = v => String(v || '').toUpperCase()
 const OPEN = new Set(['ACTIVE', 'EXIT_REQUESTED', 'WAITING_FOR_LEADS'])

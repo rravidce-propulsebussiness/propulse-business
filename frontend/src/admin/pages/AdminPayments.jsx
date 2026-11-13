@@ -11,6 +11,7 @@ const dateOnly = formatAdminDate
 
 export default function AdminPayments() {
   const [approvalType, setApprovalType] = useState('membership')
+  const [approvalTypePicked, setApprovalTypePicked] = useState(false)
   const [payments, setPayments] = useState([])
   const [topups, setTopups] = useState([])
   const [status, setStatus] = useState('all')
@@ -157,6 +158,13 @@ export default function AdminPayments() {
     { key: 'membership', label: 'Membership', note: 'GROW / SCALE payments', count: membershipPending },
     { key: 'investment', label: 'Investment', note: 'Investment payments', count: investmentPending },
   ]
+
+  // Open the queue that actually has work waiting, until the admin picks a tab themselves.
+  const firstPendingQueue = queues.find(queue => queue.count > 0)?.key
+  const activeQueueCount = queues.find(queue => queue.key === approvalType)?.count || 0
+  useEffect(() => {
+    if (!approvalTypePicked && !activeQueueCount && firstPendingQueue && firstPendingQueue !== approvalType) setApprovalType(firstPendingQueue)
+  }, [approvalTypePicked, activeQueueCount, firstPendingQueue, approvalType])
 
   const activeItems = approvalType === 'wallet'
     ? topups
@@ -351,7 +359,7 @@ export default function AdminPayments() {
       {error && <div className="payment-error">{error}</div>}
 
       <div className="premium-approval-switcher" role="tablist" aria-label="Payment approval queue">
-        {queues.map(queue => <button type="button" className={approvalType === queue.key ? 'active' : ''} onClick={() => { setApprovalType(queue.key); setExpandedApproval({}); setPage(1) }} key={queue.key}>
+        {queues.map(queue => <button type="button" className={approvalType === queue.key ? 'active' : ''} onClick={() => { setApprovalType(queue.key); setApprovalTypePicked(true); setExpandedApproval({}); setPage(1) }} key={queue.key}>
           <div><strong>{queue.label}</strong><small>{queue.note}</small></div>
           <b>{queue.count}</b>
         </button>)}

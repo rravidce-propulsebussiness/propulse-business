@@ -2,7 +2,7 @@ const pool = require('../config/database');
 const walletCouponService = require('./walletCouponService');
 const privateProofStorage = require('./privateProofStorageService');
 const topupSubmission=require('./walletTopupSubmissionService');
-const {assertTopupProof}=require('../utils/paymentProofValidation');
+const {assertTopupProof,MAX_PROOF_BYTES:MAX_TOPUP_PROOF_BYTES}=require('../utils/paymentProofValidation');
 const notificationService = require('./notificationService');
 const paymentAvailability = require('./paymentAvailabilityService');
 

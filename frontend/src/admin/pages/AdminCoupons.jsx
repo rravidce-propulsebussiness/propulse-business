@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { apiRequest } from '../../utils/api'
 import { clearSession, getToken } from '../../utils/auth'
 import './AdminCoupons.css'
+import { formatRupees } from '../../utils/formatRupees'
 
 const PURCHASE_TYPES=[
   {key:'membership',label:'Membership',note:'GROW & SCALE checkout'},
@@ -38,7 +39,7 @@ const emptyCoupon=()=>({
   membership_plan_ids:[],
   is_active:true
 })
-const money=value=>`₹${Number(value||0).toLocaleString('en-IN',{maximumFractionDigits:2})}`
+const money=value=>formatRupees(value||0)
 const pad=value=>String(value).padStart(2,'0')
 const toLocalInput=value=>{
   if(!value)return''

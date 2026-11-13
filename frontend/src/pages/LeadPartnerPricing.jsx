@@ -5,8 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import { authRequest, clearSession, getUser } from '../utils/auth';
 import './LeadPartnerHome.css';
 import './LeadPartnerPricing.css';
+import { formatRupees } from '../utils/formatRupees'
 
-const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+const money = value => formatRupees(value || 0);
 const cap = value => String(value || '—').replace(/_/g, ' ').replace(/\b\w/g, x => x.toUpperCase());
 const SHARE_TIERS = [1, 2, 3];
 const DEFAULT_SHARE_PERCENT = { 1: 100, 2: 60, 3: 45 };

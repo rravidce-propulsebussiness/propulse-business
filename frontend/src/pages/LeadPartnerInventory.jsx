@@ -8,6 +8,7 @@ import './LeadPartnerHome.css';
 import './LeadPartnerInventory.css';
 import SheetImportPreview from '../components/SheetImportPreview';
 import MetaLeadAdsPanel from '../components/MetaLeadAdsPanel';
+import { formatRupees } from '../utils/formatRupees'
 
 const statusLabel = value => String(value || '').replace(/_/g, ' ').replace(/\b\w/g, x => x.toUpperCase());
 const formatDate = value => value ? new Date(value).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Never';
@@ -71,7 +72,7 @@ export default function LeadPartnerInventory() {
   const rows=data.data||[];
 
   function signOut(){clearSession();navigate('/login',{replace:true});}
-  const activeConnections=connections.filter(x=>x.status==='active'); const money=v=>Number(v||0)>0?`₹${Number(v).toLocaleString('en-IN',{maximumFractionDigits:2})}`:'—'; const getPrice=lead=>lead.partner_base_pricing?.shares?.[0]?.price??lead.pricing?.shares?.[0]?.price??lead.price; const getBuyerCount=lead=>lead.buyer_count??lead.buyers_count??0; const buyerAccess=lead=>lead.access_strategy==='permanent_single'?'Single Buyer':lead.access_strategy==='auto_release'?`Auto · ${lead.effective_buyer_capacity||1} buyers`:`Shared · ${lead.effective_buyer_capacity||lead.buyer_capacity||3} buyers`; function exportCsv(){const h=['ID','Name','Phone','Service','Location','Price','Buyers','Buyer Access','Status','Added On'];downloadCsv('propulse-lead-inventory.csv',[h,...rows.map(l=>[l.id,l.customer_name||'',l.customer_phone||'',l.service_name||l.industry_name||'',l.city_name||'',getPrice(l)||'',getBuyerCount(l),buyerAccess(l),l.status||'',l.created_at||''])]);}
+  const activeConnections=connections.filter(x=>x.status==='active'); const money=v=>Number(v||0)>0?formatRupees(v):'—'; const getPrice=lead=>lead.partner_base_pricing?.shares?.[0]?.price??lead.pricing?.shares?.[0]?.price??lead.price; const getBuyerCount=lead=>lead.buyer_count??lead.buyers_count??0; const buyerAccess=lead=>lead.access_strategy==='permanent_single'?'Single Buyer':lead.access_strategy==='auto_release'?`Auto · ${lead.effective_buyer_capacity||1} buyers`:`Shared · ${lead.effective_buyer_capacity||lead.buyer_capacity||3} buyers`; function exportCsv(){const h=['ID','Name','Phone','Service','Location','Price','Buyers','Buyer Access','Status','Added On'];downloadCsv('propulse-lead-inventory.csv',[h,...rows.map(l=>[l.id,l.customer_name||'',l.customer_phone||'',l.service_name||l.industry_name||'',l.city_name||'',getPrice(l)||'',getBuyerCount(l),buyerAccess(l),l.status||'',l.created_at||''])]);}
   return <div className="partner-shell">
     <LeadPartnerSidebar user={user} onSignOut={signOut} />
     <main className="partner-main">

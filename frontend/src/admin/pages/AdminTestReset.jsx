@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { authRequest } from '../../utils/auth'
 import './AdminTestReset.css'
+import { formatRupees } from '../../utils/formatRupees'
 
-const money=value=>`₹${Number(value||0).toLocaleString('en-IN',{maximumFractionDigits:2})}`
+const money=value=>formatRupees(value||0)
 
 export default function AdminTestReset(){
   const [preview,setPreview]=useState(null)
