@@ -2,6 +2,7 @@ import BootLoader from '../../components/BootLoader'
 import { useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../../utils/api'
 import './AdminMembershipPlansConfig.css'
+import { formatRupees } from '../../utils/formatRupees'
 
 const DEFAULT_CYCLES=[
   {key:'monthly',label:'Monthly',months:1},
@@ -13,7 +14,7 @@ const LEAD_TYPES=[
   {key:'premium',label:'Premium'},
   {key:'exclusive',label:'Exclusive'}
 ]
-const money=value=>`₹${Number(value||0).toLocaleString('en-IN',{maximumFractionDigits:2})}`
+const money=value=>formatRupees(value||0)
 const slug=value=>String(value||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')
 const verifyLabel=value=>value==='verified'?'Verified only':value==='unverified'?'Non-verified only':'Verified + Non-verified'
 const toLocalInput=value=>{

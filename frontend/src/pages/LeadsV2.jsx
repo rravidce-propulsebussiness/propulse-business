@@ -11,10 +11,11 @@ import { loadPaymentOptions, runRazorpayCheckout } from '../utils/paymentGateway
 import { paymentProofError } from '../components/paymentProofValidation'
 import './LeadsV2.css'
 import './LeadsV2Payment.css'
+import { formatRupees } from '../utils/formatRupees'
 
 const money = (v) => {
   if (v === null || v === undefined || v === '' || !Number.isFinite(Number(v))) return ''
-  return `₹${Number(v).toLocaleString('en-IN')}`
+  return formatRupees(v)
 }
 const promotionBenefitText = (offer) => {
   const type = String(offer?.benefit_type || offer?.reward?.type || 'discount')
@@ -36,7 +37,19 @@ const promotionBenefitText = (offer) => {
 const hasValue = (v) => v !== null && v !== undefined && String(v).trim() !== '' && String(v).trim() !== '—'
 const norm = (v) => String(v ?? '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '')
 const label = (k) => String(k).replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\b\w/g, x => x.toUpperCase())
-const readableBudget = (value) => String(value || '').replace(/^(\d+)_(\d+)_(lakh|crore)$/i, (_, lower, upper, unit) => `₹${lower}–${upper} ${unit.toLowerCase()}`)
+const readableBudgetRange = (value) => String(value || '').replace(/^(\d+)_(\d+)_(lakh|crore)$/i, (_, lower, upper, unit) => `₹${lower}–${upper} ${unit.toLowerCase()}`)
+// Plain numeric budgets from sheets ("800000") read as ₹8 Lakh / ₹3 Cr instead of raw digits.
+const shortIndianAmount = (amount) => {
+  const trim = n => Number(n.toFixed(2)).toString()
+  if (amount >= 1e7) return `₹${trim(amount / 1e7)} Cr`
+  if (amount >= 1e5) return `₹${trim(amount / 1e5)} Lakh`
+  return formatRupees(amount)
+}
+const readableBudget = (value) => {
+  const text = String(value || '').trim()
+  if (/^\d[\d,]*(\.\d+)?$/.test(text)) return shortIndianAmount(Number(text.replace(/,/g, '')))
+  return readableBudgetRange(text)
+}
 const isContactKey = (k) => /(phone|mobile|whatsapp|contact|email|mail|tel|telephone|alternate|website|url|social|instagram|facebook|linkedin|address|pincode|zipcode|postal)/i.test(String(k || ''))
 const isPricingField = (k) => /^(normal|pro)\d+(share|shares|buyer|buyers)(price)?$/.test(norm(k)) || ['pricing', 'leadpricing', 'leadprice', 'price'].includes(norm(k))
 const isCanonicalField = (k) => {
@@ -224,7 +237,7 @@ export default function LeadsV2() {
   const memberBillingMonths = Number(currentMembership?.billing_months || currentMembership?.plan?.billing_months || currentMembership?.billing_months_count || currentMembership?.plan?.billing_months_count || currentMembership?.duration_months || currentMembership?.plan?.duration_months || currentMembership?.plan?.billing_months || 0)
   const memberBillingPeriod = String(currentMembership?.billing_period || currentMembership?.plan?.billing_period || '').trim()
   const memberPeriodLabel = memberBillingMonths === 12 || /year/i.test(memberBillingPeriod) ? 'Year' : memberBillingMonths === 6 || /half/i.test(memberBillingPeriod) ? 'Half-Year' : memberBillingMonths === 3 || /quarter/i.test(memberBillingPeriod) ? 'Quarter' : 'Month'
-  const memberSavingsLabel = activeMembershipGroup === 'scale' ? `Scale (${memberPeriodLabel})` : activeMembershipGroup === 'growth' ? `Growth (${memberPeriodLabel})` : 'Growth / Scale'
+  const memberSavingsLabel = activeMembershipGroup === 'scale' ? `SCALE (${memberPeriodLabel})` : activeMembershipGroup === 'growth' ? `GROW (${memberPeriodLabel})` : 'GROW / SCALE'
   const buyModalClaimed = Boolean(buyModal?.access?.claimed || buyModal?.access?.purchased)
   const currentPricingRow = buyModal?.pricing?.shares?.[0] || null
   const currentBuyerAccess = Number(currentPricingRow?.shares || buyModal?.effective_buyer_capacity || 0) || null
@@ -427,7 +440,7 @@ export default function LeadsV2() {
           const workNumbers = getCustom(lead.custom_fields, ['Work Numbers', 'Work Number', 'Number of Works', 'Number of Work', 'No. of Works', 'No of Works', 'Works', 'Quantity', 'Project Quantity'], ['worknumber', 'worknumbers', 'numberofworks', 'noofworks', 'quantity', 'projectquantity'])
           const workPhone = getCustom(lead.custom_fields, ['Work Phone Number', 'Work Phone', 'Office Phone Number', 'Office Phone', 'Business Phone', 'Business Phone Number', 'Alternate Work Phone', 'Alternate Phone'], ['workphone', 'officephone', 'businessphone'])
           const budgetRange = getCustom(lead.custom_fields, ['Budget', 'Budget Range', 'Project Budget', 'Project Budget Range', 'Budget From To', 'Expected Budget'], ['budget'])
-          const budgetDisplay = budgetRange ? readableBudget(budgetRange) : (hasValue(lead.budget) ? (Number.isFinite(Number(lead.budget)) ? money(lead.budget) : readableBudget(lead.budget)) : '')
+          const budgetDisplay = budgetRange ? readableBudget(budgetRange) : (hasValue(lead.budget) ? readableBudget(lead.budget) : '')
           const buyerCapacity = Math.max(1, Math.min(3, Number(lead.effective_buyer_capacity || lead.buyer_capacity) || 3))
           const purchasedBuyers = Math.min(buyerCapacity, Math.max(0, Number(lead.purchased_buyer_count) || 0))
           const source = String(lead.source || '').toLowerCase()
@@ -447,7 +460,7 @@ export default function LeadsV2() {
               {hasValue(lead.service_name) && <div><span>⌁</span><b>{lead.service_name}{hasValue(lead.subservice_name) ? `, ${lead.subservice_name}` : ''}</b></div>}
               {hasValue(location) && <div><span>⌖</span><b>{location}</b></div>}
               {hasValue(property) && <div><span>⌂</span><b>{property}</b></div>}
-              {hasValue(budgetDisplay) && <div><span>₹</span><b>{budgetDisplay}</b></div>}
+              {hasValue(budgetDisplay) && <div><span>₹</span><b>{String(budgetDisplay).replace(/^₹\s?/, '')}</b></div>}
               <div><span>◉</span><b>Purchased {purchasedBuyers}/{buyerCapacity}</b></div>
             </div>
             <div className="lv2-card-price">
@@ -472,7 +485,7 @@ export default function LeadsV2() {
       <button type="button" className="lv2-modal-close" onClick={() => { setBuyModal(null); setPaymentProof(null) }}>×</button>
       <div className="lv2-buy-layout">
         <section className="lv2-buy-main">
-          <div className="lv2-modal-lead"><div className="lv2-avatar">{String(buyModal.customer_name || buyModal.service_name || buyModal.industry_name || 'L').trim().charAt(0).toUpperCase()}</div><div className="lv2-modal-lead-copy"><strong>{buyModal.customer_name || buyModal.service_name || buyModal.industry_name || 'Business opportunity'}</strong><small>⌖ {[buyModal.city_name, buyModal.state_name].filter(hasValue).join(' · ') || 'India'}</small>{hasValue(buyModal.service_name) && <small>⌂ {buyModal.service_name}</small>}</div><span className="lv2-lead-id-pill">Lead #${buyModal.id}</span></div>
+          <div className="lv2-modal-lead"><div className="lv2-avatar">{String(buyModal.customer_name || buyModal.service_name || buyModal.industry_name || 'L').trim().charAt(0).toUpperCase()}</div><div className="lv2-modal-lead-copy"><strong>{buyModal.customer_name || buyModal.service_name || buyModal.industry_name || 'Business opportunity'}</strong><small>⌖ {[buyModal.city_name, buyModal.state_name].filter(hasValue).join(' · ') || 'India'}</small>{hasValue(buyModal.service_name) && <small>⌂ {buyModal.service_name}</small>}</div><span className="lv2-lead-id-pill">Lead #{buyModal.id}</span></div>
           <div className="lv2-coupon-box"><div className="lv2-coupon-title"><span>⌑</span><div><strong>PROMOTION / COUPON</strong><small>Optional · discounts or rewards are confirmed before payment</small></div></div>{publicLeadOffers.length>0&&<div className="lv2-public-offers">{publicLeadOffers.map(offer=><button type="button" key={offer.id} className={String(couponCode).trim().toUpperCase()===String(offer.code).toUpperCase()?'selected':''} onClick={()=>{setCouponCode(offer.code);queueMicrotask(()=>validateCouponForCurrentAccess(offer.code))}}><span>{String(offer.benefit_type)==='lead_bonus'?'◈+':String(offer.benefit_type)==='wallet_bonus'?'₹+':'%'}</span><div><strong>{promotionBenefitText(offer)}</strong><small>{offer.description||`Use code ${offer.code}`}{Number(offer.min_order_amount)>0?` · Min ${money(offer.min_order_amount)}`:''}</small></div><b>{offer.meets_minimum===false?'Min not met':'Use offer'}</b></button>)}</div>}<div className="lv2-coupon-row"><input value={couponCode} onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponStatus(''); setCouponError(''); setCouponDiscount(0); setCouponFinalAmount(null); setCouponReward(null) }} onKeyDown={e => { if (e.key === 'Enter') applyCoupon() }} maxLength={50} autoComplete="off" placeholder="Enter promotion code"/><button type="button" onClick={applyCoupon}>Apply</button></div>{couponStatus && <small className="lv2-coupon-status">{couponStatus}</small>}{couponError && <small className="lv2-coupon-error">{couponError}</small>}</div>
           <div className="lv2-wallet-choice"><label htmlFor="lv2-wallet-toggle"><span className="lv2-wallet-icon">▣</span><span><b>Use wallet balance</b><small>Available balance: {walletBalance > 0 ? money(walletBalance) : '₹0'}. You can pay the final amount directly.</small></span></label><strong>{walletBalance > 0 ? money(walletBalance) : '₹0'}</strong><input id="lv2-wallet-toggle" type="checkbox" checked={useWallet} onChange={e => setUseWallet(e.target.checked)} /></div>
           <div className="lv2-share-section">
@@ -481,10 +494,10 @@ export default function LeadsV2() {
               <span>Lead price: <b>{currentBuyerAccess ? money((buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(currentBuyerAccess))?.[isPro ? 'pro' : 'normal']) : '—'}</b></span>
             </div>
             <div className="lv2-pack-grid">
-              {(buyModal.pricing?.shares || []).map(p => { const n = Number(p.shares); const normal = Number(p.normal); const pro = Number(p.pro); const price = isPro ? pro : normal; const saving = Number.isFinite(normal) && Number.isFinite(pro) && normal > pro ? normal - pro : 0; const key = buyModal.id + '-' + n + '-' + (isPro ? 'pro' : 'normal') + '-' + (useWallet ? 'wallet' : 'direct'); const growthSavings = saving; const savingText = growthSavings > 0 ? (isGrowthScaleMember ? `Saved ${money(growthSavings)} with ${memberSavingsLabel}` : `Save with Growth ${money(growthSavings)}`) : ''; return <div key={key} className="lv2-pack-card selected"><span className="lv2-pack-check">✓</span><strong>{n}</strong><small>{n === 1 ? 'Single Buyer' : `Max ${n} Buyers`}</small><b>{money(price)}</b>{savingText && <em className={isGrowthScaleMember ? 'lv2-pack-saving-member' : 'lv2-pack-saving-growth'}>{savingText}</em>}{buying === key && <i>Processing…</i>}</div> })}
+              {(buyModal.pricing?.shares || []).map(p => { const n = Number(p.shares); const normal = Number(p.normal); const pro = Number(p.pro); const price = isPro ? pro : normal; const saving = Number.isFinite(normal) && Number.isFinite(pro) && normal > pro ? normal - pro : 0; const key = buyModal.id + '-' + n + '-' + (isPro ? 'pro' : 'normal') + '-' + (useWallet ? 'wallet' : 'direct'); const growthSavings = saving; const savingText = growthSavings > 0 ? (isGrowthScaleMember ? `Saved ${money(growthSavings)} with ${memberSavingsLabel}` : `Save ${money(growthSavings)} with GROW`) : ''; return <div key={key} className="lv2-pack-card selected"><span className="lv2-pack-check">✓</span><strong>{n}</strong><small>{n === 1 ? 'Single Buyer' : `Max ${n} Buyers`}</small><b>{money(price)}</b>{savingText && <em className={isGrowthScaleMember ? 'lv2-pack-saving-member' : 'lv2-pack-saving-growth'}>{savingText}</em>}{buying === key && <i>Processing…</i>}</div> })}
             </div>
           </div>
-          {!isGrowthScaleMember && <div className="lv2-pro-hint"><strong>Growth / Scale members save more</strong><span>Growth and Scale members get the configured member lead pricing.</span><Link to="/membership" onClick={() => setBuyModal(null)} className="lv2-view-plans-link">View Plans →</Link></div>}
+          {!isGrowthScaleMember && <div className="lv2-pro-hint"><strong>GROW / SCALE members save more</strong><span>Growth and Scale members get the configured member lead pricing.</span><Link to="/membership" onClick={() => setBuyModal(null)} className="lv2-view-plans-link">View Plans →</Link></div>}
           {buyModalClaimed && <div className="lv2-modal-owned">This lead is already purchased and available in your account.</div>}
         </section>
         <aside className={`lv2-purchase-summary${payment && paymentLead && paymentLead.id === buyModal.id ? " payment-ready" : ""}`}>
@@ -495,7 +508,7 @@ export default function LeadsV2() {
             const walletDeduction = useWallet ? Math.min(Math.max(0, Number(walletBalance || 0)), discountedTotal) : 0
             const amountToPay = Math.max(0, discountedTotal - walletDeduction)
             return <>
-              <div className="lv2-summary-head"><div><strong>Order Summary</strong><small>Lead #${buyModal.id}</small></div><span>🛒</span></div>
+              <div className="lv2-summary-head"><div><strong>Order Summary</strong><small>Lead #{buyModal.id}</small></div><span>🛒</span></div>
               <div className="lv2-summary-body">
                 <div className="lv2-summary-row"><span>Buyer Access</span><strong>{currentBuyerAccess ? (currentBuyerAccess === 1 ? 'Single Buyer' : `Max ${currentBuyerAccess} Buyers`) : 'Current stage'}</strong></div>
                 <div className="lv2-summary-row"><span>Lead Price</span><strong>{currentBuyerAccess ? money(selectedPrice) : '—'}</strong></div>

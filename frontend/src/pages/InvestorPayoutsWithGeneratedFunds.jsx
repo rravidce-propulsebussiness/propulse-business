@@ -4,7 +4,8 @@ import {authRequest} from '../utils/auth'
 import InvestorInvestmentSection from './InvestorInvestmentSection'
 import './InvestorGeneratedFunds.css'
 import './InvestorPayoutTransferModal.css'
-const money=v=>`₹${Number(v||0).toLocaleString('en-IN',{maximumFractionDigits:2})}`
+import { formatRupees } from '../utils/formatRupees'
+const money=v=>formatRupees(v||0)
 const dt=v=>v?new Date(v).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—'
 export default function InvestorPayoutsWithGeneratedFunds(){
  const [funds,setFunds]=useState(null),[cycle,setCycle]=useState(null),[account,setAccount]=useState(null),[loading,setLoading]=useState(true),[open,setOpen]=useState(false),[amount,setAmount]=useState(''),[notes,setNotes]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('')

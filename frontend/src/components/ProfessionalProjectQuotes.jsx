@@ -3,6 +3,7 @@ import {authRequest} from '../utils/auth'
 import {formatPublishedPackagePrice} from '../utils/packagePricing'
 import ProfessionalRequestUnlock from './ProfessionalRequestUnlock'
 import './ProfessionalProjectQuotes.css'
+import { formatRupees } from '../utils/formatRupees'
 
 const initialDraft=item=>({
   packageName:item.quoted_package||item.preferred_package||'',
@@ -87,7 +88,7 @@ export default function ProfessionalProjectQuotes({plans=[]}){
         const canAccept=accessStatus==='locked'||accessStatus==='pending_payment'
         const acceptLabel=accessStatus==='pending_payment'?'Check pending payment'
           :item.access?.eligibleForFree?'Accept Free · Pro Member'
-          :item.access?.price?`Accept & Pay ₹${Number(item.access.price).toLocaleString('en-IN')}`
+          :item.access?.price?`Accept & Pay ${formatRupees(item.access.price)}`
           :'Review enquiry'
         return <article className="pqq-card" key={item.id}>
           <div className="pqq-card-top"><div><span>QUOTATION #{item.id}</span><h3>{item.project_title}</h3></div><span className={'pqq-status status-'+item.status}>{String(item.status||'new').replaceAll('_',' ')}</span></div>

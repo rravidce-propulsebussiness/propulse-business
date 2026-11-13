@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest, authRequest, saveSession } from '../utils/auth'
 import GoogleButton from '../components/GoogleButton'
@@ -36,6 +36,10 @@ function Signup() {
   const [proofDocuments, setProofDocuments] = useState([])
   const [googleCredential, setGoogleCredential] = useState('')
   const [documentUploadStatus, setDocumentUploadStatus] = useState('idle')
+  // Signup creates the account before proofs upload. If an upload then fails, a retry
+  // must not call /auth/signup again ("account already exists"); it resumes the uploads.
+  const accountCreatedRef = useRef(false)
+  const uploadedProofsRef = useRef(new Set())
 
   useEffect(() => {
     async function loadMasterData() {
@@ -148,10 +152,15 @@ function Signup() {
     try {
       setLoading(true)
       if (!proofDocuments.length) return setError('Upload at least one company proof document.')
-      const result = await authRequest('/auth/signup', { method: 'POST', body: JSON.stringify({ ...form, confirm: undefined, password: googleCredential ? undefined : form.password, role: accountType, services: cleanServices, locations: cleanLocations, googleCredential: googleCredential || undefined }) })
-      saveSession(result)
+      if (!accountCreatedRef.current) {
+        const result = await authRequest('/auth/signup', { method: 'POST', body: JSON.stringify({ ...form, confirm: undefined, password: googleCredential ? undefined : form.password, role: accountType, services: cleanServices, locations: cleanLocations, googleCredential: googleCredential || undefined }) })
+        saveSession(result)
+        accountCreatedRef.current = true
+      }
       setDocumentUploadStatus('uploading')
       for (const file of proofDocuments) {
+        const proofKey = `${file.name}:${file.size}:${file.lastModified}`
+        if (uploadedProofsRef.current.has(proofKey)) continue
         const documentPayload = await new Promise((resolve, reject) => {
         const reader = new FileReader()
         reader.onload = () => resolve({ name: file.name, type: file.type, size: file.size, data: reader.result })
@@ -159,11 +168,15 @@ function Signup() {
           reader.readAsDataURL(file)
         })
         await authRequest('/auth/company-proofs', { method: 'POST', body: JSON.stringify({ documents: [documentPayload] }) })
+        uploadedProofsRef.current.add(proofKey)
       }
       setDocumentUploadStatus('uploaded')
       await new Promise((resolve) => setTimeout(resolve, 700))
       navigate('/dashboard', { replace: true })
-    } catch (err) { setError(err.message) } finally { setLoading(false) }
+    } catch (err) {
+      if (accountCreatedRef.current) setDocumentUploadStatus('failed')
+      setError(accountCreatedRef.current ? `Your account was created, but a document did not upload: ${String(err.message || 'Upload failed').replace(/\.?\s*$/, '.')} Press Submit to retry the upload.` : err.message)
+    } finally { setLoading(false) }
   }
 
 
@@ -278,7 +291,7 @@ function Signup() {
                       <strong>Choose documents</strong><small>PDF, JPG or PNG · up to 5 MB each · multiple files allowed</small>
                     </label>
                     {proofDocuments.length > 0 && <div className="signup-document-list">
-                      <div className="signup-document-summary"><strong>{proofDocuments.length} document{proofDocuments.length > 1 ? 's' : ''} selected</strong><span>{documentUploadStatus === 'uploaded' ? '✓ Uploaded successfully' : documentUploadStatus === 'uploading' ? 'Uploading…' : 'Ready to upload when you create the account'}</span></div>
+                      <div className="signup-document-summary"><strong>{proofDocuments.length} document{proofDocuments.length > 1 ? 's' : ''} selected</strong><span>{documentUploadStatus === 'uploaded' ? '✓ Uploaded successfully' : documentUploadStatus === 'uploading' ? 'Uploading…' : documentUploadStatus === 'failed' ? 'Upload failed. Press Submit to retry.' : 'Ready to upload when you create the account'}</span></div>
                       {proofDocuments.map((file, index) => <div className="signup-document-item" key={file.name + ":" + file.size + ":" + file.lastModified}><span className="signup-document-name"><b>✓</b>{file.name}</span><small>{(file.size / 1024 / 1024).toFixed(2)} MB</small><button type="button" onClick={() => removeProofDocument(index)} disabled={loading}>Remove</button></div>)}
                     </div>}
                   </section>

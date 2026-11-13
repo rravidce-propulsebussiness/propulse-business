@@ -25,6 +25,19 @@ const aliases = {
   leadtype: 'leadType', accessstrategy: 'accessStrategy', buyerstrategy: 'accessStrategy', releaseto2hours: 'releaseToTwoAfterHours', releasetotwohours: 'releaseToTwoAfterHours', releaseto3hours: 'releaseToThreeAfterHours', releasetothreehours: 'releaseToThreeAfterHours', proearlyaccess: 'isExclusive', earlyaccess: 'isExclusive', exclusive: 'isExclusive', isexclusive: 'isExclusive', exclusivedelaydays:'exclusiveDelayDays', earlyaccessdelaydays:'exclusiveDelayDays', proearlyaccessdelaydays:'exclusiveDelayDays',
 };
 
+// Active catalog used to resolve Industry / Service / Subservice / State / City
+// names in partner CSV rows (previewCsv and importCsv).
+async function catalogs() {
+  const [industries, services, subservices, states, cities] = await Promise.all([
+    pool.query('SELECT id,name,slug FROM industries WHERE is_active=TRUE'),
+    pool.query('SELECT id,name,slug,industry_id FROM services WHERE is_active=TRUE'),
+    pool.query('SELECT id,name,slug,service_id FROM subservices WHERE is_active=TRUE'),
+    pool.query('SELECT id,name,code FROM states WHERE is_active=TRUE'),
+    pool.query('SELECT id,name,slug,state_id FROM cities WHERE is_active=TRUE'),
+  ]);
+  return { industries: industries.rows, services: services.rows, subservices: subservices.rows, states: states.rows, cities: cities.rows };
+}
+
 function parseCsv(text) {
   const rows=parseCsvRecords(text);
   if(!rows.length)return[];
@@ -399,14 +412,19 @@ async function importCsv({ userId, csv }) {
     let createdLead=null;
     try {
       const lead = await buildLead(row, cat, locationCache);
-      createdLead = await leadService.createLead({ ...lead, createdBy: userId, leadPartnerId:partner.id, qualityGateContext:'lead_partner', deferQualityGate:true });
-      const configured = await partnerPricing.applyConfiguredPricingToLead(userId, createdLead.id, createdLead.pricing, lead.industryId, lead.cityId, lead.leadType);
-      const hasSheetPartnerPrice=lead.partnerProOnePrice!==null&&lead.partnerProOnePrice!==undefined&&lead.partnerProOnePrice!=='';const sheetPricing=hasSheetPartnerPrice&&Number.isFinite(Number(lead.partnerProOnePrice))?partnerPricing.buildFixedPartnerPricing(Number(lead.partnerProOnePrice),settings.normalPriceUplift):null;
-      const effectivePricing=sheetPricing||configured||createdLead.pricing||{shares:[]};
-      const overridden=JSON.stringify(effectivePricing)!==JSON.stringify(createdLead.pricing||{shares:[]});
+      // A partner's own "Pro 1 Buyer" price is built (with the Admin share
+      // percentages) before the lead is created, so it also works where Admin
+      // has no pricing rule for this market / lead type.
+      const hasSheetPartnerPrice=lead.partnerProOnePrice!==null&&lead.partnerProOnePrice!==undefined&&lead.partnerProOnePrice!=='';const sheetPricing=hasSheetPartnerPrice&&Number.isFinite(Number(lead.partnerProOnePrice))?partnerPricing.buildFixedPartnerPricing(Number(lead.partnerProOnePrice),settings.normalPriceUplift,settings):null;
+      createdLead = await leadService.createLead({ ...lead, ...(sheetPricing?{pricing:sheetPricing,pricingSource:'sheet'}:{}), createdBy: userId, leadPartnerId:partner.id, qualityGateContext:'lead_partner', deferQualityGate:true });
+      const adminConfigured = sheetPricing ? await leadService.getConfiguredPricing(lead.industryId, lead.cityId, lead.leadType) : null;
+      const basePricing = adminConfigured?.shares?.length ? adminConfigured : (createdLead.pricing || { shares: [] });
+      const configured = await partnerPricing.applyConfiguredPricingToLead(userId, createdLead.id, basePricing, lead.industryId, lead.cityId, lead.leadType);
+      const effectivePricing=sheetPricing||configured||basePricing;
+      const overridden=JSON.stringify(effectivePricing)!==JSON.stringify(basePricing);
       await pool.query(
         `UPDATE leads SET partner_base_pricing=$1::jsonb,partner_pricing_overridden=$2,partner_pricing_updated_at=$3,pricing=$4::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND created_by=$6`,
-        [JSON.stringify(createdLead.pricing || { shares: [] }), overridden, overridden ? new Date() : null, JSON.stringify(effectivePricing), createdLead.id, userId]
+        [JSON.stringify(basePricing), overridden, overridden ? new Date() : null, JSON.stringify(effectivePricing), createdLead.id, userId]
       );
       const gated=await leadQualityGateService.evaluateAndApply(createdLead.id,{context:'lead_partner',autoRelease:true});
       createdLead=gated.lead||createdLead;

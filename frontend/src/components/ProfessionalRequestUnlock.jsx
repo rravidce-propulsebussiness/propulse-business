@@ -5,8 +5,9 @@ import PaymentProofPicker from './PaymentProofPicker'
 import {paymentProofError} from './paymentProofValidation'
 import {loadPaymentOptions,runRazorpayCheckout} from '../utils/paymentGateway'
 import './ProfessionalRequestUnlock.css'
+import { formatRupees } from '../utils/formatRupees'
 
-const rupees=value=>`₹${Number(value||0).toLocaleString('en-IN')}`
+const rupees=value=>formatRupees(value)
 
 export default function ProfessionalRequestUnlock({kind,item,onUnlocked}){
   const access=item?.access||{}

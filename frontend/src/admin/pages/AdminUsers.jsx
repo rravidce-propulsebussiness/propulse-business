@@ -2,10 +2,11 @@ import BootLoader from '../../components/BootLoader'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { authRequest, getUser } from '../../utils/auth';
 import './AdminUsers.css';
+import { formatRupees } from '../../utils/formatRupees'
 
 const dateOnly = value => value ? new Date(value).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—';
 const dateTime = value => value ? new Date(value).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
-const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits:2 })}`;
+const money = value => formatRupees(value || 0);
 const emptyService = () => ({ industryId: '', serviceId: '', subserviceId: '' });
 const emptyLocation = () => ({ stateId: '', cityId: '', subcityId: '', pincode: '' });
 const listData = value => Array.isArray(value) ? value : (Array.isArray(value?.data) ? value.data : []);

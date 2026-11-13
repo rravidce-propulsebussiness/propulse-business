@@ -7,8 +7,9 @@ import PaymentMethodSelector from '../components/PaymentMethodSelector'
 import { loadPaymentOptions, runRazorpayCheckout } from '../utils/paymentGateway'
 import './Membership.css'
 import './CouponCheckout.css'
+import { formatRupees } from '../utils/formatRupees'
 
-const money = (value) => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
+const money = (value) => formatRupees(value)
 const asArray = (value) => (Array.isArray(value) ? value : [])
 const membershipRecord = (value) => value?.membership_plan_id ? value : null
 const planType = (plan) => String(plan?.plan_type || '').toLowerCase()

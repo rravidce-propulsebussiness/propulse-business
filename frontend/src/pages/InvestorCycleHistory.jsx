@@ -2,8 +2,9 @@ import BootLoader from '../components/BootLoader'
 import {useEffect,useState} from 'react'
 import {authRequest} from '../utils/auth'
 import './InvestorCycleHistory.css'
+import { formatRupees } from '../utils/formatRupees'
 
-const money=v=>`₹${Number(v||0).toLocaleString('en-IN',{maximumFractionDigits:2})}`
+const money=v=>formatRupees(v||0)
 const date=v=>v?new Date(v).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—'
 const status=v=>String(v||'').toUpperCase()
 const openStatuses=new Set(['ACTIVE','EXIT_REQUESTED','WAITING_FOR_LEADS'])

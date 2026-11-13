@@ -594,3 +594,13 @@
   overflow-x:hidden;
   overflow-x:clip;
 }
+
+/* Dark-banner page titles: the global h1/h2 colour (index.css) is dark navy,
+   which made these titles nearly invisible on their navy banners. */
+.admin-contact-hero h1,
+.flow-hero h1,
+.admin-faq-hero h1,
+.admin-home-media-hero h1,
+.pro-offer-admin-hero h1{
+  color:inherit;
+}

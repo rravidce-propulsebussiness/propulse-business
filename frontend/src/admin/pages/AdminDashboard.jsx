@@ -3,8 +3,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiRequest } from '../../utils/api'
 import './AdminDashboard.css'
+import { formatRupees } from '../../utils/formatRupees'
 
-const money=value=>`₹${Number(value||0).toLocaleString('en-IN',{maximumFractionDigits:2})}`
+const money=value=>formatRupees(value||0)
 const count=value=>Number(value||0).toLocaleString('en-IN')
 const EMPTY_OBJECT=Object.freeze({})
 

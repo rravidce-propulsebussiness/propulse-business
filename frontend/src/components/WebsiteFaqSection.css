@@ -423,3 +423,6 @@
   .website-faq-compact-head h2{font-size:22px}
   .website-faq-compact-grid{grid-template-columns:1fr}
 }
+
+/* Title on the navy banner: override the global dark h1/h2 colour. */
+.website-faq-hero h1,.website-faq-hero h2{color:inherit}
