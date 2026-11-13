@@ -21,17 +21,17 @@
 .expert-review-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:grid;place-items:center;width:54px;height:54px;border:2px solid #fff;color:#fff;background:#142638c9;border-radius:50%;cursor:pointer;box-shadow:0 8px 25px #0003;transition:transform .16s,background .16s}
 .expert-review-play:hover{transform:translate(-50%,-50%) scale(1.08);background:#ed652e}
 .expert-review-play:focus-visible{outline:3px solid #f76b31;outline-offset:4px}
-.expert-review-video-label{position:absolute;bottom:11px;left:12px;background:#fffef8ed;border-radius:7px;padding:6px 9px;color:#cc4d1b;font-size:11px;font-weight:850}
-.expert-review-unavailable{position:absolute;top:12px;left:12px;right:12px;text-align:center;background:#fff8edee;color:#ad4c23;font-size:11px;font-weight:750;padding:8px;border-radius:8px}
+.expert-review-video-label{position:absolute;bottom:11px;left:12px;background:#fffef8ed;border-radius:7px;padding:6px 9px;color:#cc4d1b;font-size:12px;font-weight:850}
+.expert-review-unavailable{position:absolute;top:12px;left:12px;right:12px;text-align:center;background:#fff8edee;color:#ad4c23;font-size:12px;font-weight:750;padding:8px;border-radius:8px}
 .expert-review-card-body{padding:20px;display:flex;flex-direction:column;gap:8px;min-width:0}
 .expert-review-card-title{display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-width:0}
 .expert-review-card-title strong{font-size:16px;line-height:1.4;color:#16263b;min-width:0;width:100%;overflow-wrap:break-word}
-.expert-review-card-title span{border-radius:100px;padding:5px 10px;font-size:11px;font-weight:850;background:#eaf0f5;color:#597184;text-transform:capitalize;white-space:nowrap}
+.expert-review-card-title span{border-radius:100px;padding:5px 10px;font-size:12px;font-weight:850;background:#eaf0f5;color:#597184;text-transform:capitalize;white-space:nowrap}
 .expert-review-card-title span.approved{color:#168545;background:#ddf9e5}
 .expert-review-card-title span.pending{color:#a96d13;background:#fff4db}
 .expert-review-card-title span.rejected{color:#bd3232;background:#ffebeb}
 .expert-review-card-body>small{font-size:12px;color:#74869a;line-height:1.5}
-.expert-review-previous-note{font-size:11px;color:#b54c29;margin:3px 0}
+.expert-review-previous-note{font-size:12px;color:#b54c29;margin:3px 0}
 .expert-review-actions{display:grid;gap:10px;padding-top:12px;margin-top:auto;border-top:1px solid #f1ede8;min-width:0}
 .expert-review-actions label{font-size:12px;font-weight:700;color:#51677d;display:grid;gap:6px;min-width:0}
 .expert-review-actions input{min-width:0;width:100%;border:1px solid #e5e9ec;border-radius:9px;padding:10px;font:inherit;font-size:12px}

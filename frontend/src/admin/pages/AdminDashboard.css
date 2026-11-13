@@ -57,7 +57,7 @@
 .admin-dashboard-hero>div>span{
   display:block;
   color:#f15a24;
-  font-size:7px;
+  font-size:10.5px;
   font-weight:950;
   letter-spacing:.18em;
 }
@@ -81,8 +81,8 @@
   background:#fff5f2;
   color:#a64531;
 }
-.admin-dashboard__error strong{font-size:9px}
-.admin-dashboard__error span{font-size:7.5px}
+.admin-dashboard__error strong{font-size:11.3px}
+.admin-dashboard__error span{font-size:10.7px}
 
 .admin-overview-grid{
   display:grid;
@@ -143,7 +143,7 @@
 }
 .admin-overview-card-copy>span{
   color:#516985;
-  font-size:7.6px;
+  font-size:10.8px;
   font-weight:900;
 }
 .admin-overview-card-copy>strong{
@@ -155,7 +155,7 @@
 .admin-overview-card-copy>small{
   overflow:hidden;
   color:#8796a8;
-  font-size:6.5px;
+  font-size:10.4px;
   line-height:1.35;
   white-space:nowrap;
   text-overflow:ellipsis;
@@ -240,7 +240,7 @@
   border-radius:12px;
   background:#eaf3ff;
   color:#1459a5;
-  font-size:8px;
+  font-size:10.9px;
   font-weight:950;
 }
 .admin-business-panel.partner .admin-business-badge{background:#fff0e8;color:#ed6128}
@@ -249,7 +249,7 @@
 .admin-business-eyebrow{
   display:block;
   color:#1459a5;
-  font-size:6px;
+  font-size:10.2px;
   font-weight:950;
   letter-spacing:.16em;
 }
@@ -274,7 +274,7 @@
   color:#e65b25;
   box-shadow:0 6px 16px rgba(19,46,82,.035);
   text-decoration:none;
-  font-size:6.8px;
+  font-size:10.5px;
   font-weight:900;
   white-space:nowrap;
 }
@@ -282,7 +282,7 @@
   border-color:#f1b393;
   background:#fffaf7;
 }
-.admin-business-panel-head>a b{font-size:9px}
+.admin-business-panel-head>a b{font-size:11.3px}
 
 .admin-business-metrics{
   display:grid;
@@ -321,7 +321,7 @@
 }
 .admin-panel-metric>div>span{
   color:#667b94;
-  font-size:6.7px;
+  font-size:10.4px;
   font-weight:850;
 }
 .admin-panel-metric>div>strong{
@@ -332,7 +332,7 @@
 }
 .admin-panel-metric>div>small{
   color:#95a1b0;
-  font-size:5.9px;
+  font-size:10.1px;
 }
 
 .admin-finance-row{
@@ -353,21 +353,21 @@
 .admin-finance-row span{
   display:block;
   color:#75869c;
-  font-size:6px;
+  font-size:10.2px;
   font-weight:850;
 }
 .admin-finance-row strong{
   display:block;
   margin-top:5px;
   color:#143a68;
-  font-size:11px;
+  font-size:12px;
   line-height:1;
 }
 .admin-finance-row small{
   display:block;
   margin-top:3px;
   color:#9aa6b5;
-  font-size:5.5px;
+  font-size:10px;
 }
 
 .admin-investor-panel{
@@ -396,7 +396,7 @@
 }
 .admin-compact-panel-head>span{
   color:#f15a24;
-  font-size:5.8px;
+  font-size:10.1px;
   font-weight:950;
   letter-spacing:.15em;
 }
@@ -413,7 +413,7 @@
   border-radius:8px;
   background:#fff1ea;
   color:#e85b25;
-  font-size:10px;
+  font-size:11.6px;
 }
 
 .admin-compact-actions{
@@ -439,9 +439,9 @@
   border-color:#cad8e7;
   box-shadow:0 7px 16px rgba(19,46,82,.045);
 }
-.admin-compact-action span{font-size:6.8px;font-weight:850}
-.admin-compact-action strong{color:#133b6a;font-size:11px}
-.admin-compact-action b{color:#f15a24;font-size:9px}
+.admin-compact-action span{font-size:10.5px;font-weight:850}
+.admin-compact-action strong{color:#133b6a;font-size:12px}
+.admin-compact-action b{color:#f15a24;font-size:11.3px}
 
 .admin-health-grid{
   display:grid;
@@ -460,7 +460,7 @@
   display:block;
   overflow:hidden;
   color:#74859b;
-  font-size:6.2px;
+  font-size:10.3px;
   white-space:nowrap;
   text-overflow:ellipsis;
 }
@@ -548,7 +548,7 @@
 .admin-revenue-command-head>div:first-child>span{
   display:block;
   color:#ef6331;
-  font-size:6.4px;
+  font-size:10.3px;
   font-weight:950;
   letter-spacing:.15em;
 }
@@ -561,7 +561,7 @@
 .admin-revenue-command-head p{
   margin:0;
   color:#8191a3;
-  font-size:6.9px;
+  font-size:10.5px;
   font-weight:650;
 }
 .admin-revenue-periods{
@@ -580,7 +580,7 @@
   border-radius:8px;
   background:transparent;
   color:#6f8297;
-  font-size:6.8px;
+  font-size:10.5px;
   font-weight:900;
   cursor:pointer;
 }
@@ -616,7 +616,7 @@
 }
 .admin-total-earnings span{
   color:#c7d8eb;
-  font-size:6.7px;
+  font-size:10.4px;
   font-weight:900;
   letter-spacing:.08em;
   text-transform:uppercase;
@@ -633,7 +633,7 @@
   display:block;
   margin-top:7px;
   color:#b9cbe0;
-  font-size:6.6px;
+  font-size:10.4px;
   line-height:1.4;
 }
 .admin-revenue-breakdown{
@@ -669,7 +669,7 @@
 }
 .admin-revenue-breakdown article span{
   color:#7d8ea1;
-  font-size:6.7px;
+  font-size:10.4px;
   font-weight:900;
   text-transform:uppercase;
 }
@@ -688,7 +688,7 @@
 .admin-revenue-breakdown article small{
   margin-top:5px;
   color:#919eae;
-  font-size:6.2px;
+  font-size:10.3px;
   line-height:1.35;
 }
 .admin-revenue-plus{
@@ -700,7 +700,7 @@
   border-radius:50%;
   background:#f8fafc;
   color:#8293a5;
-  font-size:10px;
+  font-size:11.6px;
   font-weight:900;
 }
 

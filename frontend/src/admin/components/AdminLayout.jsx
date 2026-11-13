@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { authRequest, clearSession, getUser } from '../../utils/auth'
 import './AdminLayout.css'
@@ -175,9 +175,10 @@ export default function AdminLayout(){
         {navigation.map(entry=>{
           if(entry.type==='link'){
             const active=routeMatches(entry,location.pathname+location.search)
-            return <NavLink key={entry.to} to={entry.to} end={entry.end} className={active?'active':''} onClick={closeMobileNav}>
+            // Plain Link: NavLink adds its own path-only "active" class and ignores ?view= queries.
+            return <Link key={entry.to} to={entry.to} className={active?'active':''} aria-current={active?'page':undefined} onClick={closeMobileNav}>
               <i>{entry.icon}</i><span>{entry.label}</span>
-            </NavLink>
+            </Link>
           }
 
           const groupActive=current.group?.key===entry.key
@@ -190,11 +191,12 @@ export default function AdminLayout(){
               {entry.children.map((child,index)=>{
                 const previous=entry.children[index-1]
                 const showSection=child.section&&child.section!==previous?.section
+                const childActive=routeMatches(child,location.pathname+location.search)
                 return <div className="admin-nav-subitem" key={child.to}>
                   {showSection&&<small className="admin-nav-subsection">{child.section}</small>}
-                  <NavLink to={child.to} className={routeMatches(child,location.pathname+location.search)?'active':''} onClick={closeMobileNav}>
+                  <Link to={child.to} className={childActive?'active':''} aria-current={childActive?'page':undefined} onClick={closeMobileNav}>
                     <span className="admin-nav-subdot"/><span>{child.label}</span>
-                  </NavLink>
+                  </Link>
                 </div>
               })}
             </div>}
