@@ -207,8 +207,8 @@ async function updateByProfessional(userId,requestId,input={}){
   if(quoteStatus==='quoted'&&(!packageName||price===null||!scope))throw bad('Select a package, enter the price and describe the scope before marking quoted');
   const result=await pool.query(
     `UPDATE professional_project_quote_requests
-     SET status=$3,quoted_package=$4,quoted_price=$5,quoted_scope=$6,
-         professional_notes=$7,quoted_at=CASE WHEN $3='quoted' THEN CURRENT_TIMESTAMP ELSE quoted_at END,
+     SET status=$3::varchar,quoted_package=$4,quoted_price=$5,quoted_scope=$6,
+         professional_notes=$7,quoted_at=CASE WHEN $3::varchar='quoted' THEN CURRENT_TIMESTAMP ELSE quoted_at END,
          updated_at=CURRENT_TIMESTAMP
      WHERE id=$1 AND business_user_id=$2
      RETURNING id,status,quoted_package,quoted_price,quoted_scope,professional_notes,quoted_at`,

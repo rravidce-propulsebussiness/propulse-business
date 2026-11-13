@@ -212,8 +212,12 @@ async function overrideQuarantine({leadId,adminUserId,note=''}) {
   const id=Number(leadId),client=await pool.connect();
   try{
     await client.query('BEGIN');
-    const before=(await client.query('SELECT id,status,quality_gate_status,quality_gate_score,quality_gate_reasons,created_by,lead_partner_id FROM leads WHERE id=$1 FOR UPDATE',[id])).rows[0];
+    const before=(await client.query('SELECT id,status,quality_gate_status,quality_gate_score,quality_gate_reasons,created_by,lead_partner_id,pricing FROM leads WHERE id=$1 FOR UPDATE',[id])).rows[0];
     if(!before)throw Object.assign(new Error('Lead is not eligible for quarantine override'),{code:'QUALITY_OVERRIDE_NOT_ALLOWED'});
+    // Never release an unpriced lead (e.g. a homeowner request in a market with no Admin pricing rule).
+    const tiers=Array.isArray(before.pricing?.shares)?before.pricing.shares:[];
+    const priced=[1,2,3].every(n=>tiers.some(t=>Number(t?.shares)===n&&Number(t?.normal)>0&&Number(t?.pro)>0));
+    if(!priced)throw Object.assign(new Error('Set Normal and Pro prices for 1, 2 and 3 buyers on this lead before releasing it'),{code:'PRICING_REQUIRED'});
     const row=(await client.query(
       `UPDATE leads SET status='available',quality_gate_status='overridden',
          quality_gate_reviewed_by=$2,quality_gate_reviewed_at=CURRENT_TIMESTAMP,quality_gate_note=$3,updated_at=CURRENT_TIMESTAMP

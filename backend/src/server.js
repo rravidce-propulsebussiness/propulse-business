@@ -174,6 +174,8 @@ app.use('/api/profile/projects/plan',express.raw({type:['application/pdf','image
 app.use('/api/profile/projects/image',express.raw({type:['image/jpeg','image/png','image/webp'],limit:'13mb'}));
 app.use('/api/admin/expert-directory/projects/photo/:userId',express.raw({type:['image/jpeg','image/png','image/webp'],limit:'13mb'}));
 app.use('/api/customer-flows/:key/:leadId/attachments',largeJsonFor('POST'));
+// The emailed quotation carries the generated PDF (~1-2 MB as base64); the handler allows up to 8 MB.
+app.use('/api/customer-flows/:key/:leadId/quotation-email',largeJsonFor('POST'));
 app.use('/api/customer-flows',express.json({limit:'64kb'}));
 app.use(express.json({limit:DEFAULT_JSON_BYTES}));
 app.use('/api',(req,res,next)=>{res.setHeader('Cache-Control','no-store, private');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');next();});
