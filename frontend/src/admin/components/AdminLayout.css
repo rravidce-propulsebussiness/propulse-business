@@ -522,3 +522,46 @@
 @media(max-width:850px){.admin-sidebar{background:#fff!important}.admin-sidebar-close{display:grid}}
 
 .admin-sidebar-logo{display:block;flex:0 0 48px;width:48px;height:48px;object-fit:contain;border-radius:9px;background:#fff}
+
+/* Shared admin page header: eyebrow + title + description, used by pages
+   that do not ship their own hero (Lead Reports, Manage Leads). */
+.admin-page-hero{
+  position:relative;
+  overflow:hidden;
+  margin:0 0 14px;
+  padding:20px 24px;
+  border:1px solid #dfe7f0;
+  border-radius:22px;
+  background:
+    radial-gradient(circle at 88% 10%,rgba(255,119,67,.13),transparent 22%),
+    radial-gradient(circle at 74% 20%,rgba(45,117,214,.12),transparent 28%),
+    linear-gradient(135deg,#ffffff 0%,#f6faff 60%,#eef5ff 100%);
+  box-shadow:0 18px 44px rgba(19,46,82,.055);
+}
+.admin-page-hero>span,.admin-page-eyebrow{
+  display:block;
+  color:#f15a24;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+}
+.admin-page-title{
+  margin:6px 0 0;
+  color:#0c2d5e;
+  font-size:30px;
+  font-weight:900;
+  line-height:1.05;
+  letter-spacing:-.045em;
+}
+.admin-page-hero>p{
+  max-width:640px;
+  margin:8px 0 0;
+  color:#5b6f8a;
+  font-size:13px;
+  line-height:1.5;
+}
+@media(max-width:600px){
+  .admin-page-hero{padding:16px;border-radius:18px}
+  .admin-page-title{font-size:24px}
+}
