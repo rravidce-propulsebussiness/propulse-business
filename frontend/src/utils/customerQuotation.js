@@ -115,7 +115,7 @@ export async function calculateRequirementQuotation({flowKey,answers}){
   return buildConstructionQuotation({answers,estimatorAnswers,result:{}});
 }
 
-export function buildConstructionQuotation({answers={},estimatorAnswers={},result={}}){
+function buildConstructionQuotation({answers={},estimatorAnswers={},result={}}){
   const builtUp=number(estimatorAnswers.built_up_area);
   const plotArea=number(estimatorAnswers.plot_area);
   const floors=Math.max(1,number(estimatorAnswers.floors)||1);

@@ -63,7 +63,7 @@ export function leadPaymentSplit(row,money){
   return parts.join(' · ')
 }
 
-export function normalizeLeadPurchase(row){
+function normalizeLeadPurchase(row){
   const leadId=row?.lead_id||row?.purchase_id
   const context=[text(row?.property_type),text(row?.budget)].filter(Boolean).join(' · ')
   return{

@@ -1,4 +1,4 @@
-export const INTERIOR_PACKAGE_CATALOG = {
+const INTERIOR_PACKAGE_CATALOG = {
   standard: {
     key: 'standard',
     name: 'Standard',

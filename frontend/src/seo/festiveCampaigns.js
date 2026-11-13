@@ -231,7 +231,7 @@ export function activeFestivals(date=indiaToday()){
 export function activeFestival(date=indiaToday()){
   return activeFestivals(date)[0]||null
 }
-export function festivalSeoRoutes(){
+function festivalSeoRoutes(){
   return FESTIVAL_EVENTS.flatMap(event=>Object.values(CAMPAIGN_SERVICES).map(service=>{
     const year=event.date.slice(0,4)
     const title=event.kind==='remembrance'

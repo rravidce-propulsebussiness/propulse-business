@@ -10,7 +10,7 @@ export const PACKAGE_PRICE_UNITS = [
   {value:'unit',label:'Per item / unit'},
 ]
 
-export function packagePriceUnit(unit){
+function packagePriceUnit(unit){
   return {
     sqft:'/ sq ft',
     sqyd:'/ sq yd',

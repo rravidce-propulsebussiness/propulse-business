@@ -56,9 +56,6 @@ function copyResult(value) {
   return value
 }
 
-export function clearReferenceCache() {
-  referenceCache.clear()
-}
 
 export function apiRequest(path, options = {}, includeToken = true) {
   const method = String(options?.method || 'GET').toUpperCase()

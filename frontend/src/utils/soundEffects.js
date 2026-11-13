@@ -25,10 +25,6 @@ function storageGet(key){
   try{return window.localStorage.getItem(key)}catch{return null}
 }
 
-function storageSet(key,value){
-  try{window.localStorage.setItem(key,value)}catch{}
-}
-
 function readPreferences(){
   const storedEnabled=storageGet(STORAGE_ENABLED)
   enabled=storedEnabled===null?true:storedEnabled!=='false'
@@ -50,30 +46,9 @@ function notify(){
   listeners.forEach(listener=>{try{listener(state)}catch{}})
 }
 
-export function subscribeSoundState(listener){
-  listeners.add(listener)
-  listener(snapshot())
-  return()=>listeners.delete(listener)
-}
 
-export function getSoundState(){
-  return snapshot()
-}
 
-export function setSoundEnabled(value){
-  enabled=Boolean(value)
-  storageSet(STORAGE_ENABLED,String(enabled))
-  notify()
-  return enabled
-}
 
-export function setSoundVolume(value){
-  const parsed=Number(value)
-  userVolume=Number.isFinite(parsed)?Math.max(0,Math.min(1,parsed)):1
-  storageSet(STORAGE_VOLUME,String(userVolume))
-  notify()
-  return userVolume
-}
 
 function categoryEnabled(type){
   if(!config.masterEnabled||!enabled)return false
@@ -165,9 +140,6 @@ export function playSound(type){
   return true
 }
 
-export function emitSound(type){
-  return playSound(type)
-}
 
 export async function refreshSoundSettings(){
   try{

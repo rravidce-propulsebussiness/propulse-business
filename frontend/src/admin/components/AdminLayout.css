@@ -565,3 +565,32 @@
   .admin-page-hero{padding:16px;border-radius:18px}
   .admin-page-title{font-size:24px}
 }
+
+
+/* Boxes with decorative shapes past their edges use overflow:hidden, which
+   the browser can still scroll when a button inside gets focus or is
+   scrolled into view, shifting the whole box sideways. overflow:clip hides
+   the overflow without making the box scrollable. */
+.admin-dashboard-hero.admin-dashboard-hero,
+.admin-revenue-command.admin-revenue-command,
+.admin-business-panel.admin-business-panel,
+.admin-investor-panel.admin-investor-panel,
+.admin-page-hero.admin-page-hero,
+.users-premium-hero.users-premium-hero,
+.receiving-premium-hero.receiving-premium-hero,
+.coupon-premium-hero.coupon-premium-hero,
+.v9-source-card.v9-source-card,
+.admin-faq-hero.admin-faq-hero,
+.admin-contact-hero.admin-contact-hero,
+.admin-home-media-hero.admin-home-media-hero,
+.auf-hero.auf-hero,
+.investments-hero.investments-hero,
+.admin-withdrawals-hero.admin-withdrawals-hero,
+.error-monitor-panel.error-monitor-panel{
+  overflow:hidden;
+  overflow:clip;
+}
+.admin-shell.admin-shell{
+  overflow-x:hidden;
+  overflow-x:clip;
+}

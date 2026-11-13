@@ -7,8 +7,6 @@ let bootstrapPromise = null
 
 export const getToken = () => (sessionKnown && currentUser ? 'cookie-session' : null)
 export const getUser = () => (sessionKnown ? currentUser : null)
-export const isSessionKnown = () => sessionKnown
-
 export function saveSession({ user }) {
   currentUser = user || null
   sessionKnown = true

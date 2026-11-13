@@ -99,7 +99,7 @@ export function districtPath(stateSlug,districtSlug){
   return '/'+stateSlug+'/construction/'+districtSlug
 }
 
-export const REGIONAL_STATE_SEO_ROUTES=Object.values(REGIONAL_STATES).map(state=>({
+const REGIONAL_STATE_SEO_ROUTES=Object.values(REGIONAL_STATES).map(state=>({
   path:'/'+state.slug+'/construction',
   type:'state-construction-hub',
   stateSlug:state.slug,

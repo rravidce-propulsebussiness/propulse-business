@@ -29,7 +29,7 @@ export async function getGoogleClientId() {
   return clientId
 }
 
-export function getBrowserOrigin() {
+function getBrowserOrigin() {
   return typeof window === 'undefined' ? '' : window.location.origin
 }
 

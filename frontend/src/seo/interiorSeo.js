@@ -12,7 +12,7 @@ export const INTERIOR_HUB_ROUTE={
   summary:'Plan a complete home, apartment, villa or office interior with a clear room-wise brief, design direction, material choices, budget and delivery expectations.'
 }
 
-export const HYDERABAD_INTERIOR_LOCALITY_ROUTES=HYDERABAD_LOCALITIES.map(locality=>({
+const HYDERABAD_INTERIOR_LOCALITY_ROUTES=HYDERABAD_LOCALITIES.map(locality=>({
   path:'/hyderabad/interior-designers/'+locality.slug,type:'interior-locality',localitySlug:locality.slug,
   localityName:locality.name,localityZone:locality.zone,localityContext:locality.focus,
   title:'Interior Designers in '+locality.name+', Hyderabad | Home Interiors | ProPulse',
@@ -21,7 +21,7 @@ export const HYDERABAD_INTERIOR_LOCALITY_ROUTES=HYDERABAD_LOCALITIES.map(localit
   summary:'Create a clear interior brief for your '+locality.name+' home with property type, rooms, finishes, budget and expected handover timeline.'
 }))
 
-export const REGIONAL_INTERIOR_ROUTES=Object.values(REGIONAL_STATES).flatMap(state=>[
+const REGIONAL_INTERIOR_ROUTES=Object.values(REGIONAL_STATES).flatMap(state=>[
   {path:'/'+state.slug+'/interior-designers',type:'interior-state-hub',stateSlug:state.slug,stateName:state.name,
    title:'Interior Designers in '+state.name+' | Home & Office Interiors | ProPulse',
    description:'Explore interior design planning across '+state.name+'. Select a district and prepare a clear brief for home interiors, modular kitchens, wardrobes and office spaces.',
