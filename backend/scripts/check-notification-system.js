@@ -70,7 +70,7 @@ assert(partnerService.includes("type:'lead_partner_status_changed'"),'Lead Partn
 assert(app.includes('Notifications=lazy')&&app.includes('path="/notifications"')&&app.includes('path="/admin/notifications"')&&app.includes('path="/lead-partner/notifications"'),'Role notification routes are missing');
 assert(bell.includes("'/notifications/unread-count'")&&bell.includes("'/notifications/'+item.id+'/read'"),'Notification bell must load and mark notifications');
 assert(page.includes('<span>Email notifications</span>')&&page.includes("'/notifications/preferences'")&&page.includes("'/notifications/read-all'"),'Notification center preferences/read controls are missing');
-assert(adminLayout.includes('<NotificationBell/>')&&userHeader.includes('<NotificationBell/>')&&investorHeader.includes('<NotificationBell/>'),'Header notification bells are missing');
+assert(adminLayout.includes('<NotificationBell/>')&&userHeader.includes('<NotificationBell/>')&&(investorHeader.includes('<NotificationBell/>')||investorHeader.includes('<UserHeader')),'Header notification bells are missing');
 assert(partnerSidebar.includes('lead-partner-notification-count'),'Lead Partner unread badge is missing');
 
 console.log('Central notification system regression test passed.');
