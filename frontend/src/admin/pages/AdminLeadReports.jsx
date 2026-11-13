@@ -112,6 +112,11 @@ export default function AdminLeadReports(){
   },[data.data,search])
 
   return <section className="lead-reports-page">
+    <header className="admin-page-hero">
+      <span>Leads / Lead reports</span>
+      <h1 className="admin-page-title">Lead Reports</h1>
+      <p>Review lead quality reports from customers and professionals, then mark each lead as verified genuine, verified fake or rejected.</p>
+    </header>
     <div className="lead-report-metrics">
       {metrics.map(metric=><article key={metric.key} className={`lead-report-metric ${metric.className}`}>
         <div className="lead-report-metric-icon"><Icon name={metric.icon}/></div>
