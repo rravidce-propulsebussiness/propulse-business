@@ -33,7 +33,7 @@
 .pjd-page .pjd-heading-tags span{white-space:nowrap;padding:9px 12px;border-radius:9px;font-size:10px;letter-spacing:.035em;font-weight:850}
 .pjd-page .pjd-heading-tags .pjd-published-label{color:#fff;border:1px solid #ffffff55;background:#ffffff18}
 .pjd-page .pjd-heading-tags .pjd-verified{color:#0a6942;background:#e7f8eb}
-.pjd-page .pjd-heading-tags .pjd-collection-index{padding:8px 0;color:#a4becd;font-size:9px;letter-spacing:.13em}
+.pjd-page .pjd-heading-tags .pjd-collection-index{padding:8px 0;color:#a4becd;font-size:12px;letter-spacing:.13em}
 .pjd-page .pjd-main-grid{display:grid;grid-template-columns:minmax(0,1.53fr) minmax(330px,.87fr);gap:22px;align-items:stretch}
 .pjd-page .pjd-gallery-block{
   display:flex;flex-direction:column;min-width:0;overflow:hidden;border:1px solid #e1e8ee;border-radius:18px;
@@ -142,7 +142,7 @@
   .pjd-page .pjd-heading-tags .pjd-collection-index{display:none}
   .pjd-page .pjd-main-image{aspect-ratio:1.1}
   .pjd-page .pjd-gallery-block,.pjd-page .pjd-summary{border-radius:13px}
-  .pjd-page .pjd-image-caption{left:14px;bottom:16px;font-size:9px}
+  .pjd-page .pjd-image-caption{left:14px;bottom:16px;font-size:12px}
   .pjd-page .pjd-photo-nav{right:9px;bottom:12px}
   .pjd-page .pjd-photo-nav button{height:29px;width:29px}
   .pjd-page .pjd-thumbnails{padding:10px}
@@ -190,7 +190,7 @@
   .pjd-page .pjd-hero-intro .pjd-highlight{font-size:12px;line-height:1.45}
   .pjd-page .pjd-hero-micro{margin-top:10px}
   .pjd-page .pjd-heading-tags{display:none}
-  .pjd-page .pjd-overline{font-size:9px;letter-spacing:.09em}
+  .pjd-page .pjd-overline{font-size:12px;letter-spacing:.09em}
   .pjd-page .pjd-main-image{aspect-ratio:1.27}
   .pjd-page .pjd-breadcrumb{margin-bottom:12px}
   .pjd-page .pjd-breadcrumb span:last-child{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;line-clamp:1;overflow:hidden}

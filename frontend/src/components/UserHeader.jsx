@@ -54,7 +54,7 @@ export default function UserHeader({ variant } = {}) {
       <Link className={active("/wallet")} to="/wallet" onClick={()=>setOpen(false)}>Wallet</Link>
       <Link className={active("/membership")} to="/membership" onClick={()=>setOpen(false)}>Membership</Link>
       {user?.role==='business'&&<Link className="user-mobile-offers-link" to="/professionals?offers=1" onClick={()=>setOpen(false)}>Offers</Link>}
-      {isPro && <Link className={active("/investment")} to="/investment" onClick={()=>setOpen(false)}>Investor</Link>}
+      {isPro && <Link className={location.pathname.startsWith("/investment")?" active":""} to="/investment" onClick={()=>setOpen(false)}>Investor</Link>}
       {!location.pathname.startsWith("/investment") && <Link className={active("/professional-contact")} to="/professional-contact" onClick={()=>setOpen(false)}>Contact</Link>}
       <Link className={active("/professional-upcoming-features")} to="/professional-upcoming-features" onClick={()=>setOpen(false)}>Upcoming Features</Link>
       <Link className={active("/professional-faq")} to="/professional-faq" onClick={()=>setOpen(false)}>FAQ</Link>

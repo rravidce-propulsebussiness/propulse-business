@@ -67,7 +67,7 @@
   display:block;
   margin-bottom:3px;
   color:#ef5a22;
-  font-size:8.5px;
+  font-size:11px;
   font-weight:950;
   letter-spacing:.14em;
 }
@@ -116,7 +116,7 @@
 }
 .glp-modal label>span small{
   color:#95a1ab;
-  font-size:8.5px;
+  font-size:11px;
   font-weight:700;
 }
 .glp-modal input,
@@ -193,7 +193,7 @@
 }
 .glp-unit i{
   border-left:1px solid #e5eaee;
-  font-size:8.5px;
+  font-size:11px;
 }
 .glp-location{
   display:flex;
@@ -205,7 +205,7 @@
   border-radius:10px;
   background:#f5fbf7;
   color:#31704a;
-  font-size:9px;
+  font-size:12px;
   font-weight:750;
 }
 .glp-error{
@@ -214,7 +214,7 @@
   border-radius:10px;
   background:#fff4ef;
   color:#a63e20;
-  font-size:9.5px;
+  font-size:12px;
   font-weight:800;
 }
 .glp-primary,

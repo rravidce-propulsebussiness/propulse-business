@@ -175,7 +175,7 @@ export default function AdminLayout(){
         {navigation.map(entry=>{
           if(entry.type==='link'){
             const active=routeMatches(entry,location.pathname+location.search)
-            return <NavLink key={entry.to} to={entry.to} end={entry.end} className={active?'active':''} onClick={closeMobileNav}>
+            return <NavLink key={entry.to} to={entry.to} end={entry.end} className={()=>active?'active':''} onClick={closeMobileNav}>
               <i>{entry.icon}</i><span>{entry.label}</span>
             </NavLink>
           }
@@ -192,7 +192,7 @@ export default function AdminLayout(){
                 const showSection=child.section&&child.section!==previous?.section
                 return <div className="admin-nav-subitem" key={child.to}>
                   {showSection&&<small className="admin-nav-subsection">{child.section}</small>}
-                  <NavLink to={child.to} className={routeMatches(child,location.pathname+location.search)?'active':''} onClick={closeMobileNav}>
+                  <NavLink to={child.to} className={()=>routeMatches(child,location.pathname+location.search)?'active':''} onClick={closeMobileNav}>
                     <span className="admin-nav-subdot"/><span>{child.label}</span>
                   </NavLink>
                 </div>
