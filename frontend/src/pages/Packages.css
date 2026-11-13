@@ -171,7 +171,7 @@
 }
 .pkg-category-nav button small{
   color:#7d8e9b;
-  font-size:8.5px;
+  font-size:11px;
 }
 .pkg-category-nav button em{
   min-width:58px;
@@ -182,7 +182,7 @@
   border-radius:999px;
   background:#f1f5f7;
   color:#6d8292;
-  font-size:7.5px;
+  font-size:11px;
   font-style:normal;
   font-weight:900;
   letter-spacing:.03em;
@@ -222,7 +222,7 @@
   border-radius:999px;
   background:#f6f8fa;
   color:#385970;
-  font-size:8.5px;
+  font-size:11px;
   font-weight:850;
 }
 .pkg-section-benefits svg{color:var(--pkg-orange)}
@@ -310,7 +310,7 @@
   border-radius:999px;
   background:rgba(255,255,255,.92);
   color:#c95124;
-  font-size:8px;
+  font-size:11px;
   font-weight:950;
   letter-spacing:.03em;
   box-shadow:0 8px 22px rgba(8,36,59,.13);
@@ -329,7 +329,7 @@
   border-radius:999px;
   background:rgba(7,45,74,.86);
   color:#fff;
-  font-size:7.5px;
+  font-size:11px;
   font-weight:900;
   box-shadow:0 8px 18px rgba(0,0,0,.16);
   backdrop-filter:blur(8px);
@@ -344,7 +344,7 @@
 .pkg-card-heading>div:first-child{min-width:0}
 .pkg-premium-card-body small{
   color:#e15a25;
-  font-size:7.5px;
+  font-size:11px;
   font-weight:950;
   letter-spacing:.12em;
 }
@@ -374,14 +374,14 @@
 }
 .pkg-premium-price span{
   color:#a36a51;
-  font-size:7px;
+  font-size:11px;
   font-weight:850;
 }
 .pkg-card-description{
   min-height:38px;
   margin:10px 0 0!important;
   color:#708595!important;
-  font-size:9.3px!important;
+  font-size:12px!important;
   line-height:1.55!important;
 }
 .pkg-card-highlights{
@@ -395,7 +395,7 @@
   display:block;
   margin-bottom:8px;
   color:#8b9aa6;
-  font-size:7px;
+  font-size:11px;
   font-weight:950;
   letter-spacing:.11em;
   text-transform:uppercase;
@@ -412,7 +412,7 @@
   align-items:flex-start;
   gap:7px;
   color:#456278;
-  font-size:9.2px;
+  font-size:12px;
   line-height:1.35;
 }
 .pkg-card-highlights li svg{
@@ -433,7 +433,7 @@
   justify-content:center;
   gap:6px;
   border-radius:10px;
-  font-size:9px;
+  font-size:12px;
   font-weight:950;
   cursor:pointer;
   transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,background .18s ease;
@@ -473,7 +473,7 @@
   border-radius:11px;
   background:#fff;
   color:#264a62;
-  font-size:9px;
+  font-size:12px;
   font-weight:900;
   cursor:pointer;
   box-shadow:0 4px 12px rgba(8,43,72,.035);
@@ -539,12 +539,12 @@
 .pkg-full-details>div:last-child{border-bottom:0}
 .pkg-full-details b{
   color:#183a55;
-  font-size:8px;
+  font-size:11px;
   font-weight:900;
 }
 .pkg-full-details span{
   color:#687e8f;
-  font-size:8.2px;
+  font-size:11px;
   line-height:1.45;
 }
 
@@ -584,11 +584,11 @@
 .pkg-compare-status span{display:grid;gap:2px}
 .pkg-compare-status b{
   color:#173a56;
-  font-size:9.5px;
+  font-size:12px;
 }
 .pkg-compare-status small{
   color:#83929e;
-  font-size:8px;
+  font-size:11px;
 }
 .pkg-compare-bar button{
   min-width:150px;
@@ -602,7 +602,7 @@
   border-radius:9px;
   background:linear-gradient(135deg,#ff6428,#ef5118);
   color:#fff;
-  font-size:8.7px;
+  font-size:11px;
   font-weight:950;
   cursor:pointer;
   box-shadow:0 8px 18px rgba(255,90,31,.17);
@@ -628,7 +628,7 @@
 }
 .pkg-comparison-heading span{
   color:var(--pkg-orange);
-  font-size:8px;
+  font-size:11px;
   font-weight:950;
   letter-spacing:.11em;
 }
@@ -640,7 +640,7 @@
 .pkg-comparison-heading p{
   margin:3px 0 0;
   color:#7a8b98;
-  font-size:9px;
+  font-size:12px;
 }
 .pkg-comparison-heading>button{
   display:flex;
@@ -649,7 +649,7 @@
   border:0;
   background:none;
   color:#2c6ca3;
-  font-size:8px;
+  font-size:11px;
   font-weight:850;
   cursor:pointer;
 }
@@ -678,17 +678,17 @@
 .pkg-comparison-table th{
   background:#f8fafb;
   color:#153650;
-  font-size:8.5px;
+  font-size:11px;
 }
 .pkg-comparison-table th:first-child{width:22%}
 .pkg-comparison-table td:first-child{
   color:#153650;
-  font-size:8.5px;
+  font-size:11px;
   font-weight:900;
 }
 .pkg-comparison-table td:not(:first-child){
   color:#506b7f;
-  font-size:8.2px;
+  font-size:11px;
 }
 .pkg-comparison-table td:not(:first-child) svg{
   margin-right:5px;
@@ -708,8 +708,8 @@
   border-radius:6px;
 }
 .pkg-table-package span{display:grid;gap:1px}
-.pkg-table-package b{font-size:9px}
-.pkg-table-package strong{font-size:8px}
+.pkg-table-package b{font-size:12px}
+.pkg-table-package strong{font-size:11px}
 
 @keyframes pkgCompareReveal{
   from{opacity:0;transform:translateY(7px)}

@@ -264,7 +264,7 @@ body:has(.profile-accordion-root) {
   .profile-accordion-icon{flex-basis:46px;width:46px;height:46px;border-radius:13px}
   .profile-accordion-title strong{font-size:15px}
   .profile-accordion-title small{font-size:10px}
-  .profile-accordion-count{padding:7px 8px;font-size:9px}
+  .profile-accordion-count{padding:7px 8px;font-size:12px}
   .profile-accordion-body{margin:0 13px;padding:16px 0 18px}
   .profile-accordion-pills span {font-size:11px}
   .profile-accordion-root .profile-overview-fields-editable{grid-template-columns:1fr}
@@ -285,7 +285,7 @@ body:has(.profile-accordion-root) {
   .profile-accordion-icon{flex-basis:39px;width:39px;height:39px}
   .profile-accordion-title strong{font-size:14px}
   .profile-accordion-title small{font-size:10px}
-  .profile-accordion-count{font-size:8px;padding:6px}
+  .profile-accordion-count{font-size:11px;padding:6px}
   .profile-accordion-savebar>a,.profile-accordion-savebar>button{font-size:10px}
 }
 @media(prefers-reduced-motion:reduce){

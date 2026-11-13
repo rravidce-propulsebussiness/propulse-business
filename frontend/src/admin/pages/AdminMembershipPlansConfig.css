@@ -42,7 +42,7 @@
 .membership-admin-hero>div:first-child>span{
   display:block;
   color:#ef6331;
-  font-size:8px;
+  font-size:11px;
   font-weight:950;
   letter-spacing:.15em;
 }
@@ -89,12 +89,12 @@
 }
 .membership-admin-state strong{
   color:#315672;
-  font-size:9.5px;
+  font-size:12px;
 }
 .membership-admin-state small{
   margin-top:2px;
   color:#8493a5;
-  font-size:7.5px;
+  font-size:11px;
 }
 
 /* KPI summary */
@@ -133,7 +133,7 @@
 }
 .membership-summary-grid span{
   color:#7c8da0;
-  font-size:7px;
+  font-size:11px;
   font-weight:900;
   letter-spacing:.055em;
   text-transform:uppercase;
@@ -147,7 +147,7 @@
 .membership-summary-grid small{
   margin-top:5px;
   color:#909dad;
-  font-size:7px;
+  font-size:11px;
 }
 .membership-summary-grid .green strong{color:#2a7b57}
 .membership-summary-grid .orange strong{color:#c15a2d}
@@ -158,7 +158,7 @@
   margin-bottom:12px;
   padding:9px 11px;
   border-radius:9px;
-  font-size:8px;
+  font-size:11px;
   font-weight:750;
 }
 .membership-alert.error{
@@ -194,7 +194,7 @@
   border-radius:8px;
   background:#fff;
   color:#315b84;
-  font-size:7.4px;
+  font-size:11px;
   font-weight:900;
   cursor:pointer;
   transition:.15s ease;
@@ -237,7 +237,7 @@
 .membership-panel-head>div>span{
   display:block;
   color:#ef6331;
-  font-size:7px;
+  font-size:11px;
   font-weight:950;
   letter-spacing:.14em;
 }
@@ -249,7 +249,7 @@
 }
 .membership-panel-head>small{
   color:#8292a4;
-  font-size:7px;
+  font-size:11px;
 }
 
 /* Base package cards */
@@ -284,7 +284,7 @@
 .membership-package-card-head>div>span{
   display:block;
   color:#8a98a9;
-  font-size:6.4px;
+  font-size:11px;
   font-weight:900;
   letter-spacing:.07em;
 }
@@ -299,7 +299,7 @@
 }
 .membership-package-card-head small{
   color:#8796a7;
-  font-size:6.8px;
+  font-size:11px;
 }
 .membership-package-card-summary{
   display:grid;
@@ -319,14 +319,14 @@
 }
 .membership-package-card-summary span{
   color:#8a99aa;
-  font-size:6.2px;
+  font-size:11px;
   font-weight:900;
   text-transform:uppercase;
 }
 .membership-package-card-summary strong{
   margin-top:4px;
   color:#315475;
-  font-size:9px;
+  font-size:12px;
 }
 .membership-package-cycles{
   display:grid;
@@ -350,18 +350,18 @@
 }
 .membership-cycle-summary strong{
   color:#355675;
-  font-size:8px;
+  font-size:11px;
 }
 .membership-cycle-summary span{
   color:#173e6c;
-  font-size:9px;
+  font-size:12px;
   font-weight:900;
   text-align:right;
 }
 .membership-cycle-summary small{
   margin-top:2px;
   color:#8b99aa;
-  font-size:6.4px;
+  font-size:11px;
   text-align:right;
 }
 .membership-cycle-summary>div:first-child small{
@@ -372,7 +372,7 @@
   border:1px dashed #d9e2eb;
   border-radius:9px;
   color:#8897a8;
-  font-size:7px;
+  font-size:11px;
   text-align:center;
 }
 
@@ -420,7 +420,7 @@
   border-radius:999px;
   background:#e9f7ef;
   color:#2a7b57;
-  font-size:6.5px;
+  font-size:11px;
   font-weight:950;
 }
 .membership-plan-chip.scale{
@@ -434,7 +434,7 @@
   align-items:center;
   padding:0 7px;
   border-radius:999px;
-  font-size:6.4px;
+  font-size:11px;
   font-weight:900;
 }
 .membership-rule-status.active{
@@ -464,7 +464,7 @@
   border-radius:999px;
   background:#f1f5f9;
   color:#607890;
-  font-size:6.2px;
+  font-size:11px;
   font-weight:800;
 }
 .membership-rule-periods{
@@ -487,19 +487,19 @@
 }
 .membership-rule-periods span{
   color:#8393a5;
-  font-size:6.2px;
+  font-size:11px;
   font-weight:900;
 }
 .membership-rule-periods strong{
   margin-top:4px;
   color:#173e6a;
-  font-size:9px;
+  font-size:12px;
 }
 .membership-rule-periods small{
   margin-top:3px;
   overflow:hidden;
   color:#8d9aaa;
-  font-size:6.1px;
+  font-size:11px;
   text-overflow:ellipsis;
   white-space:nowrap;
 }
@@ -516,7 +516,7 @@
   max-width:58%;
   overflow:hidden;
   color:#8998a9;
-  font-size:6.4px;
+  font-size:11px;
   text-overflow:ellipsis;
   white-space:nowrap;
 }
@@ -550,14 +550,14 @@
 }
 .membership-investor-summary span{
   color:#8897a8;
-  font-size:6.4px;
+  font-size:11px;
   font-weight:900;
   text-transform:uppercase;
 }
 .membership-investor-summary strong{
   margin-top:4px;
   color:#2f5273;
-  font-size:9px;
+  font-size:12px;
 }
 
 /* Shared empty */
@@ -568,7 +568,7 @@
   padding:25px;
   background:#f8fafc;
   color:#8493a5;
-  font-size:8px;
+  font-size:11px;
 }
 
 /* Modal shell */
@@ -612,7 +612,7 @@
 .membership-modal-head>div>span{
   display:block;
   color:#ef6331;
-  font-size:7px;
+  font-size:11px;
   font-weight:950;
   letter-spacing:.13em;
 }
@@ -625,7 +625,7 @@
 .membership-modal-head p{
   margin:0;
   color:#7f8fa1;
-  font-size:7px;
+  font-size:11px;
 }
 .membership-modal-head>button{
   position:absolute;
@@ -670,7 +670,7 @@
   border-radius:8px;
   background:#fff;
   color:#516a83;
-  font-size:7.4px;
+  font-size:11px;
   font-weight:900;
   cursor:pointer;
 }
@@ -711,7 +711,7 @@
   border-radius:8px;
   background:#eaf2fb;
   color:#32689d;
-  font-size:6.8px;
+  font-size:11px;
   font-weight:950;
 }
 .membership-editor-title strong,
@@ -720,12 +720,12 @@
 }
 .membership-editor-title strong{
   color:#2a4e72;
-  font-size:8.5px;
+  font-size:11px;
 }
 .membership-editor-title small{
   margin-top:2px;
   color:#8b99aa;
-  font-size:6.5px;
+  font-size:11px;
 }
 .membership-base-fields{
   display:grid;
@@ -747,7 +747,7 @@
 }
 .membership-package-lock span{
   color:#8797a8;
-  font-size:6.4px;
+  font-size:11px;
   font-weight:900;
   text-transform:uppercase;
 }
@@ -758,7 +758,7 @@
 }
 .membership-base-fields>label{
   color:#60768d;
-  font-size:7px;
+  font-size:11px;
   font-weight:900;
 }
 .membership-base-fields input,
@@ -776,7 +776,7 @@
   background:#fff;
   color:#31506f;
   font:inherit;
-  font-size:8px;
+  font-size:11px;
   outline:0;
 }
 .membership-base-fields input{
@@ -805,7 +805,7 @@
 }
 .membership-editor-subhead strong{
   color:#4b6680;
-  font-size:7.5px;
+  font-size:11px;
 }
 .membership-editor-subhead>button,
 .membership-feature-head>button,
@@ -816,7 +816,7 @@
   border-radius:7px;
   background:#fff;
   color:#315d86;
-  font-size:6.8px;
+  font-size:11px;
   font-weight:900;
   cursor:pointer;
 }
@@ -857,7 +857,7 @@
 }
 .membership-cycle-editor-head>small{
   color:#8493a5;
-  font-size:6.5px;
+  font-size:11px;
 }
 .cycle-remove{
   width:28px;
@@ -916,7 +916,7 @@
 }
 .membership-cycle-price-row>label:not(.membership-check){
   color:#657a91;
-  font-size:6.7px;
+  font-size:11px;
   font-weight:900;
 }
 .membership-cycle-price-row input[type="number"]{
@@ -930,7 +930,7 @@
   gap:5px;
   margin:0!important;
   color:#61758b!important;
-  font-size:6.7px!important;
+  font-size:11px!important;
   font-weight:850!important;
   white-space:nowrap;
 }
@@ -957,7 +957,7 @@
 }
 .membership-live-price span{
   color:#8595a7;
-  font-size:6.2px;
+  font-size:11px;
   font-weight:900;
 }
 .membership-live-price strong{
@@ -968,7 +968,7 @@
 .membership-live-price small{
   margin-top:2px;
   color:#27815a;
-  font-size:6.2px;
+  font-size:11px;
 }
 .membership-cycle-leads{
   margin-top:9px;
@@ -977,7 +977,7 @@
 }
 .membership-cycle-leads>span{
   color:#697f95;
-  font-size:6.7px;
+  font-size:11px;
   font-weight:900;
 }
 
@@ -1003,16 +1003,16 @@
 }
 .membership-lead-allowance-row>div strong{
   color:#355676;
-  font-size:7.4px;
+  font-size:11px;
 }
 .membership-lead-allowance-row>div small{
   margin-top:2px;
   color:#929eac;
-  font-size:6px;
+  font-size:11px;
 }
 .membership-lead-allowance-row label{
   color:#74869b;
-  font-size:6.2px;
+  font-size:11px;
   font-weight:850;
 }
 .membership-lead-allowance-row input{
@@ -1037,7 +1037,7 @@
   border-radius:999px;
   background:#f7fafc;
   color:#526b83;
-  font-size:6.7px;
+  font-size:11px;
   font-weight:800;
 }
 .membership-feature-chips span button{
@@ -1081,7 +1081,7 @@
 }
 .membership-scope-picker strong{
   color:#315778;
-  font-size:7.3px;
+  font-size:11px;
 }
 .membership-scope-picker>button.active strong{
   color:#124b83;
@@ -1089,7 +1089,7 @@
 .membership-scope-picker small{
   margin-top:3px;
   color:#8b99aa;
-  font-size:6px;
+  font-size:11px;
   line-height:1.35;
 }
 .membership-pricing-scope-note{
@@ -1099,7 +1099,7 @@
   border-radius:8px;
   background:#fbfdff;
   color:#6d8196;
-  font-size:6.4px;
+  font-size:11px;
   line-height:1.45;
 }
 .membership-target-tags .membership-scope-tag{
@@ -1114,7 +1114,7 @@
   display:block;
   margin-top:4px;
   color:#8493a5;
-  font-size:6.5px;
+  font-size:11px;
   font-weight:650;
 }
 
@@ -1139,19 +1139,19 @@
 .membership-offer-config-head>span{
   max-width:52%;
   color:#8a98a9;
-  font-size:5.8px;
+  font-size:11px;
   font-weight:750;
   line-height:1.45;
   text-align:right;
 }
 .membership-offer-config-head strong{
   color:#315575;
-  font-size:8px;
+  font-size:11px;
 }
 .membership-offer-config-head small{
   margin-top:2px;
   color:#8b99aa;
-  font-size:6.2px;
+  font-size:11px;
 }
 .membership-offer-grid{
   display:grid;
@@ -1165,7 +1165,7 @@
 .membership-offer-grid label{
   min-width:0;
   color:#61778e;
-  font-size:6.7px;
+  font-size:11px;
   font-weight:900;
 }
 .membership-offer-grid input,
@@ -1179,14 +1179,14 @@
   border-radius:8px;
   background:#fff;
   color:#31506f;
-  font-size:7.5px;
+  font-size:11px;
   outline:0;
 }
 .membership-offer-grid label>small{
   display:block;
   margin-top:4px;
   color:#929ead;
-  font-size:5.9px;
+  font-size:11px;
   font-weight:650;
   line-height:1.4;
 }
@@ -1200,7 +1200,7 @@
 .membership-welcome-presets>span{
   margin-right:2px;
   color:#8392a4;
-  font-size:6px;
+  font-size:11px;
   font-weight:900;
 }
 .membership-welcome-presets button{
@@ -1210,7 +1210,7 @@
   border-radius:999px;
   background:#fff;
   color:#60778e;
-  font-size:6px;
+  font-size:11px;
   font-weight:900;
   cursor:pointer;
 }
@@ -1232,7 +1232,7 @@
   border-radius:8px;
   background:#fff;
   color:#60778e;
-  font-size:6.5px;
+  font-size:11px;
   font-weight:900;
   cursor:pointer;
 }
@@ -1249,7 +1249,7 @@
   border-radius:999px;
   background:#eaf8ef;
   color:#267b55;
-  font-size:5.8px;
+  font-size:11px;
   font-style:normal;
   font-weight:900;
 }
@@ -1263,7 +1263,7 @@
 .membership-rule-form-grid label{
   min-width:0;
   color:#61778e;
-  font-size:6.8px;
+  font-size:11px;
   font-weight:900;
 }
 .membership-rule-form-grid label.wide{
@@ -1279,7 +1279,7 @@
   display:block;
   margin-top:4px;
   color:#939fad;
-  font-size:5.9px;
+  font-size:11px;
   font-weight:650;
 }
 .membership-rule-active{
@@ -1304,12 +1304,12 @@
 }
 .membership-rule-active span strong{
   color:#3e5c79;
-  font-size:7px;
+  font-size:11px;
 }
 .membership-rule-active span small{
   margin-top:2px;
   color:#8e9aaa;
-  font-size:5.9px;
+  font-size:11px;
 }
 
 /* Specific businesses */
@@ -1324,7 +1324,7 @@
   display:grid;
   gap:5px;
   color:#637990;
-  font-size:6.8px;
+  font-size:11px;
   font-weight:900;
 }
 .membership-business-picker>label>input{
@@ -1334,7 +1334,7 @@
   border-radius:8px;
   background:#fff;
   color:#31506f;
-  font-size:7.5px;
+  font-size:11px;
   outline:0;
 }
 .membership-selected-businesses{
@@ -1355,7 +1355,7 @@
   border-radius:999px;
   background:#eef6fd;
   color:#315f8d;
-  font-size:6.3px;
+  font-size:11px;
   font-weight:850;
   cursor:pointer;
 }
@@ -1405,18 +1405,18 @@
 }
 .membership-business-results strong{
   color:#355574;
-  font-size:7px;
+  font-size:11px;
 }
 .membership-business-results small{
   margin-top:2px;
   color:#8d9aaa;
-  font-size:5.9px;
+  font-size:11px;
 }
 .membership-business-results>button>b{
   flex:0 0 auto;
   padding:4px 6px;
   border-radius:999px;
-  font-size:5.8px;
+  font-size:11px;
 }
 .membership-business-results>button>b.verified{
   background:#e8f7ef;
@@ -1456,16 +1456,16 @@
 }
 .membership-rule-period-head>div strong{
   color:#315575;
-  font-size:8px;
+  font-size:11px;
 }
 .membership-rule-period-head>div small{
   margin-top:2px;
   color:#909dac;
-  font-size:6px;
+  font-size:11px;
 }
 .membership-rule-period-head>label{
   color:#667c92;
-  font-size:6.5px;
+  font-size:11px;
   font-weight:900;
 }
 .membership-rule-period-head>label input{
@@ -1502,19 +1502,19 @@
 }
 .membership-investor-industry-head strong{
   color:#355574;
-  font-size:8px;
+  font-size:11px;
 }
 .membership-investor-industry-head small{
   margin-top:2px;
   color:#8f9cac;
-  font-size:6px;
+  font-size:11px;
 }
 .membership-investor-industry-head>label{
   display:flex;
   align-items:center;
   gap:5px;
   color:#61768d;
-  font-size:6.5px;
+  font-size:11px;
   font-weight:850;
 }
 .membership-investor-locations{
@@ -1534,7 +1534,7 @@
 }
 .membership-investor-locations label{
   color:#687d92;
-  font-size:6.2px;
+  font-size:11px;
   font-weight:850;
 }
 .membership-investor-locations select,

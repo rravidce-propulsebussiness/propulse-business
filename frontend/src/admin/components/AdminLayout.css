@@ -58,7 +58,7 @@
   display:block;
   margin-top:6px;
   color:#9eb2ca;
-  font-size:7px;
+  font-size:11px;
   font-weight:900;
   letter-spacing:.18em;
   white-space:nowrap;
@@ -79,7 +79,7 @@
 .admin-nav-label{
   padding:0 11px 11px;
   color:#7691ad;
-  font-size:7px;
+  font-size:11px;
   font-weight:950;
   letter-spacing:.17em;
 }
@@ -187,7 +187,7 @@
   display:block;
   padding:8px 9px 4px;
   color:#647f9c;
-  font-size:6px;
+  font-size:11px;
   font-weight:950;
   letter-spacing:.14em;
   text-transform:uppercase;
@@ -202,7 +202,7 @@
   border-radius:9px;
   color:#b7c9dc;
   text-decoration:none;
-  font-size:8.8px;
+  font-size:12px;
   font-weight:700;
   transition:.16s ease;
 }
@@ -256,8 +256,8 @@
   font-weight:950;
 }
 .admin-sidebar-signature div{display:grid;gap:3px}
-.admin-sidebar-signature b{color:#fff;font-size:8px}
-.admin-sidebar-signature small{color:#9fb4cd;font-size:6.4px}
+.admin-sidebar-signature b{color:#fff;font-size:12px}
+.admin-sidebar-signature small{color:#9fb4cd;font-size:11px}
 
 .admin-sidebar-logout{
   width:100%;
@@ -268,7 +268,7 @@
   background:transparent;
   color:#94abc4;
   text-align:left;
-  font-size:8px;
+  font-size:12px;
   font-weight:800;
   cursor:pointer;
 }
@@ -312,7 +312,7 @@
   display:flex;
   align-items:center;
   gap:7px;
-  font-size:8.5px;
+  font-size:12px;
 }
 .admin-breadcrumb span{
   display:inline-flex;
@@ -339,7 +339,7 @@
   border-radius:999px;
   background:#f5fbf7;
   color:#2c7c56;
-  font-size:7.5px;
+  font-size:12px;
   font-weight:900;
 }
 .admin-top-status i{
@@ -367,7 +367,7 @@
   background:linear-gradient(145deg,#0d4a98,#176ed0);
   color:#fff;
   box-shadow:0 8px 18px rgba(13,73,149,.18);
-  font-size:8px;
+  font-size:12px;
   font-weight:950;
 }
 .admin-top-user div{
@@ -380,13 +380,13 @@
   max-width:150px;
   overflow:hidden;
   color:#132f52;
-  font-size:8.5px;
+  font-size:12px;
   white-space:nowrap;
   text-overflow:ellipsis;
 }
 .admin-top-user small{
   color:#8997a8;
-  font-size:6.5px;
+  font-size:11px;
 }
 
 .admin-mobile-menu{display:none}
@@ -509,7 +509,7 @@
 .admin-nav-subitem>a:hover{color:#e86325;background:#fff6ed}
 .admin-nav-subitem>a.active{background:#fff0e8;color:#df5925}
 .admin-nav-subdot{background:#e4b49b}.admin-nav-subitem>a.active .admin-nav-subdot{background:#f36a2d;box-shadow:0 0 0 4px #ffede0}
-.admin-nav-subsection{color:#b58c7a;font-size:9px}
+.admin-nav-subsection{color:#b58c7a;font-size:12px}
 .admin-sidebar-signature{background:#fff7ee;border:1px solid #f5e0d0;box-shadow:none}
 .admin-sidebar-signature>span{background:#ffebdc;color:#e96126}
 .admin-sidebar-signature b{color:#344559;font-size:11px}

@@ -1,144 +1,44 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
-import { authRequest, clearSession, getToken, getUser } from '../utils/auth'
+import { Link, useLocation } from 'react-router-dom'
+import UserHeader from './UserHeader'
 import './InvestorHeader.css'
-import NotificationBell from './NotificationBell'
+
+// Investor pages share the same main menu bar as every other professional
+// page (UserHeader). Investor sections are a secondary tab row underneath,
+// so users never lose the main navigation when they open "Investor".
+const INVESTOR_TABS = [
+  { label: 'Overview', to: '/investment' },
+  { label: 'Linked Leads', to: '/investment/leads' },
+  { label: 'Sold Leads', to: '/investment/sold-leads' },
+  { label: 'History', to: '/investment/history' },
+  { label: 'Payouts', to: '/investment/payouts' },
+  { label: 'FAQ', to: '/investment/faq' },
+]
 
 export default function InvestorHeader() {
-  const navigate = useNavigate()
   const location = useLocation()
-  const user = getUser()
-  const [open, setOpen] = useState(false)
-  const [businessName, setBusinessName] = useState(
-    user?.business_name || user?.businessName || 'Your Business'
-  )
-
-  const investorRoute = location.pathname.startsWith('/investment')
-  const [isPro, setIsPro] = useState(
-    Boolean(
-      user?.is_pro ||
-      user?.isPro ||
-      user?.membership_plan === 'pro' ||
-      user?.membershipPlan === 'pro' ||
-      investorRoute
-    )
-  )
-
-  useEffect(() => {
-    let active = true
-    if (!getToken() || user?.role === 'admin') return undefined
-
-    authRequest('/profile')
-      .then(profile => {
-        if (!active) return
-        if (profile?.business_name) setBusinessName(profile.business_name)
-
-        const profilePro = Boolean(
-          profile?.is_pro ||
-          profile?.isPro ||
-          String(profile?.membership_plan || profile?.membershipPlan || '').toLowerCase() === 'pro' ||
-          (profile?.membership?.plan &&
-            String(profile.membership.plan).toLowerCase() === 'pro')
-        )
-
-        setIsPro(profilePro || investorRoute)
-      })
-      .catch(() => {
-        if (active) setIsPro(investorRoute)
-      })
-
-    return () => {
-      active = false
-    }
-  }, [user?.role, investorRoute])
-
-  useEffect(()=>{setOpen(false)},[location.pathname,location.search])
-  useEffect(()=>{
-    const onKeyDown=event=>{if(event.key==='Escape')setOpen(false)}
-    const onResize=()=>{if(window.innerWidth>760)setOpen(false)}
-    window.addEventListener('keydown',onKeyDown)
-    window.addEventListener('resize',onResize)
-    return()=>{window.removeEventListener('keydown',onKeyDown);window.removeEventListener('resize',onResize)}
-  },[])
-
-  const logout = () => {
-    clearSession()
-    setOpen(false)
-    navigate('/')
-  }
-
-  const isActive = target => {
-    const [pathname, query] = target.split('?')
-    if (location.pathname !== pathname) return false
-    if (!query) return true
-    const targetParams = new URLSearchParams(query)
-    const currentParams = new URLSearchParams(location.search)
-    return [...targetParams.entries()].every(([key, value]) => currentParams.get(key) === value)
-  }
-
-  const nav = isPro
-    ? [
-        { label: 'Home', to: '/' },
-        { label: 'Investment', to: '/investment' },
-        { label: 'Linked Leads', to: '/investment/leads' },
-        { label: 'History', to: '/investment/history' },
-        { label: 'FAQ', to: '/investment/faq' },
-      ]
-    : [{ label: 'Home', to: '/' }]
-
-  const avatar = businessName.trim().charAt(0).toUpperCase() || 'B'
+  const pathname = location.pathname.replace(/\/+$/, '') || '/'
 
   return (
-    <header className="investor-header">
-
-      <Link
-        className="investor-header-brand"
-        to="/"
-        onClick={() => setOpen(false)}
-      >
-        <img src="/brand/propulse-logo.png" alt="Propulse Business" />
-      </Link>
-
-      <nav id="investor-header-navigation" aria-label="Investor navigation" className={`investor-header-nav${open ? ' open' : ''}`}>
-        {nav.map(item => (
-          <Link
-            key={item.to}
-            className={isActive(item.to) ? 'active' : ''}
-            to={item.to}
-            onClick={() => setOpen(false)}
-          >
-            {item.label}
-          </Link>
-        ))}
-        <button className="investor-mobile-logout" onClick={logout}>
-          Logout
-        </button>
+    <>
+      <UserHeader />
+      <nav className="investor-subnav" aria-label="Investor sections">
+        <div className="investor-subnav__inner">
+          <span className="investor-subnav__label">Investor</span>
+          {INVESTOR_TABS.map(item => {
+            const active = pathname === item.to
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={active ? 'active' : ''}
+                aria-current={active ? 'page' : undefined}
+              >
+                {item.label}
+              </Link>
+            )
+          })}
+        </div>
       </nav>
-
-      <div className="investor-header-right">
-        <NotificationBell/>
-        <Link
-          className="investor-profile"
-          to="/profile"
-          aria-label="Open business profile"
-        >
-          <span className="investor-avatar">{avatar}</span>
-          <span className="investor-profile-name">{businessName}</span>
-        </Link>
-        <button className="investor-logout" onClick={logout}>
-          Logout
-        </button>
-      <button
-        type="button"
-        className="investor-menu"
-        aria-label={open ? "Close investor navigation" : "Open investor navigation"}
-        aria-expanded={open}
-        aria-controls="investor-header-navigation"
-        onClick={() => setOpen(value => !value)}
-      >
-        ☰
-      </button>
-      </div>
-    </header>
+    </>
   )
 }
