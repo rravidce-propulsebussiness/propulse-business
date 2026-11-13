@@ -32,29 +32,55 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <title>House Construction Company in Hyderabad | ProPulse</title>
     <style>
-      /* Painted before JS/CSS bundles so slow connections never reveal unstyled text. */
-      #propulse-boot-screen{position:fixed;inset:0;z-index:2147483640;display:grid;place-items:center;background:#f7f9fc;color:#234967;font:600 14px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-      #propulse-boot-screen .propulse-boot-center{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
-      #propulse-boot-screen svg{width:100px;height:100px;overflow:visible}
-      #propulse-boot-screen .propulse-boot-stroke{stroke-dasharray:154;stroke-dashoffset:154;animation:propulse-draw 1.9s ease-in-out infinite}
-      #propulse-boot-screen .propulse-boot-orbit{transform-origin:50px 50px;animation:propulse-spin 3.2s linear infinite}
-      #propulse-boot-screen .propulse-boot-title{font-weight:800;letter-spacing:.03em;font-size:17px}
+      /* Painted before JS/CSS bundles so slow connections never reveal unstyled text.
+         3D glass loader: keep in sync with src/components/BootLoader.css. */
+      #propulse-boot-screen{position:fixed;inset:0;z-index:2147483640;display:grid;place-items:center;background:radial-gradient(60% 50% at 50% 42%,#fff 0,#f5f8fc 60%,#ecf2f8 100%);color:#234967;font:600 14px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+      #propulse-boot-screen .propulse-boot-center{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
       #propulse-boot-screen .propulse-boot-tagline{font-size:15px;color:#315b78;font-weight:650}
       #propulse-boot-screen .propulse-boot-note{color:#718598;font-size:12px;font-weight:400}
-      @keyframes propulse-draw{0%{stroke-dashoffset:154;opacity:.35}50%,80%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:-154;opacity:.35}}
-      @keyframes propulse-spin{to{transform:rotate(360deg)}}
-      @media(prefers-reduced-motion:reduce){#propulse-boot-screen .propulse-boot-stroke,#propulse-boot-screen .propulse-boot-orbit{animation:none;stroke-dashoffset:0}}
+      .pp-glass{--pp-s:74px;position:relative;width:calc(var(--pp-s)*2);height:calc(var(--pp-s)*2);display:grid;place-items:center;perspective:620px;margin-bottom:4px}
+      .pp-glass::before{content:"";position:absolute;inset:4%;border-radius:50%;background:radial-gradient(circle at 50% 46%,rgba(238,156,88,.34),rgba(54,116,147,.16) 46%,transparent 70%);filter:blur(12px);animation:pp-glass-halo 3.6s ease-in-out infinite}
+      .pp-glass-float{position:relative;width:var(--pp-s);height:var(--pp-s);transform-style:preserve-3d;animation:pp-glass-float 3.2s ease-in-out infinite}
+      .pp-glass-cube{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(-20deg) rotateY(-35deg);animation:pp-glass-spin 6.4s cubic-bezier(.65,.05,.36,1) infinite}
+      .pp-glass-face{position:absolute;inset:0;border-radius:18px;border:1px solid rgba(255,255,255,.95);background:linear-gradient(135deg,rgba(255,255,255,.30),rgba(170,205,228,.10) 50%,rgba(238,156,88,.14));box-shadow:inset 0 0 10px rgba(255,255,255,.5),inset 0 -10px 22px rgba(34,88,117,.10),0 0 0 1px rgba(34,88,117,.16);overflow:hidden}
+      .pp-glass-face::after{content:"";position:absolute;inset:-45%;background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.7) 50%,transparent 58%);transform:translateX(-62%);animation:pp-glass-glint 3.2s ease-in-out infinite}
+      .pp-glass-face.f1{transform:translateZ(calc(var(--pp-s)/2))}
+      .pp-glass-face.f2{transform:rotateY(180deg) translateZ(calc(var(--pp-s)/2))}
+      .pp-glass-face.f3{transform:rotateY(90deg) translateZ(calc(var(--pp-s)/2))}
+      .pp-glass-face.f4{transform:rotateY(-90deg) translateZ(calc(var(--pp-s)/2))}
+      .pp-glass-face.f5{transform:rotateX(90deg) translateZ(calc(var(--pp-s)/2))}
+      .pp-glass-face.f6{transform:rotateX(-90deg) translateZ(calc(var(--pp-s)/2))}
+      .pp-glass-core{position:absolute;left:50%;top:50%;width:calc(var(--pp-s)*.62);height:calc(var(--pp-s)*.62);margin:calc(var(--pp-s)*-.31) 0 0 calc(var(--pp-s)*-.31);overflow:visible;filter:drop-shadow(0 3px 6px rgba(34,88,117,.35));animation:pp-glass-float 3.2s ease-in-out infinite}
+      .pp-glass-core path{stroke-dasharray:100;stroke-dashoffset:100;animation:pp-glass-draw 3.2s cubic-bezier(.6,0,.3,1) infinite}
+      .pp-glass-orbit{position:absolute;width:150%;height:150%;left:-25%;top:-25%;border-radius:50%;border:1.5px solid rgba(34,88,117,.16);transform:rotateX(74deg);animation:pp-glass-orbit 3.4s linear infinite}
+      .pp-glass-orbit i{position:absolute;left:50%;top:-6px;width:11px;height:11px;margin-left:-5.5px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffd3a8,#ed9f55 55%,#d9772b);box-shadow:0 0 14px rgba(237,159,85,.8)}
+      .pp-glass-orbit i+i{top:auto;bottom:-4px;width:7px;height:7px;margin-left:-3.5px;background:#367493;box-shadow:0 0 10px rgba(54,116,147,.6)}
+      .pp-glass-shadow{position:absolute;bottom:2%;left:50%;width:58%;height:9%;margin-left:-29%;border-radius:50%;background:radial-gradient(rgba(12,49,82,.30),transparent 70%);animation:pp-glass-shadow 3.2s ease-in-out infinite}
+      .pp-glass-title{font-size:19px;font-weight:800;letter-spacing:.04em;background:linear-gradient(100deg,#163d5a 20%,#ed8a3c 45%,#163d5a 70%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:pp-glass-sheen 2.8s linear infinite}
+      .pp-glass-bar{position:relative;display:block;width:128px;height:3px;border-radius:9px;background:rgba(34,88,117,.12);overflow:hidden;margin-top:2px}
+      .pp-glass-bar::after{content:"";position:absolute;inset:0;width:40%;border-radius:inherit;background:linear-gradient(90deg,transparent,#ed9f55,#225875,transparent);animation:pp-glass-progress 1.6s ease-in-out infinite}
+      @keyframes pp-glass-spin{0%{transform:rotateX(-20deg) rotateY(-35deg)}50%{transform:rotateX(-14deg) rotateY(145deg)}100%{transform:rotateX(-20deg) rotateY(325deg)}}
+      @keyframes pp-glass-float{0%,100%{transform:translateY(-6px)}50%{transform:translateY(6px)}}
+      @keyframes pp-glass-shadow{0%,100%{transform:scale(.82);opacity:.5}50%{transform:scale(1);opacity:.95}}
+      @keyframes pp-glass-glint{0%,40%{transform:translateX(-62%)}75%,100%{transform:translateX(62%)}}
+      @keyframes pp-glass-orbit{from{transform:rotateX(74deg) rotateZ(0)}to{transform:rotateX(74deg) rotateZ(360deg)}}
+      @keyframes pp-glass-halo{0%,100%{opacity:.7;transform:scale(.94)}50%{opacity:1;transform:scale(1.05)}}
+      @keyframes pp-glass-draw{0%{stroke-dashoffset:100;opacity:.5}42%,90%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:0;opacity:.6}}
+      @keyframes pp-glass-sheen{to{background-position:-220% 0}}
+      @keyframes pp-glass-progress{0%{transform:translateX(-110%)}100%{transform:translateX(260%)}}
+      @media(prefers-reduced-motion:reduce){.pp-glass *,.pp-glass::before,.pp-glass-title,.pp-glass-bar::after{animation:none!important}.pp-glass-core path{stroke-dashoffset:0}}
     </style>
   </head>
   <body>
     <div id="propulse-boot-screen" role="status" aria-live="polite" aria-label="Loading ProPulse">
       <div class="propulse-boot-center">
-        <svg viewBox="0 0 100 100" fill="none" aria-hidden="true">
-          <circle cx="50" cy="50" r="38" stroke="#DEEAF1" stroke-width="4"/>
-          <g class="propulse-boot-orbit"><circle cx="50" cy="12" r="5" fill="#EE9C58"/><circle cx="50" cy="88" r="3" fill="#3A7091" opacity=".65"/></g>
-          <path class="propulse-boot-stroke" d="M36 72V27h18c11 0 18 6 18 17s-7 17-18 17H36" stroke="#225875" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="propulse-boot-title">ProPulse</span><span class="propulse-boot-tagline">Get your next project</span><span class="propulse-boot-note">Preparing your workspace</span>
+        <div class="pp-glass" aria-hidden="true">
+          <div class="pp-glass-orbit"><i></i><i></i></div>
+          <div class="pp-glass-float"><div class="pp-glass-cube"><span class="pp-glass-face f1"></span><span class="pp-glass-face f2"></span><span class="pp-glass-face f3"></span><span class="pp-glass-face f4"></span><span class="pp-glass-face f5"></span><span class="pp-glass-face f6"></span></div></div>
+          <svg class="pp-glass-core" viewBox="0 0 100 100" fill="none"><path pathLength="100" d="M36 72V27h18c11 0 18 6 18 17s-7 17-18 17H36" stroke="#225875" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="pp-glass-shadow"></span>
+        </div>
+        <span class="pp-glass-title">ProPulse</span><span class="propulse-boot-tagline">Get your next project</span><span class="propulse-boot-note">Preparing your workspace</span><span class="pp-glass-bar" aria-hidden="true"></span>
       </div>
     </div>
     <div id="root"></div>
