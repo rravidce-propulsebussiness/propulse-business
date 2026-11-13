@@ -14,7 +14,7 @@ export const HOME_SEO={
   summary:'Plan independent house and villa construction in Hyderabad. Define your plot, built-up area, floors, materials, budget and timeline before requesting an estimate. Explore interiors and independent professionals too.',
 }
 
-export const CORE_PUBLIC_SEO_ROUTES=[
+const CORE_PUBLIC_SEO_ROUTES=[
   HOME_SEO,
   {
     path:'/blog',
@@ -132,9 +132,7 @@ export const PUBLIC_SEO_ROUTES=[
   ...CONSTRUCTION_GUIDE_ROUTES,
 ].filter(Boolean)
 
-export const PUBLIC_SEO_PATHS=new Set(PUBLIC_SEO_ROUTES.map(route=>route.path))
-
-export function normalizeSeoPath(pathname='/'){
+function normalizeSeoPath(pathname='/'){
   const clean=String(pathname||'/').split('?')[0].split('#')[0].replace(/\/{2,}/g,'/')
   if(clean==='/'||!clean)return '/'
   return clean.endsWith('/')?clean.slice(0,-1):clean

@@ -64,7 +64,7 @@ export const CONSTRUCTION_PACKAGE_CATALOG = {
   },
 }
 
-export function constructionPackageKeyFromQuality(quality) {
+function constructionPackageKeyFromQuality(quality) {
   const key = String(quality || 'standard').toLowerCase()
   if (key === 'luxury' || key === 'royal') return 'royal'
   if (key === 'premium') return 'premium'

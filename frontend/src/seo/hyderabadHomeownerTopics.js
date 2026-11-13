@@ -397,6 +397,3 @@ export const HYDERABAD_HOMEOWNER_TOPIC_GROUPS = Object.entries(groups).map(([cat
     evidence: "Search-language research; exact monthly volume not available from public results"
   }))
 }));
-export const HYDERABAD_HOMEOWNER_TOPICS = HYDERABAD_HOMEOWNER_TOPIC_GROUPS.flatMap(group =>
-  group.topics.map(topic => ({ ...topic, category: group.category }))
-);

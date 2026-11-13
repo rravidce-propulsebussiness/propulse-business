@@ -138,7 +138,7 @@ export const HYDERABAD_CONSTRUCTION_COST_ROUTE={
   ],
 }
 
-export const HYDERABAD_SERVICES={
+const HYDERABAD_SERVICES={
   construction:{
     slug:'construction',
     label:'Construction',
@@ -286,7 +286,7 @@ export function localityPagePath(serviceSlug,localitySlug){
   return '/hyderabad/'+service.slug+'#'+locality.slug
 }
 
-export const HYDERABAD_SERVICE_SEO_ROUTES=Object.values(HYDERABAD_SERVICES).map(service=>({
+const HYDERABAD_SERVICE_SEO_ROUTES=Object.values(HYDERABAD_SERVICES).map(service=>({
   path:'/hyderabad/'+service.slug,
   type:'city-service',
   serviceSlug:service.slug,
@@ -314,7 +314,7 @@ export const HYDERABAD_LOCALITY_SEO_ROUTES=HYDERABAD_LOCALITIES.map(locality=>{
   }
 })
 
-export const HYDERABAD_COMPARISON_SEO_ROUTES=Object.values(COMPARISONS).map(item=>({
+const HYDERABAD_COMPARISON_SEO_ROUTES=Object.values(COMPARISONS).map(item=>({
   ...item,
   type:'comparison',
 }))

@@ -136,9 +136,6 @@ export function ProjectVideoCover({src,thumbnail}) {
   </div>
 }
 
-export function playableProjectVideo(url){
-  return Boolean(url)&&!/(youtube\.com|youtu\.be|vimeo\.com)/i.test(url)
-}
 
 export function Icon({ name, size = 18 }) {
   const props = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }

@@ -1,5 +1,5 @@
-export const MAX_PAYOUT_PROOF_BYTES = 6 * 1024 * 1024
-export const PAYOUT_PROOF_TYPES = ['image/png', 'image/jpeg', 'image/webp']
+const MAX_PAYOUT_PROOF_BYTES = 6 * 1024 * 1024
+const PAYOUT_PROOF_TYPES = ['image/png', 'image/jpeg', 'image/webp']
 
 export function payoutProofError(file,{typeMessage='Payment proof must be a PNG, JPG, or WebP image.',sizeMessage='Payment proof must be 6 MB or smaller.'}={}) {
   if (!file) return ''
