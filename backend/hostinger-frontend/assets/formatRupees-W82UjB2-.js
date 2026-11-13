@@ -1,0 +1,1 @@
+function e(e){return Math.round(Number(e||0)*100)%100!=0}function t(t){let n=Number(t||0),r=e(n)?2:0;return`₹${n.toLocaleString(`en-IN`,{minimumFractionDigits:r,maximumFractionDigits:r})}`}export{t};
