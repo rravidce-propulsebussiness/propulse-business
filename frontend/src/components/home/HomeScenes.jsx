@@ -101,5 +101,3 @@ export function HouseScene({ stage = 4, idPrefix = 'hs' }) {
     </svg>
   )
 }
-
-
