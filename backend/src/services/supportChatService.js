@@ -438,7 +438,7 @@ async function adminSetStatus(publicId,status){
   if(!['open','resolved'].includes(next))throw supportError('Invalid support status','SUPPORT_STATUS_INVALID',400);
   const row=(await pool.query(
     `UPDATE support_conversations
-       SET status=$1,resolved_at=CASE WHEN $1='resolved' THEN CURRENT_TIMESTAMP ELSE NULL END,updated_at=CURRENT_TIMESTAMP
+       SET status=$1::varchar,resolved_at=CASE WHEN $1::varchar='resolved' THEN CURRENT_TIMESTAMP ELSE NULL END,updated_at=CURRENT_TIMESTAMP
      WHERE public_id=$2
      RETURNING *`,
     [next,cleanText(publicId,40)]

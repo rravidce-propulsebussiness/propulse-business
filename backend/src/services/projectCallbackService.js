@@ -82,10 +82,10 @@ async function requestCallback(projectId,input={}){
   const result=await pool.query(
     `INSERT INTO project_callback_requests
       (project_id,project_title,business_user_id,customer_name,customer_phone,customer_email,message,requirement_fields)
-      SELECT $1,$7,$2,$3,$4,$5,$6,$8::jsonb
+      SELECT $1::int,$7::varchar,$2::int,$3::varchar,$4::varchar,$5::varchar,$6::varchar,$8::jsonb
       WHERE NOT EXISTS (
         SELECT 1 FROM project_callback_requests
-        WHERE project_id=$1 AND customer_phone=$4
+        WHERE project_id=$1::int AND customer_phone=$4::varchar
         AND created_at>CURRENT_TIMESTAMP-INTERVAL '1 hour'
       )
       RETURNING id`,
@@ -157,10 +157,10 @@ async function requestProfileCallback(expertId,input={}){
   const result=await pool.query(
     `INSERT INTO project_callback_requests
       (project_id,project_title,business_user_id,customer_name,customer_phone,customer_email,message,requirement_fields)
-     SELECT NULL,$1,$2,$3,$4,$5,$6,$7::jsonb
+     SELECT NULL,$1::varchar,$2::int,$3::varchar,$4::varchar,$5::varchar,$6::varchar,$7::jsonb
      WHERE NOT EXISTS (
        SELECT 1 FROM project_callback_requests
-       WHERE project_id IS NULL AND business_user_id=$2 AND customer_phone=$4
+       WHERE project_id IS NULL AND business_user_id=$2::int AND customer_phone=$4::varchar
          AND created_at>CURRENT_TIMESTAMP-INTERVAL '1 hour'
      ) RETURNING id`,
     [title.slice(0,180),profile.user_id,name,phone,email,message||null,JSON.stringify(requirementFields)]

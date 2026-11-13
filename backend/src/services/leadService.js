@@ -40,7 +40,12 @@ async function createLead({industryId,serviceId,subserviceId,stateId,cityId,cust
   }
   const type=normalizeLeadType(leadType)||'basic';
   const configured=await getConfiguredPricing(industryId,cityId,type);
-  const effectivePricing=resolveEffectivePricing(configured,pricing,pricingSource);
+  // Homeowner requests must never be lost because Admin has not priced this market yet:
+  // keep them unpriced and quarantined for Admin review instead of rejecting the customer.
+  const publicIntake=['public_requirement','homepage_basic'].includes(qualityGateContext);
+  let effectivePricing;let awaitingPricing=false;
+  try{effectivePricing=resolveEffectivePricing(configured,pricing,pricingSource)}
+  catch(error){if(!(publicIntake&&error.code==='PRICING_REQUIRED'))throw error;effectivePricing={shares:[]};awaitingPricing=true}
   const exclusive=Boolean(isExclusive);
   const requestedDays=exclusiveDelayDays!==undefined&&exclusiveDelayDays!==null&&exclusiveDelayDays!==''?Number(exclusiveDelayDays):(exclusiveDelayHours!==undefined&&exclusiveDelayHours!==null&&exclusiveDelayHours!==''?Number(exclusiveDelayHours)/24:1);
   const delay=exclusive?Math.max(1,Math.min(365,Number.isFinite(requestedDays)?requestedDays:1)):0;
@@ -53,6 +58,13 @@ async function createLead({industryId,serviceId,subserviceId,stateId,cityId,cust
     [industryId,serviceId||null,subserviceId||null,stateId||null,cityId||null,customerName||null,customerPhone||null,customerEmail||null,requirement||null,propertyType||null,budget??null,source||'upload',notes||null,JSON.stringify(storedCustomFields),JSON.stringify(effectivePricing),type,exclusive,delay,access.buyerCapacity,pincode||zipcode||null,createdBy||null,access.accessStrategy,access.releaseToTwoAfterHours,access.releaseToThreeAfterHours,leadPartnerId?Number(leadPartnerId):null,investorUserId?Number(investorUserId):null,consentAt,contactConsentVersion||null,intakeSubmissionKey||null]
   );
   const created=result.rows[0];
+  if(awaitingPricing){
+    const held=(await pool.query(
+      `UPDATE leads SET quality_gate_status='quarantined',quality_gate_reasons=$2::jsonb,quality_gate_checked_at=CURRENT_TIMESTAMP,quality_gate_context=$3,updated_at=CURRENT_TIMESTAMP WHERE id=$1 RETURNING *`,
+      [created.id,JSON.stringify([{code:'pricing_required',message:'No Admin Lead Pricing rule matches this industry, city and lead type. Set pricing for this lead or market, then release it.'}]),String(qualityGateContext).slice(0,32)]
+    )).rows[0];
+    return held||created;
+  }
   if(deferQualityGate)return created;
   try{
     const gated=await leadQualityGateService.evaluateAndApply(created.id,{context:qualityGateContext,autoRelease:true});
