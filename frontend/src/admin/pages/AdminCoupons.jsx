@@ -53,11 +53,12 @@ const toIso=value=>{
   const date=new Date(value)
   return Number.isNaN(date.getTime())?null:date.toISOString()
 }
+const validityDate=value=>new Date(value).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})
 const validityLabel=item=>{
   if(!item.starts_at&&!item.expires_at)return'Always available'
-  const start=item.starts_at?new Date(item.starts_at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Now'
-  const end=item.expires_at?new Date(item.expires_at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'No expiry'
-  return `${start} → ${end}`
+  if(!item.starts_at)return`Until ${validityDate(item.expires_at)}`
+  if(!item.expires_at)return`From ${validityDate(item.starts_at)} · no expiry`
+  return `${validityDate(item.starts_at)} → ${validityDate(item.expires_at)}`
 }
 const couponStatus=item=>{
   if(item.is_active===false)return{key:'inactive',label:'Disabled'}
@@ -66,6 +67,8 @@ const couponStatus=item=>{
   const end=item.expires_at?new Date(item.expires_at).getTime():null
   if(start&&start>now)return{key:'scheduled',label:'Scheduled'}
   if(end&&end<=now)return{key:'expired',label:'Expired'}
+  // A coupon whose total usage limit is reached can no longer be redeemed: don't count it as active.
+  if(item.usage_limit&&Number(item.redeemed_count||0)>=Number(item.usage_limit))return{key:'expired',label:'Used up'}
   return{key:'active',label:'Active'}
 }
 const purchaseLabel=types=>{

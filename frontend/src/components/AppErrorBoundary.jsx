@@ -1,6 +1,6 @@
 import {Component} from 'react'
 import {reportClientError} from '../utils/clientObservability'
-import {reloadOnceForStaleAsset} from '../utils/chunkRecovery'
+import {isReloadingForStaleAsset,reloadOnceForStaleAsset} from '../utils/chunkRecovery'
 
 export default class AppErrorBoundary extends Component{
   constructor(props){
@@ -11,11 +11,13 @@ export default class AppErrorBoundary extends Component{
     return{failed:true}
   }
   componentDidCatch(error,info){
+    // A reload for new deploy files is already under way: nothing to report or show.
+    if(isReloadingForStaleAsset()||reloadOnceForStaleAsset(error))return
     reportClientError(error,{kind:'react_error_boundary',componentStack:info?.componentStack||null})
-    reloadOnceForStaleAsset(error)
   }
   render(){
     if(!this.state.failed)return this.props.children
+    if(isReloadingForStaleAsset())return null
     return <main style={{minHeight:'100vh',display:'grid',placeItems:'center',padding:24,background:'#f5f8fb'}}>
       <section style={{width:'min(520px,100%)',padding:28,border:'1px solid #dce6ef',borderRadius:18,background:'#fff',boxShadow:'0 18px 50px rgba(21,50,81,.08)',textAlign:'center'}}>
         <div style={{width:48,height:48,margin:'0 auto 14px',display:'grid',placeItems:'center',borderRadius:14,background:'#fff0ed',color:'#b64c40',fontWeight:900,fontSize:22}}>!</div>

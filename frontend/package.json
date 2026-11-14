@@ -24,7 +24,8 @@
     "test:lead-partner-pricing": "node scripts/check-lead-partner-pricing.mjs",
     "test:wallet-coupon-react": "node scripts/check-wallet-coupon-react.mjs",
     "test:admin-investments-react": "node scripts/check-admin-investments-react.mjs",
-    "test:scroll-preservation": "node scripts/check-scroll-restoration.mjs"
+    "test:scroll-preservation": "node scripts/check-scroll-restoration.mjs",
+    "test:chunk-recovery": "node scripts/check-chunk-recovery.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",

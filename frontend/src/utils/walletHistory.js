@@ -12,12 +12,21 @@ const purchaseTypeLabel=value=>{
 
 const leadLabel=id=>id?`Lead #${id}`:'Lead'
 const leadPaymentState=row=>lower(row?.status||row?.payment_status)
+// The customer's own UPI/bank payment for a wallet top-up: money going INTO the wallet, never a debit.
+const isTopupPayment=row=>row?.source==='direct'&&['wallet_topup','topup'].includes(lower(row?.purchase_type))
 
 export function transactionTitle(row){
   if(!row)return'Transaction'
   if(row.source==='lead')return`Lead purchase · ${leadLabel(row.lead_id||row.purchase_id)}`
   if(row.source==='direct'){
     const kind=purchaseTypeLabel(row.purchase_type)
+    if(isTopupPayment(row)){
+      const state=leadPaymentState(row)
+      if(state==='pending')return'Wallet top-up · awaiting approval'
+      if(state==='rejected')return'Wallet top-up rejected'
+      if(state==='failed'||state==='cancelled')return'Wallet top-up payment failed'
+      return'Wallet top-up payment'
+    }
     if(lower(row.purchase_type)==='lead'){
       const state=leadPaymentState(row)
       if(state==='pending')return`Lead payment pending · ${leadLabel(row.purchase_id)}`
@@ -45,10 +54,17 @@ export function transactionTitle(row){
       return`Lead purchase · ${leadLabel(row.reference_id)}`
     }
     if(referenceType==='booster')return'Booster payment'
+    if(referenceType==='investment')return'Investment purchase'
+    if(referenceType==='admin_adjustment')return'Balance adjusted by ProPulse'
     return'Wallet debit'
   }
   if(type==='credit'){
     if(['topup','wallet_topup','wallet'].includes(referenceType))return'Wallet top-up'
+    if(referenceType==='promotion'){
+      const code=text(row.description).match(/^Promotion\s+([A-Z0-9_-]+)/i)?.[1]
+      return code?`Promotion bonus · ${code.toUpperCase()}`:'Promotion bonus'
+    }
+    if(referenceType==='admin_adjustment')return'Balance adjusted by ProPulse'
     return'Wallet credit'
   }
   return'Transaction'
@@ -88,10 +104,10 @@ function normalizeCombined(row){
   const isUnsettledLeadAttempt=row?.source==='direct'&&lower(row?.purchase_type)==='lead'&&state!=='paid'
   return{
     ...row,
-    type:isUnsettledLeadAttempt?'attempt':row?.type,
+    type:isUnsettledLeadAttempt?'attempt':isTopupPayment(row)?'topup_request':row?.type,
     amount:Number(row?.amount||0),
     balance_after:row?.balance_after==null?null:Number(row.balance_after),
-    historyKind:isUnsettledLeadAttempt?'Lead payment attempt':row?.source==='wallet'?'Wallet':'Direct payment',
+    historyKind:isUnsettledLeadAttempt?'Lead payment attempt':isTopupPayment(row)?'Top-up request':row?.source==='wallet'?'Wallet':'Direct payment',
     displayTitle:transactionTitle(row)
   }
 }
@@ -130,6 +146,9 @@ export function buildWalletHistory(history={}){
   const suppressMovement=row=>{
     const paymentId=text(row.payment_id)
     if(row.source==='direct'&&lower(row.purchase_type)==='lead')return true
+    // An approved top-up already appears as its "+ Wallet top-up" credit (and any bonus credit);
+    // the matching payment row would only duplicate it. Pending/rejected requests stay visible.
+    if(isTopupPayment(row)&&leadPaymentState(row)==='paid')return true
     if(row.source==='wallet'&&lower(row.type)==='debit'){
       return (paymentId&&leadPaymentIds.has(paymentId))||(paymentId&&leadAttemptPaymentIds.has(paymentId))
     }
