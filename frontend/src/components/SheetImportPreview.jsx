@@ -50,7 +50,7 @@ export default function SheetImportPreview({preview,mappings={},onMappingsChange
             {items.map(field=><label key={field.id}>
               <span>{field.label}</span>
               <select value={mappings?.[field.id]||''} disabled={disabled} onChange={e=>change(field.id,e.target.value)}>
-                <option value="">{field.id==='leadId'?'Optional — auto-match or create new lead':(field.group==='Access'||field.group==='Pricing'?'Use configured ProPulse rules':'Not mapped')}</option>
+                <option value="">{field.id==='leadId'?'Optional — auto-match or create new lead':field.id==='leadType'?'Auto-detect lead type':(field.group==='Access'||field.group==='Pricing'?'Use configured ProPulse rules':'Not mapped')}</option>
                 {headers.map(header=><option key={header} value={header}>{header}</option>)}
               </select>
             </label>)}
