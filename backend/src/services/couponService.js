@@ -619,5 +619,5 @@ async function applyRewardForPayment(client,paymentId){
 module.exports={
   getAdminCoupons,getAdminCoupon,createCoupon,updateCoupon,setCouponActive,deleteCoupon,
   validateForUser,getPublicOffersForUser,reserveRedemption,redeemForPayment,releaseForPayment,
-  applyRewardForPayment,benefitSummary
+  applyRewardForPayment,benefitSummary,rewardFor
 };

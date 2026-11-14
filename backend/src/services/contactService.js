@@ -50,8 +50,19 @@ function normalize(input={}){
   };
 }
 function empty(audience){return {audience,...normalize({})}}
+// Contact details are read on every page view and only change through update() below; the app
+// runs as a single process, so a short per-audience cache saves a database round trip per page.
+const CACHE_TTL_MS=60_000;
+const cache=new Map();
 async function get(audience='website'){
   const key=normalizeAudience(audience);
+  const hit=cache.get(key);
+  if(hit&&hit.expiresAt>Date.now())return structuredClone(hit.value);
+  const value=await load(key);
+  cache.set(key,{value,expiresAt:Date.now()+CACHE_TTL_MS});
+  return structuredClone(value);
+}
+async function load(key){
   const result=await pool.query(`SELECT audience,company_name,email,phone,whatsapp,address,business_hours,support_email,careers_email,maps_url,website_url,social_handles,updated_at FROM contact_audience_settings WHERE audience=$1`,[key]);
   if(result.rows[0]) return result.rows[0];
   const legacy=(await pool.query(`SELECT company_name,email,phone,whatsapp,address,business_hours,support_email,careers_email,maps_url,website_url,social_handles,updated_at FROM contact_settings WHERE id=1`)).rows[0];
@@ -69,6 +80,7 @@ async function update(input,audience='website'){
      RETURNING audience,company_name,email,phone,whatsapp,address,business_hours,support_email,careers_email,maps_url,website_url,social_handles,updated_at`,
     [key,value.company_name,value.email,value.phone,value.whatsapp,value.address,value.business_hours,value.support_email,value.careers_email,value.maps_url,value.website_url,JSON.stringify(value.social_handles)]
   );
+  cache.clear();
   return result.rows[0];
 }
 module.exports={AUDIENCES,get,update,normalize};

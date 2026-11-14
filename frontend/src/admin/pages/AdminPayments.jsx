@@ -291,7 +291,7 @@ export default function AdminPayments() {
         <div className="payment-approval-amount">
           <span>Recharge</span>
           <strong>{money(topup.amount)}</strong>
-          <small>{topup.payment_method || 'manual'}</small>
+          <small>{topup.promotion ? `${topup.promotion.code} · credits ${money(topup.promotion.walletCredit)}` : topup.payment_method || 'manual'}</small>
         </div>
         <span className={`pay-status ${topup.status}`}>{topup.status}</span>
         <div className="payment-approval-actions">
@@ -304,6 +304,12 @@ export default function AdminPayments() {
       </div>
       {open && <div className="payment-approval-details">
         <div><span>Recharge amount</span><strong>{money(topup.amount)}</strong></div>
+        {topup.promotion && <>
+          <div><span>Coupon</span><strong>{topup.promotion.code}</strong></div>
+          <div><span>Customer pays</span><strong>{money(topup.promotion.payableAmount)}</strong></div>
+          {topup.promotion.bonusAmount > 0 && <div><span>Promotion bonus</span><strong>+{money(topup.promotion.bonusAmount)}</strong></div>}
+          <div><span>Wallet credit on approval</span><strong>{money(topup.promotion.walletCredit)}</strong></div>
+        </>}
         <div><span>Wallet balance</span><strong>{money(topup.wallet_balance)}</strong></div>
         <div><span>Payment method</span><strong>{topup.payment_method || 'manual'}</strong></div>
         <div><span>Reference / UTR</span><strong>{topup.reference || '—'}</strong></div>

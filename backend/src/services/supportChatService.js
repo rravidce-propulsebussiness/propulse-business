@@ -79,9 +79,14 @@ async function getSettings(client=pool){
   };
 }
 
+// Loaded by the chat widget on every page view; settings change only through updateSettings
+// below and the app runs as a single process, so a short in-memory cache is safe.
+const PUBLIC_CONFIG_TTL_MS=60_000;
+let publicConfigCache=null;
 async function getPublicConfig(){
+  if(publicConfigCache&&publicConfigCache.expiresAt>Date.now())return {...publicConfigCache.value};
   const settings=await getSettings();
-  return {
+  const value={
     enabled:settings.enabled,
     allowGuests:settings.allowGuests,
     widgetTitle:settings.widgetTitle,
@@ -89,6 +94,8 @@ async function getPublicConfig(){
     offlineMessage:settings.offlineMessage,
     pollSeconds:Math.max(3,Math.min(30,settings.pollSeconds)),
   };
+  publicConfigCache={value,expiresAt:Date.now()+PUBLIC_CONFIG_TTL_MS};
+  return {...value};
 }
 
 async function getAdminConfig(){
@@ -113,6 +120,7 @@ async function updateSettings(actorId,payload={}){
       widgetTitle,greeting,offlineMessage,pollSeconds,actorId||null
     ]
   );
+  publicConfigCache=null;
   return getAdminConfig();
 }
 
