@@ -22,7 +22,7 @@ assert(server.includes("if(runMigrationsOnStartup)await runMigrations()"),'Web p
 assert(server.includes('if(runBackgroundJobsInWeb){')&&server.includes('stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync()')&&server.includes('stopAdminGoogleSheetAutoSync=startAdminGoogleSheetAutoSync()'),'Web process must honor background-job control for Lead Partner and Admin sheet schedulers');
 assert(runtimeFlags.includes("['0', 'false', 'no', 'off']"),'Runtime flag parser must support explicit false values');
 assert(scheduler.includes('createIntervalScheduler')&&intervalScheduler.includes('unref=true')&&intervalScheduler.includes('runImmediately=false'),'Sheet scheduler must support web and worker modes');
-assert(intervalScheduler.includes("if(runImmediately)void run({source:'startup'})"),'Dedicated worker must be able to sync immediately and label the run as startup');
+assert(intervalScheduler.includes("if(runImmediately)void runScheduled(name,run,{source:'startup'})"),'Dedicated worker must be able to sync immediately and label the run as startup');
 assert(intervalScheduler.includes('if(unref)timer.unref?.()'),'Web scheduler timer must remain non-blocking');
 assert(!scheduler.includes('pg_try_advisory_lock'),'Lead Partner scheduler must not hold a process-wide DB advisory-lock connection');
 assert(partnerInventory.includes("pg_try_advisory_lock($1,$2)")&&partnerInventory.includes("pg_advisory_unlock($1,$2)"),'Lead Partner sheet sync must serialize per connection across replicas');

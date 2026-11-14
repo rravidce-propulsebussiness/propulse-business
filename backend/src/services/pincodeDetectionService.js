@@ -38,7 +38,53 @@ async function readResponseTextLimited(response, maxBytes) {
   }
 }
 
+// India Post's public API has outages (HTTP 503, timeouts). Lookups are retried once; when the
+// service is confirmed down, further lookups fail fast for a minute instead of each waiting 10s,
+// so a CSV with many new PINs does not hang. Outages use the PIN_LOOKUP_TIMEOUT code, which every
+// caller already turns into a friendly "try again" message instead of a server error.
+const INDIA_POST_OUTAGE_COOLDOWN_MS = 60 * 1000;
+const INDIA_POST_RETRY_DELAY_MS = 700;
+let indiaPostUnavailableUntil = 0;
+
+function indiaPostUnavailableError() {
+  const error = new Error('PIN code verification (India Post) is temporarily unavailable. Please try again in a few minutes.');
+  error.code = 'PIN_LOOKUP_TIMEOUT';
+  error.retryable = true;
+  return error;
+}
+
+function isIndiaPostOutage(error) {
+  if (error?.code === 'PIN_NOT_FOUND') return false;
+  if (error?.code === 'PIN_LOOKUP_TIMEOUT') return true;
+  if (Number(error?.status) >= 500) return true;
+  return error instanceof TypeError || /fetch failed|ECONNRESET|ECONNREFUSED|ETIMEDOUT|EAI_AGAIN|ENOTFOUND/i.test(`${error?.message || ''} ${error?.cause?.code || ''}`);
+}
+
 async function fetchIndiaPost(pincode) {
+  if (Date.now() < indiaPostUnavailableUntil) throw indiaPostUnavailableError();
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      const offices = await fetchIndiaPostOnce(pincode);
+      indiaPostUnavailableUntil = 0;
+      return offices;
+    } catch (error) {
+      if (!isIndiaPostOutage(error)) throw error;
+      if (attempt === 0) {
+        await new Promise(resolve => setTimeout(resolve, INDIA_POST_RETRY_DELAY_MS));
+        continue;
+      }
+      indiaPostUnavailableUntil = Date.now() + INDIA_POST_OUTAGE_COOLDOWN_MS;
+      console.warn(`India Post lookup unavailable (${error.message}); pausing lookups for ${INDIA_POST_OUTAGE_COOLDOWN_MS / 1000}s.`);
+      throw indiaPostUnavailableError();
+    }
+  }
+}
+
+function resetIndiaPostOutage() {
+  indiaPostUnavailableUntil = 0;
+}
+
+async function fetchIndiaPostOnce(pincode) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
   try {
@@ -50,7 +96,7 @@ async function fetchIndiaPost(pincode) {
     if (contentLength > MAX_INDIA_POST_BYTES) {
       throw new Error('India Post returned an unexpectedly large response');
     }
-    if (!response.ok) throw new Error(`India Post lookup failed (HTTP ${response.status})`);
+    if (!response.ok) throw Object.assign(new Error(`India Post lookup failed (HTTP ${response.status})`), { status: response.status });
     const body = await readResponseTextLimited(response, MAX_INDIA_POST_BYTES);
     if (body === null) throw new Error('India Post returned an unexpectedly large response');
     let payload;
@@ -508,5 +554,6 @@ module.exports = {
   mapPinToCity,
   listUnmappedPins,
   fetchIndiaPost,
+  resetIndiaPostOutage,
   reverseCoordinates,
 };

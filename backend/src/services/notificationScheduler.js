@@ -1,4 +1,5 @@
 const notifications=require('./notificationService');
+const {runScheduled}=require('./intervalSchedulerService');
 const jobControl=require('./backgroundJobControlService');
 
 const DELIVERY_INTERVAL_MS=Math.min(15*60*1000,Math.max(30*1000,Number(process.env.NOTIFICATION_DELIVERY_INTERVAL_MS)||60*1000));
@@ -27,13 +28,13 @@ async function runMembershipReminders({source='scheduled',triggeredBy=null}={}){
 }
 function startNotificationScheduler({unref=true,runImmediately=false}={}){
   if(!deliveryTimer){
-    if(runImmediately)void runNotificationDelivery({source:'startup'});
-    deliveryTimer=setInterval(()=>{void runNotificationDelivery({source:'scheduled'})},DELIVERY_INTERVAL_MS);
+    if(runImmediately)void runScheduled('Notification email delivery',runNotificationDelivery,{source:'startup'});
+    deliveryTimer=setInterval(()=>{void runScheduled('Notification email delivery',runNotificationDelivery,{source:'scheduled'})},DELIVERY_INTERVAL_MS);
     if(unref)deliveryTimer.unref?.();
   }
   if(!reminderTimer){
-    if(runImmediately)void runMembershipReminders({source:'startup'});
-    reminderTimer=setInterval(()=>{void runMembershipReminders({source:'scheduled'})},REMINDER_INTERVAL_MS);
+    if(runImmediately)void runScheduled('Membership expiry reminders',runMembershipReminders,{source:'startup'});
+    reminderTimer=setInterval(()=>{void runScheduled('Membership expiry reminders',runMembershipReminders,{source:'scheduled'})},REMINDER_INTERVAL_MS);
     if(unref)reminderTimer.unref?.();
   }
   console.log(`Notification scheduler enabled: email every ${Math.round(DELIVERY_INTERVAL_MS/1000)}s; membership reminders every ${Math.round(REMINDER_INTERVAL_MS/3600000)}h.`);
