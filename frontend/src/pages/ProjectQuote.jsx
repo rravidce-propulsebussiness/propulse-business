@@ -16,7 +16,8 @@ const validPackages=(profile,industry)=>Array.isArray(profile?.service_plans)
 
 export default function ProjectQuote(){
   const {projectId}=useParams()
-  const id=/^project-([1-9]\d*)$/.exec(projectId||'')?.[1]
+  // Accept the same project keys as the project page: project-12, a plain 12, or the SEO slug.
+  const id=/^project-([1-9]\d*)$/.exec(projectId||'')?.[1]||(/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(projectId||'')&&!/^sample-/.test(projectId||'')?projectId:'')
   const [project,setProject]=useState(null)
   const [packages,setPackages]=useState([])
   const [preferredPackage,setPreferredPackage]=useState('')

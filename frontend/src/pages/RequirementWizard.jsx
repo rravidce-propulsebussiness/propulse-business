@@ -962,6 +962,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
           </div>
           <label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event => setWebsite(event.target.value)} /></label>
           {projectQuote&&<label className="rq-marketplace-consent"><input type="checkbox" required checked={marketplaceConsent} onChange={event=>setMarketplaceConsent(event.target.checked)}/> I agree that ProPulse may share my enquiry with the selected professional and other relevant professionals through its marketplace. Contact details remain protected until access is authorized.</label>}
+          {!projectQuote&&<p className="rq-consent-note">By submitting, you agree ProPulse may contact you and share your requirement with relevant verified professionals. <a href="/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy policy</a></p>}
           {state.error && <div className="rq-error">{state.error}</div>}
           <button className="rq-submit" type="submit" disabled={state.saving}>{state.saving ? 'Submitting…' : projectQuote ? 'Request Professional Quote' : (isQuotationFlow && answers.built_up_area ? 'Generate Detailed Quotation' : (isQuotationFlow ? 'Get Free Quote' : (flow.config?.submitLabel || 'Submit Requirement')))} <Icon name="arrow" size={15}/></button>
 

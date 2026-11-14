@@ -189,9 +189,9 @@ export default function GlobalLeadPopup(){
     }
   },[open,closePopup])
   function setFlow(flowKey){
-    setForm(current=>({...EMPTY,flowKey,name:current.name,phone:current.phone}))
-    setCitySearch('')
-    setDetected(null)
+    // Only the requirement-specific answers depend on the category. PIN, city, contact and notes are
+    // usually entered first (PIN is the first field), so switching category must keep them.
+    setForm(current=>({...EMPTY,flowKey,cityId:current.cityId,pincode:current.pincode,name:current.name,phone:current.phone,additional:current.additional,website:current.website}))
     setError('')
     setSubmitted(null)
     setSubmissionKey(makeSubmissionKey())
@@ -367,6 +367,7 @@ export default function GlobalLeadPopup(){
         <input className="glp-honeypot" tabIndex="-1" autoComplete="off" value={form.website} onChange={event=>setForm({...form,website:event.target.value})}/>
         </div>
         <div className="glp-form-actions">
+          <p className="glp-consent-note">By submitting, you agree ProPulse may contact you and share your requirement with relevant verified professionals. <a href="/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy policy</a></p>
           {error&&<div className="glp-error" role="alert">{error}</div>}
           <button className="glp-primary" type="submit" disabled={saving}>{saving?'Submitting…':intent==='callback'?'Request Callback':'Submit Requirement'} <Icon name="arrow" size={15}/></button>
         </div>
