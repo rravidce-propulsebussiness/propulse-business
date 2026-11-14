@@ -1,6 +1,7 @@
 import './BootLoader.css'
 
 const GLASS_FACES=['f1','f2','f3','f4','f5','f6']
+const PROFESSIONAL_LEAD_PATH=/^\/(?:leads|professionals|professional-requests|purchased-leads|my-leads)(?:\/|$)/
 
 /**
  * One canonical ProPulse loader for route changes and asynchronous page content.
@@ -8,7 +9,8 @@ const GLASS_FACES=['f1','f2','f3','f4','f5','f6']
  * contained keeps the current navigation visible; compact works in small panels.
  * Never add a minimum delay -- it disappears as soon as data is ready.
  */
-export default function BootLoader({message='',contained=false,compact=false}) {
+export default function BootLoader({message='',contained=false,compact=false,tagline=''}) {
+  const resolvedTagline=tagline||(typeof window!=='undefined'&&PROFESSIONAL_LEAD_PATH.test(window.location.pathname)?'Start your project here':'Your dream home starts here')
   const className='propulse-route-loading'+(contained?' is-contained':'')+(compact?' is-compact':'')
   return <div className={className} role="status" aria-live="polite" aria-label="Loading ProPulse">
     <div className="propulse-route-loader">
@@ -26,7 +28,7 @@ export default function BootLoader({message='',contained=false,compact=false}) {
         <span className="pp-glass-shadow"/>
       </div>
       <strong className="pp-glass-title">ProPulse</strong>
-      <span className="propulse-loader-tagline">Your dream home starts here</span>
+      <span className="propulse-loader-tagline">{resolvedTagline}</span>
       {message&&<span className="propulse-loader-detail">{message}</span>}
       <span className="pp-glass-bar" aria-hidden="true"/>
     </div>
