@@ -87,7 +87,9 @@ const pool = new Pool({
         password: process.env.DB_PASSWORD,
       }),
   max: poolMax,
-  idleTimeoutMillis: Math.max(1000, Number(process.env.DB_IDLE_TIMEOUT_MS) || 30000),
+  // The Supabase session pooler allows only pool_size (15) clients for every app and worker sharing
+  // the project, so idle connections are returned after 10s there instead of being held for 30s.
+  idleTimeoutMillis: Math.max(1000, Number(process.env.DB_IDLE_TIMEOUT_MS) || (isSupabasePooler ? 10000 : 30000)),
   connectionTimeoutMillis: Math.max(1000, Number(process.env.DB_CONNECTION_TIMEOUT_MS) || 10000),
   statement_timeout: Math.max(1000, Number(process.env.DB_STATEMENT_TIMEOUT_MS) || 30000),
   idle_in_transaction_session_timeout: Math.max(1000, Number(process.env.DB_IDLE_IN_TX_TIMEOUT_MS) || 60000),
@@ -101,5 +103,37 @@ const pool = new Pool({
 pool.on('error', error => {
   console.error('Unexpected PostgreSQL pool error:', error.message);
 });
+
+// A brief pooler hiccup ("Connection terminated due to connection timeout", "max clients reached in
+// session mode", a reset socket) fails while the connection is being opened, before any SQL is sent.
+// Retrying that step is therefore safe for every query, including writes. pool.query() opens its
+// connection through pool.connect(callback), so wrapping connect covers both call styles.
+const TRANSIENT_CONNECT_ERROR=/connection terminated|timeout exceeded when trying to connect|max clients reached|EMAXCONNSESSION|remaining connection slots are reserved|too many clients|ECONNRESET|ECONNREFUSED|ETIMEDOUT|EAI_AGAIN/i;
+const configuredConnectRetries=Number(process.env.DB_CONNECT_RETRIES);
+const connectRetries=Number.isInteger(configuredConnectRetries)&&configuredConnectRetries>=0
+  ? Math.min(5, configuredConnectRetries)
+  : 2;
+const rawConnect=pool.connect.bind(pool);
+function isTransientConnectError(error){
+  return TRANSIENT_CONNECT_ERROR.test(`${error?.message||''} ${error?.code||''}`);
+}
+async function connectWithRetry(){
+  for(let attempt=0;;attempt+=1){
+    try{
+      return await rawConnect();
+    }catch(error){
+      if(attempt>=connectRetries||pool.ending||!isTransientConnectError(error))throw error;
+      const delayMs=300*(attempt+1)+Math.floor(Math.random()*200);
+      console.warn(`PostgreSQL connect failed (${error.message}); retrying in ${delayMs}ms (${attempt+1}/${connectRetries}).`);
+      await new Promise(resolve=>setTimeout(resolve,delayMs));
+    }
+  }
+}
+pool.connect=function connect(callback){
+  if(typeof callback!=='function')return connectWithRetry();
+  connectWithRetry().then(client=>callback(undefined,client,client.release),error=>callback(error));
+  return undefined;
+};
+pool.isTransientConnectError=isTransientConnectError;
 
 module.exports = pool;

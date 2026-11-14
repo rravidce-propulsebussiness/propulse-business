@@ -1,4 +1,5 @@
 const monitor=require('./financialReconciliationMonitorService');
+const {runScheduled}=require('./intervalSchedulerService');
 const notificationService=require('./notificationService');
 const jobControl=require('./backgroundJobControlService');
 
@@ -55,8 +56,8 @@ function startFinancialReconciliationScheduler({unref=true,runImmediately=false}
   if(timer)return async()=>{};
   const intervalMs=configuredIntervalMs();
   console.log(`Financial reconciliation scheduler enabled: every ${Math.round(intervalMs/3600000)} hour(s).`);
-  if(runImmediately)void runFinancialReconciliation({source:'startup'});
-  timer=setInterval(()=>{void runFinancialReconciliation({source:'scheduled'})},intervalMs);
+  if(runImmediately)void runScheduled('Financial reconciliation',runFinancialReconciliation,{source:'startup'});
+  timer=setInterval(()=>{void runScheduled('Financial reconciliation',runFinancialReconciliation,{source:'scheduled'})},intervalMs);
   if(unref)timer.unref?.();
   return async()=>{
     if(timer){clearInterval(timer);timer=null}
