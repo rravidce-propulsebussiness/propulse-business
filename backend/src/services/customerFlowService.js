@@ -79,7 +79,23 @@ async function publish(flowId,userId){
  }catch(e){await client.query('ROLLBACK').catch(()=>{});throw e}finally{client.release()}
 }
 async function setDefinitionStatus(flowId,isActive,userId){const r=await pool.query('UPDATE customer_flow_definitions SET is_active=$1,updated_by=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING id',[Boolean(isActive),userId||null,id(flowId)]);if(!r.rows[0])fail('Customer flow not found','FLOW_NOT_FOUND',404);return getAdminDefinition(r.rows[0].id)}
+// Every homeowner form page (/quote, project quotes, popup) loads its published definition first.
+// That is three database round trips per visitor; published forms change only through the admin
+// writes below, which clear this cache, and the app runs as one process. The signed flowToken is
+// time-based, so it is never cached: each response gets a fresh token.
+const PUBLISHED_FLOW_TTL_MS=60_000;
+const publishedFlowCache=new Map();
+function clearPublishedFlowCache(){publishedFlowCache.clear()}
 async function getPublishedFlow(key){
+ const cacheKey=String(key||'');
+ const hit=publishedFlowCache.get(cacheKey);
+ if(hit&&hit.expiresAt>Date.now())return{...structuredClone(hit.value),flowToken:signFlowToken(hit.value.versionId)};
+ const value=await loadPublishedFlow(key);
+ const {flowToken,...cacheable}=value;
+ publishedFlowCache.set(cacheKey,{value:cacheable,expiresAt:Date.now()+PUBLISHED_FLOW_TTL_MS});
+ return value;
+}
+async function loadPublishedFlow(key){
  const r=(await pool.query(`SELECT d.id definition_id,d.key,d.name,d.flow_type,d.industry_id,d.service_id,d.subservice_id,i.name industry_name,s.name service_name,ss.name subservice_name,v.id version_id,v.version_no,v.config FROM customer_flow_definitions d JOIN industries i ON i.id=d.industry_id AND i.is_active=TRUE LEFT JOIN services s ON s.id=d.service_id AND s.is_active=TRUE LEFT JOIN subservices ss ON ss.id=d.subservice_id AND ss.is_active=TRUE JOIN customer_flow_versions v ON v.definition_id=d.id AND v.status='published' WHERE d.key=$1 AND d.is_active=TRUE AND (d.service_id IS NULL OR s.id IS NOT NULL) AND (d.subservice_id IS NULL OR ss.id IS NOT NULL) AND (v.effective_from IS NULL OR v.effective_from<=CURRENT_TIMESTAMP) LIMIT 1`,[flowKey(key)])).rows[0];if(!r)fail('This customer flow is not available','FLOW_NOT_FOUND',404);
  let qs=(await questions(pool,r.version_id)).filter(q=>q.isActive).map(q=>({...q,options:q.options.filter(o=>o.isActive)}));if(r.key==='property')qs=qs.map(q=>q.questionKey==='property_intent'?{...q,options:q.options.filter(o=>['buy','sell'].includes(String(o.value)))}:q);return{definitionId:r.definition_id,key:r.key,name:r.name,flowType:r.flow_type,industryId:r.industry_id,serviceId:r.service_id,subserviceId:r.subservice_id,industryName:r.industry_name,serviceName:r.service_name,subserviceName:r.subservice_name,versionId:r.version_id,versionNo:r.version_no,config:r.config||{},questions:qs,flowToken:signFlowToken(r.version_id)};
 }
@@ -96,4 +112,6 @@ async function getVersionFlow(versionId){
  let qs=(await questions(pool,r.version_id)).filter(q=>q.isActive).map(q=>({...q,options:q.options.filter(o=>o.isActive)}));if(r.key==='property')qs=qs.map(q=>q.questionKey==='property_intent'?{...q,options:q.options.filter(o=>['buy','sell'].includes(String(o.value)))}:q);
  return{definitionId:r.definition_id,key:r.key,name:r.name,flowType:r.flow_type,industryId:r.industry_id,serviceId:r.service_id,subserviceId:r.subservice_id,industryName:r.industry_name,serviceName:r.service_name,subserviceName:r.subservice_name,versionId:r.version_id,versionNo:r.version_no,status:r.status,config:r.config||{},questions:qs};
 }
-module.exports={listDefinitions,getAdminDefinition,createDefinition,saveDraft,publish,setDefinitionStatus,getPublishedFlow,getVersionFlow,verifyFlowToken};
+// Admin writes always clear the published-form cache, even when they fail part way.
+const clearingCache=fn=>async(...args)=>{try{return await fn(...args)}finally{clearPublishedFlowCache()}};
+module.exports={listDefinitions,getAdminDefinition,createDefinition:clearingCache(createDefinition),saveDraft:clearingCache(saveDraft),publish:clearingCache(publish),setDefinitionStatus:clearingCache(setDefinitionStatus),getPublishedFlow,getVersionFlow,verifyFlowToken,clearPublishedFlowCache};

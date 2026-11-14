@@ -40,6 +40,8 @@ jobs:
         run: npm run test:auth-bootstrap
       - name: Stale chunk recovery
         run: npm run test:chunk-recovery
+      - name: Lead form regressions
+        run: npm run test:lead-form-regressions
       - name: CSV export security
         run: npm run test:csv-security
       - name: User header layout
