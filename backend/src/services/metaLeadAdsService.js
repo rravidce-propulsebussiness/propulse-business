@@ -201,7 +201,7 @@ async function listForms({ userId, scope, pageId }) {
 
 async function formSnapshot({ token, formId, sampleLimit = SAMPLE_LEADS, since = null }) {
   const form = await graph.graphRequest(clean(formId), { params: { fields: 'id,name,page,questions{key,label,type}' }, token });
-  const params = { fields: 'id,created_time,field_data,ad_name,campaign_name,platform' };
+  const params = { fields: 'id,created_time,field_data,ad_id,ad_name,campaign_name,platform' };
   if (since) params.filtering = JSON.stringify([{ field: 'time_created', operator: 'GREATER_THAN', value: Math.floor(since.getTime() / 1000) }]);
   const leads = sampleLimit > 0 ? await graph.graphList(`${clean(formId)}/leads`, { params, token, maxItems: sampleLimit }) : [];
   return { form, leads, csv: leadsToCsv({ formName: clean(form.name), questions: form.questions || [], leads }) };
