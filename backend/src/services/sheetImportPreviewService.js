@@ -23,18 +23,18 @@ const TARGETS=[
   {id:'source',label:'Source',canonical:'Source',group:'Lead',aliases:['source','lead source','platform']},
   {id:'notes',label:'Notes',canonical:'Notes',group:'Lead',aliases:['notes','remarks']},
   {id:'leadType',label:'Lead Type',canonical:'Lead Type',group:'Access',aliases:['lead type']},
-  {id:'accessStrategy',label:'Access Strategy',canonical:'Access Strategy',group:'Access',aliases:['access strategy','buyer strategy']},
-  {id:'buyerCapacity',label:'Buyer Capacity',canonical:'Buyer Capacity',group:'Access',aliases:['buyer capacity','buyer capacity limit','max buyers','capacity']},
-  {id:'releaseToTwoHours',label:'Release to 2 Hours',canonical:'Release to 2 Hours',group:'Access',aliases:['release to 2 hours','release to two hours']},
-  {id:'releaseToThreeHours',label:'Release to 3 Hours',canonical:'Release to 3 Hours',group:'Access',aliases:['release to 3 hours','release to three hours']},
+  {id:'accessStrategy',label:'Access Strategy',canonical:'Access Strategy',group:'Access',aliases:['access strategy','buyer strategy','lead access strategy','lead sharing strategy','sharing strategy','sharing type','sharing mode','access type','distribution strategy']},
+  {id:'buyerCapacity',label:'Buyer Capacity',canonical:'Buyer Capacity',group:'Access',aliases:['buyer capacity','buyer capacity limit','max buyers','maximum buyers','max buyers per lead','buyer limit','buyer count','number of buyers','number of buyers per lead','capacity']},
+  {id:'releaseToTwoHours',label:'Release to 2 Hours',canonical:'Release to 2 Hours',group:'Access',aliases:['release to 2 hours','release to two hours','release after 2 hours','release after two hours','released after 2 hours','release in 2 hours','2 hour release','2 hours release']},
+  {id:'releaseToThreeHours',label:'Release to 3 Hours',canonical:'Release to 3 Hours',group:'Access',aliases:['release to 3 hours','release to three hours','release after 3 hours','release after three hours','released after 3 hours','release in 3 hours','3 hour release','3 hours release']},
   {id:'isExclusive',label:'Pro Early Access',canonical:'Pro Early Access',group:'Access',aliases:['pro early access','early access','exclusive','is exclusive']},
   {id:'exclusiveDelayDays',label:'Exclusive Delay Days',canonical:'Exclusive Delay Days',group:'Access',aliases:['exclusive delay days','early access delay days','pro early access delay days']},
-  {id:'normal1BuyerPrice',label:'Normal 1 Buyer Price',canonical:'Normal 1 Buyer',group:'Pricing',aliases:['normal 1 buyer','normal 1 buyer price','normal 1 share','normal 1 share price'],scopes:['admin']},
-  {id:'normal2BuyerPrice',label:'Normal 2 Buyer Price',canonical:'Normal 2 Buyer',group:'Pricing',aliases:['normal 2 buyer','normal 2 buyer price','normal 2 shares','normal 2 share price'],scopes:['admin']},
-  {id:'normal3BuyerPrice',label:'Normal 3 Buyer Price',canonical:'Normal 3 Buyer',group:'Pricing',aliases:['normal 3 buyer','normal 3 buyer price','normal 3 shares','normal 3 share price'],scopes:['admin']},
-  {id:'pro1BuyerPrice',label:'Pro 1 Buyer Price',canonical:'Pro 1 Buyer',group:'Pricing',aliases:['pro 1 buyer','pro 1 buyer price','pro 1 share','pro 1 share price']},
-  {id:'pro2BuyerPrice',label:'Pro 2 Buyer Price',canonical:'Pro 2 Buyer',group:'Pricing',aliases:['pro 2 buyer','pro 2 buyer price','pro 2 shares','pro 2 share price'],scopes:['admin']},
-  {id:'pro3BuyerPrice',label:'Pro 3 Buyer Price',canonical:'Pro 3 Buyer',group:'Pricing',aliases:['pro 3 buyer','pro 3 buyer price','pro 3 shares','pro 3 share price'],scopes:['admin']}
+  {id:'normal1BuyerPrice',label:'Normal 1 Buyer Price',canonical:'Normal 1 Buyer',group:'Pricing',aliases:['normal 1 buyer','normal 1 buyer price','normal buyer 1 price','normal buyer price 1','normal price 1 buyer','normal 1 share','normal 1 share price'],scopes:['admin']},
+  {id:'normal2BuyerPrice',label:'Normal 2 Buyer Price',canonical:'Normal 2 Buyer',group:'Pricing',aliases:['normal 2 buyer','normal 2 buyer price','normal buyer 2 price','normal buyer price 2','normal price 2 buyers','normal 2 shares','normal 2 share price'],scopes:['admin']},
+  {id:'normal3BuyerPrice',label:'Normal 3 Buyer Price',canonical:'Normal 3 Buyer',group:'Pricing',aliases:['normal 3 buyer','normal 3 buyer price','normal buyer 3 price','normal buyer price 3','normal price 3 buyers','normal 3 shares','normal 3 share price'],scopes:['admin']},
+  {id:'pro1BuyerPrice',label:'Pro 1 Buyer Price',canonical:'Pro 1 Buyer',group:'Pricing',aliases:['pro 1 buyer','pro 1 buyer price','pro buyer 1 price','pro buyer price 1','pro price 1 buyer','pro 1 share','pro 1 share price']},
+  {id:'pro2BuyerPrice',label:'Pro 2 Buyer Price',canonical:'Pro 2 Buyer',group:'Pricing',aliases:['pro 2 buyer','pro 2 buyer price','pro buyer 2 price','pro buyer price 2','pro price 2 buyers','pro 2 shares','pro 2 share price'],scopes:['admin']},
+  {id:'pro3BuyerPrice',label:'Pro 3 Buyer Price',canonical:'Pro 3 Buyer',group:'Pricing',aliases:['pro 3 buyer','pro 3 buyer price','pro buyer 3 price','pro buyer price 3','pro price 3 buyers','pro 3 shares','pro 3 share price'],scopes:['admin']}
 ];
 
 function targetsFor(scope='admin'){
