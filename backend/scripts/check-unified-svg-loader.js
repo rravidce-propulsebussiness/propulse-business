@@ -6,6 +6,8 @@ const loader=read('frontend/src/components/BootLoader.jsx');
 const css=read('frontend/src/components/BootLoader.css');
 const html=read('frontend/index.html');
 assert.match(loader,/Your dream home starts here/);
+assert.match(loader,/Start your project here/);
+assert.match(loader,/PROFESSIONAL_LEAD_PATH/);
 assert.match(html,/Your dream home starts here/);
 assert.match(loader,/contained=false,compact=false/);
 assert.match(css,/prefers-reduced-motion:reduce/);
@@ -49,4 +51,4 @@ for(const [relative,legacy] of [
   assert(!read('frontend/src/'+relative).includes(legacy),
     'Old text-only loader has been removed from '+relative);
 }
-console.log('Shared ProPulse SVG loader and Your dream home starts here tagline verified across '+pages.length+' screens.');
+console.log('Shared ProPulse SVG loader shows homeowner or professional-lead wording by route across '+pages.length+' screens.');
