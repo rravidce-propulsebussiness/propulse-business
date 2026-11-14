@@ -42,6 +42,7 @@ export default function SheetImportPreview({preview,mappings={},onMappingsChange
 
     <div className="sheet-preview-mapping">
       <div className="sheet-preview-section-title"><div><span>COLUMN MAPPING</span><h4>Confirm how source columns enter ProPulse</h4></div><small>{mappedCount} mapped</small></div>
+      <p className="sheet-preview-mapping-help">Lead ID is optional: unmatched rows create new leads when required lead and location details are available. Leave Access and Pricing unmapped to use configured ProPulse rules; map a sheet column only when you want per-row overrides.</p>
       <div className="sheet-preview-groups">
         {Object.entries(grouped).map(([group,items])=><section key={group}>
           <h5>{group}</h5>
@@ -49,7 +50,7 @@ export default function SheetImportPreview({preview,mappings={},onMappingsChange
             {items.map(field=><label key={field.id}>
               <span>{field.label}</span>
               <select value={mappings?.[field.id]||''} disabled={disabled} onChange={e=>change(field.id,e.target.value)}>
-                <option value="">Not mapped</option>
+                <option value="">{field.id==='leadId'?'Optional — auto-match or create new lead':(field.group==='Access'||field.group==='Pricing'?'Use configured ProPulse rules':'Not mapped')}</option>
                 {headers.map(header=><option key={header} value={header}>{header}</option>)}
               </select>
             </label>)}
