@@ -26,7 +26,7 @@ export default function BootLoader({message='',contained=false,compact=false}) {
         <span className="pp-glass-shadow"/>
       </div>
       <strong className="pp-glass-title">ProPulse</strong>
-      <span className="propulse-loader-tagline">Get your next project</span>
+      <span className="propulse-loader-tagline">Your dream home starts here</span>
       {message&&<span className="propulse-loader-detail">{message}</span>}
       <span className="pp-glass-bar" aria-hidden="true"/>
     </div>
