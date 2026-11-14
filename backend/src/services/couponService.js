@@ -217,6 +217,7 @@ async function createCoupon(input,adminId){
     ])).rows[0];
     if(userIds.length)await client.query('INSERT INTO coupon_users(coupon_id,user_id) SELECT $1,x FROM UNNEST($2::int[]) AS x ON CONFLICT DO NOTHING',[row.id,userIds]);
     if(industryIds.length)await client.query('INSERT INTO coupon_industries(coupon_id,industry_id) SELECT $1,x FROM UNNEST($2::int[]) AS x ON CONFLICT DO NOTHING',[row.id,industryIds]);
+    await client.query('UPDATE coupons SET applies_to_partner_leads=$1 WHERE id=$2',[input.applies_to_partner_leads===true,row.id]);
     await client.query('COMMIT');
     return getAdminCoupon(row.id);
   }catch(e){
@@ -284,6 +285,7 @@ async function updateCoupon(id,input){
       await client.query('DELETE FROM coupon_industries WHERE coupon_id=$1',[id]);
       if(industryIds.length)await client.query('INSERT INTO coupon_industries(coupon_id,industry_id) SELECT $1,x FROM UNNEST($2::int[]) AS x ON CONFLICT DO NOTHING',[id,industryIds]);
     }
+    if(input.applies_to_partner_leads!==undefined)await client.query('UPDATE coupons SET applies_to_partner_leads=$1 WHERE id=$2',[input.applies_to_partner_leads===true,id]);
     await client.query('COMMIT');
     return getAdminCoupon(id);
   }catch(e){
@@ -382,7 +384,7 @@ async function usageEligible(db,coupon,userId){
   return true;
 }
 
-async function validateForUser({client=pool,userId,code,subtotal,purchaseType,industryId=null,membershipPlanId=null}){
+async function validateForUser({client=pool,userId,code,subtotal,purchaseType,industryId=null,membershipPlanId=null,leadId=null}){
   const normalized=normalizeCode(code);
   if(!normalized)return null;
   const amount=Number(subtotal);
@@ -398,6 +400,10 @@ async function validateForUser({client=pool,userId,code,subtotal,purchaseType,in
   const purchaseTypes=jsonArray(coupon.purchase_types);
   validateBenefitScope(coupon.benefit_type,purchaseTypes);
   if(purchaseType&&!purchaseTypes.includes(purchaseType))fail('This offer does not apply to this purchase','PURCHASE_NOT_ELIGIBLE');
+  if(purchaseType==='lead'&&leadId&&!coupon.applies_to_partner_leads){
+    const partnerLead=(await db.query('SELECT lead_partner_id FROM leads WHERE id=$1',[Number(leadId)])).rows[0]?.lead_partner_id;
+    if(partnerLead)fail('Offers cannot be used on Lead Partner leads','PARTNER_LEAD_NOT_ELIGIBLE');
+  }
   const planIds=jsonArray(coupon.membership_plan_ids).map(Number);
   if(membershipPlanId&&planIds.length&&!planIds.includes(Number(membershipPlanId)))fail('This offer does not apply to this membership plan','PLAN_NOT_ELIGIBLE');
   if(!(await audienceEligible(db,coupon,userId,{industryId})))fail('This offer is not available for this account','USER_NOT_ELIGIBLE');
@@ -419,8 +425,9 @@ async function validateForUser({client=pool,userId,code,subtotal,purchaseType,in
   };
 }
 
-async function getPublicOffersForUser({userId,purchaseType,subtotal=null,membershipPlanId=null,industryId=null}){
+async function getPublicOffersForUser({userId,purchaseType,subtotal=null,membershipPlanId=null,industryId=null,leadId=null}){
   if(!['membership','lead','wallet_topup'].includes(purchaseType))return[];
+  const partnerLead=purchaseType==='lead'&&leadId?Boolean((await pool.query('SELECT lead_partner_id FROM leads WHERE id=$1',[Number(leadId)])).rows[0]?.lead_partner_id):false;
   const normalizedIndustryId=industryId==null||industryId===''?null:Number(industryId);
   const rows=(await pool.query(`
     WITH current_membership AS (
@@ -489,6 +496,7 @@ async function getPublicOffersForUser({userId,purchaseType,subtotal=null,members
   for(const coupon of rows){
     const purchaseTypes=jsonArray(coupon.purchase_types);
     if(!purchaseTypes.includes(purchaseType))continue;
+    if(partnerLead&&!coupon.applies_to_partner_leads)continue;
     // Older mixed-scope rewards are never advertised when the current strict
     // benefit-to-purchase rules would reject them at checkout.
     try{validateBenefitScope(coupon.benefit_type,purchaseTypes)}catch{continue}

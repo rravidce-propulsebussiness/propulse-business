@@ -255,7 +255,7 @@ export default function LeadsV2() {
     const leadRow = lead?.pricing?.shares?.[0] || null
     const offerSubtotal = Number(leadRow?.[isPro ? 'pro' : 'normal'] || 0)
     const subtotalParam = offerSubtotal > 0 ? `&subtotal=${encodeURIComponent(offerSubtotal)}` : ''
-    authRequest(`/coupons/offers?purchaseType=lead${industryId}${subtotalParam}`).then(data => setPublicLeadOffers(Array.isArray(data) ? data : [])).catch(() => setPublicLeadOffers([]))
+    authRequest(`/coupons/offers?purchaseType=lead${industryId}${subtotalParam}${lead?.id ? `&leadId=${encodeURIComponent(lead.id)}` : ''}`).then(data => setPublicLeadOffers(Array.isArray(data) ? data : [])).catch(() => setPublicLeadOffers([]))
   }
   const validateCouponForCurrentAccess = async (code = couponCode) => {
     const normalized = String(code || '').trim().toUpperCase()
@@ -279,6 +279,7 @@ export default function LeadsV2() {
           code: normalized,
           subtotal,
           purchaseType: 'lead',
+          leadId: buyModal?.id || null,
           industryId: buyModal?.industry_id || null
         })
       })

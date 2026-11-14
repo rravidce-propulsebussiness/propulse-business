@@ -1479,3 +1479,6 @@
  .premium-coupons-page .coupon-free-shortcut-buttons{width:100%}
  .premium-coupons-page .coupon-free-shortcut-buttons button{flex:1 1 150px}
 }
+
+/* Lead Partner lead option sits under the purchase scope choices. */
+.coupon-partner-control{margin-top:12px}
