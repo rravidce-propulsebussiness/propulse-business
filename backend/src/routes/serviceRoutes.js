@@ -3,6 +3,7 @@ const serviceController = require('../controllers/serviceController');
 const requireAdmin = require('../middleware/adminMiddleware');
 
 const router = express.Router();
+require('../utils/numericRouteParams').numericRouteParams(router,'id');
 
 router.get('/', serviceController.getServices);
 router.get('/:id', serviceController.getServiceById);
