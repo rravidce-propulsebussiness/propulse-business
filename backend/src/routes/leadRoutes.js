@@ -8,6 +8,8 @@ router.get('/investors',requireAdmin,leadController.getInvestors);
 router.get('/pricing',requireAdmin,leadController.getLeadPricing);
 router.put('/pricing',requireAdmin,leadController.updateLeadPricing);
 router.get('/access-settings',requireAdmin,leadController.getAccessSettings);
+router.get('/classification/settings',requireAdmin,leadController.getLeadClassificationSettings);
+router.put('/classification/settings',requireAdmin,leadController.updateLeadClassificationSettings);
 router.get('/quality-gate/settings',requireAdmin,leadController.getQualityGateSettings);
 router.put('/quality-gate/settings',requireAdmin,leadController.updateQualityGateSettings);
 router.put('/access-settings',requireAdmin,leadController.updateAccessSettings);
