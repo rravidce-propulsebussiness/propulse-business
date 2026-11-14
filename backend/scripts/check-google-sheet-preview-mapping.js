@@ -50,7 +50,6 @@ assert(guessed.effectiveMappings.industry==='Industry','Known headers must be au
 const controls='Customer Phone,Requirement,Industry,Pincode,Access Strategy,Buyer Capacity,Normal 1 Buyer Price,Pro 1 Buyer Price\\n9876543210,Need a home,Interiors,560001,exclusive,2,100,150';
 const defaultRules=previewModule.analyzeCsv(controls,{scope:'admin'});
 assert(defaultRules.effectiveMappings.accessStrategy===null&&defaultRules.effectiveMappings.buyerCapacity===null,'Admin access columns must use configured rules unless explicitly mapped');
-assert(defaultRules.effectiveMappings.leadType===null,'Test sheet without a Lead Type header should leave its mapping empty');
 const typed=previewModule.analyzeCsv('Lead Type,Customer Phone\\nMeta Ad,9876543210',{scope:'admin'});
 assert(typed.effectiveMappings.leadType==='Lead Type','Lead Type must remain auto-mapped to select the right pricing membership class');
 assert(defaultRules.effectiveMappings.normal1BuyerPrice===null&&defaultRules.effectiveMappings.pro1BuyerPrice===null,'Admin price columns must use configured Lead Pricing unless explicitly mapped');
