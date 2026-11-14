@@ -10,6 +10,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/database');
 const graph = require('./metaGraphClient');
+const metaAdPricing = require('./metaAdPricingService');
 const sheetPreview = require('./sheetImportPreviewService');
 const partnerSheets = require('./leadPartnerInventoryCompatService');
 const adminSheets = require('./adminGoogleSheetSyncService');
@@ -22,7 +23,7 @@ const RETURN_PATHS = { admin: '/admin/leads/sheets', lead_partner: '/lead-partne
 const SAMPLE_LEADS = 25;
 const BACKFILL_DAYS = 30;
 const BACKFILL_MAX = 500;
-const FIXED_HEADERS = ['Lead ID', 'Created At', 'Source', 'Meta Form', 'Meta Ad', 'Meta Campaign', 'Meta Platform'];
+const FIXED_HEADERS = ['Lead ID', 'Created At', 'Source', 'Meta Form', 'Meta Ad', 'Meta Campaign', 'Meta Platform', 'Meta Ad ID', 'Meta Ad Spend Total', 'Meta Ad Spend Delta', 'Normal 1 Buyer Price', 'Pro 1 Buyer Price'];
 
 function clean(value) { return String(value ?? '').trim(); }
 function stateSecret() {
@@ -72,6 +73,11 @@ function leadsToCsv({ formName = '', questions = [], leads = [] }) {
         case 'Meta Ad': return clean(lead.ad_name);
         case 'Meta Campaign': return clean(lead.campaign_name);
         case 'Meta Platform': return clean(lead.platform);
+        case 'Meta Ad ID': return clean(lead.ad_id);
+        case 'Meta Ad Spend Total': return lead.__propulsePricing?.totalSpend ?? '';
+        case 'Meta Ad Spend Delta': return lead.__propulsePricing?.spendDelta ?? '';
+        case 'Normal 1 Buyer Price': return lead.__propulsePricing?.nonMemberPrice ?? '';
+        case 'Pro 1 Buyer Price': return lead.__propulsePricing?.memberPrice ?? '';
         default: return byHeader.get(header) ?? '';
       }
     });
@@ -137,12 +143,12 @@ async function finishOauth({ code, state, error }) {
     if (!usable.length) return returnPath(scope, 'error', 'No Facebook Pages were shared. Select at least one Page when logging in.');
     for (const page of usable) {
       await pool.query(
-        `INSERT INTO meta_lead_pages(owner_user_id,owner_scope,page_id,page_name,page_token_encrypted,meta_user_id)
-         VALUES($1,$2,$3,$4,$5,$6)
+        `INSERT INTO meta_lead_pages(owner_user_id,owner_scope,page_id,page_name,page_token_encrypted,meta_user_id,meta_user_token_encrypted)
+         VALUES($1,$2,$3,$4,$5,$6,$7)
          ON CONFLICT(owner_user_id,owner_scope,page_id) DO UPDATE SET
            page_name=EXCLUDED.page_name,page_token_encrypted=EXCLUDED.page_token_encrypted,
-           meta_user_id=EXCLUDED.meta_user_id,authorized_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP`,
-        [payload.u, scope, clean(page.id), clean(page.name).slice(0, 255), graph.encryptToken(page.access_token), clean(me.id) || null]
+           meta_user_id=EXCLUDED.meta_user_id,meta_user_token_encrypted=EXCLUDED.meta_user_token_encrypted,authorized_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP`,
+        [payload.u, scope, clean(page.id), clean(page.name).slice(0, 255), graph.encryptToken(page.access_token), clean(me.id) || null, graph.encryptToken(userToken)]
       );
     }
     return returnPath(scope, 'connected');
@@ -330,22 +336,34 @@ async function processLead({ leadgenId, formId, lead = null }) {
   const id = clean(leadgenId);
   if (!/^\d{5,30}$/.test(id)) return { status: 'ignored' };
   const connection = (await pool.query(
-    `SELECT c.*,p.page_token_encrypted FROM meta_lead_connections c JOIN meta_lead_pages p ON p.id=c.meta_page_id
+    `SELECT c.*,p.page_token_encrypted,p.meta_user_token_encrypted FROM meta_lead_connections c JOIN meta_lead_pages p ON p.id=c.meta_page_id
       WHERE c.form_id=$1 AND c.status='active' LIMIT 1`, [clean(formId)]
   )).rows[0];
   const claimed = (await pool.query(
     `INSERT INTO meta_lead_events(leadgen_id,connection_id,form_id,page_id,status) VALUES($1,$2,$3,$4,$5)
      ON CONFLICT(leadgen_id) DO UPDATE SET connection_id=EXCLUDED.connection_id,status=EXCLUDED.status
        WHERE meta_lead_events.status IN ('received','failed','ignored')
-     RETURNING leadgen_id`,
+     RETURNING *`,
     [id, connection?.id || null, clean(formId) || null, connection?.page_id || null, connection ? 'received' : 'ignored']
   )).rows[0];
   if (!claimed) return { status: 'already-processed' };
   if (!connection) return { status: 'ignored' };
   try {
     const token = graph.decryptToken(connection.page_token_encrypted);
-    const fullLead = lead || await graph.graphRequest(id, { params: { fields: 'id,created_time,field_data,ad_name,campaign_name,platform,form_id' }, token });
-    const csv = leadsToCsv({ formName: connection.form_name, questions: [], leads: [fullLead] });
+    const fullLead = lead || await graph.graphRequest(id, { params: { fields: 'id,created_time,field_data,ad_id,ad_name,campaign_name,platform,form_id' }, token });
+    let pricing = null;
+    if (connection.owner_scope === 'admin') {
+      if (claimed.normal_price !== null && claimed.normal_price !== undefined && claimed.member_price !== null && claimed.member_price !== undefined) {
+        pricing = { adId: claimed.ad_id, totalSpend: Number(claimed.total_spend), spendDelta: Number(claimed.spend_delta), nonMemberPrice: Number(claimed.normal_price), memberPrice: Number(claimed.member_price) };
+      } else {
+        const result = await metaAdPricing.priceLead({ adId: fullLead.ad_id, userTokenEncrypted: connection.meta_user_token_encrypted });
+        pricing = result.pricing;
+        if (pricing) await pool.query('UPDATE meta_lead_events SET ad_id=$2,ad_account_id=$3,total_spend=$4,spend_delta=$5,normal_price=$6,member_price=$7,pricing_error=NULL WHERE leadgen_id=$1', [id, pricing.adId, pricing.adAccountId, pricing.totalSpend, pricing.spendDelta, pricing.nonMemberPrice, pricing.memberPrice]);
+        else await pool.query('UPDATE meta_lead_events SET ad_id=$2,pricing_error=$3 WHERE leadgen_id=$1', [id, clean(fullLead.ad_id) || null, result.error]);
+      }
+    }
+    const pricedLead = pricing ? { ...fullLead, __propulsePricing: pricing } : fullLead;
+    const csv = leadsToCsv({ formName: connection.form_name, questions: [], leads: [pricedLead] });
     const outcome = await importCsvForConnection(connection, csv);
     await recordOutcome(connection.id, id, outcome, outcome.failures?.[0]);
     return { status: outcome.created ? 'imported' : outcome.duplicate ? 'duplicate' : 'failed' };
