@@ -5,8 +5,8 @@ const read=relative=>fs.readFileSync(path.join(__dirname,'../..',relative),'utf8
 const loader=read('frontend/src/components/BootLoader.jsx');
 const css=read('frontend/src/components/BootLoader.css');
 const html=read('frontend/index.html');
-assert.match(loader,/Get your next project/);
-assert.match(html,/Get your next project/);
+assert.match(loader,/Your dream home starts here/);
+assert.match(html,/Your dream home starts here/);
 assert.match(loader,/contained=false,compact=false/);
 assert.match(css,/prefers-reduced-motion:reduce/);
 assert.match(css,/\.propulse-route-loading\.is-contained/);
@@ -49,4 +49,4 @@ for(const [relative,legacy] of [
   assert(!read('frontend/src/'+relative).includes(legacy),
     'Old text-only loader has been removed from '+relative);
 }
-console.log('Shared ProPulse SVG loader and Get your next project tagline verified across '+pages.length+' screens.');
+console.log('Shared ProPulse SVG loader and Your dream home starts here tagline verified across '+pages.length+' screens.');
