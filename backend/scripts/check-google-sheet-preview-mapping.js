@@ -47,6 +47,14 @@ assert(previewUi.includes("next[id]=value||null"),'Not mapped must be represente
 const sample='Industry,Customer Phone,Custom Source\nInterior Design & Home Interiors,9876543210,Referral';
 const guessed=previewModule.analyzeCsv(sample,{scope:'admin'});
 assert(guessed.effectiveMappings.industry==='Industry','Known headers must be auto-mapped on first analysis');
+const controls='Customer Phone,Requirement,Industry,Pincode,Access Strategy,Buyer Capacity,Normal 1 Buyer Price,Pro 1 Buyer Price\\n9876543210,Need a home,Interiors,560001,exclusive,2,100,150';
+const defaultRules=previewModule.analyzeCsv(controls,{scope:'admin'});
+assert(defaultRules.effectiveMappings.accessStrategy===null&&defaultRules.effectiveMappings.buyerCapacity===null,'Admin access columns must use configured rules unless explicitly mapped');
+assert(defaultRules.effectiveMappings.normal1BuyerPrice===null&&defaultRules.effectiveMappings.pro1BuyerPrice===null,'Admin price columns must use configured Lead Pricing unless explicitly mapped');
+assert(defaultRules.mappedCsv.split('\\n')[0].includes('Unmapped Access Strategy'),'Unmapped access aliases must not be auto-detected by the importer');
+assert(defaultRules.mappedCsv.split('\\n')[0].includes('Unmapped Normal 1 Buyer Price'),'Unmapped prices must not override configured Lead Pricing');
+const explicitRules=previewModule.analyzeCsv(controls,{scope:'admin',columnMappings:{accessStrategy:'Access Strategy',normal1BuyerPrice:'Normal 1 Buyer Price'}});
+assert(explicitRules.effectiveMappings.accessStrategy==='Access Strategy'&&explicitRules.effectiveMappings.normal1BuyerPrice==='Normal 1 Buyer Price','Explicit sheet overrides must remain available');
 const suppressed=previewModule.analyzeCsv(sample,{scope:'admin',columnMappings:{industry:null,customerPhone:'Customer Phone'}});
 assert(Object.prototype.hasOwnProperty.call(suppressed.effectiveMappings,'industry')&&suppressed.effectiveMappings.industry===null,'Explicit Not mapped choice must survive analysis');
 assert(suppressed.mappedCsv.split('\n')[0].includes('Unmapped Industry'),'Explicitly suppressed aliases must be renamed so importers cannot auto-detect them');

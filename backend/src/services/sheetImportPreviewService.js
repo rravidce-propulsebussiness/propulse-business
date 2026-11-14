@@ -72,6 +72,12 @@ function analyzeCsv(csv,{columnMappings={},scope='admin'}={}){
   const requested=columnMappings&&typeof columnMappings==='object'&&!Array.isArray(columnMappings)?columnMappings:{};
   const effective={};
   for(const target of targets){
+    if(scope==='admin'&&(target.group==='Access'||target.group==='Pricing')&&!Object.prototype.hasOwnProperty.call(requested,target.id)){
+      // Admin sheet access and price columns are opt-in overrides. By default,
+      // lead creation resolves these values from the configured Admin rules.
+      effective[target.id]=null;
+      continue;
+    }
     if(Object.prototype.hasOwnProperty.call(requested,target.id)){
       const sourceHeader=requested[target.id];
       if(sourceHeader===null||sourceHeader===undefined||clean(sourceHeader)===''){effective[target.id]=null;continue}
