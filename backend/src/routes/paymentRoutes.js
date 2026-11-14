@@ -6,6 +6,7 @@ const rateLimit = require('../middleware/rateLimitMiddleware');
 const idempotency = require('../middleware/idempotencyMiddleware');
 
 const router = express.Router();
+require('../utils/numericRouteParams').numericRouteParams(router,'id','userId');
 const paymentWriteLimit = rateLimit({ windowMs: 60 * 1000, max: 20 });
 const adminPaymentWriteLimit = rateLimit({ windowMs: 60 * 1000, max: 60 });
 router.use(requireAuth);

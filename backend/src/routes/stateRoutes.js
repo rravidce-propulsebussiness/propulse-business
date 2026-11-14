@@ -3,6 +3,7 @@ const stateController = require('../controllers/stateController');
 const requireAdmin = require('../middleware/adminMiddleware');
 
 const router = express.Router();
+require('../utils/numericRouteParams').numericRouteParams(router,'id');
 
 router.get('/', stateController.getStates);
 router.get('/:id', stateController.getStateById);

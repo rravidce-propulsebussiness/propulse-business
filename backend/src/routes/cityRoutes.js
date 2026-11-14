@@ -3,6 +3,7 @@ const cityController = require('../controllers/cityController');
 const requireAdmin = require('../middleware/adminMiddleware');
 
 const router = express.Router();
+require('../utils/numericRouteParams').numericRouteParams(router,'id');
 
 router.get('/', cityController.getCities);
 router.get('/:id', cityController.getCityById);

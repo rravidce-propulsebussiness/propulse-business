@@ -4,6 +4,7 @@ const requireAuth=require('../middleware/authMiddleware');
 const requireAdmin=require('../middleware/adminMiddleware');
 const rateLimit=require('../middleware/rateLimitMiddleware');
 const router=express.Router();
+require('../utils/numericRouteParams').numericRouteParams(router,'id');
 const couponValidationLimit=rateLimit({windowMs:60*1000,max:30});
 router.use(requireAuth);
 router.post('/validate',couponValidationLimit,controller.validate);

@@ -1,4 +1,5 @@
 const router = require('express').Router();
+require('../utils/numericRouteParams').numericRouteParams(router,'id','userId','cycleId');
 const auth = require('../middleware/authMiddleware');
 const investor = require('../middleware/investorMiddleware');
 const admin = require('../middleware/adminMiddleware');

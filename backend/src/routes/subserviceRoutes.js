@@ -3,6 +3,7 @@ const subserviceController = require('../controllers/subserviceController');
 const requireAdmin = require('../middleware/adminMiddleware');
 
 const router = express.Router();
+require('../utils/numericRouteParams').numericRouteParams(router,'id');
 
 router.get('/', subserviceController.getSubservices);
 router.get('/:id', subserviceController.getSubserviceById);
