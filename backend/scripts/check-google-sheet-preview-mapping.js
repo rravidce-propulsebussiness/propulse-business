@@ -27,6 +27,7 @@ assert(preview.includes('SHEET_PREVIEW_HAS_INVALID_ROWS'),'Activation must rejec
 assert(preview.includes('consumePreview'),'Preview tokens must be consumed after successful activation');
 assert(preview.includes('fingerprint:crypto.createHash'),'Preview must fingerprint the raw sheet');
 assert(preview.includes('effectiveMappings'),'Column mapping must be normalized and deterministic');
+assert(admin.includes("!norm(key).startsWith('unmapped')"),'Suppressed source columns must not be copied into custom lead fields');
 assert(admin.includes('async function previewGoogleSheet'),'Admin preview validator is missing');
 assert(admin.includes("sheetPreview.assertPreview"),'Admin connection activation must require a valid preview');
 assert(admin.includes('defaultIndustryId:defaultIndustry?.id||null'),'Admin preview token must bind the selected default Industry so activation cannot change it silently');
