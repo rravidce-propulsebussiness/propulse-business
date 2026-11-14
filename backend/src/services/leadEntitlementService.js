@@ -337,7 +337,7 @@ async function claimLead(userId,leadId){
              industry_id,service_id,subservice_id,state_id,city_id,
              customer_name,customer_phone,customer_email,requirement,property_type,
              budget,source,notes,custom_fields,buyer_capacity,access_strategy,contact_consent_version,
-             release_to_two_after_hours,release_to_three_after_hours,access_capacity_locked
+             release_to_two_after_hours,release_to_three_after_hours,access_capacity_locked,lead_partner_id
       FROM leads WHERE id=$1 FOR UPDATE
     `,[leadId]);
     const lead=leadResult.rows[0];

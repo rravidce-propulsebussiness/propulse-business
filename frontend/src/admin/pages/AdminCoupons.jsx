@@ -28,6 +28,7 @@ const emptyCoupon=()=>({
   registration_max_age_days:0,
   bonus_valid_days:30,
   is_public_offer:false,
+  applies_to_partner_leads:false,
   min_order_amount:'',
   usage_limit:'',
   per_user_limit:'',
@@ -446,7 +447,7 @@ export default function AdminCoupons(){
               <p className="coupon-description">{item.description||'No campaign description'}</p>
 
               <div className="coupon-discount-block">
-                <div><span>{String(item.benefit_type||'discount')==='discount'?'Discount':'Reward'}</span><strong>{benefitLabel(item)}</strong>{String(item.benefit_type||'discount')==='discount'&&item.max_discount!=null&&<small>Max {money(item.max_discount)}</small>}{item.is_public_offer&&<small>Shown to eligible customers</small>}</div>
+                <div><span>{String(item.benefit_type||'discount')==='discount'?'Discount':'Reward'}</span><strong>{benefitLabel(item)}</strong>{String(item.benefit_type||'discount')==='discount'&&item.max_discount!=null&&<small>Max {money(item.max_discount)}</small>}{item.is_public_offer&&<small>Shown to eligible customers</small>}{(Array.isArray(item.purchase_types)?item.purchase_types:[]).includes('lead')&&<small>{item.applies_to_partner_leads?'Includes Lead Partner leads':'ProPulse leads only'}</small>}</div>
                 <div><span>Minimum purchase</span><strong>{Number(item.min_order_amount)>0?money(item.min_order_amount):'None'}</strong></div>
               </div>
 
@@ -544,6 +545,8 @@ export default function AdminCoupons(){
                 <b>{form.purchase_types.includes(item.key)?'✓':'+'}</b>
               </button>)}
             </div>
+
+            {form.purchase_types.includes('lead')&&<label className="coupon-public-control coupon-partner-control"><input type="checkbox" checked={form.applies_to_partner_leads===true} onChange={e=>setForm(current=>({...current,applies_to_partner_leads:e.target.checked}))}/><span><strong>Also allow on Lead Partner leads</strong><small>Off by default: this offer and any bonus lead credits apply only to ProPulse-owned leads, so Lead Partners always earn their full share. Turn on only if ProPulse will cover the partner's discount.</small></span></label>}
 
             {form.purchase_types.includes('membership')&&<details className="coupon-membership-scope">
               <summary className="coupon-subhead"><div><strong>Advanced: restrict billing cycles</strong><small>Optional. Your GROW/SCALE audience is selected once below. Open only to restrict particular plan durations.</small></div>{form.membership_plan_ids.length>0&&<span>{form.membership_plan_ids.length} selected</span>}</summary>

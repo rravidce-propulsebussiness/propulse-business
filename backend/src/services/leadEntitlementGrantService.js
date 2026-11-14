@@ -28,6 +28,8 @@ function normalizeLeadStrategy(lead){
 
 function grantAllowsLead(grant,lead,{exclusiveActive=false,pro=false}={}){
   if(lead){
+    // Promotion credits are platform offers: they never consume a Lead Partner's lead unless the coupon allows it.
+    if(lead.lead_partner_id&&grant.partner_leads_allowed===false)return false;
     const strategy=normalizeLeadStrategy(lead);
     if(strategy==='permanent_single'&&!bool(grant.allow_single,true))return false;
     if(strategy==='shared'&&!bool(grant.allow_shared,true))return false;
@@ -299,6 +301,9 @@ async function getActiveGrants(userId,client=pool,{ensureWelcome=true,forUpdate=
 
   const result=await client.query(`
     SELECT g.*,
+           CASE WHEN g.source='promotion' THEN COALESCE((
+             SELECT cp.applies_to_partner_leads FROM coupon_rewards cr JOIN coupons cp ON cp.id=cr.coupon_id
+             WHERE cr.lead_grant_id=g.id LIMIT 1),FALSE) ELSE TRUE END AS partner_leads_allowed,
            COUNT(c.id) FILTER(WHERE c.entitlement_type='shared')::int AS used_shared,
            COUNT(c.id) FILTER(WHERE c.entitlement_type='premium')::int AS used_premium
     FROM lead_entitlement_grants g
