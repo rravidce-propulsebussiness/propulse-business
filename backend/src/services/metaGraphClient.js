@@ -39,13 +39,15 @@ function publicOrigin() {
 function config() {
   const version = env('META_GRAPH_API_VERSION', 'META_LEADS_GRAPH_VERSION');
   const scopes = clean(process.env.META_LEADS_OAUTH_SCOPES);
+  const requestedScopes = scopes ? scopes.split(/[\s,]+/).filter(Boolean) : [...DEFAULT_SCOPES];
+  if (!requestedScopes.includes('ads_read')) requestedScopes.push('ads_read');
   return {
     appId: env('META_APP_ID', 'META_LEADS_APP_ID'),
     appSecret: env('META_APP_SECRET', 'META_LEADS_APP_SECRET'),
     version: /^v\d{1,3}\.\d{1,2}$/.test(version) ? version : DEFAULT_VERSION,
     verifyToken: env('META_LEADS_WEBHOOK_VERIFY_TOKEN', 'META_LEADS_VERIFY_TOKEN'),
     loginConfigId: clean(process.env.META_LEADS_LOGIN_CONFIG_ID),
-    scopes: scopes ? scopes.split(/[\s,]+/).filter(Boolean) : DEFAULT_SCOPES,
+    scopes: requestedScopes,
     key: encryptionKey(),
     redirectUri: publicOrigin() + '/api/meta-leads/oauth/callback',
   };
