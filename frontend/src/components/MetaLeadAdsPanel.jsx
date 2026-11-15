@@ -156,6 +156,7 @@ export default function MetaLeadAdsPanel({ scope = 'partner' }) {
             <option value="">Use the form's answer</option>
             {industries.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
           </select>
+          <small className="mla-muted">Choose the industry whose Basic/Premium rules should classify this form when it does not provide an Industry answer.</small>
         </label>
         <button type="button" className="mla-btn" disabled={!formId || Boolean(busy)} onClick={() => analyze()}>{busy === 'preview' ? 'Analyzing…' : preview ? 'Re-analyze' : 'Analyze form'}</button>
       </div>}
