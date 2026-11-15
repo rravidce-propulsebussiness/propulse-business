@@ -25,6 +25,12 @@ async function reviewVideo(req,res){
   catch(error){
     const status=error.code==='COMPLETED_PROJECT_NOT_FOUND'?404:error.code==='DUPLICATE_REWARD_VIDEO'?409:['INVALID_PROJECT_VIDEO_REVIEW','PROJECT_VIDEO_CONTACT_PRIVACY_REQUIRED','PROJECT_VIDEO_REDACTION_NOT_READY'].includes(error.code)?400:503;
     if(status===503)console.error('Admin video review failed:',error);
+    if(status===503){
+      const message=error.code==='PROJECT_VIDEO_STORAGE_UNAVAILABLE'
+        ?error.message
+        :'The review could not be saved. This project remains pending; retry after the service recovers.';
+      return res.status(503).json({error:message,code:error.code||'PROJECT_VIDEO_REVIEW_UNAVAILABLE'});
+    }
     return sendError(res,status,error,'Could not review project video',{code:error.code});
   }
 }
