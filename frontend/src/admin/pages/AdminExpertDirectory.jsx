@@ -10,7 +10,7 @@ function dataList(value){return Array.isArray(value?.data)?value.data:Array.isAr
 function formatDate(value){if(!value)return '—';const d=new Date(value);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('en-IN',{month:'short',year:'numeric'})}
 function initials(value){return String(value||'P').split(/\s+/).filter(Boolean).slice(0,2).map(v=>v[0]).join('').toUpperCase()}
 function Badge({type,children}){return <span className={'expert-v2-badge '+type}>{children}</span>}
-const SECTIONS=[['all','All Professionals'],['featured','Featured Professionals'],['pending','Lead Credit Reviews'],['verified','Verification'],['badges','Manage Badges'],['settings','Directory Settings']]
+const SECTIONS=[['all','All Professionals'],['featured','Featured Professionals'],['pending','Video Reviews'],['settings','Directory Settings']]
 
 export default function AdminExpertDirectory(){
   const pageLocation=useLocation()
@@ -66,12 +66,10 @@ export default function AdminExpertDirectory(){
 
   useEffect(()=>{
     const allowed=new Set(SECTIONS.map(item=>item[0]))
-    const next=new URLSearchParams(pageLocation.search).get('view')||'all'
-    const view=allowed.has(next)?next:'all'
+    const requested=new URLSearchParams(pageLocation.search).get('view')||'all'
+    const view=allowed.has(requested)?requested:'all'
     setSection(view)
-    if(view==='verified')setProfileTab('verification')
-    else if(view==='badges')setProfileTab('badges')
-    else setProfileTab('projects')
+    setProfileTab(requested==='badges'?'badges':requested==='verified'?'profile':'projects')
   },[pageLocation.search])
 
   useEffect(()=>{
@@ -101,8 +99,6 @@ export default function AdminExpertDirectory(){
       if(videoStatus==='pending'&&!Number(item.pending_video_count))return false
       if(section==='featured'&&!item.is_featured)return false
       if(section==='pending'&&!Number(item.pending_video_count))return false
-      if(section==='verified'&&item.is_verified)return false
-      if(section==='badges'&&!item.is_official&&!item.is_verified&&!item.is_featured)return false
       return true
     })
     if(sort==='projects')rows=rows.sort((a,b)=>Number(b.project_count)-Number(a.project_count))
@@ -147,10 +143,7 @@ export default function AdminExpertDirectory(){
     navigate('/admin/expert-directory'+(value==='all'?'':'?view='+encodeURIComponent(value)))
     setSection(value)
     setError('')
-    if(value==='pending')setProfileTab('projects')
-    else if(value==='verified')setProfileTab('verification')
-    else if(value==='badges')setProfileTab('badges')
-    else setProfileTab('projects')
+    setProfileTab('projects')
   }
 
   if(loading)return <main className="expert-v2"><BootLoader contained message="Loading Expert Directory" /></main>
@@ -230,7 +223,7 @@ export default function AdminExpertDirectory(){
             <div><strong>{formatDate(selected.created_at)}</strong><small>Joined</small></div>
           </div>
           <div className="expert-v2-detail-tabs" role="tablist" aria-label="Professional details">
-            {[['profile','Profile Details'],['projects','Projects & Media'],['verification','Verification'],['badges','Badges & Status'],['activity','Activity']].map(([key,title])=>
+            {[['profile','Profile Details'],['projects','Projects & Media'],['badges','Badges & Status'],['activity','Activity']].map(([key,title])=>
               <button key={key} role="tab" type="button" aria-selected={profileTab===key} className={profileTab===key?'active':''} onClick={()=>setProfileTab(key)}>{title}</button>)}
           </div>
           <div className="expert-v2-profile-content">
@@ -241,13 +234,9 @@ export default function AdminExpertDirectory(){
                 <div><dt>Contact owner</dt><dd>{selected.name}</dd></div>
                 <div><dt>Location</dt><dd>{selected.city_names||'Not set'}</dd></div>
                 <div><dt>Membership</dt><dd>{selected.plan_name||'No active paid membership'}</dd></div>
+                <div><dt>Verification</dt><dd>{selected.is_verified?'Verified':'Not verified'} · <a href="/admin/company-proofs">Company Proofs</a></dd></div>
               </dl>
-            </div>}
-            {profileTab==='verification'&&<div className="expert-v2-info">
-              <h3>Company Verification</h3>
-              <p>{selected.is_verified?'Company documents are verified.':'The company has not completed document verification.'}</p>
-              <Badge type={selected.is_verified?'verified':'muted'}>{selected.is_verified?'✓ Verified':'Unverified'}</Badge>
-              <a href="/admin/company-proofs" className="expert-v2-outline-action">Review verification documents ↗</a>
+              <p className="expert-v2-verification-note">Company document review is managed in Customers → Company Proofs.</p>
             </div>}
             {profileTab==='badges'&&<div className="expert-v2-info">
               <h3>Badges &amp; Directory Visibility</h3>

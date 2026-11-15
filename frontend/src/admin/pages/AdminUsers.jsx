@@ -268,6 +268,11 @@ export default function AdminUsers() {
       </div>
     </section>
 
+    <nav className="customer-section-nav" aria-label="Customer workspaces">
+      <a className="active" href="/admin/users">Users <span>Account management</span></a>
+      <a href="/admin/company-proofs">Company Proofs <span>Document review</span></a>
+    </nav>
+
     <section className="users-premium-stats">
       <article className="users-stat-card total"><div className="users-stat-icon">Σ</div><div><span>Total accounts</span><strong>{Number(userPagination?.total ?? users.length).toLocaleString('en-IN')}</strong><small>Directory total</small></div></article>
       <article className="users-stat-card active"><div className="users-stat-icon">✓</div><div><span>Active</span><strong>{active}</strong><small>On this page</small></div></article>
@@ -276,6 +281,7 @@ export default function AdminUsers() {
       <article className="users-stat-card admin"><div className="users-stat-icon">A</div><div><span>Admins</span><strong>{admins}</strong><small>Admin accounts</small></div></article>
     </section>
 
+    <div className="customer-operations-layout">
     <section className="users-directory-panel">
       <div className="users-directory-head">
         <div><span>ACCOUNT DIRECTORY</span><h2>Manage accounts</h2></div>
@@ -358,8 +364,8 @@ export default function AdminUsers() {
       </div>}
     </section>
 
-    {selected && <div className="modal-backdrop users-360-backdrop" onClick={() => setSelected(null)}>
-      <div className="user-modal user-360-modal" onClick={e => e.stopPropagation()}>
+    <aside className="customer-account-panel" aria-label="Selected customer account">
+      {selected ? <div className="user-modal user-360-modal customer-account-workspace">
         <div className="user-360-head">
           <div className="user-360-identity">
             <div className={'user-360-avatar ' + selected.role}>{(selected.name||selected.business_name||'?').trim().split(/\s+/).slice(0,2).map(part=>part.charAt(0).toUpperCase()).join('')}</div>
@@ -554,8 +560,9 @@ export default function AdminUsers() {
             </div>}
           </div>
         </>}
-      </div>
-    </div>}
+      </div> : <div className="customer-account-empty"><span>ACCOUNT DETAILS</span><h2>Select an account</h2><p>Choose a user from the directory to review membership, wallet, leads, payments, profile and activity.</p></div>}
+    </aside>
+    </div>
 
     {showCreate && <div className="modal-backdrop" onClick={() => setShowCreate(false)}><form className="user-modal create-user-modal premium-create-admin-modal" onClick={e => e.stopPropagation()} onSubmit={createAdmin}><div className="modal-head"><div><span className="eyebrow">NEW ADMIN</span><h2>Create Administrator</h2></div><button type="button" onClick={() => setShowCreate(false)}>×</button></div><div className="create-grid"><label>Name<input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label><label>Email<input required type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></label><label>Password<input required type="password" minLength="8" maxLength="64" pattern="(?=.*[A-Za-z])(?=.*\d).{8,64}" title="Use 8–64 characters with at least one letter and one number." placeholder="8–64 characters, letter + number" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /></label></div><div className="modal-actions"><button className="admin-primary-btn" type="submit" disabled={saving}>{saving ? 'Creating...' : 'Create administrator'}</button><button type="button" onClick={() => setShowCreate(false)}>Cancel</button></div></form></div>}
   </section>;

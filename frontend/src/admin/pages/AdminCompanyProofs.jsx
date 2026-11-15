@@ -85,6 +85,10 @@ export default function AdminCompanyProofs() {
 
   return (
     <section className="admin-company-proofs-page">
+      <nav className="customer-section-nav" aria-label="Customer workspaces">
+        <a href="/admin/users">Users <span>Account management</span></a>
+        <a className="active" href="/admin/company-proofs">Company Proofs <span>Document review</span></a>
+      </nav>
       <div className="company-proofs-heading">
         <div>
           <h1>Company Proof Review</h1>
