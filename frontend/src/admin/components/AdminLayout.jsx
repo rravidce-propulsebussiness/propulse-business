@@ -63,6 +63,7 @@ const navigation=[
     {to:'/admin/sound-effects',label:'Sound Effects'},
     {to:'/admin/homepage-media',label:'Homepage Media'},
     {to:'/admin/upcoming-features',label:'Upcoming Features'},
+    {to:'/admin/website-pages',label:'Landing Pages'},
     {to:'/admin/contact-social',label:'Contact & Social'},
     {to:'/admin/faqs',label:'FAQs'}
   ]}
@@ -75,6 +76,7 @@ function routeMatches(item,pathname){
     const [current,currentSearch]=pathname.split('?')
     if(current!==base && (item.end||!current.startsWith(base+'/')))return false
     if(search)return current===base && currentSearch===search
+    if(item.end&&currentSearch)return false
     if(base==='/admin/expert-directory'&&current===base)return !currentSearch
     return true
   })
