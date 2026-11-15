@@ -1,16 +1,15 @@
 # Meta Lead Ads (Facebook & Instagram) → ProPulse
 
 Leads from Facebook/Instagram lead forms go **directly** into ProPulse through
-the Meta API. No Google Sheet is involved and nothing polls: Meta pushes each
-new lead to ProPulse the moment it is submitted.
+the Meta API. Meta pushes each new lead to ProPulse when it is submitted.
 
 ```
 Lead form submitted ──► Meta webhook (leadgen) ──► ProPulse fetches the lead
-                       ──► same lead rules as uploads/sheets (duplicates,
+                       ──► same lead rules as CSV imports (duplicates,
                            quality gate, partner pricing) ──► lead created
 ```
 
-Who can connect: **Admin** (Admin → Leads → Sheets → *Meta Lead Ads*) and
+Who can connect: **Admin** (Admin → Leads → *Meta Lead Ads*) and
 **Lead Partners** (Inventory → *Meta Lead Ads* tab). A lead form can feed only
 one account at a time.
 
@@ -56,8 +55,7 @@ everyone must reconnect Meta.
    (name, phone, email, city, pincode map automatically).
 3. **Connect this lead form**. Leads from the last 30 days are imported in the
    background; new leads arrive in real time.
-4. Once a form is connected here, remove its old Google Sheet connection so
-   the sheet stops being re-checked every 5 minutes.
+4. New leads now arrive automatically; disconnecting the form later stops future imports while keeping leads already imported.
 
 Pincode: ask for pincode (or locality) in the Meta form. If only a locality
 is given, ProPulse fills the pincode when that locality maps to exactly one
