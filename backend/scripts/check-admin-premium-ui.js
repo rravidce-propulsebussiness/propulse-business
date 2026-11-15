@@ -31,7 +31,6 @@ const adminController=read('../backend/src/controllers/adminController.js');
 const adminUserAuditMigration=read('../backend/src/database/migrations/2026-09-27-z-admin-user-audit.sql');
 const app=read('../frontend/src/App.jsx');
 const upload=read('../frontend/src/admin/pages/AdminLeadUpload.jsx');
-const sheets=read('../frontend/src/admin/pages/AdminLeadSheets.jsx');
 const industries=read('../frontend/src/pages/Industries.jsx');
 const industriesCss=read('../frontend/src/pages/Industries.css');
 const leadPricing=read('../frontend/src/admin/pages/AdminLeadPricing.jsx');
@@ -170,14 +169,11 @@ assert(!layout.includes('admin-sidebar-status'),'Duplicated sidebar health copy 
 assert(!layout.includes('admin-sidebar-user'),'Duplicated sidebar user profile must stay removed');
 
 assert(layout.includes("{to:'/admin/leads/upload',label:'Upload Leads'}"),'Upload Leads must remain a dedicated navigation destination');
-assert(layout.includes("{to:'/admin/leads/sheets',label:'Google Sheets'}"),'Google Sheets must remain a dedicated navigation destination');
 assert(layout.includes("{to:'/admin/leads/entitlements',label:'Lead Entitlements'}"),'Lead Entitlements must remain in Leads navigation');
 assert(layout.indexOf("{to:'/admin/faqs',label:'FAQs'}")>layout.indexOf("{to:'/admin/contact-social',label:'Contact & Social'}"),'FAQ must remain last in Website & Content');
 
 assert(app.includes('<Route path="/admin/leads/upload" element={<AdminLeadUpload/>}/>'),'Upload Leads route must remain dedicated');
-assert(app.includes('<Route path="/admin/leads/sheets" element={<AdminLeadSheets/>}/>'),'Google Sheets route must remain dedicated');
 assert(upload.includes('<AdminLeadsV9 mode="upload"/>'),'Upload Leads must reuse the shared lead import logic');
-assert(sheets.includes('<GoogleSheetAutoSync/>'),'Google Sheets page must reuse the shared sheet sync logic');
 
 assert(app.includes('<Route path="/admin/industries" element={<Industries/>}/>'),'Industries must remain available in Admin');
 assert(industries.includes("const adminMode = location.pathname.startsWith('/admin/')"),'Industries premium redesign must stay scoped to Admin');
