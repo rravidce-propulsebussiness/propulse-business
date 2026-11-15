@@ -21,15 +21,6 @@ router.get('/meta-ad-pricing/settings',requireAdmin,leadController.getMetaAdPric
 router.put('/meta-ad-pricing/settings',requireAdmin,leadController.updateMetaAdPricingSettings);
 router.get('/pricing/partner-settings',requireAdmin,adminLeadPartnerPricingController.getSettings);
 router.put('/pricing/partner-settings',requireAdmin,adminLeadPartnerPricingController.updateSettings);
-router.get('/google-sheet/settings',requireAdmin,leadController.getGoogleSheetSyncSettings);
-router.put('/google-sheet/settings',requireAdmin,leadController.updateGoogleSheetSyncSettings);
-router.post('/google-sheet/preview',requireAdmin,leadController.previewGoogleSheet);
-router.post('/google-sheet/sync',requireAdmin,leadController.syncGoogleSheet);
-router.get('/google-sheet/connections',requireAdmin,leadController.listGoogleSheetConnections);
-router.post('/google-sheet/connections',requireAdmin,leadController.connectGoogleSheet);
-router.post('/google-sheet/connections/:id/sync',requireAdmin,leadController.syncGoogleSheetConnection);
-router.put('/google-sheet/connections/:id/default-industry',requireAdmin,leadController.updateGoogleSheetDefaultIndustry);
-router.delete('/google-sheet/connections/:id',requireAdmin,leadController.disconnectGoogleSheet);
 router.get('/purchased',requireAuth,leadPurchaseController.purchases);
 router.get('/purchased/export',requireAuth,leadPurchaseController.exportPurchases);
 router.patch('/:id/crm',requireAuth,leadCrmController.update);
