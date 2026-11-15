@@ -252,7 +252,7 @@ function utilitySeo(pathname){
   return {...HOME_SEO,title:match?match[1]+' | ProPulse':'ProPulse'}
 }
 
-export function applySeo(location){
+export function applySeo(location,overrides={}){
     const route=seoForPath(location.pathname)
     const origin=siteOrigin()
     const detailType=publicDetailType(location.pathname)
@@ -292,7 +292,14 @@ export function applySeo(location){
     document.head.querySelector('script[data-propulse-project-seo]')?.remove()
     document.head.querySelector('script[data-propulse-expert-seo]')?.remove()
     const indexable=isIndexablePath(location.pathname)
-    const effective=route||utilitySeo(location.pathname)
+    const base=route||utilitySeo(location.pathname)
+    const effective={
+      ...base,
+      title:overrides?.seo_title||base.title,
+      description:overrides?.meta_description||base.description,
+      heading:overrides?.hero_title||base.heading,
+      summary:overrides?.hero_summary||base.summary,
+    }
     const canonical=origin+(route?.path||location.pathname||'/')
     const robots=indexable
       ?'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
@@ -325,6 +332,19 @@ export function applySeo(location){
 
     setCanonical(canonical)
 
-    if(indexable&&route)setJsonLd(route,origin)
+    if(indexable&&route)setJsonLd(effective,origin)
     else document.head.querySelector('script[data-propulse-seo="jsonld"]')?.remove()
+
+    if(indexable&&route){
+      const heading=String(overrides?.hero_title||'').trim()
+      const summary=String(overrides?.hero_summary||'').trim()
+      const main=document.querySelector('main')
+      const h1=main?.querySelector('h1')
+      if(heading&&h1)h1.textContent=heading
+      if(summary&&h1){
+        const hero=h1.closest('section')||h1.parentElement
+        const paragraph=hero?.querySelector('p')
+        if(paragraph)paragraph.textContent=summary
+      }
+    }
 }
