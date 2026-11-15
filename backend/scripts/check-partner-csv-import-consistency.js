@@ -5,13 +5,13 @@ const {parseCsvRecords}=require('../src/utils/csvRecords');
 const root=path.join(__dirname,'..');
 const read=relative=>fs.readFileSync(path.join(root,relative),'utf8');
 
-const source='Full Name,Phone Number,Campaign Name,Notes\\r\\n"Ravi, R",9876543210,"Ad, Sept","Uses ""branded"" materials"';
+const source='Full Name,Phone Number,Campaign Name,Notes\r\n"Ravi, R",9876543210,"Ad, Sept","Uses ""branded"" materials"';
 assert.deepEqual(parseCsvRecords(source),[
  ['Full Name','Phone Number','Campaign Name','Notes'],
  ['Ravi, R','9876543210','Ad, Sept','Uses "branded" materials']
 ]);
 assert.deepEqual(parseCsvRecords(''),[]);
-assert.deepEqual(parseCsvRecords('First,Second\\n1,2'),[['First','Second'],['1','2']]);
+assert.deepEqual(parseCsvRecords('First,Second\n1,2'),[['First','Second'],['1','2']]);
 
 const service=read('src/services/leadPartnerCsvImportService.js');
 const controller=read('src/controllers/leadPartnerInventoryController.js');
