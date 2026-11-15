@@ -5,7 +5,7 @@ import { REGIONAL_SEO_ROUTES } from '../../seo/regionalSeo'
 import { INTERIOR_SEO_ROUTES } from '../../seo/interiorSeo'
 import './AdminLandingPages.css'
 
-const pages=[...HYDERABAD_SEO_ROUTES,...REGIONAL_SEO_ROUTES,...INTERIOR_SEO_ROUTES]
+const pages=[...new Map([...HYDERABAD_SEO_ROUTES,...REGIONAL_SEO_ROUTES,...INTERIOR_SEO_ROUTES].map(page=>[page.path,page])).values()]
 const empty={seo_title:'',meta_description:'',hero_title:'',hero_summary:''}
 const fields=[
   ['seo_title','SEO title','Search result title'],
