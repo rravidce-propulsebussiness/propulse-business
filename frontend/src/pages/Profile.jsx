@@ -370,6 +370,10 @@ export default function Profile(){
       setError('Only MP4, MOV and WebM project videos are supported.')
       return
     }
+    if(file.size>2*1024*1024*1024){
+      setError('Project videos must be 2 GB and 15 minutes or shorter. Trim the video or export it at a lower size and try again.')
+      return
+    }
     let session=null
     setVideoUploads(current=>({...current,[index]:true}))
     setVideoProgress(current=>({...current,[index]:0}))

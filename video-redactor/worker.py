@@ -23,8 +23,18 @@ from botocore.config import Config
 LOG = logging.getLogger("propulse.video_processor")
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
 PREFIX = "private-object-s3:"
-MAX_BYTES = int(os.environ.get("VIDEO_REDACTOR_MAX_BYTES", str(750 * 1024 * 1024)))
-MAX_SECONDS = int(os.environ.get("VIDEO_REDACTOR_MAX_SECONDS", "600"))
+# Upload limit in backend/src/services/projectVideoService.js must match MAX_BYTES.
+# Sized for a GitHub-hosted runner: about 14 GB disk (original + playback copy) and
+# the 120-minute job limit in project-video-redaction.yml.
+MAX_BYTES = int(os.environ.get("VIDEO_REDACTOR_MAX_BYTES", str(2 * 1024 * 1024 * 1024)))
+MAX_SECONDS = int(os.environ.get("VIDEO_REDACTOR_MAX_SECONDS", "900"))
+
+# Admin "Compress videos" switch (video_processing_settings). Off by default, so playback
+# copies keep the original picture and sound.
+DEFAULT_SETTINGS = {"compress": False, "max_resolution": 1080, "quality": "balanced"}
+QUALITY_CRF = {"high": 20, "balanced": 23, "small": 26}
+# Cap on the longer side, so portrait and landscape videos both end at e.g. 1080p.
+LONG_EDGE = {720: 1280, 1080: 1920, 1440: 2560}
 
 
 def r2_client():
@@ -42,7 +52,7 @@ def r2_client():
 
 
 def claim_job(connection):
-    """Lease one project; reclaim crashed workers only after 45 minutes."""
+    """Lease one project; reclaim crashed workers only after the 120-minute job limit."""
     with connection.transaction():
         row = connection.execute("""
             SELECT p.id,p.video_url,bp.user_id
@@ -52,7 +62,7 @@ def claim_job(connection):
                AND p.is_published=TRUE
                AND (p.video_redaction_status='pending'
                   OR (p.video_redaction_status='processing'
-                      AND p.video_redaction_started_at < now() - interval '45 minutes'))
+                      AND p.video_redaction_started_at < now() - interval '150 minutes'))
              ORDER BY p.id
              FOR UPDATE OF p SKIP LOCKED LIMIT 1
         """).fetchone()
@@ -69,6 +79,24 @@ def claim_job(connection):
              WHERE id=%s
         """, (token, row[0]))
         return dict(id=row[0], source=row[1], owner=row[2], token=token)
+
+
+def load_settings(connection):
+    """Read the admin compression switch; any problem keeps the original-quality default."""
+    try:
+        with connection.transaction():
+            row = connection.execute("""
+                SELECT compress_enabled,max_resolution,quality
+                  FROM video_processing_settings WHERE id=1
+            """).fetchone()
+    except psycopg.Error:
+        LOG.warning("Video processing settings unavailable; keeping original quality")
+        return dict(DEFAULT_SETTINGS)
+    if not row:
+        return dict(DEFAULT_SETTINGS)
+    resolution = int(row[1]) if int(row[1] or 0) in LONG_EDGE else DEFAULT_SETTINGS["max_resolution"]
+    quality = row[2] if row[2] in QUALITY_CRF else DEFAULT_SETTINGS["quality"]
+    return {"compress": row[0] is True, "max_resolution": resolution, "quality": quality}
 
 
 def active_job(connection, job):
@@ -88,8 +116,12 @@ def probe_streams(source_path):
     return json.loads(result.stdout)
 
 
-def transcode(source_path, output_path):
-    """Keep original picture and audio; encode only for browser compatibility."""
+def transcode(source_path, output_path, settings=None):
+    """Keep original picture and audio; encode only for browser compatibility.
+
+    With the admin compression switch on, re-encode to H.264 at the chosen size
+    and quality instead, unless that would not make the file smaller."""
+    settings = settings or DEFAULT_SETTINGS
     info = probe_streams(source_path)
     video = next((s for s in info.get("streams", [])
                   if s.get("codec_type") == "video"), None)
@@ -99,31 +131,52 @@ def transcode(source_path, output_path):
         raise RuntimeError("Video is missing its video stream")
     duration = float(info.get("format", {}).get("duration") or 0)
     if not 0 < duration <= MAX_SECONDS:
-        raise RuntimeError("Invalid or overlong project video")
+        raise RuntimeError("Video is empty or longer than the %d-minute processing limit" % (MAX_SECONDS // 60))
 
     # Stream copy offers bit-exact source audio and video when already
     # supported by major browsers; transcoding never replaces the music.
-    video_copy = video.get("codec_name") == "h264"
+    browser_video = video.get("codec_name") == "h264"
+    compress = settings.get("compress") is True
+    video_copy = browser_video and not compress
     audio_copy = audio is None or audio.get("codec_name") == "aac"
-    args = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin",
-        "-y", "-i", str(source_path), "-map", "0:v:0", "-map", "0:a:0?",
-        "-sn", "-dn", "-map_metadata", "-1"]
-    if video_copy:
-        args += ["-c:v", "copy"]
-    else:
-        args += ["-c:v", "libx264", "-preset", "veryfast", "-crf", "19",
-                 "-vf", "scale=1920:1920:force_original_aspect_ratio=decrease:"
-                        "force_divisible_by=2", "-pix_fmt", "yuv420p"]
-    if audio_copy:
-        args += ["-c:a", "copy"]
-    else:
-        args += ["-c:a", "aac", "-b:a", "192k"]
-    args += ["-movflags", "+faststart", str(output_path)]
-    try:
-        subprocess.run(args, check=True, capture_output=True, timeout=max(180, 5*duration))
-    except subprocess.CalledProcessError as exc:
-        raise RuntimeError("MP4 preparation failed: " +
-                           exc.stderr.decode("utf-8", "replace")[-600:]) from exc
+
+    def render(copy_video):
+        args = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin",
+            "-y", "-i", str(source_path), "-map", "0:v:0", "-map", "0:a:0?",
+            "-sn", "-dn", "-map_metadata", "-1"]
+        if copy_video:
+            args += ["-c:v", "copy"]
+        elif compress:
+            edge = LONG_EDGE[settings["max_resolution"]]
+            args += ["-c:v", "libx264", "-preset", "faster",
+                     "-crf", str(QUALITY_CRF[settings["quality"]]),
+                     "-vf", f"scale={edge}:{edge}:force_original_aspect_ratio=decrease:"
+                            "force_divisible_by=2", "-pix_fmt", "yuv420p"]
+        else:
+            args += ["-c:v", "libx264", "-preset", "veryfast", "-crf", "19",
+                     "-vf", "scale=1920:1920:force_original_aspect_ratio=decrease:"
+                            "force_divisible_by=2", "-pix_fmt", "yuv420p"]
+        if audio_copy:
+            args += ["-c:a", "copy"]
+        else:
+            args += ["-c:a", "aac", "-b:a", "192k"]
+        args += ["-movflags", "+faststart", str(output_path)]
+        try:
+            subprocess.run(args, check=True, capture_output=True, timeout=max(180, 5*duration))
+        except subprocess.CalledProcessError as exc:
+            raise RuntimeError("MP4 preparation failed: " +
+                               exc.stderr.decode("utf-8", "replace")[-600:]) from exc
+
+    render(video_copy)
+    video_label = "unchanged" if video_copy else "browser encoded"
+    if compress:
+        video_label = (f"compressed to {settings['max_resolution']}p max "
+                       f"({settings['quality']} quality)")
+        # An already small H.264 upload can grow when re-encoded; keep the original then.
+        if browser_video and output_path.stat().st_size >= Path(source_path).stat().st_size:
+            render(True)
+            video_copy = True
+            video_label = "unchanged (compression would not reduce size)"
 
     result = probe_streams(output_path)
     rendered_video = next((s for s in result.get("streams", [])
@@ -135,7 +188,7 @@ def transcode(source_path, output_path):
     output_duration = float(result.get("format", {}).get("duration") or 0)
     if abs(output_duration - duration) > 1.5:
         raise RuntimeError("Output video duration does not match source")
-    return {"video": "unchanged" if video_copy else "browser encoded",
+    return {"video": video_label,
             "audio": "original retained" if audio_copy and audio else
                      "original re-encoded" if audio else "no source track"}
 
@@ -229,7 +282,7 @@ def process_one(connection, client, job):
     head=client.head_object(Bucket=bucket,Key=source_key)
     size=int(head.get("ContentLength",0))
     if not 12<=size<=MAX_BYTES:
-        raise RuntimeError("Video size exceeds auto-redaction worker limit")
+        raise RuntimeError("Video is larger than the %d MB processing limit" % (MAX_BYTES // (1024 * 1024)))
     # Legacy R2 prefix and database fields retained for compatibility.
     derivative_key=("business-project-redacted/"
         +str(job["owner"])+"-"+str(job["id"])+"-"+uuid.uuid4().hex+".mp4")
@@ -240,7 +293,8 @@ def process_one(connection, client, job):
         client.download_file(bucket,source_key,str(original))
         if original.stat().st_size != size:
             raise RuntimeError("Downloaded video changed during processing")
-        stats=transcode(original,processed)
+        settings=load_settings(connection)
+        stats=transcode(original,processed,settings)
         duration_seconds=generate_thumbnail(processed,thumbnail)
         if processed.stat().st_size<1024:
             raise RuntimeError("Empty processed video")

@@ -3,6 +3,7 @@ import BootLoader from '../../components/BootLoader'
 import {useEffect,useMemo,useRef,useState} from 'react'
 import {authRequest} from '../../utils/auth'
 import AdminCompletedProjects from './AdminCompletedProjects'
+import AdminVideoProcessingSettings from './AdminVideoProcessingSettings'
 import './AdminExpertDirectory.css'
 
 function dataList(value){return Array.isArray(value?.data)?value.data:Array.isArray(value)?value:[]}
@@ -284,5 +285,6 @@ export default function AdminExpertDirectory(){
       <div className="expert-v2-settings-footer"><div><b>Membership groups</b><div>{planGroups.map(group=><button type="button" key={group} className={(settings.allowedPlanGroups||[]).includes(group)?'active':''} onClick={()=>togglePlan(group)}>{String(group).toUpperCase()}</button>)}</div></div>
         <button type="button" className="expert-v2-main-action" disabled={saving==='settings'} onClick={saveSettings}>{saving==='settings'?'Saving…':'Save Settings'}</button></div>
     </section>}
+    {section==='settings'&&<AdminVideoProcessingSettings/>}
   </main>
 }

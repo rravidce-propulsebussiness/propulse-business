@@ -23,7 +23,7 @@ jobs:
   redact-one:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 120
     env:
       DATABASE_URL: ${{ secrets.PROPULSE_VIDEO_DATABASE_URL }}
       PRIVATE_OBJECT_STORAGE_ENDPOINT: ${{ secrets.PROPULSE_VIDEO_R2_ENDPOINT }}
