@@ -10,8 +10,6 @@ const navigation=[
     {to:'/admin/expert-directory',label:'All Professionals',end:true},
     {to:'/admin/expert-directory?view=featured',label:'Featured Professionals'},
     {to:'/admin/expert-directory?view=pending',label:'Video Approvals'},
-    {to:'/admin/expert-directory?view=verified',label:'Verification Requests'},
-    {to:'/admin/expert-directory?view=badges',label:'Manage Badges'},
     {to:'/admin/expert-directory?view=settings',label:'Directory Settings'}
   ]},
   {type:'group',key:'leads',label:'Leads',icon:'◈',children:[
@@ -30,7 +28,9 @@ const navigation=[
   ]},
   {type:'group',key:'customers',label:'Customers',icon:'◎',children:[
     {to:'/admin/users',label:'Users',aliases:['/admin/businesses']},
-    {to:'/admin/company-proofs',label:'Company Proofs'},
+    {to:'/admin/company-proofs',label:'Company Proofs'}
+  ]},
+  {type:'group',key:'help',label:'Help',icon:'?',children:[
     {to:'/admin/support-chats',label:'Support Chats'}
   ]},
   {type:'group',key:'payments',label:'Payments & Wallet',icon:'▣',children:[
