@@ -1,4 +1,5 @@
 import MetaLeadAdsPanel from '../../components/MetaLeadAdsPanel';
+import LeadClassificationRulesPanel from '../../components/LeadClassificationRulesPanel';
 import './AdminLeadsV9.css';
 
 export default function AdminLeadMeta(){
@@ -10,6 +11,7 @@ export default function AdminLeadMeta(){
         <p>Connect lead forms and send captured leads into your ProPulse inventory.</p>
       </div>
     </section>
+    <LeadClassificationRulesPanel/>
     <MetaLeadAdsPanel scope="admin"/>
   </main>;
 }
