@@ -53,3 +53,7 @@
 
 .expert-review-processing{margin:0;padding:10px 12px;border:1px solid #c8dfd7;background:#f1fcf7;border-radius:9px;color:#29634e;font-size:12px;font-weight:750;line-height:1.5}
 .expert-review-processing-error{display:block;color:#a13422;line-height:1.5;overflow-wrap:anywhere}
+
+.expert-review-grant-summary{margin:10px 0;padding:12px 14px;border:1px solid #c7ead7;border-radius:12px;background:#f0fbf5;color:#176b43;font-size:13px;font-weight:700;line-height:1.5}
+.expert-review-card-title>span.approved{max-width:220px;text-align:center}
+@media(max-width:640px){.expert-review-grant-summary{font-size:12px}.expert-review-card-title>span.approved{max-width:150px}}
