@@ -6,7 +6,6 @@ import { authRequest, clearSession, getUser } from '../utils/auth';
 import { downloadCsv } from '../utils/csv';
 import './LeadPartnerHome.css';
 import './LeadPartnerInventory.css';
-import SheetImportPreview from '../components/SheetImportPreview';
 import MetaLeadAdsPanel from '../components/MetaLeadAdsPanel';
 import { formatRupees } from '../utils/formatRupees'
 
@@ -18,7 +17,7 @@ function downloadCsvSample() {
   const headers = ['Lead ID','Industry','Service','Subservice','Pincode','Customer Name','Customer Phone','Customer Email','Requirement','Property Type','Budget','Source','Notes','Lead Type','Access Strategy','Buyer Capacity','Release to 2 Hours','Release to 3 Hours','Pro Early Access','Exclusive Delay Days','Pro 1 Buyer','WhatsApp Number','STATUS','Remarks','CONTACTED BY','NEXT FOLLOWUP','How soon do you want to buy?','Job title'];
   const rows = [
     ['LP-001','REPLACE WITH ACTIVE INDUSTRY','','','500001','Config Example','9876500000','config@example.com','Blank access and price fields use configured Basic defaults','Residential','2500000','Website','Configuration fallback','basic','','','','','FALSE','','','9876500000','FOLLOW UP','Call tomorrow','Ravi','Tomorrow','Right away','Owner'],
-    ['LP-002','REPLACE WITH ACTIVE INDUSTRY','','','500001','Override Example','9876500001','override@example.com','Exact sheet access and Pro base price override configuration','Residential','3000000','Website','Sheet override','premium','auto_release','3','48','96','TRUE','1','1500','9876500001','NEW','','','','','Owner']
+    ['LP-002','REPLACE WITH ACTIVE INDUSTRY','','','500001','Override Example','9876500001','override@example.com','Access and Pro base price override configuration','Residential','3000000','Website','CSV override','premium','auto_release','3','48','96','TRUE','1','1500','9876500001','NEW','','','','','Owner']
   ];
   const esc = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
   const csv = [headers,...rows].map(values => values.map(esc).join(',')).join('\n');
@@ -28,51 +27,14 @@ function downloadCsvSample() {
 
 export default function LeadPartnerInventory() {
   const navigate = useNavigate(); const user = getUser(); const fileRef = useRef(null);
-  const [data,setData]=useState({data:[],stats:{}}); const [loading,setLoading]=useState(true); const [importing,setImporting]=useState(false); const [sheetBusy,setSheetBusy]=useState(false); const [syncingId,setSyncingId]=useState(null); const [sheetUrl,setSheetUrl]=useState(''); const [sheetDefaultIndustryId,setSheetDefaultIndustryId]=useState(''); const [sheetPreview,setSheetPreview]=useState(null); const [sheetMappings,setSheetMappings]=useState({}); const [sheetPreviewStale,setSheetPreviewStale]=useState(false); const [savingDefaultId,setSavingDefaultId]=useState(null); const [search,setSearch]=useState(''); const [status,setStatus]=useState('all'); const [industryId,setIndustryId]=useState('all'); const [cityId,setCityId]=useState('all'); const [connections,setConnections]=useState([]); const [message,setMessage]=useState(null); const [expanded,setExpanded]=useState({}); const [workspace,setWorkspace]=useState('leads'); const [view,setView]=useState('grid');
+  const [data,setData]=useState({data:[],stats:{}}); const [loading,setLoading]=useState(true); const [importing,setImporting]=useState(false); const [search,setSearch]=useState(''); const [status,setStatus]=useState('all'); const [industryId,setIndustryId]=useState('all'); const [cityId,setCityId]=useState('all'); const [message,setMessage]=useState(null); const [expanded,setExpanded]=useState({}); const [workspace,setWorkspace]=useState('leads'); const [view,setView]=useState('grid');
   const load=useCallback(async()=>{try{setLoading(true);const params=new URLSearchParams({status,search,industryId,cityId});setData(await authRequest(`/lead-partner/inventory?${params}`));}catch(e){setMessage({type:'error',text:e.message});}finally{setLoading(false);}},[status,search,industryId,cityId]);
-  const loadConnections=useCallback(async()=>{try{const result=await authRequest('/lead-partner/inventory/sheets');setConnections(result?.connections||[]);}catch(e){setMessage({type:'error',text:e.message});}},[]);
-  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[load]); useEffect(()=>{let active=true;if(new URLSearchParams(window.location.search).has('meta'))queueMicrotask(()=>{if(active)setWorkspace('meta')});return()=>{active=false}},[]); useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)loadConnections()});return()=>{active=false}},[loadConnections]);
-  async function analyzeGoogleSheet(){
-    if(!sheetUrl.trim())return setMessage({type:'error',text:'Enter a Google Sheets URL.'});
-    try{
-      setSheetBusy(true);setMessage(null);
-      const result=await authRequest('/lead-partner/inventory/sheets/preview',{method:'POST',body:JSON.stringify({url:sheetUrl.trim(),defaultIndustryId:sheetDefaultIndustryId||null,columnMappings:sheetMappings})});
-      setSheetPreview(result);setSheetMappings(result?.columnMappings||{});setSheetPreviewStale(false);
-      const summary=result?.summary||{};
-      setMessage({type:Number(summary.invalid||0)>0?'error':'success',text:`Preview ready. ${summary.valid||0} valid, ${summary.warning||0} warnings, ${summary.invalid||0} invalid.`});
-    }catch(e){setSheetPreview(null);setMessage({type:'error',text:e.message});}
-    finally{setSheetBusy(false);}
-  }
-  async function connectGoogleSheet(e){
-    e.preventDefault();
-    if(!sheetUrl.trim())return setMessage({type:'error',text:'Enter a Google Sheets URL.'});
-    if(!sheetPreview||sheetPreviewStale)return setMessage({type:'error',text:'Analyze the current URL, Default Industry and column mapping before activation.'});
-    if(Number(sheetPreview?.summary?.invalid||0)>0)return setMessage({type:'error',text:'Fix invalid rows or mappings, then analyze again before activation.'});
-    try{
-      setSheetBusy(true);setMessage(null);
-      const r=await authRequest('/lead-partner/inventory/sheets',{method:'POST',body:JSON.stringify({url:sheetUrl.trim(),defaultIndustryId:sheetDefaultIndustryId||null,columnMappings:sheetMappings,previewToken:sheetPreview.previewToken})});
-      setSheetUrl('');setSheetDefaultIndustryId('');setSheetPreview(null);setSheetMappings({});setSheetPreviewStale(false);
-      setMessage({type:r.failed?'error':'success',text:`Sheet connected. Imported ${r.created} leads${r.quarantined?` · ${r.quarantined} quarantined`:''}. ${r.duplicate} duplicates, ${r.failed} failed.${r.failures?.length?` First failure: ${r.failures[0]}`:''}`});
-      await Promise.all([load(),loadConnections()]);
-    }catch(e){setMessage({type:'error',text:e.message});}
-    finally{setSheetBusy(false);}
-  }
-  async function syncSheet(id){try{setSyncingId(id);setMessage(null);const r=await authRequest(`/lead-partner/inventory/sheets/${id}/sync`,{method:'POST'});setMessage({type:r.failed?'error':'success',text:`Sync complete. Imported ${r.created} leads${r.quarantined?` · ${r.quarantined} quarantined`:''}. ${r.duplicate} duplicates, ${r.failed} failed.${r.failures?.length?` First failure: ${r.failures[0]}`:''}`});await Promise.all([load(),loadConnections()]);}catch(e){setMessage({type:'error',text:e.message});}finally{setSyncingId(null);}}
-  async function updateSheetDefaultIndustry(id,value){
-    try{
-      setSavingDefaultId(id);setMessage(null);
-      const r=await authRequest(`/lead-partner/inventory/sheets/${id}/default-industry`,{method:'PUT',body:JSON.stringify({defaultIndustryId:value||null})});
-      setMessage({type:r.failed?'error':'success',text:`Default Industry saved and sheet re-synced. Imported ${r.created||0} leads${r.quarantined?` · ${r.quarantined} quarantined`:''}. ${r.duplicate||0} duplicates, ${r.failed||0} failed.${r.failures?.length?` First failure: ${r.failures[0]}`:''}`});
-      await Promise.all([load(),loadConnections()]);
-    }catch(e){setMessage({type:'error',text:e.message});}
-    finally{setSavingDefaultId(null);}
-  }
-  async function disconnectSheet(id){if(!window.confirm('Disconnect this Google Sheet? Existing imported leads will remain in your inventory.'))return;try{setSheetBusy(true);await authRequest(`/lead-partner/inventory/sheets/${id}`,{method:'DELETE'});setMessage({type:'success',text:'Google Sheet disconnected. Existing leads were not deleted.'});await loadConnections();}catch(e){setMessage({type:'error',text:e.message});}finally{setSheetBusy(false);}}
-  async function importCsv(file){if(!file)return;if(!/\.csv$/i.test(file.name))return setMessage({type:'error',text:'Please export the sheet as CSV before uploading.'});try{setImporting(true);setMessage(null);const csv=await file.text();const r=await authRequest('/lead-partner/inventory/import/csv',{method:'POST',body:JSON.stringify({csv})});setMessage({type:r.failed?'error':'success',text:`Imported ${r.created} leads${r.quarantined?` · ${r.quarantined} quarantined`:''}. ${r.duplicate} duplicates, ${r.failed} failed.${r.failures?.length?` First failure: ${r.failures[0]}`:''}`});await load();}catch(e){setMessage({type:'error',text:e.message});}finally{setImporting(false);if(fileRef.current)fileRef.current.value='';}}
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[load]); useEffect(()=>{let active=true;if(new URLSearchParams(window.location.search).has('meta'))queueMicrotask(()=>{if(active)setWorkspace('meta')});return()=>{active=false}},[]);
+  async function importCsv(file){if(!file)return;if(!/\.csv$/i.test(file.name))return setMessage({type:'error',text:'Please choose a CSV file before uploading.'});try{setImporting(true);setMessage(null);const csv=await file.text();const r=await authRequest('/lead-partner/inventory/import/csv',{method:'POST',body:JSON.stringify({csv})});setMessage({type:r.failed?'error':'success',text:`Imported ${r.created} leads${r.quarantined?` · ${r.quarantined} quarantined`:''}. ${r.duplicate} duplicates, ${r.failed} failed.${r.failures?.length?` First failure: ${r.failures[0]}`:''}`});await load();}catch(e){setMessage({type:'error',text:e.message});}finally{setImporting(false);if(fileRef.current)fileRef.current.value='';}}
   const rows=data.data||[];
 
   function signOut(){clearSession();navigate('/login',{replace:true});}
-  const activeConnections=connections.filter(x=>x.status==='active'); const money=v=>Number(v||0)>0?formatRupees(v):'—'; const getPrice=lead=>lead.partner_base_pricing?.shares?.[0]?.price??lead.pricing?.shares?.[0]?.price??lead.price; const getBuyerCount=lead=>lead.buyer_count??lead.buyers_count??0; const buyerAccess=lead=>lead.access_strategy==='permanent_single'?'Single Buyer':lead.access_strategy==='auto_release'?`Auto · ${lead.effective_buyer_capacity||1} buyers`:`Shared · ${lead.effective_buyer_capacity||lead.buyer_capacity||3} buyers`; function exportCsv(){const h=['ID','Name','Phone','Service','Location','Price','Buyers','Buyer Access','Status','Added On'];downloadCsv('propulse-lead-inventory.csv',[h,...rows.map(l=>[l.id,l.customer_name||'',l.customer_phone||'',l.service_name||l.industry_name||'',l.city_name||'',getPrice(l)||'',getBuyerCount(l),buyerAccess(l),l.status||'',l.created_at||''])]);}
+  const money=v=>Number(v||0)>0?formatRupees(v):'—'; const getPrice=lead=>lead.partner_base_pricing?.shares?.[0]?.price??lead.pricing?.shares?.[0]?.price??lead.price; const getBuyerCount=lead=>lead.buyer_count??lead.buyers_count??0; const buyerAccess=lead=>lead.access_strategy==='permanent_single'?'Single Buyer':lead.access_strategy==='auto_release'?`Auto · ${lead.effective_buyer_capacity||1} buyers`:`Shared · ${lead.effective_buyer_capacity||lead.buyer_capacity||3} buyers`; function exportCsv(){const h=['ID','Name','Phone','Service','Location','Price','Buyers','Buyer Access','Status','Added On'];downloadCsv('propulse-lead-inventory.csv',[h,...rows.map(l=>[l.id,l.customer_name||'',l.customer_phone||'',l.service_name||l.industry_name||'',l.city_name||'',getPrice(l)||'',getBuyerCount(l),buyerAccess(l),l.status||'',l.created_at||''])]);}
   return <div className="partner-shell">
     <LeadPartnerSidebar user={user} onSignOut={signOut} />
     <main className="partner-main">
@@ -85,17 +47,17 @@ export default function LeadPartnerInventory() {
           <div className="inventory-hero-copy">
             <span>LEAD PARTNER / INVENTORY</span>
             <h1>Lead inventory</h1>
-            <p>Upload lead files, connect live Google Sheets and manage imported leads from separate workspaces.</p>
+            <p>Upload lead files and manage imported leads from separate workspaces.</p>
             <div className="inventory-hero-meta">
               <span><b>{rows.length}</b> leads in view</span>
-              <span><b>{activeConnections.length}</b> active sheets</span>
+              <span><b>{data.stats?.total??rows.length}</b> total</span>
               <span><b>{data.stats?.available??rows.filter(x=>(x.outcome_status||x.status)==='available').length}</b> available</span><span><b>{data.stats?.quarantined??rows.filter(x=>x.status==='quarantined').length}</b> quarantined</span>
             </div>
           </div>
           <div className="lp-workspace-status">
             <span>ACTIVE WORKSPACE</span>
-            <strong>{workspace==='leads'?'My Leads':workspace==='upload'?'Upload Leads':workspace==='meta'?'Meta Lead Ads':'Google Sheets'}</strong>
-            <small>{workspace==='leads'?'Search, filter and review inventory':workspace==='upload'?'Import CSV lead files safely':workspace==='meta'?'Real-time Facebook & Instagram lead forms':'Connect, sync and diagnose live sheets'}</small>
+            <strong>{workspace==='leads'?'My Leads':workspace==='upload'?'Upload Leads':workspace==='meta'?'Meta Lead Ads':'Upload Leads'}</strong>
+            <small>{workspace==='leads'?'Search, filter and review inventory':workspace==='upload'?'Import CSV lead files safely':workspace==='meta'?'Real-time Facebook & Instagram lead forms':'Import CSV lead files'}</small>
           </div>
         </section>
 
@@ -109,11 +71,6 @@ export default function LeadPartnerInventory() {
             <span className="lp-workspace-icon">↥</span>
             <div><strong>Upload Leads</strong><small>CSV import with duplicate checks</small></div>
             <b>CSV</b>
-          </button>
-          <button type="button" className={workspace==='sheets'?'active':''} onClick={()=>setWorkspace('sheets')}>
-            <span className="lp-workspace-icon">▣</span>
-            <div><strong>Google Sheets</strong><small>Automatic sync schedule managed by Admin</small></div>
-            <b>{activeConnections.length}</b>
           </button>
           <button type="button" className={workspace==='meta'?'active':''} onClick={()=>setWorkspace('meta')}>
             <span className="lp-workspace-icon">f</span>
@@ -129,7 +86,7 @@ export default function LeadPartnerInventory() {
 
         {workspace==='upload'&&<section className="lp-inventory-workspace lp-upload-card">
           <header className="lp-workspace-head">
-            <div><span>UPLOAD LEADS</span><h2>Import lead file</h2><p>Keep file uploads separate from live sheet automation. Existing duplicate and PIN validation rules remain active.</p></div>
+            <div><span>UPLOAD LEADS</span><h2>Import lead file</h2><p>Existing duplicate and PIN validation rules remain active.</p></div>
             <span className="lp-workspace-badge">CSV WORKSPACE</span>
           </header>
           <div className="lp-upload-grid">
@@ -167,27 +124,7 @@ export default function LeadPartnerInventory() {
           </Fragment>})}</tbody></table>}</div>
         </section>}
 
-        {workspace==='sheets'&&<section className="lp-inventory-workspace lp-sheets-workspace">
-          <header className="lp-workspace-head">
-            <div><span>GOOGLE SHEETS</span><h2>Automatic lead sources</h2><p>Connect live sources here. Sheet connections, defaults and sync failures stay separate from your lead inventory.</p></div>
-            <span className="lp-workspace-badge live"><i/> MANAGED SYNC</span>
-          </header>
 
-          <div className="lp-sheet-connect-card">
-            <div className="lp-sheet-connect-copy">
-              <span className="lp-big-icon">▣</span>
-              <div><small>NEW CONNECTION</small><h3>Connect Google Sheet</h3><p>Paste a shareable Google Sheets URL. An optional Default Industry is used only when a row has no Industry, Service or Subservice.</p></div>
-            </div>
-            <div className="lp-sheet-connect-form">
-              <label><span>Google Sheets URL</span><input value={sheetUrl} onChange={e=>{setSheetUrl(e.target.value);if(sheetPreview)setSheetPreviewStale(true)}} placeholder="https://docs.google.com/spreadsheets/d/..."/></label>
-              <label><span>Default Industry for blank rows</span><select value={sheetDefaultIndustryId} onChange={e=>{setSheetDefaultIndustryId(e.target.value);if(sheetPreview)setSheetPreviewStale(true)}}><option value="">None — require sheet classification</option>{(data.filters?.industries||[]).map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
-              <div className="lp-sheet-preview-actions"><button type="button" onClick={analyzeGoogleSheet} disabled={sheetBusy}>{sheetBusy?'Analyzing…':sheetPreview?'Re-analyze':'Analyze Sheet'}</button>{sheetPreview&&<button type="button" className="secondary" onClick={connectGoogleSheet} disabled={sheetBusy||sheetPreviewStale||Number(sheetPreview?.summary?.invalid||0)>0}>{sheetBusy?'Activating…':'Activate Sync'}</button>}</div>
-            </div>
-          </div>
-          <SheetImportPreview preview={sheetPreview} mappings={sheetMappings} stale={sheetPreviewStale} disabled={sheetBusy} onMappingsChange={next=>{setSheetMappings(next);setSheetPreviewStale(true)}}/>
-
-          <section className="partner-panel partner-sheets-panel"><div className="partner-panel-head"><div><h2>Google Sheets connections</h2><p>{activeConnections.length} active connection{activeConnections.length===1?'':'s'}. Syncing imports only new/non-duplicate leads.</p></div></div>{!connections.length?<div className="partner-empty partner-sheet-empty">No Google Sheets connected yet.</div>:<div className="partner-sheet-list">{connections.map(c=>{const failures=Array.isArray(c.last_sync_failures)?c.last_sync_failures:[];const busy=syncingId===c.id;return <article className={`partner-sheet-row ${c.status==='disabled'?'disabled':''}`} key={c.id}><div className="partner-sheet-info"><div className="partner-sheet-title"><strong>Google Sheet</strong><span className={`partner-connection-status ${c.status}`}>{statusLabel(c.status)}</span></div><a href={c.source_url} target="_blank" rel="noreferrer">{c.source_url}</a><small>Spreadsheet: {c.spreadsheet_id} · Tab: {c.gid}</small><small>Approved mappings: {Object.values(c.column_mappings||{}).filter(Boolean).length} · Preview: {c.last_previewed_at?formatDate(c.last_previewed_at):'Legacy connection'}</small><label className="partner-sheet-default"><span>Default Industry for blank rows</span><select value={c.default_industry_id??''} disabled={savingDefaultId===c.id||busy||sheetBusy} onChange={e=>updateSheetDefaultIndustry(c.id,e.target.value)}><option value="">None — require sheet classification</option>{(data.filters?.industries||[]).map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label><small>Last sync: {formatDate(c.last_synced_at)} · Created {c.last_sync_created??0} · Duplicates {c.last_sync_duplicate??0} · Failed {c.last_sync_failed??0}</small>{Array.isArray(c.last_sync_failure_summary)&&c.last_sync_failure_summary.length>0&&<div className="partner-sheet-failure-summary">{c.last_sync_failure_summary.map(x=><span key={x.category}>{x.category}: {x.count}</span>)}</div>}{failures.length>0&&<details className="partner-sheet-failures"><summary>View {failures.length} import failures</summary><ul>{failures.slice(0,30).map((x,i)=><li key={i}>{typeof x==='string'?x:x.message||JSON.stringify(x)}</li>)}</ul></details>}</div><div className="partner-sheet-actions">{c.status==='active'&&<button className="partner-action-btn primary" disabled={busy||sheetBusy} onClick={()=>syncSheet(c.id)}>{busy?'Syncing…':'Sync now'}</button>}{c.status==='active'&&<button className="partner-action-btn danger" disabled={busy||sheetBusy} onClick={()=>disconnectSheet(c.id)}>Disconnect</button>}</div></article>})}</div>}</section>
-        </section>}
       </div>
     </main>
   </div>;

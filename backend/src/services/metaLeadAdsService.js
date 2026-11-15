@@ -1,25 +1,20 @@
-// Meta (Facebook/Instagram) Lead Ads as a lead source for admin and lead partners.
-//
-// Flow: owner logs in with Facebook -> Propulse stores their Page tokens
-// (encrypted) -> owner picks a lead form and maps its questions exactly like a
-// Google Sheet -> Propulse subscribes the Page to the `leadgen` webhook.
-// Each new lead is pushed by Meta in real time, fetched once, turned into a
-// one-row CSV and sent through the SAME import pipeline as Google Sheets
-// (duplicate checks, quality gate, partner pricing). Nothing polls Meta.
+// Meta (Facebook/Instagram) Lead Ads feed captured form responses into lead imports.
+// Meta pushes each new lead through the `leadgen` webhook; Propulse maps the
+// form answers into the normal lead import pipeline. Nothing polls Meta.
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/database');
 const graph = require('./metaGraphClient');
 const metaAdPricing = require('./metaAdPricingService');
-const sheetPreview = require('./sheetImportPreviewService');
-const partnerSheets = require('./leadPartnerInventoryCompatService');
-const adminSheets = require('./adminGoogleSheetSyncService');
+const leadImportMapping = require('./leadImportMappingService');
+const partnerImports = require('./leadPartnerCsvImportService');
+const adminImports = require('./adminLeadCsvImportService');
 const leadPartnerService = require('./leadPartnerService');
 const { resolvePincode } = require('./pincodeService');
 
 const SCOPES = new Set(['admin', 'lead_partner']);
 const STATE_AUDIENCE = 'propulse-meta-leads-oauth';
-const RETURN_PATHS = { admin: '/admin/leads/sheets', lead_partner: '/lead-partner/inventory' };
+const RETURN_PATHS = { admin: '/admin/leads/meta', lead_partner: '/lead-partner/inventory' };
 const SAMPLE_LEADS = 25;
 const BACKFILL_DAYS = 30;
 const BACKFILL_MAX = 500;
@@ -51,7 +46,7 @@ async function assertOwnerAllowed(userId, scope) {
   }
 }
 
-// ---------- CSV conversion (Meta lead -> the same CSV a sheet would give) ----------
+// ---------- CSV conversion (Meta lead -> the same CSV format as other lead sources) ----------
 function csvEscape(value) { return `"${clean(value).replace(/"/g, '""')}"`; }
 function questionHeader(key) { return clean(key).replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim(); }
 function fieldValue(field) { return (Array.isArray(field?.values) ? field.values : [field?.values]).filter(v => v !== undefined && v !== null).join(', '); }
@@ -90,10 +85,10 @@ function leadsToCsv({ formName = '', questions = [], leads = [] }) {
 // (only when the place maps to exactly one PIN) before handing rows over.
 const LOCALITY_HEADERS = ['locality', 'area', 'location', 'address', 'street address', 'post office', 'sub city', 'subcity'];
 async function fillMissingPincodes(csv, { columnMappings = {}, scope = 'lead_partner' } = {}) {
-  const matrix = sheetPreview.parseCsvMatrix(csv);
+  const matrix = leadImportMapping.parseCsvMatrix(csv);
   if (matrix.length < 2) return csv;
   const headers = matrix[0];
-  const mappings = sheetPreview.analyzeCsv(csv, { columnMappings, scope }).effectiveMappings || {};
+  const mappings = leadImportMapping.analyzeCsv(csv, { columnMappings, scope }).effectiveMappings || {};
   const indexOf = header => header ? headers.findIndex(h => h === header) : -1;
   let pinIndex = indexOf(mappings.pincode);
   const cityIndex = indexOf(mappings.city);
@@ -214,10 +209,10 @@ async function previewForm({ userId, scope, pageId, formId, columnMappings = {},
   const { form, leads, csv } = await formSnapshot({ token, formId });
   if (!form?.page?.id || clean(form.page.id) !== page.page_id) throw httpError(400, 'This lead form does not belong to the selected Page');
   const prepared = scope === 'lead_partner' && leads.length ? await fillMissingPincodes(csv, { columnMappings, scope }) : csv;
-  const sheetResult = { csv: prepared, spreadsheetId: null, gid: null };
+  const previewCsv = prepared;
   if (!leads.length) {
     // A new form with no leads yet: still let the owner map its questions.
-    const analysis = sheetPreview.analyzeCsv(csv, { columnMappings, scope });
+    const analysis = leadImportMapping.analyzeCsv(csv, { columnMappings, scope });
     return {
       formName: clean(form.name), sampleCount: 0, headers: analysis.headers, mappingFields: analysis.mappingFields,
       columnMappings: analysis.effectiveMappings, mappingWarnings: analysis.mappingWarnings,
@@ -225,8 +220,8 @@ async function previewForm({ userId, scope, pageId, formId, columnMappings = {},
     };
   }
   const preview = scope === 'admin'
-    ? await adminSheets.previewGoogleSheet({ adminId: userId, url: null, defaults, columnMappings, defaultIndustryId, sheetResult, issueToken: false })
-    : await partnerSheets.previewGoogleSheet({ userId, url: null, columnMappings, defaultIndustryId, sheetResult, issueToken: false });
+    ? await adminImports.previewCsv({ adminId: userId, csv: previewCsv, defaults, columnMappings, defaultIndustryId })
+    : await partnerImports.previewCsv({ userId, csv: previewCsv, columnMappings, defaultIndustryId });
   return { ...preview, formName: clean(form.name), sampleCount: leads.length };
 }
 
@@ -256,7 +251,7 @@ async function connectForm({ userId, scope, pageId, formId, columnMappings = {},
   const token = graph.decryptToken(page.page_token_encrypted);
   const form = await graph.graphRequest(clean(formId), { params: { fields: 'id,name,page,questions{key,label,type}' }, token });
   if (!form?.page?.id || clean(form.page.id) !== page.page_id) throw httpError(400, 'This lead form does not belong to the selected Page');
-  const analysis = sheetPreview.analyzeCsv(leadsToCsv({ formName: clean(form.name), questions: form.questions || [], leads: [] }), { columnMappings, scope });
+  const analysis = leadImportMapping.analyzeCsv(leadsToCsv({ formName: clean(form.name), questions: form.questions || [], leads: [] }), { columnMappings, scope });
   const industryId = Number(defaultIndustryId) > 0 ? Number(defaultIndustryId) : null;
   // Subscribing is idempotent; Meta then pushes `leadgen` events for this Page.
   await graph.graphRequest(`${page.page_id}/subscribed_apps`, { method: 'POST', params: { subscribed_fields: 'leadgen' }, token });
@@ -308,15 +303,15 @@ async function unsubscribePageIfUnused(metaPageRowId) {
 async function importCsvForConnection(connection, csv) {
   const mappings = connection.column_mappings || {};
   if (connection.owner_scope === 'admin') {
-    const result = await adminSheets.syncGoogleSheet({
-      adminId: connection.owner_user_id, url: null, defaults: connection.defaults || {}, columnMappings: mappings,
-      defaultIndustryId: connection.default_industry_id, force: true, sheetResult: { csv, spreadsheetId: null, gid: null },
+    const result = await adminImports.syncCsv({
+      adminId: connection.owner_user_id, csv, defaults: connection.defaults || {}, columnMappings: mappings,
+      defaultIndustryId: connection.default_industry_id, source: 'meta-lead-ad',
     });
     return { created: result.created || 0, duplicate: (result.updated || 0) + (result.unchanged || 0), failed: result.failed || 0, failures: result.failures || [] };
   }
   const prepared = await fillMissingPincodes(csv, { columnMappings: mappings, scope: 'lead_partner' });
-  const analysis = sheetPreview.analyzeCsv(prepared, { columnMappings: mappings, scope: 'lead_partner' });
-  const result = await partnerSheets.importCsv({ userId: connection.owner_user_id, csv: analysis.mappedCsv, defaultIndustryId: connection.default_industry_id });
+  const analysis = leadImportMapping.analyzeCsv(prepared, { columnMappings: mappings, scope: 'lead_partner' });
+  const result = await partnerImports.importCsv({ userId: connection.owner_user_id, csv: analysis.mappedCsv, defaultIndustryId: connection.default_industry_id });
   return { created: result.created || 0, duplicate: result.duplicate || 0, failed: result.failed || 0, failures: result.failures || [] };
 }
 

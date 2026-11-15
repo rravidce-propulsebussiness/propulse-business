@@ -1,13 +1,11 @@
 const pool=require('../config/database');
-const {shouldSkipUnchangedSheet}=require('../utils/sheetSyncRetryPolicy');
 const leadService=require('./leadService');
 const leadClassificationService=require('./leadClassificationService');
-const {fetchGoogleSheetCsv}=require('./googleSheetService');
 const {resolvePincode}=require('./pincodeService');
 const pincodeDetectionService=require('./pincodeDetectionService');
-const sheetPreview=require('./sheetImportPreviewService');
+const leadImportMapping=require('./leadImportMappingService');
 const {parseCsvRecords}=require('../utils/csvRecords');
-const {sheetRowIdentity,candidateMaps,matchLead}=require('../utils/sheetLeadIdentity');
+const {leadRowIdentity,candidateMaps,matchLead}=require('../utils/leadImportIdentity');
 
 const clean=v=>String(v??'').trim();
 const norm=v=>clean(v).toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]/g,'');
@@ -48,10 +46,10 @@ function hasColumn(row,names){return Object.keys(row).some(k=>names.some(n=>norm
 function parseAccessStrategy(value){const n=norm(value);if(!n)return undefined;if(n.includes('permanent')||n==='single'||n==='singlebuyer'||n==='singleonly')return'permanent_single';if(n.includes('auto'))return'auto_release';if(n.includes('shared'))return'shared';throw new Error('Access Strategy must be Single Only, Auto Release, or Shared from Start')}
 async function catalogs(){const[i,s,ss,st,c]=await Promise.all([pool.query('SELECT id,name FROM industries WHERE is_active=TRUE'),pool.query('SELECT id,name,industry_id FROM services WHERE is_active=TRUE'),pool.query('SELECT id,name,service_id FROM subservices WHERE is_active=TRUE'),pool.query('SELECT id,name FROM states WHERE is_active=TRUE'),pool.query('SELECT id,name,state_id FROM cities WHERE is_active=TRUE')]);return{industries:i.rows,services:s.rows,subservices:ss.rows,states:st.rows,cities:c.rows}}
 function locationFromDetection(info,cat){if(!info)return{state:null,city:null,pincode:''};const state=cat.states.find(x=>String(x.id)===String(info.state_id))||catalogMatch(cat.states,info.state_name);const city=cat.cities.find(x=>String(x.id)===String(info.city?.id))||(state?cat.cities.find(x=>String(x.state_id)===String(state.id)&&norm(x.name)===norm(info.city?.name||info.district_name)):null);return{state,city,pincode:info.pincode||''}}
-function buildPayload(row,lead,cat,locationInfo,classificationSettings=null){const classification=resolveClassification(row,cat);const catalogLocation=resolveCatalogLocation(row,cat);const location=locationInfo?locationFromDetection(locationInfo,cat):catalogLocation;const capacityRaw=get(row,['Buyer Capacity','Buyer Capacity Limit','Max Buyers','Capacity']);const capacityNumber=capacityRaw===''?undefined:Number(capacityRaw);if(capacityRaw!==''&&(!Number.isFinite(capacityNumber)||capacityNumber<1||capacityNumber>3))throw new Error('Buyer Capacity must be a number from 1 to 3');const strategyRaw=get(row,['Access Strategy','Buyer Strategy']);const strategy=parseAccessStrategy(strategyRaw);const releaseTwoRaw=get(row,['Release to 2 Hours','Release To Two Hours']);const releaseThreeRaw=get(row,['Release to 3 Hours','Release To Three Hours']);const releaseTwo=releaseTwoRaw===''?undefined:Number(releaseTwoRaw),releaseThree=releaseThreeRaw===''?undefined:Number(releaseThreeRaw);if(releaseTwoRaw!==''&&(!Number.isFinite(releaseTwo)||releaseTwo<0))throw new Error('Release to 2 Hours must be zero or greater');if(releaseThreeRaw!==''&&(!Number.isFinite(releaseThree)||releaseThree<0))throw new Error('Release to 3 Hours must be zero or greater');if(releaseTwo!==undefined&&releaseThree!==undefined&&releaseThree<releaseTwo)throw new Error('Release to 3 Hours must be after Release to 2 Hours');const hasAccessOverride=[strategyRaw,capacityRaw,releaseTwoRaw,releaseThreeRaw].some(value=>clean(value)!=='');const custom={...dynamicFields(row)};if(capacityNumber!==undefined)custom.buyerCapacity=strategy==='permanent_single'?1:Math.floor(capacityNumber);const id=sourceId(row);if(id)custom.id=id;const autoLeadType=leadClassificationService.classify(custom,classificationSettings);const exclusiveNames=['Pro Early Access','Exclusive','Is Exclusive','Early Access'];const exclusiveColumnPresent=hasColumn(row,exclusiveNames);const delayNames=['Exclusive Delay Days','Early Access Delay Days','Pro Early Access Delay Days'];const delayRaw=get(row,delayNames);const leadTypeValue=get(row,['Lead Type']);const rawPincode=get(row,['Pincode']);const pincode=normalizePincode(location.pincode)||normalizePincode(rawPincode)||normalizePincode(lead?.pincode);const pricing=parsePricing(row);return{industryId:classification.industry?.id||lead?.industry_id||'',serviceId:classification.service?.id||lead?.service_id||'',subserviceId:classification.subservice?.id||lead?.subservice_id||'',stateId:location.state?.id||lead?.state_id||'',cityId:location.city?.id||lead?.city_id||'',customerName:get(row,['Customer Name'])||lead?.customer_name||'',customerPhone:get(row,['Customer Phone'])||lead?.customer_phone||'',customerEmail:get(row,['Customer Email'])||lead?.customer_email||'',requirement:get(row,['Requirement'])||lead?.requirement||'',propertyType:get(row,['Property Type'])||lead?.property_type||'',budget:get(row,['Budget'])||lead?.budget||'',source:get(row,['Source'])||lead?.source||'google-sheet',notes:get(row,['Notes'])||lead?.notes||'',pincode,buyerCapacity:strategy==='permanent_single'?1:capacityNumber,accessStrategy:strategy,accessSource:hasAccessOverride?'sheet':'rule',releaseToTwoAfterHours:releaseTwo,releaseToThreeAfterHours:releaseThree,leadType:norm(leadTypeValue)==='premium'?'premium':(norm(leadTypeValue)==='basic'?'basic':(lead?.lead_type||autoLeadType||'basic')),isExclusive:exclusiveColumnPresent?['true','yes','y','1','exclusive'].includes(norm(get(row,exclusiveNames))):Boolean(lead?.is_exclusive),exclusiveDelayDays:delayRaw!==''?Number(delayRaw):(lead?.exclusive_delay_days??undefined),customFields:custom,pricing:pricing||undefined,pricingSource:pricing?'sheet':'rule',status:lead?.status||'available',sheetSync:exclusiveColumnPresent?{exclusiveColumnPresent:true}:{}}}
-function needsUpdate(next,lead){return next.pricingSource==='sheet'||next.accessSource==='sheet'||next.accessSource==='rule'||!stableEqual(next.customerName,lead.customer_name)||!stableEqual(next.customerPhone,lead.customer_phone)||!stableEqual(next.customerEmail,lead.customer_email)||!stableEqual(next.requirement,lead.requirement)||!stableEqual(next.propertyType,lead.property_type)||!stableEqual(next.budget,lead.budget)||!stableEqual(next.source,lead.source)||!stableEqual(next.notes,lead.notes)||!stableEqual(next.pincode,lead.pincode)||String(next.leadType||'')!==String(lead.lead_type||'')||String(next.industryId||'')!==String(lead.industry_id||'')||String(next.serviceId||'')!==String(lead.service_id||'')||String(next.subserviceId||'')!==String(lead.subservice_id||'')||String(next.stateId||'')!==String(lead.state_id||'')||String(next.cityId||'')!==String(lead.city_id||'')||Boolean(next.isExclusive)!==Boolean(lead.is_exclusive)||Number(next.exclusiveDelayDays||0)!==Number(lead.exclusive_delay_days||0)||!stableEqual(next.customFields,lead.custom_fields||{})}
+function buildPayload(row,lead,cat,locationInfo,classificationSettings=null){const classification=resolveClassification(row,cat);const catalogLocation=resolveCatalogLocation(row,cat);const location=locationInfo?locationFromDetection(locationInfo,cat):catalogLocation;const capacityRaw=get(row,['Buyer Capacity','Buyer Capacity Limit','Max Buyers','Capacity']);const capacityNumber=capacityRaw===''?undefined:Number(capacityRaw);if(capacityRaw!==''&&(!Number.isFinite(capacityNumber)||capacityNumber<1||capacityNumber>3))throw new Error('Buyer Capacity must be a number from 1 to 3');const strategyRaw=get(row,['Access Strategy','Buyer Strategy']);const strategy=parseAccessStrategy(strategyRaw);const releaseTwoRaw=get(row,['Release to 2 Hours','Release To Two Hours']);const releaseThreeRaw=get(row,['Release to 3 Hours','Release To Three Hours']);const releaseTwo=releaseTwoRaw===''?undefined:Number(releaseTwoRaw),releaseThree=releaseThreeRaw===''?undefined:Number(releaseThreeRaw);if(releaseTwoRaw!==''&&(!Number.isFinite(releaseTwo)||releaseTwo<0))throw new Error('Release to 2 Hours must be zero or greater');if(releaseThreeRaw!==''&&(!Number.isFinite(releaseThree)||releaseThree<0))throw new Error('Release to 3 Hours must be zero or greater');if(releaseTwo!==undefined&&releaseThree!==undefined&&releaseThree<releaseTwo)throw new Error('Release to 3 Hours must be after Release to 2 Hours');const hasAccessOverride=[strategyRaw,capacityRaw,releaseTwoRaw,releaseThreeRaw].some(value=>clean(value)!=='');const custom={...dynamicFields(row)};if(capacityNumber!==undefined)custom.buyerCapacity=strategy==='permanent_single'?1:Math.floor(capacityNumber);const id=sourceId(row);if(id)custom.id=id;const autoLeadType=leadClassificationService.classify(custom,classificationSettings);const exclusiveNames=['Pro Early Access','Exclusive','Is Exclusive','Early Access'];const exclusiveColumnPresent=hasColumn(row,exclusiveNames);const delayNames=['Exclusive Delay Days','Early Access Delay Days','Pro Early Access Delay Days'];const delayRaw=get(row,delayNames);const leadTypeValue=get(row,['Lead Type']);const rawPincode=get(row,['Pincode']);const pincode=normalizePincode(location.pincode)||normalizePincode(rawPincode)||normalizePincode(lead?.pincode);const pricing=parsePricing(row);return{industryId:classification.industry?.id||lead?.industry_id||'',serviceId:classification.service?.id||lead?.service_id||'',subserviceId:classification.subservice?.id||lead?.subservice_id||'',stateId:location.state?.id||lead?.state_id||'',cityId:location.city?.id||lead?.city_id||'',customerName:get(row,['Customer Name'])||lead?.customer_name||'',customerPhone:get(row,['Customer Phone'])||lead?.customer_phone||'',customerEmail:get(row,['Customer Email'])||lead?.customer_email||'',requirement:get(row,['Requirement'])||lead?.requirement||'',propertyType:get(row,['Property Type'])||lead?.property_type||'',budget:get(row,['Budget'])||lead?.budget||'',source:get(row,['Source'])||lead?.source||'csv-upload',notes:get(row,['Notes'])||lead?.notes||'',pincode,buyerCapacity:strategy==='permanent_single'?1:capacityNumber,accessStrategy:strategy,accessSource:hasAccessOverride?'import':'rule',releaseToTwoAfterHours:releaseTwo,releaseToThreeAfterHours:releaseThree,leadType:norm(leadTypeValue)==='premium'?'premium':(norm(leadTypeValue)==='basic'?'basic':(lead?.lead_type||autoLeadType||'basic')),isExclusive:exclusiveColumnPresent?['true','yes','y','1','exclusive'].includes(norm(get(row,exclusiveNames))):Boolean(lead?.is_exclusive),exclusiveDelayDays:delayRaw!==''?Number(delayRaw):(lead?.exclusive_delay_days??undefined),customFields:custom,pricing:pricing||undefined,pricingSource:pricing?'import':'rule',status:lead?.status||'available',importMetadata:exclusiveColumnPresent?{exclusiveColumnPresent:true}:{}}}
+function needsUpdate(next,lead){return next.pricingSource==='import'||next.accessSource==='import'||next.accessSource==='rule'||!stableEqual(next.customerName,lead.customer_name)||!stableEqual(next.customerPhone,lead.customer_phone)||!stableEqual(next.customerEmail,lead.customer_email)||!stableEqual(next.requirement,lead.requirement)||!stableEqual(next.propertyType,lead.property_type)||!stableEqual(next.budget,lead.budget)||!stableEqual(next.source,lead.source)||!stableEqual(next.notes,lead.notes)||!stableEqual(next.pincode,lead.pincode)||String(next.leadType||'')!==String(lead.lead_type||'')||String(next.industryId||'')!==String(lead.industry_id||'')||String(next.serviceId||'')!==String(lead.service_id||'')||String(next.subserviceId||'')!==String(lead.subservice_id||'')||String(next.stateId||'')!==String(lead.state_id||'')||String(next.cityId||'')!==String(lead.city_id||'')||Boolean(next.isExclusive)!==Boolean(lead.is_exclusive)||Number(next.exclusiveDelayDays||0)!==Number(lead.exclusive_delay_days||0)||!stableEqual(next.customFields,lead.custom_fields||{})}
 async function findCandidates(rows){const phones=[...new Set(rows.map(r=>phoneKey(get(r,['Customer Phone']))).filter(Boolean))],emails=[...new Set(rows.map(r=>emailKey(get(r,['Customer Email']))).filter(Boolean))],ids=[...new Set(rows.map(sourceId).filter(Boolean))];if(!phones.length&&!emails.length&&!ids.length)return[];return(await pool.query(`SELECT id,industry_id,service_id,subservice_id,state_id,city_id,customer_name,customer_phone,customer_email,requirement,property_type,budget,source,notes,custom_fields,lead_type,is_exclusive,exclusive_delay_days,pincode,status FROM leads WHERE lead_partner_id IS NULL AND investor_user_id IS NULL AND (regexp_replace(COALESCE(customer_phone,''),'[^0-9]','','g')=ANY($1::text[]) OR LOWER(TRIM(COALESCE(customer_email,'')))=ANY($2::text[]) OR COALESCE(custom_fields->>'id',custom_fields->>'leadId',custom_fields->>'lead_id',custom_fields->>'externalId',custom_fields->>'external_id','')=ANY($3::text[])) ORDER BY id DESC`,[phones,emails,ids])).rows}
-async function ensurePincode(pincode,cityId,{forCreate=false}={}){if(!isValidPincode(pincode))throw new Error('Pincode is missing and could not be resolved from the supplied location');let detected;try{detected=await pincodeDetectionService.detectPincode(pincode)}catch(error){if(forCreate&&!cityId){const e=new Error('PIN directory could not be verified. Please retry after postal lookup is available.');e.code='PIN_DIRECTORY_UNAVAILABLE';throw e}return null}if(['NEEDS_MAPPING','NO_MATCH'].includes(detected?.status)){if(cityId)await pincodeDetectionService.mapPinToCity(pincode,cityId,'admin-google-sheet');else if(forCreate&&!detected?.state_id&&!detected?.state_name){const e=new Error('New PIN could not be matched to a State or City');e.code='PIN_LOCATION_UNRESOLVED';throw e}}return detected}
+async function ensurePincode(pincode,cityId,{forCreate=false}={}){if(!isValidPincode(pincode))throw new Error('Pincode is missing and could not be resolved from the supplied location');let detected;try{detected=await pincodeDetectionService.detectPincode(pincode)}catch(error){if(forCreate&&!cityId){const e=new Error('PIN directory could not be verified. Please retry after postal lookup is available.');e.code='PIN_DIRECTORY_UNAVAILABLE';throw e}return null}if(['NEEDS_MAPPING','NO_MATCH'].includes(detected?.status)){if(cityId)await pincodeDetectionService.mapPinToCity(pincode,cityId,'admin-csv');else if(forCreate&&!detected?.state_id&&!detected?.state_name){const e=new Error('New PIN could not be matched to a State or City');e.code='PIN_LOCATION_UNRESOLVED';throw e}}return detected}
 async function previewPincodeStatus(pincode,cityId){
   if(!isValidPincode(pincode))return{invalid:'Pincode is missing and could not be resolved from the supplied location'};
   const row=(await pool.query(
@@ -67,26 +65,24 @@ async function previewPincodeStatus(pincode,cityId){
   if(!row)return{warning:`PIN ${pincode} will be verified against India Post during activation`};
   if(Number(row.mapped_cities||0)===0)return{warning:`PIN ${pincode} is verified but does not yet have a City mapping; sync will keep the verified State + PIN and leave City unset until mapped`};
   if(cityId&&!row.matches_city)return{warning:`PIN ${pincode} is not currently mapped to the selected City; activation will verify the location`};
-  if(Number(row.mapped_cities||0)>1&&!cityId)return{warning:`PIN ${pincode} maps to multiple Cities; include City in the sheet to make the import deterministic`};
+  if(Number(row.mapped_cities||0)>1&&!cityId)return{warning:`PIN ${pincode} maps to multiple Cities; include City in the CSV to make the import deterministic`};
   return{};
 }
-// sheetResult/issueToken let other sources (Meta Lead Ads) reuse this exact
-// preview with already-built CSV and without a sheet activation token.
-async function previewGoogleSheet({adminId,url,defaults,columnMappings={},defaultIndustryId=null,sheetResult=null,issueToken=true}){
+async function previewCsv({adminId,csv,defaults,columnMappings={},defaultIndustryId=null}){
   const normalized=normalizeDefaults(defaults);
   const defaultIndustry=await resolveDefaultIndustry(defaultIndustryId);
-  const sheet=sheetResult||await fetchGoogleSheetCsv(url);
-  const analysis=sheetPreview.analyzeCsv(sheet.csv||'',{columnMappings,scope:'admin'});
+  const sourceCsv=String(csv||'');
+  const analysis=leadImportMapping.analyzeCsv(sourceCsv,{columnMappings,scope:'admin'});
   const parsed=parseRows(analysis.mappedCsv);
-  if(!parsed.items.length)throw new Error('Google Sheet contains no data rows');
+  if(!parsed.items.length)throw new Error('CSV file contains no data rows');
   const unique=[],seen=new Set(),previewRows=[];
   let duplicateCount=0;
   for(let index=0;index<parsed.items.length;index+=1){
     const row=applyDefaultIndustry(applyDefaults(parsed.items[index],normalized),defaultIndustry);
-    const key=sheetRowIdentity(row);
+    const key=leadRowIdentity(row);
     if(seen.has(key)){
       duplicateCount+=1;
-      if(previewRows.length<60)previewRows.push({row:index+2,status:'warning',action:'skip',key:sourceId(row)||get(row,['Customer Phone'])||get(row,['Customer Email'])||`Row ${index+2}`,messages:['Duplicate row in this sheet; the later copy will be skipped']});
+      if(previewRows.length<60)previewRows.push({row:index+2,status:'warning',action:'skip',key:sourceId(row)||get(row,['Customer Phone'])||get(row,['Customer Email'])||`Row ${index+2}`,messages:['Duplicate row in this CSV; the later copy will be skipped']});
       continue;
     }
     seen.add(key);unique.push({row,index:index+2,key});
@@ -141,34 +137,25 @@ async function previewGoogleSheet({adminId,url,defaults,columnMappings={},defaul
     updates,
     mappingWarnings:analysis.mappingWarnings
   };
-  const token=!issueToken?{}:await sheetPreview.createPreview({
-    actorType:'admin',actorUserId:adminId,sourceUrl:url,spreadsheetId:sheet.spreadsheetId,gid:sheet.gid,
-    fingerprint:analysis.fingerprint,defaults:{...normalized,defaultIndustryId:defaultIndustry?.id||null},columnMappings:analysis.effectiveMappings,summary
-  });
   return{
-    spreadsheetId:sheet.spreadsheetId,
-    gid:sheet.gid,
     headers:analysis.headers,
     mappingFields:analysis.mappingFields,
     columnMappings:analysis.effectiveMappings,
     mappingWarnings:analysis.mappingWarnings,
     summary,
-    rows:previewRows.slice(0,60),
-    ...token
+    rows:previewRows.slice(0,60)
   };
 }
-async function syncGoogleSheet({adminId,url,defaults,columnMappings={},previousFingerprint,previousFailed=0,force=false,sheetResult=null,defaultIndustryId=null}){
+async function syncCsv({adminId,csv,defaults,columnMappings={},defaultIndustryId=null,source='csv'}){
   const defaultIndustry=await resolveDefaultIndustry(defaultIndustryId);
-  const sheet=sheetResult||await fetchGoogleSheetCsv(url);
-  const analysis=sheetPreview.analyzeCsv(sheet.csv||'',{columnMappings,scope:'admin'});
+  const sourceCsv=String(csv||'');
+  const analysis=leadImportMapping.analyzeCsv(sourceCsv,{columnMappings,scope:'admin'});
   const parsed=parseRows(analysis.mappedCsv);
-  if(!parsed.items.length)throw new Error('Google Sheet contains no data rows');
-  const fingerprint=analysis.fingerprint;
-  if(shouldSkipUnchangedSheet({force,previousFingerprint,nextFingerprint:fingerprint,lastFailed:previousFailed}))return{skipped:true,fingerprint,total:parsed.items.length,updated:0,created:0,unchanged:0,failed:0,failures:[],spreadsheetId:sheet.spreadsheetId,gid:sheet.gid};
+  if(!parsed.items.length)throw new Error('CSV file contains no data rows');
   const unique=[],seen=new Set();
   for(const original of parsed.items){
-    const row=applyDefaultIndustry(applyDefaults(original,defaults),defaultIndustry);
-    const key=sheetRowIdentity(row);
+    const row=applyDefaultIndustry(applyDefaults({...original,Source:get(original,['Source'])||source},defaults),defaultIndustry);
+    const key=leadRowIdentity(row);
     if(seen.has(key))continue;seen.add(key);unique.push(row);
   }
   const[cat,candidates,classificationSettings]=await Promise.all([catalogs(),findCandidates(unique),leadClassificationService.getSettings()]);
@@ -193,76 +180,11 @@ async function syncGoogleSheet({adminId,url,defaults,columnMappings={},previousF
       const next=buildPayload(row,lead,cat,locationInfo,classificationSettings);
       if(!next.pincode)throw new Error('Pincode is missing and could not be resolved from the supplied location');
       if(lead){await ensurePincode(next.pincode,next.cityId);if(needsUpdate(next,lead)){await leadService.updateLead(lead.id,next);updated++}else unchanged++}
-      else{if(!next.industryId)throw new Error('Industry not found');await ensurePincode(next.pincode,next.cityId,{forCreate:true});const createdLead=await leadService.createLead({...next,createdBy:adminId,qualityGateContext:'admin_sheet'});created++;if(createdLead.status==='quarantined')quarantined++}
+      else{if(!next.industryId)throw new Error('Industry not found');await ensurePincode(next.pincode,next.cityId,{forCreate:true});const createdLead=await leadService.createLead({...next,createdBy:adminId,qualityGateContext:'admin_csv'});created++;if(createdLead.status==='quarantined')quarantined++}
     }catch(error){failed++;failures.push(`${sourceId(row)||get(row,['Customer Phone'])||'row'}: ${error.message||'sync failed'}`)}
   }
-  return{skipped:false,fingerprint,total:unique.length,updated,created,quarantined,unchanged,failed,failures,spreadsheetId:sheet.spreadsheetId,gid:sheet.gid};
+  return{total:unique.length,updated,created,quarantined,unchanged,failed,failures};
 }
 
-async function listConnections(){return(await pool.query(`SELECT c.id,c.spreadsheet_id,c.gid,c.source_url,c.defaults,c.default_industry_id,i.name AS default_industry_name,c.column_mappings,c.last_preview_summary,c.last_previewed_at,c.status,c.created_by,c.last_synced_at,c.last_checked_at,c.fingerprint,c.last_sync_created,c.last_sync_updated,c.last_sync_unchanged,c.last_sync_failed,c.last_sync_failures,c.sync_failure_count,c.last_sync_error_at,c.last_sync_error,c.next_retry_at,c.created_at,c.updated_at FROM admin_google_sheet_connections c LEFT JOIN industries i ON i.id=c.default_industry_id WHERE c.status='active' ORDER BY c.updated_at DESC,c.id DESC`)).rows}
-async function connectGoogleSheet({adminId,url,defaults,columnMappings={},previewToken,defaultIndustryId=null}){
-  const normalized=normalizeDefaults(defaults);
-  const defaultIndustry=await resolveDefaultIndustry(defaultIndustryId);
-  const sheet=await fetchGoogleSheetCsv(url);
-  const analysis=sheetPreview.analyzeCsv(sheet.csv||'',{columnMappings,scope:'admin'});
-  const preview=await sheetPreview.assertPreview({
-    previewToken,actorType:'admin',actorUserId:adminId,spreadsheetId:sheet.spreadsheetId,gid:sheet.gid,
-    fingerprint:analysis.fingerprint,defaults:{...normalized,defaultIndustryId:defaultIndustry?.id||null},columnMappings:analysis.effectiveMappings
-  });
-  const synced=await syncGoogleSheet({adminId,url,defaults:normalized,columnMappings:analysis.effectiveMappings,force:true,sheetResult:sheet,defaultIndustryId:defaultIndustry?.id||null});
-  const connection=(await pool.query(
-    `INSERT INTO admin_google_sheet_connections(
-       spreadsheet_id,gid,source_url,defaults,default_industry_id,column_mappings,last_preview_summary,last_previewed_at,status,created_by,last_synced_at,last_checked_at,fingerprint,
-       last_sync_created,last_sync_updated,last_sync_unchanged,last_sync_failed,last_sync_failures,sync_failure_count,last_sync_error_at,last_sync_error,next_retry_at
-     ) VALUES($1,$2,$3,$4::jsonb,$5,$6::jsonb,$7::jsonb,CURRENT_TIMESTAMP,'active',$8,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,$9,$10,$11,$12,$13,$14::jsonb,0,NULL,NULL,NULL)
-     ON CONFLICT(spreadsheet_id,gid) DO UPDATE SET
-       source_url=EXCLUDED.source_url,defaults=EXCLUDED.defaults,default_industry_id=EXCLUDED.default_industry_id,column_mappings=EXCLUDED.column_mappings,last_preview_summary=EXCLUDED.last_preview_summary,
-       last_previewed_at=CURRENT_TIMESTAMP,status='active',created_by=COALESCE(EXCLUDED.created_by,admin_google_sheet_connections.created_by),
-       last_synced_at=CURRENT_TIMESTAMP,last_checked_at=CURRENT_TIMESTAMP,fingerprint=EXCLUDED.fingerprint,last_sync_created=EXCLUDED.last_sync_created,
-       last_sync_updated=EXCLUDED.last_sync_updated,last_sync_unchanged=EXCLUDED.last_sync_unchanged,last_sync_failed=EXCLUDED.last_sync_failed,
-       last_sync_failures=EXCLUDED.last_sync_failures,sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP
-     RETURNING *`,
-    [synced.spreadsheetId,synced.gid||'0',url,JSON.stringify(normalized),defaultIndustry?.id||null,JSON.stringify(analysis.effectiveMappings),JSON.stringify(preview.summary||{}),adminId||null,synced.fingerprint,synced.created||0,synced.updated||0,synced.unchanged||0,synced.failed||0,JSON.stringify(synced.failures||[])]
-  )).rows[0];
-  await sheetPreview.consumePreview(previewToken);
-  return{connection,sync:synced};
-}
-async function getConnection(connectionId){return(await pool.query(`SELECT * FROM admin_google_sheet_connections WHERE id=$1 AND status='active'`,[Number(connectionId)])).rows[0]||null}
-async function syncConnection({connectionId,adminId,force=false}){
-  const id=Number(connectionId);
-  if(!Number.isInteger(id)||id<=0){const e=new Error('Google Sheet connection ID must be valid');e.code='SHEET_CONNECTION_NOT_FOUND';throw e}
-  const lockClient=await pool.connect();
-  let locked=false;
-  try{
-    const lock=(await lockClient.query('SELECT pg_try_advisory_lock($1,$2) AS acquired',[73190520,id])).rows[0];
-    locked=Boolean(lock?.acquired);
-    if(!locked)return{busy:true,sync:{busy:true,skipped:true,reason:'SYNC_IN_PROGRESS'}};
-    const connection=await getConnection(id);
-    if(!connection){const e=new Error('Active Google Sheet connection not found');e.code='SHEET_CONNECTION_NOT_FOUND';throw e}
-    const synced=await syncGoogleSheet({adminId:adminId||connection.created_by||null,url:connection.source_url,defaults:connection.defaults||{},columnMappings:connection.column_mappings||{},previousFingerprint:connection.fingerprint,previousFailed:connection.last_sync_failed,force,defaultIndustryId:connection.default_industry_id});
-    const saved=synced.skipped
-      ?(await pool.query(`UPDATE admin_google_sheet_connections
-            SET last_checked_at=CURRENT_TIMESTAMP,
-                last_sync_created=0,last_sync_updated=0,last_sync_unchanged=$1,last_sync_failed=0,last_sync_failures='[]'::jsonb,
-                sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP
-          WHERE id=$2
-          RETURNING *`,[Number(synced.total||0),id])).rows[0]
-      :(await pool.query(`UPDATE admin_google_sheet_connections SET last_checked_at=CURRENT_TIMESTAMP,last_synced_at=CURRENT_TIMESTAMP,fingerprint=COALESCE($1,fingerprint),last_sync_created=$2,last_sync_updated=$3,last_sync_unchanged=$4,last_sync_failed=$5,last_sync_failures=$6::jsonb,sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=$7 RETURNING *`,[synced.fingerprint||connection.fingerprint,synced.created||0,synced.updated||0,synced.unchanged||0,synced.failed||0,JSON.stringify(synced.failures||[]),id])).rows[0];
-    return{connection:saved,sync:synced};
-  }finally{
-    if(locked)await lockClient.query('SELECT pg_advisory_unlock($1,$2)',[73190520,id]).catch(()=>{});
-    lockClient.release();
-  }
-}
-async function updateConnectionDefaultIndustry({connectionId,defaultIndustryId=null}){
-  const id=Number(connectionId);
-  if(!Number.isInteger(id)||id<=0)throw Object.assign(new Error('Google Sheet connection not found'),{code:'SHEET_CONNECTION_NOT_FOUND'});
-  const industry=await resolveDefaultIndustry(defaultIndustryId);
-  const row=(await pool.query(`UPDATE admin_google_sheet_connections SET default_industry_id=$1,fingerprint=NULL,last_checked_at=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND status='active' RETURNING *`,[industry?.id||null,id])).rows[0];
-  if(!row)throw Object.assign(new Error('Google Sheet connection not found'),{code:'SHEET_CONNECTION_NOT_FOUND'});
-  return{...row,default_industry_name:industry?.name||null};
-}
-async function disableConnection(connectionId){const row=(await pool.query(`UPDATE admin_google_sheet_connections SET status='disabled',updated_at=CURRENT_TIMESTAMP WHERE id=$1 RETURNING *`,[Number(connectionId)])).rows[0];if(!row){const e=new Error('Google Sheet connection not found');e.code='SHEET_CONNECTION_NOT_FOUND';throw e}return row}
-async function recordConnectionFailure(connectionId,error){const current=await getConnection(connectionId);if(!current)return null;const failureCount=Math.max(1,Number(current.sync_failure_count||0)+1);const retryMinutes=failureCount<=1?5:failureCount===2?15:failureCount===3?60:360;return(await pool.query(`UPDATE admin_google_sheet_connections SET sync_failure_count=$1,last_sync_error_at=CURRENT_TIMESTAMP,last_sync_error=$2,next_retry_at=CURRENT_TIMESTAMP + ($3 * INTERVAL '1 minute'),last_checked_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=$4 RETURNING *`,[failureCount,String(error?.message||'Google Sheet sync failed').slice(0,500),retryMinutes,Number(connectionId)])).rows[0]}
 
-module.exports={previewGoogleSheet,syncGoogleSheet,parseRows,applyDefaults,applyDefaultIndustry,resolveDefaultIndustry,listConnections,connectGoogleSheet,syncConnection,updateConnectionDefaultIndustry,disableConnection,recordConnectionFailure};
+module.exports={previewCsv,syncCsv};
