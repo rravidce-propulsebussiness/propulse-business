@@ -14,32 +14,6 @@ function sendError(res, error, fallback) {
   return res.status(status).json({ error: error?.message || fallback, code: error?.code });
 }
 
-async function listAdmin(req, res) {
-  try { return res.json(await customerFlowService.listDefinitions()); }
-  catch (error) { console.error('List customer flows failed:', error); return res.status(500).json({ error: 'Failed to load customer flows' }); }
-}
-async function getAdmin(req, res) {
-  try { return res.json(await customerFlowService.getAdminDefinition(req.params.id)); }
-  catch (error) { return sendError(res, error, 'Failed to load customer flow'); }
-}
-async function create(req, res) {
-  try { return res.status(201).json(await customerFlowService.createDefinition({ ...req.body, createdBy: req.user?.id })); }
-  catch (error) { return sendError(res, error, 'Failed to create customer flow'); }
-}
-async function saveDraft(req, res) {
-  try { return res.json(await customerFlowService.saveDraft(req.params.id, req.body || {}, req.user?.id)); }
-  catch (error) { return sendError(res, error, 'Failed to save customer flow'); }
-}
-async function publish(req, res) {
-  try { return res.json(await customerFlowService.publish(req.params.id, req.user?.id)); }
-  catch (error) { return sendError(res, error, 'Failed to publish customer flow'); }
-}
-async function setStatus(req, res) {
-  try {
-    if (typeof req.body?.isActive !== 'boolean') return res.status(400).json({ error: 'isActive must be true or false' });
-    return res.json(await customerFlowService.setDefinitionStatus(req.params.id, req.body.isActive, req.user?.id));
-  } catch (error) { return sendError(res, error, 'Failed to update customer flow'); }
-}
 async function getPublic(req, res) {
   try { return res.json(await customerFlowService.getPublishedFlow(req.params.key)); }
   catch (error) { return sendError(res, error, 'Failed to load requirement form'); }
@@ -135,4 +109,4 @@ async function emailQuotation(req,res){
     return res.json({sent:true});
   }catch(error){console.error('Quotation email failed:',error);return res.status(502).json({error:'Quotation was created, but email delivery failed'});}
 }
-module.exports = { listAdmin,getAdmin,create,saveDraft,publish,setStatus,getPublic,submitConsultation,submitPublic,uploadReference,downloadReferenceAdmin,emailQuotation };
+module.exports = { getPublic,submitConsultation,submitPublic,uploadReference,downloadReferenceAdmin,emailQuotation };

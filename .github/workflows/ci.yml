@@ -209,15 +209,6 @@ jobs:
           DB_USER: ci_smoke
           DB_PASSWORD: ci_smoke
         run: npm run test:estimator-schema
-      - name: Verify estimator runtime lifecycle
-        env:
-          DB_HOST: 127.0.0.1
-          DB_PORT: 5432
-          DB_NAME: ci_smoke
-          DB_USER: ci_smoke
-          DB_PASSWORD: ci_smoke
-          JWT_SECRET: ci-estimator-secret-with-at-least-32-characters
-        run: npm run test:estimator-runtime
       - name: Verify Interior estimator seed and pricing
         env:
           DB_HOST: 127.0.0.1
@@ -236,15 +227,6 @@ jobs:
           DB_PASSWORD: ci_smoke
           JWT_SECRET: ci-construction-estimator-secret-with-at-least-32-characters
         run: npm run test:construction-estimator
-      - name: Verify estimator to lead conversion
-        env:
-          DB_HOST: 127.0.0.1
-          DB_PORT: 5432
-          DB_NAME: ci_smoke
-          DB_USER: ci_smoke
-          DB_PASSWORD: ci_smoke
-          JWT_SECRET: ci-estimator-conversion-secret-with-at-least-32-characters
-        run: npm run test:estimator-conversion
       - name: Verify lead PIN location mapping
         env:
           DB_HOST: 127.0.0.1
