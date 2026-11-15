@@ -11,10 +11,10 @@ function numericValue(value,fieldType='number'){
   const text=clean(value).replace(/,/g,'');
   if(!text)return null;
   if(fieldType==='floors'){
-    const groundPlus=text.match(/^\\s*(?:g|ground(?:\\s*floor)?)\\s*\\+\\s*(\\d+(?:\\.\\d+)?)/i);
+    const groundPlus=text.match(/^\s*(?:g|ground(?:\s*floor)?)\s*\\+\s*(\d+(?:\\.\d+)?)/i);
     if(groundPlus)return Number(groundPlus[1])+1;
   }
-  const match=text.match(/-?\\d+(?:\\.\\d+)?/);
+  const match=text.match(/-?\d+(?:\\.\d+)?/);
   return match?Number(match[0]):null;
 }
 function normalizeCondition(condition={}){
