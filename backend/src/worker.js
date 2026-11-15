@@ -1,8 +1,6 @@
 require('dotenv').config();
 const pool = require('./config/database');
 const { runMigrations } = require('./database/runMigrations');
-const { startLeadPartnerSheetAutoSync } = require('./services/leadPartnerSheetSyncScheduler');
-const { startAdminGoogleSheetAutoSync } = require('./services/adminGoogleSheetSyncScheduler');
 const { startFinancialReconciliationScheduler } = require('./services/financialReconciliationScheduler');
 const { startNotificationScheduler } = require('./services/notificationScheduler');
 const { startPrivateStorageBackupScheduler } = require('./services/privateStorageBackupScheduler');
@@ -11,8 +9,6 @@ const { envFlag } = require('./config/runtimeFlags');
 const workerHeartbeat = require('./services/backgroundWorkerHeartbeatService');
 const operationalMonitoringService = require('./services/operationalMonitoringService');
 
-let stopLeadPartnerAutoSync = () => {};
-let stopAdminAutoSync = () => {};
 let stopHeartbeat = async () => {};
 let stopFinancialReconciliation = async () => {};
 let stopNotifications = async () => {};
@@ -44,8 +40,6 @@ async function shutdown(signal, exitCode = 0) {
   forceTimer.unref?.();
 
   try {
-    stopLeadPartnerAutoSync();
-    stopAdminAutoSync();
     await stopFinancialReconciliation();
     await stopNotifications();
     await stopPrivateStorageBackup();
@@ -72,8 +66,6 @@ async function start() {
   await workerHeartbeat.beat();
   stopHeartbeat = workerHeartbeat.startHeartbeat({ intervalMs:heartbeatIntervalMs, unref:false, runImmediately:false });
 
-  stopLeadPartnerAutoSync = startLeadPartnerSheetAutoSync({ unref: false, runImmediately: true });
-  stopAdminAutoSync = startAdminGoogleSheetAutoSync({ unref: false, runImmediately: true });
   stopFinancialReconciliation = startFinancialReconciliationScheduler({ unref: false, runImmediately: true });
   stopNotifications = startNotificationScheduler({ unref:false, runImmediately:true });
   stopPrivateStorageBackup = startPrivateStorageBackupScheduler({ unref:false, runImmediately:true });
