@@ -82,13 +82,26 @@ async function list({page=1,pageSize=20,businessUserId=null}={}){
   const result=await pool.query(`
     SELECT p.id,p.title,p.project_type,p.description,p.location_text,p.completion_year,p.area_text,
       p.budget_text,p.cover_image_url,p.image_urls,p.package_name,p.video_url,p.plan_url,
-      p.is_published,p.published_at,p.created_at,p.video_reward_status,p.video_reward_review_note,p.video_reward_reviewed_at,
+      p.is_published,p.published_at,p.created_at,p.video_reward_status,p.video_reward_review_note,p.video_reward_reviewed_by,p.video_reward_reviewed_at,
       p.video_redaction_status,p.video_redaction_error,p.video_redacted_url,p.video_redaction_source_url,
       COALESCE(p.video_privacy_cleared_url=p.video_url,FALSE) AS video_privacy_cleared,
-      u.id AS business_user_id,bp.business_name
+      u.id AS business_user_id,bp.business_name,u.created_at AS business_registered_at,
+      COALESCE(project_reward.active_grant_count,0) AS active_project_reward_grant_count,
+      COALESCE(project_reward.active_shared_quantity,0) AS active_project_reward_shared_quantity,
+      COALESCE(project_reward.active_premium_quantity,0) AS active_project_reward_premium_quantity
     FROM business_profile_projects p
     JOIN business_profiles bp ON bp.id=p.business_profile_id
     JOIN users u ON u.id=bp.user_id
+    LEFT JOIN LATERAL(
+      SELECT COUNT(*)::int AS active_grant_count,
+        COALESCE(SUM(g.shared_quantity),0)::int AS active_shared_quantity,
+        COALESCE(SUM(g.premium_quantity),0)::int AS active_premium_quantity
+      FROM lead_entitlement_grants g
+      JOIN lead_entitlement_business_campaigns c ON c.id=g.campaign_id
+      WHERE g.user_id=u.id AND g.source='campaign' AND c.min_completed_projects>0
+        AND c.registration_scope='new_registration' AND g.revoked_at IS NULL
+        AND g.starts_at<=CURRENT_TIMESTAMP AND (g.expires_at IS NULL OR g.expires_at>CURRENT_TIMESTAMP)
+    ) project_reward ON TRUE
     ${where}
     ORDER BY p.updated_at DESC,p.id DESC LIMIT $1 OFFSET $2
   `,userId?[size,(n-1)*size,userId]:[size,(n-1)*size]);
