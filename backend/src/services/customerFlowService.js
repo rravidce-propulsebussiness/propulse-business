@@ -18,10 +18,8 @@ async function questions(client,versionId){
  for(const o of os){if(!by.has(Number(o.question_id)))by.set(Number(o.question_id),[]);by.get(Number(o.question_id)).push({id:o.id,value:o.value,label:o.label,displayOrder:o.display_order,isActive:o.is_active})}
  return qs.map(q=>({id:q.id,questionKey:q.question_key,questionType:q.question_type,label:q.label,helpText:q.help_text,isRequired:q.is_required,displayOrder:q.display_order,validation:q.validation||{},showWhen:q.show_when||{},leadField:q.lead_field,visibility:q.visibility,isActive:q.is_active,options:by.get(Number(q.id))||[]}));
 }
-// Every homeowner form page (/quote, project quotes, popup) loads its published definition first.
-// That is three database round trips per visitor; published forms change only through the admin
-// writes below, which clear this cache, and the app runs as one process. The signed flowToken is
-// time-based, so it is never cached: each response gets a fresh token.
+// Fixed Marketplace request forms load their seeded published definitions. Cache the schema
+// briefly; the signed flowToken is time-based, so each response receives a fresh token.
 const PUBLISHED_FLOW_TTL_MS=60_000;
 const publishedFlowCache=new Map();
 async function getPublishedFlow(key){
