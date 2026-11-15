@@ -156,7 +156,7 @@ const service = require(src('services/metaLeadAdsService'));
   assert.ok(!app.includes('path="/admin/leads/sheets"'), 'The retired Google Sheets route is removed');
   const guide = fs.readFileSync(path.resolve(__dirname, '../../docs/META-LEAD-ADS.md'), 'utf8');
   assert.doesNotMatch(guide, /Google Sheets?/i, 'Meta setup guide contains no obsolete Google Sheets instructions');
-  const migrationDir = path.resolve(__dirname, 'src/database/migrations');
+  const migrationDir = path.resolve(__dirname, '../src/database/migrations');
   const retiredMigrations = fs.readdirSync(migrationDir).filter(name => /google_sheet|lead_partner_sheet/i.test(name) && name !== '20261116_zz_remove_google_sheets.sql');
   assert.deepStrictEqual(retiredMigrations, [], 'Retired Google Sheets migration history is removed');
   const cleanup = fs.readFileSync(path.join(migrationDir, '20261116_zz_remove_google_sheets.sql'), 'utf8');
