@@ -125,7 +125,7 @@ export const HYDERABAD_CONSTRUCTION_COST_ROUTE={
   type:'cost-guide',
   serviceSlug:'construction',
   title:'House Construction Cost in Hyderabad | Per Sq Ft Guide | ProPulse',
-  description:'Plan house construction cost in Hyderabad using ProPulse package reference rates, built-up-area examples, cost drivers and a construction estimator before requesting actual quotations.',
+  description:'Plan house construction cost in Hyderabad using ProPulse package reference rates, built-up-area examples, cost drivers to plan your scope before requesting actual quotations.',
   heading:'House construction cost in Hyderabad',
   summary:'Use current ProPulse construction package reference rates to build a preliminary Hyderabad budget, understand what can change the final cost and move from a per-sq-ft estimate to an actual project quotation.',
   searchTerms:[
