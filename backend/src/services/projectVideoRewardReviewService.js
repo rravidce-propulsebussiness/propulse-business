@@ -50,10 +50,16 @@ async function videoContentFingerprint(userId,reference){
         throw invalid('Private video storage refused the source verification request. The review remains pending; retry after storage is available.','PROJECT_VIDEO_STORAGE_UNAVAILABLE');
       if(!response.body)throw invalid('R2 returned an empty video stream.');
       let length=0;
-      for await(const chunk of response.body){
-        length+=chunk.length;
-        if(length> (full?meta.size:1024*1024+4096))throw invalid('Video content exceeded verification bounds.');
-        digest.update(chunk);
+      try{
+        for await(const chunk of response.body){
+          length+=chunk.length;
+          if(length> (full?meta.size:1024*1024+4096))throw invalid('Video content exceeded verification bounds.');
+          digest.update(chunk);
+        }
+      }catch(error){
+        if(error.code)throw error;
+        console.error('Project video source stream ended during verification:',error.message);
+        throw invalid('Private video storage could not finish reading the original upload. The review remains pending; retry after storage is available.','PROJECT_VIDEO_STORAGE_UNAVAILABLE');
       }
       if(length!==(end-start+1))throw invalid('Video content changed during verification; upload it again.');
     }finally{clearTimeout(timeout)}
