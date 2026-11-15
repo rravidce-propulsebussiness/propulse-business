@@ -12,13 +12,11 @@ assert.deepEqual(parseCsvRecords(''),[]);
 assert.deepEqual(parseCsvRecords('First,Second\n1,2'),[['First','Second'],['1','2']]);
 
 const originalLoad=Module._load;
-let directBaseCalls=0;
 let importedCsv=null;
 let importedBy=null;
 let importResult={total:1,created:1,duplicate:0,failed:0,failures:[]};
 let unexpectedDbCalls=0;
 const sheet={
-  spreadsheetId:'sheet_123',gid:'5',
   csv:'Full Name,Phone Number,Industry,Campaign Name,Notes\r\n"Ravi, R",9876543210,Construction,"Ad, Sept","Uses ""branded"" materials"'
 };
 const db={
@@ -32,35 +30,25 @@ const base={
   importedBy=userId;
   importedCsv=csv;
   return importResult;
- },
- importGoogleSheet:async()=>{directBaseCalls++;throw Error('Legacy import must not be used');}
+ }
 };
 Module._load=function(request,parent,isMain){
  const from=parent?.filename||'';
- if(from.endsWith(path.sep+'leadPartnerInventoryCompatService.js')){
+ if(from.endsWith(path.sep+'leadPartnerCsvImportService.js')){
   if(request==='../config/database')return db;
   if(request==='./leadPartnerInventoryService')return base;
-  if(request==='./googleSheetService')return {fetchGoogleSheetCsv:async url=>{
-   assert.equal(url,'https://docs.google.com/spreadsheets/d/sheet_123/edit#gid=5');
-   return sheet;
-  }};
-  if(request==='./sheetImportPreviewService')return{};
+  if(request==='./leadImportMappingService')return{};
  }
  return originalLoad.apply(this,arguments);
 };
 (async()=>{
  try{
-  const compat=require('../src/services/leadPartnerInventoryCompatService');
-  const result=await compat.importGoogleSheet({
-   userId:21,url:'https://docs.google.com/spreadsheets/d/sheet_123/edit#gid=5'
-  });
-  assert.equal(result.spreadsheetId,'sheet_123');
-  assert.equal(result.gid,'5');
+  const compat=require('../src/services/leadPartnerCsvImportService');
+  const result=await compat.importCsv({userId:21,csv:sheet.csv});
   assert.equal(result.created,1);
-  assert.equal(directBaseCalls,0,'One-off Google Sheet import must not use legacy base importer directly');
   assert.equal(importedBy,21);
   assert(importedCsv.includes('Customer Phone')&&importedCsv.includes('Customer Name'),
-    'One-off Sheet import must resolve canonical lead field aliases');
+    'Partner CSV import must resolve canonical lead field aliases');
   assert(importedCsv.includes('Campaign Name'),'Unmapped campaign column must survive round trip to importer');
   const records=parseCsvRecords(importedCsv);
   const mapped=Object.fromEntries(records[0].map((name,i)=>[name,records[1][i]]));
@@ -87,7 +75,7 @@ Module._load=function(request,parent,isMain){
     ['9876543210',longCampaign].join(',')
   ].join(String.fromCharCode(10))});
   const rawRows=parseCsvRecords(importedCsv);
-  assert.equal(rawRows[0].includes('Source'),false,'Campaign-only Sheets must not synthesize Source');
+  assert.equal(rawRows[0].includes('Source'),false,'Campaign-only CSV files must not synthesize Source');
 
 
   assert.equal(unexpectedDbCalls,0,
@@ -105,11 +93,11 @@ Module._load=function(request,parent,isMain){
   assert.equal(unexpectedDbCalls,0,
     'Failed import rows must not modify previously saved leads');
 
-  for(const file of ['leadPartnerInventoryService.js','leadPartnerInventoryCompatService.js']){
+  for(const file of ['leadPartnerInventoryService.js','leadPartnerCsvImportService.js']){
    const source=fs.readFileSync(path.join(__dirname,'../src/services',file),'utf8');
    assert(source.includes("require('../utils/csvRecords')"),
       file+' must use the shared CSV parser');
   }
-  console.log('Lead partner Sheet import compatibility regression tests passed.');
+  console.log('Lead partner CSV import consistency regression tests passed.');
  }finally{Module._load=originalLoad;}
 })().catch(error=>{console.error(error);process.exitCode=1;});

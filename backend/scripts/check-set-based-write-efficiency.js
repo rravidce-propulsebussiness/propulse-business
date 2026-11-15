@@ -6,7 +6,6 @@ const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 const auth=read('src/services/authService.js');
 const coupon=read('src/services/couponService.js');
 const profile=read('src/services/profileService.js');
-const sheetCompat=read('src/services/leadPartnerInventoryCompatService.js');
 const sheetBase=read('src/services/leadPartnerInventoryService.js');
 const leadService=read('src/services/leadService.js');
 const grantService=read('src/services/leadEntitlementGrantService.js');
@@ -33,15 +32,10 @@ assert(profile.includes('INSERT INTO business_profile_locations')&&profile.inclu
 assert(!profile.includes('for (const item of services)'),'Profile update must not query once per service selection');
 assert(!profile.includes('for (const item of locations)'),'Profile update must not query once per location selection');
 
-assert(!sheetCompat.includes('async function persistDetails')&&!sheetCompat.includes('jsonb_to_recordset'),
-  'Sheet imports must not run fuzzy post-import updates against existing leads');
-const partnerImport=sheetCompat.slice(sheetCompat.indexOf('async function importCsv('),sheetCompat.indexOf('function csvEscape('));
-assert(partnerImport.includes('return base.importCsv('),
-  'Partner Sheet import must delegate lead creation and custom-field persistence to the base importer');
-assert(!partnerImport.includes('pool.query(')&&!partnerImport.includes('UPDATE leads'),
-  'Partner Sheet import must not re-match or modify existing leads after the base import');
+assert(!sheetBase.includes('async function persistDetails')&&!sheetBase.includes('jsonb_to_recordset'),
+  'Partner CSV imports must not run fuzzy post-import updates against existing leads');
 assert(sheetBase.includes('customFields: buildImportedCustomFields(row)')&&sheetBase.includes('leadService.createLead('),
-  'Base Sheet importer must attach custom fields directly to each created lead');
+  'Partner CSV importer must attach custom fields directly to each created lead');
 assert(leadService.includes('sanitizeCustomFields(customFields)')&&leadService.includes('INSERT INTO leads'),
   'Lead creation must persist custom fields atomically with the new lead');
 

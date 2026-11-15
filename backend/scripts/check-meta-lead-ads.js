@@ -38,11 +38,11 @@ const pool = {
 };
 require.cache[require.resolve(src('config/database'))] = { exports: pool };
 require.cache[require.resolve(src('services/leadPartnerService'))] = { exports: { assertActivePartner: async () => ({ id: 9, status: 'active' }) } };
-require.cache[require.resolve(src('services/leadPartnerInventoryCompatService'))] = {
-  exports: { importCsv: async ({ userId, csv }) => { db.imports.push({ userId, csv }); return { created: 1, duplicate: 0, failed: 0, failures: [] }; }, previewGoogleSheet: async () => ({}) },
+require.cache[require.resolve(src('services/leadPartnerCsvImportService'))] = {
+  exports: { importCsv: async ({ userId, csv }) => { db.imports.push({ userId, csv }); return { created: 1, duplicate: 0, failed: 0, failures: [] }; }, previewCsv: async () => ({}) },
 };
 require.cache[require.resolve(src('services/pincodeService'))] = { exports: { resolvePincode: async ({ location }) => ({ kondapur: { pincode: '500084' } })[String(location).toLowerCase()] || null } };
-require.cache[require.resolve(src('services/adminGoogleSheetSyncService'))] = { exports: { syncGoogleSheet: async () => ({ created: 1 }), previewGoogleSheet: async () => ({}) } };
+require.cache[require.resolve(src('services/adminLeadCsvImportService'))] = { exports: { syncCsv: async () => ({ created: 1 }), previewCsv: async () => ({}) } };
 
 const graphCalls = [];
 global.fetch = async (url, init = {}) => {
@@ -63,7 +63,7 @@ global.fetch = async (url, init = {}) => {
 };
 
 const graph = require(src('services/metaGraphClient'));
-const sheetPreview = require(src('services/sheetImportPreviewService'));
+const sheetPreview = require(src('services/leadImportMappingService'));
 const service = require(src('services/metaLeadAdsService'));
 
 (async () => {

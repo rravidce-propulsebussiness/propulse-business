@@ -2,7 +2,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const Module=require('node:module');
-const {sheetRowIdentity,candidateMaps,matchLead}=require('../src/utils/sheetLeadIdentity');
+const {leadRowIdentity,candidateMaps,matchLead}=require('../src/utils/leadImportIdentity');
 
 const a={id:101,customer_name:'Ravi',customer_phone:'98765 43210',customer_email:'r@example.com',
   requirement:'New 2BHK interiors',pincode:'500039',custom_fields:{id:'sheet-A-11'}};
@@ -12,15 +12,15 @@ const maps=candidateMaps([b,a]);
 const row=(requirement,others={})=>({'Customer Phone':'9876543210','Customer Email':'r@example.com',
   Requirement:requirement,Pincode:'500039',...others});
 
-assert.notEqual(sheetRowIdentity(row('New 2BHK interiors')),
-  sheetRowIdentity(row('Terrace extension')),'Same customer with distinct requirements must not collapse to one row');
-assert.equal(sheetRowIdentity(row('New 2BHK interiors')),sheetRowIdentity(row('New 2BHK interiors')),
+assert.notEqual(leadRowIdentity(row('New 2BHK interiors')),
+  leadRowIdentity(row('Terrace extension')),'Same customer with distinct requirements must not collapse to one row');
+assert.equal(leadRowIdentity(row('New 2BHK interiors')),leadRowIdentity(row('New 2BHK interiors')),
   'Identical requirement and contact should deduplicate inside the sheet');
-assert.notEqual(sheetRowIdentity(row('New 2BHK interiors',{Industry:'Interior'})),
-  sheetRowIdentity(row('New 2BHK interiors',{Industry:'Construction'})),
+assert.notEqual(leadRowIdentity(row('New 2BHK interiors',{Industry:'Interior'})),
+  leadRowIdentity(row('New 2BHK interiors',{Industry:'Construction'})),
   'Different project classification must not be combined in the sheet');
-assert.notEqual(sheetRowIdentity({'Customer Name':'A',Requirement:'Build home'}),
-  sheetRowIdentity({'Customer Name':'B',Requirement:'Build home'}),
+assert.notEqual(leadRowIdentity({'Customer Name':'A',Requirement:'Build home'}),
+  leadRowIdentity({'Customer Name':'B',Requirement:'Build home'}),
   'Rows without contacts must not deduplicate different customers');
 
 assert.equal(matchLead(row('New 2BHK interiors'),maps)?.id,101);
@@ -71,12 +71,12 @@ Module._load=function(request,parent,isMain){
       'Contact-based deduplication must require a nonblank requirement');
   }finally{Module._load=originalLoad;}
 
-  const admin=fs.readFileSync(path.join(__dirname,'../src/services/adminGoogleSheetSyncService.js'),'utf8');
+  const admin=fs.readFileSync(path.join(__dirname,'../src/services/adminLeadCsvImportService.js'),'utf8');
   const partner=fs.readFileSync(path.join(__dirname,'../src/services/leadPartnerInventoryService.js'),'utf8');
-  assert(admin.includes("require('../utils/sheetLeadIdentity')"));
-  assert(admin.includes('sheetRowIdentity(row)')&&admin.includes('matchLead(row,maps)'));
+  assert(admin.includes("require('../utils/leadImportIdentity')"));
+  assert(admin.includes('leadRowIdentity(row)')&&admin.includes('matchLead(row,maps)'));
   assert(admin.includes('lead_partner_id IS NULL AND investor_user_id IS NULL'),
-    'Admin Sheet matcher must exclude partner- and investor-owned leads');
+    'Admin CSV matcher must exclude partner- and investor-owned leads');
   assert(partner.includes('requirement_key')&&partner.includes('requirementKey'),
     'Partner preview should warn about duplicate requirements rather than shared contacts');
   console.log('Lead duplicate requirement matching regression tests passed.');

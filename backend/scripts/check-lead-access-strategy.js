@@ -31,7 +31,7 @@ assert(access.includes('access_capacity_locked=COALESCE(access_capacity_locked,$
 assert(access.includes("UPDATE leads SET status='sold'"),'Lead must close when the locked capacity is filled');
 
 assert(leadService.includes('accessService.resolveForLead'),'Lead creation must reuse the shared access configuration');
-assert(leadService.includes("accessSource==='sheet'||accessSource==='rule'"),'Lead updates must resolve sheet/config access from one shared configuration');
+assert(leadService.includes("accessSource==='import'||accessSource==='rule'"),'Lead updates must resolve imported/config access from one shared configuration');
 assert(leadService.includes('Lead pricing must include exactly 1, 2 and 3 buyer tiers'),'Admin pricing must be fixed to 1/2/3 buyer stages');
 
 assert(purchase.includes('lead-capacity:'),'Paid checkout must use a lead-wide capacity lock');

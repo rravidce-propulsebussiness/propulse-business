@@ -17,8 +17,6 @@ const purchase=read('src/services/leadPurchaseService.js');
 const adminUser=read('src/services/adminUser360Service.js');
 const partnerPayout=read('src/services/leadPartnerPayoutService.js');
 const investorPayout=read('src/services/investorPayoutRequestService.js');
-const adminSheet=read('src/services/adminGoogleSheetSyncScheduler.js');
-const partnerSheet=read('src/services/leadPartnerSheetSyncScheduler.js');
 const reconciliation=read('src/services/financialReconciliationScheduler.js');
 const risk=read('src/services/securityRiskService.js');
 const quality=read('src/services/leadQualityGateService.js');
@@ -60,7 +58,6 @@ assert(purchase.includes("type:'lead_purchased'"),'Lead-purchase notification is
 assert(adminUser.includes("type:current?'membership_plan_changed':'membership_assigned'")&&payment.includes("type:'membership_updated'"),'Membership change notifications are incomplete');
 assert(partnerPayout.includes("type:'payout_paid'")&&partnerPayout.includes("type:'payout_rejected'"),'Lead Partner payout notifications are incomplete');
 assert(investorPayout.includes("type:'investor_payout_paid'")&&investorPayout.includes("type:'investor_payout_rejected'"),'Investor payout notifications are incomplete');
-assert(adminSheet.includes("type:'admin_sheet_sync_failed'")&&partnerSheet.includes("type:'lead_partner_sheet_sync_failed'"),'Google Sheet failure notifications are incomplete');
 assert(reconciliation.includes("type:'financial_reconciliation_issue'")&&reconciliation.includes("type:'financial_reconciliation_failed'"),'Financial reconciliation alerts are missing');
 assert(risk.includes("type:'security_risk_event'"),'High-risk Risk Center notifications are missing');
 assert(quality.includes("type:'lead_quality_hold'")&&quality.includes("type:'lead_quality_released'"),'Lead quality notifications are incomplete');

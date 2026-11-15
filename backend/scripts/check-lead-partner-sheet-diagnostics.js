@@ -5,14 +5,8 @@ const read=relative=>fs.readFileSync(path.join(root,relative),'utf8');
 const assert=(condition,message)=>{if(!condition)throw new Error(message)};
 
 const inventory=read('src/services/leadPartnerInventoryService.js');
-const scheduler=read('src/services/leadPartnerSheetSyncScheduler.js');
 const ui=read('../frontend/src/pages/LeadPartnerInventory.jsx');
 const investor=read('../frontend/src/pages/InvestorInvestmentSection.jsx');
-const compat=read('src/services/leadPartnerInventoryCompatService.js');
-const routes=read('src/routes/leadPartnerRoutes.js');
-const migration=read('src/database/migrations/20260928_lead_partner_sheet_default_industry.sql');
-const fingerprintMigration=read('src/database/migrations/20261005_lead_partner_sheet_fingerprint.sql');
-const controller=read('src/controllers/leadPartnerInventoryController.js');
 
 assert(inventory.includes("n==='singleonly'"),'Lead Partner Google Sheet import must accept Single Only wording');
 assert(inventory.includes("interiordesignandhomeinteriors:'interiordesignandhomeimprovement'")&&inventory.includes('canonicalIndustryValue'),'Lead Partner sheet import must normalize legacy Interior Design & Home Interiors values to the active Interior Design & Home Improvement catalog');
@@ -24,20 +18,5 @@ assert(inventory.includes('const settings=await partnerPricing.getSettings()'),'
 assert(inventory.includes('failureSummary:summarizeFailures(failures)'),'Lead Partner import must return categorized failure diagnostics');
 assert(inventory.includes("if (error.code === 'DUPLICATE_LEAD')")&&inventory.includes('duplicateSamples.push(detail)'),'Duplicate rows must be counted separately from genuine failures');
 assert(inventory.includes('failures.push(detail)'),'Only genuine import errors must populate the failure list');
-assert(compat.includes('last_sync_failure_summary:base.summarizeFailures'),'Stored sheet connections must expose failure-category summaries through the active compatibility service');
-assert(scheduler.includes('failureSummary='),'Worker logs must include failure category counts');
-assert(scheduler.includes('Google Sheet row failures:'),'Worker logs must include sample row-level failures');
-assert(scheduler.includes('Google Sheet duplicate samples:'),'Worker logs may show duplicates separately without polluting failure diagnostics');
-assert(ui.includes('partner-sheet-failure-summary'),'Lead Partner inventory must show failure categories');
-assert(migration.includes('default_industry_id'),'Lead Partner sheet connections must persist an optional default Industry');
-assert(fingerprintMigration.includes('ADD COLUMN IF NOT EXISTS fingerprint CHAR(64)'),'Lead Partner sheet connections must persist the last processed raw-sheet fingerprint');
-assert(compat.includes('connection.fingerprint')&&compat.includes("reason:'unchanged'")&&compat.includes('fingerprint=$1'),'Scheduled Lead Partner sheet sync must skip unchanged sheets and persist a new fingerprint after processing');
-assert(compat.includes('fingerprint=NULL,last_synced_at=NULL'),'Changing the default Industry must invalidate the partner sheet fingerprint and make the connection immediately due');
-assert(controller.includes('force:true'),'Explicit Lead Partner sync actions must be able to reprocess an unchanged sheet after catalog or PIN fixes');
-assert(compat.includes("last_sync_created=0,last_sync_duplicate=0,last_sync_failed=0,last_sync_failures='[]'::jsonb"),'An unchanged scheduled Lead Partner sheet check must clear stale duplicate and failure metrics');
-assert(compat.includes('applyDefaultIndustry')&&compat.includes('hasClassification'),'Default Industry must apply only when the row has no classification fields');
-assert(compat.includes('defaultIndustryId:connection.default_industry_id'),'Recurring sheet sync must reuse the stored default Industry');
-assert(routes.includes("/inventory/sheets/:connectionId/default-industry"),'Lead Partners must be able to update a connected sheet default Industry');
-assert(ui.includes('Default Industry for blank rows'),'Lead Partner UI must expose the per-sheet default Industry explicitly');
 assert(!investor.includes('const isSold ='),'Unused investor isSold helper must remain removed');
-console.log('Lead Partner sheet diagnostics/efficiency regression test passed.');
+console.log('Lead Partner CSV import diagnostics/efficiency regression test passed.');

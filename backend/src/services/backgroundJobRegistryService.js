@@ -2,18 +2,13 @@ const pool=require('../config/database');
 const backupVerification=require('./backupVerificationService');
 const heartbeat=require('./backgroundWorkerHeartbeatService');
 const audit=require('./criticalActionAuditService');
-const sheetSyncSettings=require('./sheetSyncSettingsService');
 
-function defs({sheetIntervalMs=5*60*1000,adminEnabled=true,partnerEnabled=true}={}){
-  const adminSheets=require('./adminGoogleSheetSyncScheduler');
-  const partnerSheets=require('./leadPartnerSheetSyncScheduler');
+function defs(){
   const financial=require('./financialReconciliationScheduler');
   const notifications=require('./notificationScheduler');
   const privateStorageBackup=require('./privateStorageBackupScheduler');
   const databaseBackup=require('./databaseBackupScheduler');
   return[
-    {key:'admin_google_sheet_sync',name:'Admin Google Sheet Sync',group:'Google Sheets',description:'Imports and updates leads from Admin-managed Google Sheet connections.',intervalMs:sheetIntervalMs||adminSheets.AUTO_SYNC_INTERVAL_MS||300000,retrySupported:true,scheduleEnabled:adminEnabled},
-    {key:'lead_partner_google_sheet_sync',name:'Lead Partner Google Sheet Sync',group:'Google Sheets',description:'Imports Lead Partner inventory from connected Google Sheets.',intervalMs:sheetIntervalMs||partnerSheets.AUTO_SYNC_INTERVAL_MS||300000,retrySupported:true,scheduleEnabled:partnerEnabled},
     {key:'notification_email_delivery',name:'Notification Email Delivery',group:'Notifications',description:'Delivers queued transactional notification emails with retry/backoff.',intervalMs:notifications.DELIVERY_INTERVAL_MS,retrySupported:true},
     {key:'membership_expiry_reminders',name:'Membership Expiry Reminders',group:'Notifications',description:'Creates deduplicated membership-expiry reminders for customers.',intervalMs:notifications.REMINDER_INTERVAL_MS,retrySupported:true},
     {key:'financial_reconciliation',name:'Financial Reconciliation',group:'Finance',description:'Reconciles wallet, payment, payout and investment financial integrity.',intervalMs:financial.configuredIntervalMs(),retrySupported:true},
@@ -35,12 +30,7 @@ function isoPlus(value,ms){
   return Number.isFinite(time)?new Date(time+ms).toISOString():null;
 }
 async function list({historyLimit=6}={}){
-  const syncConfig=await sheetSyncSettings.getConfig().catch(()=>({autoSyncEnabled:true,adminSourcesEnabled:true,leadPartnerSourcesEnabled:true,intervalMinutes:5}));
-  const definitions=defs({
-    sheetIntervalMs:Math.max(60000,Number(syncConfig.intervalMinutes||5)*60*1000),
-    adminEnabled:Boolean(syncConfig.autoSyncEnabled&&syncConfig.adminSourcesEnabled),
-    partnerEnabled:Boolean(syncConfig.autoSyncEnabled&&syncConfig.leadPartnerSourcesEnabled)
-  });
+  const definitions=defs();
   const keys=definitions.map(item=>item.key);
   const limit=Math.min(20,Math.max(1,Number(historyLimit)||6));
   const rows=(await pool.query(
@@ -95,9 +85,7 @@ async function retry(jobKey,{adminId}={}){
   if(!def)throw Object.assign(new Error('Background job not found'),{code:'JOB_NOT_FOUND'});
   if(!def.retrySupported)throw Object.assign(new Error('This job can only be run by the production scheduler/backup command'),{code:'JOB_RETRY_UNSUPPORTED'});
   let result;
-  if(key==='admin_google_sheet_sync')result=await require('./adminGoogleSheetSyncScheduler').runAutoSync({source:'manual',triggeredBy:adminId});
-  else if(key==='lead_partner_google_sheet_sync')result=await require('./leadPartnerSheetSyncScheduler').runAutoSync({source:'manual',triggeredBy:adminId});
-  else if(key==='notification_email_delivery')result=await require('./notificationScheduler').runNotificationDelivery({source:'manual',triggeredBy:adminId});
+  if(key==='notification_email_delivery')result=await require('./notificationScheduler').runNotificationDelivery({source:'manual',triggeredBy:adminId});
   else if(key==='membership_expiry_reminders')result=await require('./notificationScheduler').runMembershipReminders({source:'manual',triggeredBy:adminId});
   else if(key==='financial_reconciliation')result=await require('./financialReconciliationScheduler').runFinancialReconciliation({source:'manual',triggeredBy:adminId});
   else if(key==='private_storage_backup')result=await require('./privateStorageBackupScheduler').runPrivateStorageBackup({source:'manual',triggeredBy:adminId,force:true});
