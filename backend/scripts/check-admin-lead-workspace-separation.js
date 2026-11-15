@@ -12,7 +12,7 @@ const upload=read('../frontend/src/admin/pages/AdminLeadUpload.jsx');
 const bulk=read('../frontend/src/admin/leadImportBulkEnhancer.js');
 
 assert(app.includes('/admin/leads/upload')&&app.includes('/admin/leads/meta'),'Admin must expose upload and Meta lead workspaces');
-assert(app.includes('path="/admin/leads/sheets" element={<Navigate to="/admin/leads/meta" replace/>}'),'Old Sheets URL must redirect to Meta lead ads');
+assert(!app.includes('path="/admin/leads/sheets"'),'Retired Google Sheets URL must be removed');
 assert(layout.includes("{to:'/admin/leads',label:'Manage Leads',end:true}"),'Manage Leads navigation must not absorb nested lead routes');
 assert(layout.includes("{to:'/admin/leads/upload',label:'Upload Leads'}"),'Sidebar must expose Upload Leads');
 assert(layout.includes("{to:'/admin/leads/meta',label:'Meta Lead Ads'}"),'Sidebar must expose Meta Lead Ads');

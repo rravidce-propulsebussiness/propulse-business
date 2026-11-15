@@ -151,6 +151,19 @@ const service = require(src('services/metaLeadAdsService'));
   assert.ok(webhookAt < server.indexOf("app.use('/api',csrfProtection)"), 'Meta webhook must not require a CSRF token');
   const routes = fs.readFileSync(src('routes/metaLeadAdsRoutes.js'), 'utf8');
   assert.ok(routes.includes("ownerRouter('admin', [requireAdmin])") && routes.includes("ownerRouter('lead_partner', [requireLeadPartner])"), 'Owner routes must use the existing admin and lead-partner guards');
+  const app = fs.readFileSync(path.resolve(__dirname, '../../frontend/src/App.jsx'), 'utf8');
+  assert.ok(app.includes('path="/admin/leads/meta"'), 'Meta Lead Ads remains available to admins');
+  assert.ok(!app.includes('path="/admin/leads/sheets"'), 'The retired Google Sheets route is removed');
+  const guide = fs.readFileSync(path.resolve(__dirname, '../../docs/META-LEAD-ADS.md'), 'utf8');
+  assert.doesNotMatch(guide, /Google Sheets?/i, 'Meta setup guide contains no obsolete Google Sheets instructions');
+  const migrationDir = path.resolve(__dirname, '../src/database/migrations');
+  const retiredMigrations = fs.readdirSync(migrationDir).filter(name => /google_sheet|lead_partner_sheet/i.test(name) && name !== '20261116_zz_remove_google_sheets.sql');
+  assert.deepStrictEqual(retiredMigrations, [], 'Retired Google Sheets migration history is removed');
+  const cleanup = fs.readFileSync(path.join(migrationDir, '20261116_zz_remove_google_sheets.sql'), 'utf8');
+  for (const table of ['google_sheet_import_previews', 'lead_partner_sheet_connections', 'admin_google_sheet_connections', 'google_sheet_sync_settings']) {
+    assert.match(cleanup, new RegExp('DROP TABLE IF EXISTS ' + table), 'Cleanup drops the retired ' + table + ' table');
+  }
+  assert.match(cleanup, /DELETE FROM schema_migrations/, 'Cleanup forgets retired Sheets migration records');
 
   console.log('Meta Lead Ads OAuth, encryption, webhook signature, idempotent import and mapping checks passed.');
 })().catch(error => { console.error(error); process.exit(1); });
