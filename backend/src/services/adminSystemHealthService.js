@@ -14,7 +14,6 @@ const workerHeartbeatMaxAgeSeconds=Math.min(600,Math.max(30,Math.floor(Number(pr
 const financialReconciliationMaxAgeHours=Math.min(168,Math.max(2,Number(process.env.FINANCIAL_RECONCILIATION_MAX_AGE_HOURS)||30));
 const backupVerificationMaxAgeHours=Math.min(720,Math.max(1,Number(process.env.BACKUP_VERIFICATION_MAX_AGE_HOURS)||30));
 const backupVerificationRequired=/^(1|true|yes|on)$/i.test(String(process.env.REQUIRE_BACKUP_VERIFICATION||'').trim());
-const persistentSheetFailureThreshold=Math.min(20,Math.max(2,Math.floor(Number(process.env.SYSTEM_HEALTH_SHEET_FAILURE_THRESHOLD)||3)));
 const backgroundWorkerRequired=/^(1|true|yes|on)$/i.test(String(process.env.REQUIRE_BACKGROUND_WORKER||'').trim());
 
 function safeNumber(value){const n=Number(value);return Number.isFinite(n)?n:0}
@@ -71,99 +70,14 @@ async function legacyUploadHealth(){
   result.total=result.companyProofs+result.homepageMedia+result.projectMedia+result.privateProofs;
   return result;
 }
-async function sheetHealth(tableName){
-  const allowed=new Set(['lead_partner_sheet_connections','admin_google_sheet_connections']);
-  if(!allowed.has(tableName))throw new Error('Unsupported sheet connection table');
-  const row=(await pool.query(`
-    SELECT
-      COUNT(*) FILTER (WHERE status='active')::int AS active,
-      COUNT(*) FILTER (WHERE status='active' AND COALESCE(last_sync_failed,0)>0)::int AS failing,
-      COUNT(*) FILTER (WHERE status='active' AND sync_failure_count>0)::int AS connection_errors,
-      COUNT(*) FILTER (WHERE status='active' AND sync_failure_count>=$1)::int AS persistent_connection_errors,
-      COALESCE(MAX(sync_failure_count) FILTER (WHERE status='active'),0)::int AS max_failure_count,
-      MAX(last_synced_at) AS last_synced_at
-    FROM ${tableName}
-  `,[persistentSheetFailureThreshold])).rows[0]||{};
-  const failures=(await pool.query(`
-    SELECT id,last_sync_failed,sync_failure_count,last_sync_error,last_sync_error_at,last_synced_at,next_retry_at
-      FROM ${tableName}
-     WHERE status='active'
-       AND (COALESCE(last_sync_failed,0)>0 OR sync_failure_count>0)
-     ORDER BY COALESCE(last_sync_error_at,last_synced_at,updated_at) DESC
-     LIMIT 8
-  `)).rows;
-  const persistentConnectionErrors=safeNumber(row.persistent_connection_errors);
-  const connectionErrors=safeNumber(row.connection_errors);
-  const failing=safeNumber(row.failing);
-  const status=persistentConnectionErrors>0?'degraded':(connectionErrors>0||failing>0?'attention':'healthy');
-  return{
-    status,
-    active:safeNumber(row.active),
-    failing,
-    connectionErrors,
-    persistentConnectionErrors,
-    maxFailureCount:safeNumber(row.max_failure_count),
-    persistentFailureThreshold:persistentSheetFailureThreshold,
-    lastSyncedAt:row.last_synced_at||null,
-    recentProblems:failures.map(item=>({
-      id:Number(item.id),
-      failedRows:safeNumber(item.last_sync_failed),
-      failureCount:safeNumber(item.sync_failure_count),
-      persistent:safeNumber(item.sync_failure_count)>=persistentSheetFailureThreshold,
-      error:item.last_sync_error?safeMessage(item.last_sync_error):null,
-      errorAt:item.last_sync_error_at||null,
-      lastSyncedAt:item.last_synced_at||null,
-      nextRetryAt:item.next_retry_at||null
-    }))
-  };
-}
-async function leadPartnerSheetHealth(){return sheetHealth('lead_partner_sheet_connections')}
-async function adminSheetHealth(){return sheetHealth('admin_google_sheet_connections')}
-
-function addSheetIssues(issues,label,data,{source,actionUrl,actionLabel}){
-  if(data.unavailable){
-    issues.push(createIssue({severity:'degraded',code:`${source}_unavailable`,title:`${label} health unavailable`,message:'System Health could not read this sheet connection state from PostgreSQL.',actionUrl,actionLabel,source}));
-    return;
-  }
-  for(const problem of data.recentProblems||[]){
-    if(problem.failureCount>0){
-      const severity=problem.failureCount>=persistentSheetFailureThreshold?'degraded':'attention';
-      const retry=problem.nextRetryAt?' Automatic retry is scheduled.':'';
-      issues.push(createIssue({
-        severity,
-        code:`${source}_connection_${problem.id}`,
-        title:`${label} connection #${problem.id} cannot sync`,
-        message:`${problem.error||'The Google Sheet connection failed.'}${retry}`,
-        actionUrl,
-        actionLabel,
-        source,
-        connectionId:problem.id
-      }));
-    }else if(problem.failedRows>0){
-      issues.push(createIssue({
-        severity:'attention',
-        code:`${source}_rows_${problem.id}`,
-        title:`${label} connection #${problem.id} has invalid rows`,
-        message:`${problem.failedRows} row${problem.failedRows===1?' needs':'s need'} review. Valid rows can continue without treating the whole platform as degraded.`,
-        actionUrl,
-        actionLabel,
-        source,
-        connectionId:problem.id
-      }));
-    }
-  }
-}
-
 async function getSystemHealth(){
-  const [databaseProbe,storageProbe,privateObjectProbe,heartbeatResult,migrationsResult,legacyUploadsResult,partnerSheetsResult,adminSheetsResult,financialResult,backupResult]=await Promise.allSettled([
+  const [databaseProbe,storageProbe,privateObjectProbe,heartbeatResult,migrationsResult,legacyUploadsResult,financialResult,backupResult]=await Promise.allSettled([
     pool.query('SELECT NOW() AS now'),
     checkUploadStorage(),
     privateObjectStorage.isEnabled()?privateObjectStorage.probe():Promise.resolve({provider:'local',configured:false,status:'ready'}),
     workerHeartbeat.latestHeartbeat(),
     migrationHealth(),
     legacyUploadHealth(),
-    leadPartnerSheetHealth(),
-    adminSheetHealth(),
     financialReconciliationMonitor.getHealthSummary({maxAgeHours:financialReconciliationMaxAgeHours}),
     backupVerificationService.getHealthSummary({maxAgeHours:backupVerificationMaxAgeHours,required:backupVerificationRequired})
   ]);
@@ -177,8 +91,6 @@ async function getSystemHealth(){
   const workerFresh=Boolean(heartbeat)&&workerAgeSeconds<=workerHeartbeatMaxAgeSeconds;
   const migrations=migrationsResult.status==='fulfilled'?migrationsResult.value:{status:'unavailable',checked:0,applied:0,pending:null};
   const legacyUploads=legacyUploadsResult.status==='fulfilled'?legacyUploadsResult.value:{total:null,companyProofs:null,homepageMedia:null,projectMedia:null,privateProofs:null,unavailable:true};
-  const leadPartnerSheets=partnerSheetsResult.status==='fulfilled'?partnerSheetsResult.value:{status:'degraded',active:0,failing:0,connectionErrors:0,persistentConnectionErrors:0,maxFailureCount:0,persistentFailureThreshold:persistentSheetFailureThreshold,lastSyncedAt:null,recentProblems:[],unavailable:true};
-  const adminSheets=adminSheetsResult.status==='fulfilled'?adminSheetsResult.value:{status:'degraded',active:0,failing:0,connectionErrors:0,persistentConnectionErrors:0,maxFailureCount:0,persistentFailureThreshold:persistentSheetFailureThreshold,lastSyncedAt:null,recentProblems:[],unavailable:true};
   const financialIntegrity=financialResult.status==='fulfilled'?financialResult.value:{status:'unavailable',latestRunId:null,lastCompletedAt:null,ageHours:null,maxAgeHours:financialReconciliationMaxAgeHours,criticalAlerts:0,warningAlerts:0,totalIssues:null};
   const backups=backupResult.status==='fulfilled'?backupResult.value:{status:'unavailable',required:backupVerificationRequired,maxAgeHours:backupVerificationMaxAgeHours,database:{status:'unavailable'},privateStorage:{status:'unavailable'},verifiedCount:0};
   const poolMax=Math.max(1,Number(pool.options?.max)||5);
@@ -202,9 +114,6 @@ async function getSystemHealth(){
   else if(legacyUploads.total>0)issues.push(createIssue({severity:'attention',code:'legacy_upload_references',title:'Legacy local upload references remain',message:`${legacyUploads.total} stored reference${legacyUploads.total===1?' still depends':'s still depend'} on pre-R2 local upload storage. Migrate or replace these files before removing legacy Hostinger uploads.`,actionUrl:'/admin/system-health',actionLabel:'Review storage',source:'legacy_uploads'}));
   if(backgroundWorkerRequired&&!workerFresh)issues.push(createIssue({severity:'degraded',code:'worker_heartbeat_stale',title:heartbeat?'Background worker heartbeat is stale':'Background worker unavailable',message:heartbeat?`The latest worker heartbeat is ${workerAgeSeconds} seconds old; the freshness limit is ${workerHeartbeatMaxAgeSeconds} seconds.`:'No background worker heartbeat is available.',actionUrl:'/admin/jobs',actionLabel:'Open background jobs',source:'worker'}));
   if(migrations.status!=='current')issues.push(createIssue({severity:'degraded',code:'migrations_not_current',title:'Database migrations are not current',message:migrations.status==='pending'?`${migrations.pending} migration${migrations.pending===1?' is':'s are'} pending.`:'Migration state could not be read.',actionUrl:'/admin/system-health',actionLabel:'Review migrations',source:'migrations'}));
-
-  addSheetIssues(issues,'Lead Partner sheet',leadPartnerSheets,{source:'lead_partner_sheets',actionUrl:'/admin/lead-partners',actionLabel:'Open Lead Partners'});
-  addSheetIssues(issues,'Admin sheet',adminSheets,{source:'admin_sheets',actionUrl:'/admin/leads/sheets',actionLabel:'Open Google Sheets'});
 
   if(['failed','critical','unavailable'].includes(financialIntegrity.status)){
     issues.push(createIssue({severity:'degraded',code:'financial_reconciliation_critical',title:'Financial reconciliation needs immediate review',message:financialIntegrity.status==='unavailable'?'Financial reconciliation health could not be read.':`${financialIntegrity.criticalAlerts||0} critical alert${Number(financialIntegrity.criticalAlerts||0)===1?' is':'s are'} active.`,actionUrl:'/admin/financial-integrity',actionLabel:'Open Financial Integrity',source:'financial'}));
@@ -288,11 +197,7 @@ async function getSystemHealth(){
     },
     migrations,
     financialIntegrity,
-    backups,
-    sheets:{
-      leadPartner:leadPartnerSheets,
-      admin:adminSheets
-    }
+    backups
   };
 }
 
