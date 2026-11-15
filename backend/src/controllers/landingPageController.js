@@ -13,7 +13,7 @@ async function list(req,res){
 async function save(req,res){
   const path=pagePath(req.body?.pagePath);
   if(!path)return res.status(400).json({error:'A valid page path is required'});
-  const values=FIELDS.map((field,index)=>clean(req.body?.[field.replace(/_([a-z])/g,(_,letter)=>letter.toUpperCase())],index===0?160:500));
+  const values=FIELDS.map((field,index)=>{const camel=field.replace(/_([a-z])/g,(_,letter)=>letter.toUpperCase());return clean(req.body?.[field]??req.body?.[camel],index===0?160:500)});
   try{
     const {rows}=await pool.query(`INSERT INTO website_landing_page_overrides(page_path,seo_title,meta_description,hero_title,hero_summary,updated_at)
       VALUES($1,$2,$3,$4,$5,NOW()) ON CONFLICT(page_path) DO UPDATE SET seo_title=EXCLUDED.seo_title,meta_description=EXCLUDED.meta_description,hero_title=EXCLUDED.hero_title,hero_summary=EXCLUDED.hero_summary,updated_at=NOW()
