@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { authRequest, publicRequest } from '../utils/auth'
-import SheetImportPreview from './SheetImportPreview'
+import LeadImportPreview from './LeadImportPreview'
 import './MetaLeadAdsPanel.css'
 
 // Connect Facebook/Instagram Lead Ads forms as a real-time lead source.
@@ -162,7 +162,7 @@ export default function MetaLeadAdsPanel({ scope = 'partner' }) {
 
       {preview && <div className="mla-preview">
         <p className="mla-muted">{preview.sampleCount ? `Checked ${preview.sampleCount} recent leads from “${preview.formName || selectedForm?.name}”.` : `No leads on “${preview.formName || selectedForm?.name}” yet. Map its questions now; new leads will follow this mapping.`} Make sure Pincode or City is mapped so leads can be placed.</p>
-        <SheetImportPreview preview={preview} mappings={mappings} stale={stale} disabled={Boolean(busy)} onMappingsChange={next => { setMappings(next); setStale(true) }}/>
+        <LeadImportPreview preview={preview} mappings={mappings} stale={stale} disabled={Boolean(busy)} onMappingsChange={next => { setMappings(next); setStale(true) }}/>
         <div className="mla-actions end">
           {stale && <button type="button" className="mla-btn" disabled={Boolean(busy)} onClick={() => analyze(mappings)}>Re-analyze with this mapping</button>}
           <button type="button" className="mla-btn primary" disabled={stale || Boolean(busy)} onClick={connectForm}>{busy === 'connect' ? 'Connecting…' : 'Connect this lead form'}</button>
