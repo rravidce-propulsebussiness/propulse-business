@@ -60,7 +60,7 @@ assert.match(editor,/disabled/,'Campaign registration scope cannot be widened to
 const newBusinessMigration=read('src/database/migrations/20261116_new_registration_only_business_campaigns.sql');
 assert.match(newBusinessMigration,/SET registration_scope='new_registration'/,'Existing automatic campaigns are narrowed to new registrations');
 assert.match(newBusinessMigration,/WHERE registration_scope IS DISTINCT FROM 'new_registration'/,'Migration only changes campaigns that are not already restricted');
-assert.match(editor,/registrationScope:item\.registration_scope/,'Existing rewards load saved registration filtering');
+assert.doesNotMatch(editor,/registrationScope:item\.registration_scope/,'Existing campaigns cannot restore eligibility for existing accounts');
 assert.match(editor,/registrationScope:'new_registration'/,'Project welcome preset defaults to new registrants');
 assert.match(source,/if\(!qualifiesCampaignSignup\(campaign,business\.created_at\)\)continue/,'Lazy grant path enforces signup scope');
 assert.match(source,/Number\(campaign.min_completed_projects\|\|0\)===0&&!qualifiesCampaignRegistrationAge\(campaign,business.created_at\)/,'Non-project rewards use account-age cutoff while project uploads can be approved later');
