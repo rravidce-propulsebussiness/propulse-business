@@ -53,9 +53,14 @@ assert.match(editor,/registrationEligibilityDays:clamp\(e.target.value,0,365\)/,
   'Conditional signup-age window remains configurable independently of registration reward');
 assert.match(editor,/registrationEligibilityDays:clamp\(e.target.value,0,365\)/,'Signup age window stays editable');
 assert.match(editor,/registrationEligibilityDays:Number\(item.registration_eligibility_days\|\|item.project_registration_window_days\|\|0\)/,'Legacy project rewards open with the original window value');
-assert.match(editor,/Anyone \(existing and new businesses\)/);
+assert.doesNotMatch(editor,/Anyone \\(existing and new businesses\\)/,'Automatic campaigns cannot include existing accounts');
 assert.match(editor,/New registrations only/);
-assert.match(editor,/registrationScope:item\.registration_scope/,'Existing rewards load saved registration filtering');
+assert.match(editor,/registrationScope:'new_registration'/,'Campaign forms default to new registrations');
+assert.match(editor,/disabled/,'Campaign registration scope cannot be widened to existing accounts');
+const newBusinessMigration=read('src/database/migrations/20261116_new_registration_only_business_campaigns.sql');
+assert.match(newBusinessMigration,/SET registration_scope='new_registration'/,'Existing automatic campaigns are narrowed to new registrations');
+assert.match(newBusinessMigration,/WHERE registration_scope IS DISTINCT FROM 'new_registration'/,'Migration only changes campaigns that are not already restricted');
+assert.doesNotMatch(editor,/registrationScope:item\.registration_scope/,'Existing campaigns cannot restore eligibility for existing accounts');
 assert.match(editor,/registrationScope:'new_registration'/,'Project welcome preset defaults to new registrants');
 assert.match(source,/if\(!qualifiesCampaignSignup\(campaign,business\.created_at\)\)continue/,'Lazy grant path enforces signup scope');
 assert.match(source,/Number\(campaign.min_completed_projects\|\|0\)===0&&!qualifiesCampaignRegistrationAge\(campaign,business.created_at\)/,'Non-project rewards use account-age cutoff while project uploads can be approved later');

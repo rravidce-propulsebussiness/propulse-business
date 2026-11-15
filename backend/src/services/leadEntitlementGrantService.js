@@ -213,14 +213,14 @@ function qualifiesCampaignRegistrationAge(campaign,registered,now=new Date()){
 async function ensureProjectQualifiedCampaignGrants(userId,client=pool){
   const campaigns=(await client.query(`
     SELECT bc.* FROM lead_entitlement_business_campaigns bc
-    WHERE (bc.min_completed_projects>0 OR bc.registration_scope IN ('any','new_registration'))
+    WHERE bc.registration_scope='new_registration'
       AND NOT EXISTS(SELECT 1 FROM lead_entitlement_grants g
         WHERE g.user_id=$1 AND g.campaign_id=bc.id)
     ORDER BY bc.id
   `,[userId])).rows;
-  if(!campaigns.length)return;
+  if(!campaigns.length)return[];
   const business=await getBusinessContext(userId,client);
-  if(!business||business.role!=='business'||business.is_active!==true)return;
+  if(!business||business.role!=='business'||business.is_active!==true)return[];
   // Only the initial project upload time counts, not later publication/review.
   const projects=campaigns.some(c=>Number(c.min_completed_projects)>0)
     ?(await client.query(`
@@ -239,6 +239,7 @@ async function ensureProjectQualifiedCampaignGrants(userId,client=pool){
          AND p.video_redaction_source_url=p.video_url
     `,[userId])).rows
     :[];
+  const created=[];
   for(const campaign of campaigns){
     if(!qualifiesCampaignSignup(campaign,business.created_at))continue;
     // The upload deadline is enforced on project/video timestamps, not the review date.
@@ -260,7 +261,7 @@ async function ensureProjectQualifiedCampaignGrants(userId,client=pool){
         [campaign.id,userId])).rowCount;
       if(!assigned)continue;
     }
-    await client.query(`
+    const inserted=await client.query(`
       INSERT INTO lead_entitlement_grants(
         user_id,source,campaign_id,shared_quantity,premium_quantity,
         starts_at,expires_at,claim_expiry_days,allow_single,allow_shared,
@@ -270,11 +271,14 @@ async function ensureProjectQualifiedCampaignGrants(userId,client=pool){
         CASE WHEN $5::int>0 THEN CURRENT_TIMESTAMP+($5::int*INTERVAL '1 day') ELSE NULL END,
         $6,$7,$8,$9,$10,$11,$12
       ) ON CONFLICT DO NOTHING
+      RETURNING id,shared_quantity,premium_quantity,expires_at
     `,[userId,campaign.id,campaign.shared_quantity,campaign.premium_quantity,
       campaign.valid_days,campaign.claim_expiry_days,campaign.allow_single,
       campaign.allow_shared,campaign.allow_auto_release,campaign.allow_exclusive,
       campaign.created_by,campaign.notes||'Verified completed-project reward']);
+    if(inserted.rows[0])created.push(inserted.rows[0]);
   }
+  return created;
 }
 
 function allowanceFor(grant,type){
@@ -583,9 +587,7 @@ function normalizeBusinessCampaign(input){
   const audienceScope=['all','specific_users'].includes(String(input?.audienceScope||'').toLowerCase())
     ?String(input.audienceScope).toLowerCase()
     :'all';
-  const registrationScope=['any','new_registration'].includes(String(input?.registrationScope||'').toLowerCase())
-    ?String(input.registrationScope).toLowerCase()
-    :'any';
+  const registrationScope='new_registration';
   const verificationScope=['any','verified','unverified'].includes(String(input?.verificationScope||'').toLowerCase())
     ?String(input.verificationScope).toLowerCase()
     :'any';

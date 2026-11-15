@@ -47,12 +47,26 @@ export default function AdminCompletedProjects({businessUserId,filter='all'}){
     }
     try{
       setBusy(item.id);setError('');setNotice('')
-      await authRequest('/admin/expert-directory/projects/'+item.id+'/review-video',{
+      const result=await authRequest('/admin/expert-directory/projects/'+item.id+'/review-video',{
         method:'POST',body:JSON.stringify({decision,note,contactDetailsChecked:decision==='approve'&&privacyChecked[item.id]===true})
       })
-      setNotice(decision==='approve'
-        ?'Video approved for lead-credit eligibility. Eligible credits are issued through the existing reward rules.'
-        :'Lead-credit approval rejected. This does not unpublish an already-processed public video.')
+      const reviewStatus=result?.video_reward_status||(decision==='approve'?'approved':'rejected')
+      setProjects(current=>current.map(project=>Number(project.id)===Number(item.id)
+        ?{...project,video_reward_status:reviewStatus,video_reward_review_note:result?.video_reward_review_note??note,video_reward_reviewed_at:new Date().toISOString()}
+        :project))
+      if(decision==='approve'){
+        const grants=result?.grantSummary||{}
+        const shared=Number(grants.activeSharedQuantity)||0
+        const premium=Number(grants.activePremiumQuantity)||0
+        const active=Number(grants.activeGrantCount)||0
+        setNotice(grants.status==='retry_pending'
+          ?'Lead-credit review approved. The entitlement grant check needs a retry; credits are not confirmed yet.'
+          :active>0
+            ?`Lead-credit review approved. Active new-registration project rewards: ${shared} Basic + ${premium} Premium credits across ${active} grant(s).`
+            :'Lead-credit review approved, but no new credit grant was issued. Check the active new-registration entitlement criteria; video approval alone does not grant credits.')
+      }else{
+        setNotice('Lead-credit review rejected. This does not unpublish an already-processed public video.')
+      }
       setNotes(current=>({...current,[item.id]:''}))
       setPrivacyChecked(current=>({...current,[item.id]:false}))
       await load(pagination.page||1)
@@ -106,11 +120,19 @@ export default function AdminCompletedProjects({businessUserId,filter='all'}){
             <div className="expert-review-card-title">
               <strong title={item.title}>{item.title}</strong>
               <span className={item.video_reward_status==='approved'?'approved':item.video_reward_status==='rejected'?'rejected':'pending'}>
-                {item.video_url?(item.video_reward_status||'pending'):'No video'}
+                {item.video_url?'Lead-credit review: '+(item.video_reward_status||'pending'):'No video'}
               </span>
             </div>
             <small>⌖ {item.location_text||'Location not specified'} {item.completion_year?'· '+item.completion_year:''}</small>
             <small>{item.is_published?'Published project':'Private project'} · {item.project_type||'Project'}</small>
+            {item.business_registered_at&&<small>Business registered {new Date(item.business_registered_at).toLocaleDateString('en-IN')}</small>}
+            {item.video_reward_reviewed_at&&item.video_reward_status!=='pending'&&
+              <small>Lead-credit review {item.video_reward_status} on {new Date(item.video_reward_reviewed_at).toLocaleString('en-IN')}</small>}
+            {item.video_reward_status==='approved'&&<div className="expert-review-grant-summary" role="status">
+              {Number(item.active_project_reward_grant_count)>0
+                ?`Active new-registration project rewards: ${Number(item.active_project_reward_shared_quantity)||0} Basic + ${Number(item.active_project_reward_premium_quantity)||0} Premium credits.`
+                :'Video approved for eligibility; no active new-registration project reward grant is currently recorded.'}
+            </div>}
             {item.video_reward_review_note&&<p className="expert-review-previous-note">Review note: {item.video_reward_review_note}</p>}
             {item.video_url&&<div className="expert-review-actions">
               <p className="expert-review-processing" role="status">

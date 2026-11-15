@@ -29,7 +29,7 @@ const defaultRule=()=>({
 const defaultCampaign=()=>({
   name:'',
   audienceScope:'all',
-  registrationScope:'any',
+  registrationScope:'new_registration',
   registrationEligibilityDays:0,
   verificationScope:'any',
   minCompletedProjects:1,
@@ -294,7 +294,7 @@ export default function AdminLeadEntitlements(){
     setCampaign({
       name:item.name||'',
       audienceScope:item.audience_scope||'all',
-      registrationScope:item.registration_scope||'any',
+      registrationScope:'new_registration',
       // Existing project rewards may have only the older upload-day value.
       registrationEligibilityDays:Number(item.registration_eligibility_days||item.project_registration_window_days||0),
       verificationScope:item.verification_scope||'any',
@@ -627,13 +627,10 @@ export default function AdminLeadEntitlements(){
                   <option value="specific_users">Specific businesses</option>
                 </select></label>}
             {!registrationReward&&<label>Registration eligibility
-              <select value={campaign.registrationScope} onChange={e=>setCampaign(v=>({...v,registrationScope:e.target.value}))}>
-                <option value="any">Anyone (existing and new businesses)</option>
+              <select value="new_registration" disabled aria-label="Registration eligibility">
                 <option value="new_registration">New registrations only</option>
               </select>
-              <small>{campaign.registrationScope==='new_registration'
-                ?'Only companies that sign up after this reward is created qualify. You can also require verification and project uploads below.'
-                :'Existing and future businesses can qualify when they meet the conditions below.'}</small>
+              <small>Automatic campaign credits go only to business accounts created after the reward is created. Verification, location, industry and approved-project criteria still apply.</small>
             </label>}
             <label>Company verification
               <select value={currentReward.verificationScope}
@@ -747,7 +744,7 @@ export default function AdminLeadEntitlements(){
             {registrationReward
               ? <small>Valid until {rule.windowDays} day(s) after registration. Claimed leads:
                   {Number(rule.claimExpiryDays)>0?' '+rule.claimExpiryDays+' day(s)':' lifetime'}.</small>
-              : <small>{campaign.registrationScope==='new_registration'?'New registrations only. ':'Existing and new registrations. '}
+              : <small>New registrations only.
                 {Number(campaign.registrationEligibilityDays)>0?'Must qualify within '+campaign.registrationEligibilityDays+' days of signup. ':'No signup-age cutoff. '}
                 {Number(campaign.minCompletedProjects)>0
                   ?'At least '+campaign.minCompletedProjects+' completed published project(s) with uploaded, admin-approved video(s)'+
