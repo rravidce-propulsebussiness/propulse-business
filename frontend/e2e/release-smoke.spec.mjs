@@ -464,7 +464,7 @@ test('active Lead Partner reaches dashboard and separated inventory workspaces',
   await expect(page.getByRole('heading',{name:'Lead inventory'})).toBeVisible()
   await expect(page.getByRole('button',{name:/my leads/i})).toBeVisible()
   await expect(page.getByRole('button',{name:/upload leads/i})).toBeVisible()
-  await expect(page.getByRole('button',{name:/google sheets/i})).toBeVisible()
+  await expect(page.getByRole('button',{name:/google sheets/i})).toHaveCount(0)
 
   await page.reload()
   await expect(page).toHaveURL(/\/lead-partner\/inventory$/)
