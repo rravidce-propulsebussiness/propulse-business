@@ -455,15 +455,6 @@ async function importCsv({ userId, csv }) {
 // Google Sheets connection and import flows live in leadPartnerInventoryCompatService.
 // Keep base CSV validation, persistence, and disconnect/listing primitives only.
 
-async function disableSheetConnection({ userId, connectionId }) {
-  const result = await pool.query(
-    `UPDATE lead_partner_sheet_connections SET status='disabled',updated_at=CURRENT_TIMESTAMP WHERE id=$1 AND user_id=$2 RETURNING *`,
-    [connectionId, userId]
-  );
-  if (!result.rows[0]) { const error = new Error('Sheet connection not found'); error.code = 'SHEET_CONNECTION_NOT_FOUND'; throw error; }
-  return result.rows[0];
-}
-
 async function listInventory({ userId, status = 'all', search = '', industryId = 'all', cityId = 'all' } = {}) {
   const params = [userId];
   const conditions = ['((lp.user_id=$1 AND l.lead_partner_id=lp.id) OR (l.created_by=$1 AND l.lead_partner_id IS NULL))'];
@@ -538,4 +529,4 @@ async function listInventory({ userId, status = 'all', search = '', industryId =
   };
 }
 
-module.exports = { importCsv, previewCsv, disableSheetConnection, listInventory, summarizeFailures };
+module.exports = { importCsv, previewCsv, listInventory, summarizeFailures };
