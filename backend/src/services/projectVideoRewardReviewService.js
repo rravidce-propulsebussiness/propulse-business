@@ -95,7 +95,13 @@ async function review(projectId,adminId,{decision,note,contactDetailsChecked=fal
     ))throw invalid('Automatic video redaction must complete before lead-credit review. Check processing status or upload a corrected video.','PROJECT_VIDEO_REDACTION_NOT_READY');
     if(decision==='approve'){
       const redactedKey=s3.parseReference(project.video_redacted_url);
-      if(!await s3.headObject(redactedKey))
+      let redactedMeta;
+      try{redactedMeta=await s3.headObject(redactedKey)}
+      catch(error){
+        console.error('Project video credit review could not inspect the processed object:',error.message);
+        throw invalid('Private video storage could not verify the processed video. The review remains pending; retry after storage is available.','PROJECT_VIDEO_STORAGE_UNAVAILABLE');
+      }
+      if(!redactedMeta)
         throw invalid('The processed video is missing from private storage. Reprocess before lead-credit approval.','PROJECT_VIDEO_REDACTION_NOT_READY');
     }
     const digest=decision==='approve'?await videoContentFingerprint(project.user_id,project.video_url):null;
