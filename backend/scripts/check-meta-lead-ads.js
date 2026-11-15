@@ -38,11 +38,13 @@ const pool = {
 };
 require.cache[require.resolve(src('config/database'))] = { exports: pool };
 require.cache[require.resolve(src('services/leadPartnerService'))] = { exports: { assertActivePartner: async () => ({ id: 9, status: 'active' }) } };
-require.cache[require.resolve(src('services/leadPartnerInventoryCompatService'))] = {
-  exports: { importCsv: async ({ userId, csv }) => { db.imports.push({ userId, csv }); return { created: 1, duplicate: 0, failed: 0, failures: [] }; }, previewGoogleSheet: async () => ({}) },
+require.cache[require.resolve(src('services/leadPartnerCsvImportService'))] = {
+  exports: { importCsv: async ({ userId, csv }) => { db.imports.push({ userId, csv }); return { created: 1, duplicate: 0, failed: 0, failures: [] }; } },
+};
+require.cache[require.resolve(src('services/adminLeadCsvImportService'))] = {
+  exports: { importCsv: async ({ userId, csv }) => { db.imports.push({ userId, csv }); return { created: 1, duplicate: 0, failed: 0, failures: [] }; } },
 };
 require.cache[require.resolve(src('services/pincodeService'))] = { exports: { resolvePincode: async ({ location }) => ({ kondapur: { pincode: '500084' } })[String(location).toLowerCase()] || null } };
-require.cache[require.resolve(src('services/adminGoogleSheetSyncService'))] = { exports: { syncGoogleSheet: async () => ({ created: 1 }), previewGoogleSheet: async () => ({}) } };
 
 const graphCalls = [];
 global.fetch = async (url, init = {}) => {
@@ -63,7 +65,8 @@ global.fetch = async (url, init = {}) => {
 };
 
 const graph = require(src('services/metaGraphClient'));
-const sheetPreview = require(src('services/sheetImportPreviewService'));
+const leadImportMapping = require(src('services/leadImportMappingService'));
+const { parseCsvRecords } = require(src('utils/csvRecords'));
 const service = require(src('services/metaLeadAdsService'));
 
 (async () => {
@@ -79,7 +82,7 @@ const service = require(src('services/metaLeadAdsService'));
 
   // Lead -> CSV -> existing mapping: standard Meta fields map automatically
   const csv = service.leadsToCsv({ formName: 'Form A', questions: [], leads: [{ id: '42', created_time: 't', field_data: [{ name: 'full_name', values: ['Asha Rao'] }, { name: 'phone_number', values: ['+919876543210'] }, { name: 'email', values: ['a@b.co'] }, { name: 'zip_code', values: ['500081'] }, { name: 'city', values: ['Hyderabad'] }] }] });
-  const analysis = sheetPreview.analyzeCsv(csv, { scope: 'lead_partner' });
+  const analysis = leadImportMapping.analyzeCsv(csv, { scope: 'lead_partner' });
   for (const [field, header] of Object.entries({ customerName: 'full name', customerPhone: 'phone number', customerEmail: 'email', pincode: 'zip code', city: 'city', leadId: 'Lead ID', source: 'Source' })) {
     assert.strictEqual(analysis.effectiveMappings[field], header, `Meta field "${header}" must map to ${field}`);
   }
@@ -90,7 +93,7 @@ const service = require(src('services/metaLeadAdsService'));
     { id: '1', field_data: [{ name: 'full_name', values: ['A'] }, { name: 'phone_number', values: ['+919000000001'] }, { name: 'locality', values: ['Kondapur'] }, { name: 'city', values: ['Hyderabad'] }] },
     { id: '2', field_data: [{ name: 'full_name', values: ['B'] }, { name: 'phone_number', values: ['+919000000002'] }, { name: 'city', values: ['Hyderabad'] }] },
   ] });
-  const filled = sheetPreview.parseCsvMatrix(await service.fillMissingPincodes(noPin, { scope: 'lead_partner' }));
+  const filled = parseCsvRecords(await service.fillMissingPincodes(noPin, { scope: 'lead_partner' }));
   const pinCol = filled[0].indexOf('Pincode');
   assert.ok(pinCol >= 0, 'A Pincode column is added when the form has none');
   assert.strictEqual(filled[1][pinCol], '500084', 'Unambiguous locality fills the PIN');
