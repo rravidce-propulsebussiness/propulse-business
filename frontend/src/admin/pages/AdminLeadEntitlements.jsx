@@ -744,7 +744,7 @@ export default function AdminLeadEntitlements(){
             {registrationReward
               ? <small>Valid until {rule.windowDays} day(s) after registration. Claimed leads:
                   {Number(rule.claimExpiryDays)>0?' '+rule.claimExpiryDays+' day(s)':' lifetime'}.</small>
-              : <small>New registrations only. 
+              : <small>New registrations only.
                 {Number(campaign.registrationEligibilityDays)>0?'Must qualify within '+campaign.registrationEligibilityDays+' days of signup. ':'No signup-age cutoff. '}
                 {Number(campaign.minCompletedProjects)>0
                   ?'At least '+campaign.minCompletedProjects+' completed published project(s) with uploaded, admin-approved video(s)'+
