@@ -1,12 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { apiRequest } from '../../utils/api'
-import { HYDERABAD_SEO_ROUTES } from '../../seo/hyderabadSeo'
-import { REGIONAL_SEO_ROUTES } from '../../seo/regionalSeo'
 import './AdminCustomerFlows.css'
 
 const types=['single_select','multi_select','text','number','area','budget','timeline','boolean','location']
 const emptyCreate={key:'',name:'',flowType:'requirement',industryId:'',serviceId:'',subserviceId:''}
-const PUBLIC_LANDING_PAGES=[...HYDERABAD_SEO_ROUTES,...REGIONAL_SEO_ROUTES]
 const blankQuestion=(index=0)=>({questionKey:'question_'+(index+1),questionType:'single_select',label:'New question',helpText:'',isRequired:false,displayOrder:(index+1)*10,validation:{},showWhen:{},leadField:'',visibility:'marketplace',isActive:true,options:[{value:'option_1',label:'Option 1',displayOrder:10,isActive:true}]})
 const optionTypes=new Set(['single_select','multi_select','timeline'])
 const optionsText=q=>(q.options||[]).map(o=>o.value+'|'+o.label).join('\n')
@@ -21,8 +18,9 @@ export default function AdminCustomerFlows(){
   try{
    setBusy(true);setError('')
    const[flowRows,industryRows,serviceRows,subserviceRows]=await Promise.all([apiRequest('/customer-flows/admin'),apiRequest('/industries'),apiRequest('/services'),apiRequest('/subservices')])
-   setFlows((flowRows||[]).filter(flow=>flow.flow_type!=='estimator'));setIndustries(industryRows||[]);setServices(serviceRows||[]);setSubservices(subserviceRows||[])
-   const chosen=selectedId||flowRows?.[0]?.id
+   const requirementFlows=(flowRows||[]).filter(flow=>flow.flow_type!=='estimator')
+   setFlows(requirementFlows);setIndustries(industryRows||[]);setServices(serviceRows||[]);setSubservices(subserviceRows||[])
+   const chosen=requirementFlows.some(flow=>String(flow.id)===String(selectedId))?selectedId:requirementFlows[0]?.id
    setDetail(chosen?await apiRequest('/customer-flows/admin/'+chosen):null)
   }catch(e){setError(e.message)}finally{setBusy(false)}
  },[])
@@ -67,10 +65,9 @@ export default function AdminCustomerFlows(){
  }
 
  return <main className="flow-admin">
-  <section className="flow-hero"><div><span>CUSTOMER DEMAND</span><h1>Customer Flows</h1><p>Configure customer quotation and requirement journeys, and inspect every public SEO landing page from one place.</p></div><button type="button" onClick={()=>setShowCreate(x=>!x)}>+ New flow</button></section>
+  <section className="flow-hero"><div><span>CUSTOMER DEMAND</span><h1>Customer Flows</h1><p>Build and publish the requirement forms customers use to request quotes and connect with Marketplace professionals.</p></div><button type="button" onClick={()=>setShowCreate(x=>!x)}>+ New flow</button></section>
   {error&&<div className="flow-alert error">{error}</div>}{message&&<div className="flow-alert success">{message}</div>}
   {showCreate&&<form className="flow-create" onSubmit={create}><div className="flow-panel-head"><div><span>NEW FLOW</span><h3>Create customer flow</h3></div></div><div className="flow-grid"><label>Type<select value={createForm.flowType} onChange={e=>setCreateForm({...createForm,flowType:e.target.value})}><option value="requirement">Quotation / Requirement</option></select></label><label>Key<input value={createForm.key} onChange={e=>setCreateForm({...createForm,key:e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,'')})} placeholder="example-flow" required/></label><label>Name<input value={createForm.name} onChange={e=>setCreateForm({...createForm,name:e.target.value})} required/></label><label>Industry<select value={createForm.industryId} onChange={e=>setCreateForm({...createForm,industryId:e.target.value,serviceId:'',subserviceId:''})} required><option value="">Select industry</option>{industries.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label><label>Service <small>Optional</small><select value={createForm.serviceId} onChange={e=>setCreateForm({...createForm,serviceId:e.target.value,subserviceId:''})}><option value="">All services</option>{createServices.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label><label>Subservice <small>Optional</small><select value={createForm.subserviceId} onChange={e=>setCreateForm({...createForm,subserviceId:e.target.value})}><option value="">All subservices</option>{createSubs.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label></div><div className="flow-form-actions"><button type="button" onClick={()=>setShowCreate(false)}>Cancel</button><button className="primary" disabled={busy}>Create</button></div></form>}
-  <section className="flow-panel"><div className="flow-panel-head"><div><span>PUBLIC LANDING PAGES</span><h3>{PUBLIC_LANDING_PAGES.length} SEO pages</h3><p>Open each live landing page to inspect it. These are public SEO pages, not estimator flows.</p></div></div><div className="landing-page-links">{PUBLIC_LANDING_PAGES.map(page=><a key={page.path} href={page.path} target="_blank" rel="noreferrer"><strong>{page.heading||page.title||page.path}</strong><code>{page.path}</code></a>)}</div></section>
   <div className="flow-layout">
    <aside className="flow-list"><div className="flow-list-head"><b>Flows</b><span>{flows.length}</span></div>{flows.map(flow=><button type="button" key={flow.id} className={detail?.id===flow.id?'active':''} onClick={()=>selectFlow(flow.id)}><span>{flow.key}</span><strong>{flow.name}</strong><small>{flow.industry_name}{flow.service_name?' · '+flow.service_name:''}</small><small>Quotation / Requirement</small><em className={flow.published_version?'published':'draft'}>{flow.published_version?'Published v'+flow.published_version:'Draft only'}</em></button>)}</aside>
    <section className="flow-editor">
