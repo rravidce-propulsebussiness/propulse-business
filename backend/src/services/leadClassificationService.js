@@ -4,7 +4,7 @@ const DEFAULT_CONDITIONS=[
   {field:'Plot Size',operator:'gt',value:'150',fieldType:'number'},
   {field:'Floors',operator:'gt',value:'G+3',fieldType:'floors'}
 ];
-const OPERATORS=new Set(['gt','gte','lt','lte','eq']);
+const OPERATORS=new Set(['gt','gte','lt','lte','eq','contains','not_contains']);
 const clean=value=>String(value??'').trim();
 const normalizeKey=value=>clean(value).toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]/g,'');
 function numericValue(value,fieldType='number'){
@@ -20,10 +20,16 @@ function numericValue(value,fieldType='number'){
 function normalizeCondition(condition={}){
   const field=clean(condition.field).slice(0,120);
   const operator=OPERATORS.has(clean(condition.operator))?clean(condition.operator):'gt';
-  const fieldType=clean(condition.fieldType)==='floors'?'floors':'number';
+  const requestedType=clean(condition.fieldType);
+  const fieldType=['floors','text'].includes(requestedType)?requestedType:'number';
   const value=clean(condition.value).slice(0,60);
   if(!field)throw Object.assign(new Error('Enter the form question name for every Premium condition'),{code:'INVALID_LEAD_CLASSIFICATION_SETTINGS'});
-  if(numericValue(value,fieldType)===null)throw Object.assign(new Error('Enter a numeric threshold; floors also accepts values such as G+3'),{code:'INVALID_LEAD_CLASSIFICATION_SETTINGS'});
+  if(!value)throw Object.assign(new Error('Enter a value for every Premium condition'),{code:'INVALID_LEAD_CLASSIFICATION_SETTINGS'});
+  if(fieldType==='text'){
+    if(!['eq','contains','not_contains'].includes(operator))throw Object.assign(new Error('Text conditions support equals, contains, or does not contain'),{code:'INVALID_LEAD_CLASSIFICATION_SETTINGS'});
+  }else if(numericValue(value,fieldType)===null){
+    throw Object.assign(new Error('Enter a numeric threshold; floors also accepts values such as G+3'),{code:'INVALID_LEAD_CLASSIFICATION_SETTINGS'});
+  }
   return{field,operator,value,fieldType};
 }
 function normalizeSettings(row={}){
@@ -38,25 +44,52 @@ function normalizeSettings(row={}){
   };
 }
 async function getSettings(client=pool){
-  const row=(await client.query('SELECT * FROM lead_classification_settings WHERE id=1')).rows[0];
-  return normalizeSettings(row||{});
+  const [globalResult,industryResult]=await Promise.all([
+    client.query('SELECT * FROM lead_classification_settings WHERE id=1'),
+    client.query('SELECT * FROM lead_classification_industry_settings ORDER BY industry_id')
+  ]);
+  const settings=normalizeSettings(globalResult.rows[0]||{});
+  settings.industryRules=Object.fromEntries(industryResult.rows.map(row=>[String(row.industry_id),normalizeSettings(row)]));
+  return settings;
 }
 async function updateSettings(data={},adminUserId){
-  const current=await getSettings();
+  const industryId=data.industryId===null||data.industryId===undefined||data.industryId===''?null:Number(data.industryId);
+  if(industryId!==null&&(!Number.isInteger(industryId)||industryId<1))throw Object.assign(new Error('Choose a valid industry for these Premium rules'),{code:'INVALID_LEAD_CLASSIFICATION_SETTINGS'});
+  if(industryId!==null){
+    const current=(await pool.query('SELECT * FROM lead_classification_industry_settings WHERE industry_id=$1',[industryId])).rows[0];
+    const inherited=current?normalizeSettings(current):await getGlobalSettings();
+    const settings=normalizeSettings({
+      enabled:data.enabled===undefined?inherited.enabled:Boolean(data.enabled),
+      matchMode:data.matchMode??inherited.matchMode,
+      premiumConditions:data.premiumConditions??inherited.premiumConditions
+    });
+    await pool.query(
+      `INSERT INTO lead_classification_industry_settings(industry_id,enabled,match_mode,premium_conditions,updated_by,updated_at)
+       VALUES($1,$2,$3,$4::jsonb,$5,CURRENT_TIMESTAMP)
+       ON CONFLICT(industry_id) DO UPDATE SET enabled=EXCLUDED.enabled,match_mode=EXCLUDED.match_mode,
+         premium_conditions=EXCLUDED.premium_conditions,updated_by=EXCLUDED.updated_by,updated_at=CURRENT_TIMESTAMP`,
+      [industryId,settings.enabled,settings.matchMode,JSON.stringify(settings.premiumConditions),adminUserId||null]
+    );
+    return getSettings();
+  }
+  const current=await getGlobalSettings();
   const settings=normalizeSettings({
     enabled:data.enabled===undefined?current.enabled:Boolean(data.enabled),
     matchMode:data.matchMode??current.matchMode,
     premiumConditions:data.premiumConditions??current.premiumConditions
   });
-  const row=(await pool.query(
+  await pool.query(
     `INSERT INTO lead_classification_settings(id,enabled,match_mode,premium_conditions,updated_by,updated_at)
      VALUES(1,$1,$2,$3::jsonb,$4,CURRENT_TIMESTAMP)
      ON CONFLICT(id) DO UPDATE SET enabled=EXCLUDED.enabled,match_mode=EXCLUDED.match_mode,
-       premium_conditions=EXCLUDED.premium_conditions,updated_by=EXCLUDED.updated_by,updated_at=CURRENT_TIMESTAMP
-     RETURNING *`,
+       premium_conditions=EXCLUDED.premium_conditions,updated_by=EXCLUDED.updated_by,updated_at=CURRENT_TIMESTAMP`,
     [settings.enabled,settings.matchMode,JSON.stringify(settings.premiumConditions),adminUserId||null]
-  )).rows[0];
-  return normalizeSettings(row);
+  );
+  return getSettings();
+}
+async function getGlobalSettings(client=pool){
+  const row=(await client.query('SELECT * FROM lead_classification_settings WHERE id=1')).rows[0];
+  return normalizeSettings(row||{});
 }
 function fieldAnswer(custom={},field){
   if(!custom||typeof custom!=='object'||Array.isArray(custom))return'';
@@ -69,6 +102,13 @@ function fieldAnswer(custom={},field){
 }
 function matchesCondition(custom,condition){
   const answer=fieldAnswer(custom,condition.field);
+  if(condition.fieldType==='text'){
+    const left=normalizeKey(answer),right=normalizeKey(condition.value);
+    if(!left||!right)return false;
+    if(condition.operator==='contains')return left.includes(right);
+    if(condition.operator==='not_contains')return !left.includes(right);
+    return left===right;
+  }
   const left=numericValue(answer,condition.fieldType),right=numericValue(condition.value,condition.fieldType);
   if(left===null||right===null)return false;
   switch(condition.operator){
@@ -79,11 +119,12 @@ function matchesCondition(custom,condition){
     default:return left>right;
   }
 }
-function classify(custom,settings){
-  if(!settings||settings.enabled!==true)return null;
-  const conditions=Array.isArray(settings.premiumConditions)?settings.premiumConditions:[];
+function classify(custom,settings,industryId=null){
+  const scoped=settings?.industryRules?.[String(industryId)]||settings;
+  if(!scoped||scoped.enabled!==true)return null;
+  const conditions=Array.isArray(scoped.premiumConditions)?scoped.premiumConditions:[];
   if(!conditions.length)return'basic';
-  const result=settings.matchMode==='any'?conditions.some(condition=>matchesCondition(custom,condition)):conditions.every(condition=>matchesCondition(custom,condition));
+  const result=scoped.matchMode==='any'?conditions.some(condition=>matchesCondition(custom,condition)):conditions.every(condition=>matchesCondition(custom,condition));
   return result?'premium':'basic';
 }
-module.exports={getSettings,updateSettings,classify,normalizeSettings,numericValue};
+module.exports={getSettings,updateSettings,classify,normalizeSettings,numericValue,matchesCondition};
