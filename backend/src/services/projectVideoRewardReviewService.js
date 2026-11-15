@@ -109,16 +109,24 @@ async function review(projectId,adminId,{decision,note,contactDetailsChecked=fal
       try{newGrants=await ensureProjectQualifiedCampaignGrants(project.user_id)}
       catch(error){grantRetryPending=true;console.error('Video approved, but automatic reward grant retry failed:',error.message)}
     }
-    const grantTotals=decision==='approve'?(await pool.query(`
-      SELECT COUNT(*)::int AS active_grant_count,
-        COALESCE(SUM(g.shared_quantity),0)::int AS active_shared_quantity,
-        COALESCE(SUM(g.premium_quantity),0)::int AS active_premium_quantity
-      FROM lead_entitlement_grants g
-      JOIN lead_entitlement_business_campaigns c ON c.id=g.campaign_id
-      WHERE g.user_id=$1 AND g.source='campaign' AND c.min_completed_projects>0
-        AND c.registration_scope='new_registration' AND g.revoked_at IS NULL
-        AND g.starts_at<=CURRENT_TIMESTAMP AND (g.expires_at IS NULL OR g.expires_at>CURRENT_TIMESTAMP)
-    `,[project.user_id])).rows[0]:null;
+    let grantTotals=null;
+    if(decision==='approve'){
+      try{
+        grantTotals=(await pool.query(`
+          SELECT COUNT(*)::int AS active_grant_count,
+            COALESCE(SUM(g.shared_quantity),0)::int AS active_shared_quantity,
+            COALESCE(SUM(g.premium_quantity),0)::int AS active_premium_quantity
+          FROM lead_entitlement_grants g
+          JOIN lead_entitlement_business_campaigns c ON c.id=g.campaign_id
+          WHERE g.user_id=$1 AND g.source='campaign' AND c.min_completed_projects>0
+            AND c.registration_scope='new_registration' AND g.revoked_at IS NULL
+            AND g.starts_at<=CURRENT_TIMESTAMP AND (g.expires_at IS NULL OR g.expires_at>CURRENT_TIMESTAMP)
+        `,[project.user_id])).rows[0];
+      }catch(error){
+        grantRetryPending=true;
+        console.error('Video review saved, but the entitlement summary could not be loaded:',error.message);
+      }
+    }
     return{
       ...saved.rows[0],
       fingerprintMode:digest?.fingerprintMode||null,
