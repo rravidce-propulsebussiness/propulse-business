@@ -15,12 +15,22 @@ async function videoContentFingerprint(userId,reference){
   const managed=videos.managedVideoInfo(userId,reference);
   if(!managed||managed.provider!=='s3')
     throw invalid('A directly uploaded ProPulse project video is required for reward approval. External video links are not eligible.');
-  const meta=await s3.headObject(managed.key);
+  let meta;
+  try{meta=await s3.headObject(managed.key)}
+  catch(error){
+    console.error('Project video credit review could not inspect the source object:',error.message);
+    throw invalid('Private video storage could not verify the original upload. The review remains pending; retry after storage is available.','PROJECT_VIDEO_STORAGE_UNAVAILABLE');
+  }
   if(!meta||meta.size<12)throw invalid('Video file could not be verified in private storage.');
   const digest=crypto.createHash('sha256');
   const full=meta.size<=128*1024*1024;
   digest.update(full?'FULL-SHA256:v1:':'RANGE-SHA256:v1:'+meta.size+':');
-  const link=await s3.getMediaGetUrl(reference,{expiresSeconds:3600});
+  let link;
+  try{link=await s3.getMediaGetUrl(reference,{expiresSeconds:3600})}
+  catch(error){
+    console.error('Project video credit review could not sign the source object:',error.message);
+    throw invalid('Private video storage could not open the original upload. The review remains pending; retry after storage is available.','PROJECT_VIDEO_STORAGE_UNAVAILABLE');
+  }
   const ranges=full?[[0,meta.size-1]]:[
     [0,Math.min(meta.size-1,1024*1024-1)],
     [Math.max(0,Math.floor(meta.size/2)-512*1024),Math.min(meta.size-1,Math.floor(meta.size/2)+512*1024-1)],
@@ -30,8 +40,14 @@ async function videoContentFingerprint(userId,reference){
     const abort=new AbortController();
     const timeout=setTimeout(()=>abort.abort(),120000);timeout.unref?.();
     try{
-      const response=await fetch(link,{headers:full?{}:{Range:`bytes=${start}-${end}`},signal:abort.signal});
-      if(response.status!==(full?200:206))throw invalid('R2 refused the video content verification request.');
+      let response;
+      try{response=await fetch(link,{headers:full?{}:{Range:`bytes=${start}-${end}`},signal:abort.signal})}
+      catch(error){
+        console.error('Project video source fingerprint read failed:',error.message);
+        throw invalid('Private video storage could not read the original upload. The review remains pending; retry after storage is available.','PROJECT_VIDEO_STORAGE_UNAVAILABLE');
+      }
+      if(response.status!==(full?200:206))
+        throw invalid('Private video storage refused the source verification request. The review remains pending; retry after storage is available.','PROJECT_VIDEO_STORAGE_UNAVAILABLE');
       if(!response.body)throw invalid('R2 returned an empty video stream.');
       let length=0;
       for await(const chunk of response.body){
@@ -88,10 +104,32 @@ async function review(projectId,adminId,{decision,note,contactDetailsChecked=fal
       decision==='approve'?project.video_url:null,adminId,safeNote||null,
       decision==='approve'&&contactDetailsChecked===true?project.video_url:null]);
     await client.query('COMMIT');
-    if(decision==='approve')await ensureProjectQualifiedCampaignGrants(project.user_id).catch(error=>{
-      console.error('Video approved, but automatic reward grant retry failed:',error.message);
-    });
-    return{...saved.rows[0],fingerprintMode:digest?.fingerprintMode||null};
+    let newGrants=[],grantRetryPending=false;
+    if(decision==='approve'){
+      try{newGrants=await ensureProjectQualifiedCampaignGrants(project.user_id)}
+      catch(error){grantRetryPending=true;console.error('Video approved, but automatic reward grant retry failed:',error.message)}
+    }
+    const grantTotals=decision==='approve'?(await pool.query(`
+      SELECT COUNT(*)::int AS active_grant_count,
+        COALESCE(SUM(g.shared_quantity),0)::int AS active_shared_quantity,
+        COALESCE(SUM(g.premium_quantity),0)::int AS active_premium_quantity
+      FROM lead_entitlement_grants g
+      JOIN lead_entitlement_business_campaigns c ON c.id=g.campaign_id
+      WHERE g.user_id=$1 AND g.source='campaign' AND c.min_completed_projects>0
+        AND c.registration_scope='new_registration' AND g.revoked_at IS NULL
+        AND g.starts_at<=CURRENT_TIMESTAMP AND (g.expires_at IS NULL OR g.expires_at>CURRENT_TIMESTAMP)
+    `,[project.user_id])).rows[0]:null;
+    return{
+      ...saved.rows[0],
+      fingerprintMode:digest?.fingerprintMode||null,
+      grantSummary:decision==='approve'?{
+        status:grantRetryPending?'retry_pending':Number(grantTotals?.active_grant_count)>0?'active':'no_new_grant',
+        newGrantCount:newGrants.length,
+        activeGrantCount:Number(grantTotals?.active_grant_count)||0,
+        activeSharedQuantity:Number(grantTotals?.active_shared_quantity)||0,
+        activePremiumQuantity:Number(grantTotals?.active_premium_quantity)||0,
+      }:null,
+    };
   }catch(error){
     await client.query('ROLLBACK').catch(()=>{});
     if(error.code==='23505'&&error.constraint==='uq_approved_project_video_fingerprint')
