@@ -98,7 +98,7 @@ const service = require(src('services/metaLeadAdsService'));
   assert.ok(pinCol >= 0, 'A Pincode column is added when the form has none');
   assert.strictEqual(filled[1][pinCol], '500084', 'Unambiguous locality fills the PIN');
   assert.strictEqual(filled[2][pinCol], '', 'Ambiguous city must not guess a PIN');
-  assert.strictEqual(sheetPreview.analyzeCsv(filled.map(r => r.join(',')).join(String.fromCharCode(10)), { scope: 'lead_partner' }).effectiveMappings.pincode, 'Pincode');
+  assert.strictEqual(leadImportMapping.analyzeCsv(filled.map(r => r.join(',')).join(String.fromCharCode(10)), { scope: 'lead_partner' }).effectiveMappings.pincode, 'Pincode');
 
   // Webhook subscription handshake
   assert.strictEqual(service.verifyWebhookSubscription({ mode: 'subscribe', token: 'verify-token-0123456789', challenge: '12345' }), '12345');
