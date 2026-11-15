@@ -1,0 +1,24 @@
+.video-quality-settings{margin-top:18px;background:#fff;border:1px solid #e8eaf0;border-radius:16px;padding:22px;display:grid;gap:16px}
+.video-quality-heading h2{font-size:20px;color:#25374b;margin:0 0 6px}
+.video-quality-heading p{margin:0;color:#5f7184;font-size:13px}
+.video-quality-alert{border-radius:10px;padding:10px 12px;font-size:13px}
+.video-quality-alert.error{background:#fff1f0;color:#b42318;border:1px solid #fecdca}
+.video-quality-alert.success{background:#ecfdf3;color:#067647;border:1px solid #abefc6}
+.video-quality-loading{margin:0;color:#5f7184;font-size:13px}
+.video-quality-switch{display:flex;gap:12px;align-items:flex-start;border:1px solid #e8eaf0;border-radius:12px;padding:14px;cursor:pointer}
+.video-quality-switch input{width:20px;height:20px;margin:2px 0 0;accent-color:#fb6529;flex:none}
+.video-quality-switch span{display:grid;gap:4px}
+.video-quality-switch strong{font-size:15px;color:#19293b}
+.video-quality-switch small{font-size:13px;color:#5f7184;line-height:1.45}
+.video-quality-options{border:0;margin:0;padding:0;display:grid;gap:8px;min-width:0}
+.video-quality-options legend{font-size:13px;font-weight:700;color:#25374b;margin-bottom:8px;padding:0}
+.video-quality-options>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.video-quality-options button{border:1px solid #e3e6ec;background:#fff;border-radius:10px;padding:10px 12px;display:grid;gap:2px;text-align:left;cursor:pointer;color:#19293b}
+.video-quality-options button b{font-size:14px}
+.video-quality-options button small{font-size:12px;color:#5f7184}
+.video-quality-options button.selected{border-color:#fb6529;background:#fff4ed;box-shadow:inset 0 0 0 1px #fb6529}
+.video-quality-options:disabled{opacity:.55}
+.video-quality-options:disabled button{cursor:not-allowed}
+.video-quality-footer{display:flex;gap:14px;align-items:center;justify-content:space-between}
+.video-quality-footer small{font-size:12px;color:#5f7184}
+@media(max-width:620px){.video-quality-settings{padding:16px}.video-quality-options>div{grid-template-columns:1fr}.video-quality-footer{flex-direction:column;align-items:stretch}}

@@ -76,5 +76,56 @@ class VideoPreservationTests(unittest.TestCase):
                 if s["codec_type"]=="audio"), "aac")
 
 
+def make_h264(path, size="640x480", duration=2, crf="10"):
+    subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error",
+        "-y", "-f", "lavfi", "-i", f"testsrc2=size={size}:rate=24:duration={duration}",
+        "-f", "lavfi", "-i", f"sine=frequency=660:duration={duration}",
+        "-c:v", "libx264", "-crf", crf, "-pix_fmt", "yuv420p", "-c:a", "aac",
+        "-shortest", str(path)], check=True, timeout=60)
+
+
+def video_size(path):
+    stream = next(s for s in worker.probe_streams(path)["streams"]
+                  if s["codec_type"] == "video")
+    return stream
+
+
+class CompressionSwitchTests(unittest.TestCase):
+    def test_switch_off_by_default_keeps_original(self):
+        with tempfile.TemporaryDirectory() as directory:
+            src = Path(directory) / "source.mp4"
+            out = Path(directory) / "output.mp4"
+            make_h264(src)
+            stats = worker.transcode(src, out, dict(worker.DEFAULT_SETTINGS))
+            self.assertFalse(worker.DEFAULT_SETTINGS["compress"])
+            self.assertEqual(stats["video"], "unchanged")
+            self.assertEqual(stream_hash(src, "v"), stream_hash(out, "v"))
+
+    def test_switch_on_compresses_and_keeps_original_sound(self):
+        with tempfile.TemporaryDirectory() as directory:
+            src = Path(directory) / "source.mp4"
+            out = Path(directory) / "output.mp4"
+            # Near-lossless 1080p source, so a 720p "small" encode is clearly smaller.
+            make_h264(src, size="1920x1080", duration=3, crf="4")
+            settings = {"compress": True, "max_resolution": 720, "quality": "small"}
+            stats = worker.transcode(src, out, settings)
+            self.assertTrue(stats["video"].startswith("compressed to 720p"), stats)
+            self.assertLess(out.stat().st_size, src.stat().st_size)
+            stream = video_size(out)
+            self.assertLessEqual(max(int(stream.get("width", 0)), int(stream.get("height", 0))), 1280)
+            self.assertEqual(stream_hash(src, "a"), stream_hash(out, "a"),
+                "Compression must keep the original AAC soundtrack")
+
+    def test_switch_on_never_makes_a_small_video_bigger(self):
+        with tempfile.TemporaryDirectory() as directory:
+            src = Path(directory) / "source.mp4"
+            out = Path(directory) / "output.mp4"
+            make_h264(src, size="320x240", duration=2, crf="40")
+            settings = {"compress": True, "max_resolution": 1440, "quality": "high"}
+            stats = worker.transcode(src, out, settings)
+            self.assertEqual(stats["video"], "unchanged (compression would not reduce size)")
+            self.assertEqual(stream_hash(src, "v"), stream_hash(out, "v"))
+
+
 if __name__ == "__main__":
     unittest.main()

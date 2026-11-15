@@ -77,13 +77,15 @@ async function saveProjectVideo(userId,mime,buffer){
 
 const MULTIPART_THRESHOLD=96*1024*1024;
 const MIN_PART_BYTES=64*1024*1024;
-const PROVIDER_MAX_BYTES=5*1024**4;
+// Must match VIDEO_REDACTOR_MAX_BYTES in video-redactor/worker.py: anything larger would
+// upload successfully and then fail playback preparation.
+const DIRECT_UPLOAD_MAX_BYTES=2*1024*1024*1024;
 
 function validateVideoRequest(mime,size){
   const normalized=normalizeMime(mime),bytes=Number(size);
   if(!Object.hasOwn(MIME_EXTENSIONS,normalized))throw videoError('Only MP4, MOV and WebM videos are supported','INVALID_PROJECT_VIDEO_TYPE');
   if(!Number.isSafeInteger(bytes)||bytes<12)throw videoError('Select a valid, non-empty video','INVALID_PROJECT_VIDEO');
-  if(bytes>PROVIDER_MAX_BYTES)throw videoError('Video exceeds Cloudflare R2 object storage capacity','PROJECT_VIDEO_TOO_LARGE');
+  if(bytes>DIRECT_UPLOAD_MAX_BYTES)throw videoError('Video must be 2 GB or smaller','PROJECT_VIDEO_TOO_LARGE');
   return{mime:normalized,bytes,extension:MIME_EXTENSIONS[normalized]};
 }
 function uploadInfo(userId,reference){
@@ -170,6 +172,7 @@ async function removeManagedProjectVideos(userId,urls){
 }
 module.exports={
   MAX_VIDEO_BYTES,
+  DIRECT_UPLOAD_MAX_BYTES,
   MIME_EXTENSIONS,
   assertVideoBuffer,
   managedVideoInfo,
