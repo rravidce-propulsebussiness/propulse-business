@@ -101,8 +101,8 @@ const settings={
     '4':{enabled:true,matchMode:'all',premiumConditions:[{field:'Budget',operator:'gte',value:'10',fieldType:'number'}]}
   }
 };
-assert.strictEqual(classify({'Project type':'Full Home Interior'},settings,3),'premium','Interior form answers must use the Interior-specific rule');
-assert.strictEqual(classify({Budget:'15 lakh'},settings,4),'premium','Budget answers must use the selected industry rule');
-assert.strictEqual(classify({Budget:'15 lakh'},settings,5),'basic','Other industries must use the shared fallback when no override exists');
-assert.strictEqual(numericValue('G+3','floors'),4,'Floors must parse G+3 as four levels');
+assert(classify({'Project type':'Full Home Interior'},settings,3)==='premium','Interior form answers must use the Interior-specific rule');
+assert(classify({Budget:'15 lakh'},settings,4)==='premium','Budget answers must use the selected industry rule');
+assert(classify({Budget:'15 lakh'},settings,5)==='basic','Other industries must use the shared fallback when no override exists');
+assert(numericValue('G+3','floors')===4,'Floors must parse G+3 as four levels');
 console.log('Premium Manage Leads regression test passed.');
