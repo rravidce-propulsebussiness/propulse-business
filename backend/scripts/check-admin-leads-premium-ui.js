@@ -85,10 +85,14 @@ assert(entitlementsCss.includes('/* Business entitlement audience campaigns */')
 assert(entitlementsCss.includes('.campaign-user-results'),'Specific-business picker styling must remain');
 assert(entitlementsCss.includes('.campaign-history-card'),'Business entitlement campaign card styling must remain');
 
+const metaPage=read('../frontend/src/admin/pages/AdminLeadMeta.jsx');
+const classificationPanel=read('../frontend/src/components/LeadClassificationRulesPanel.jsx');
 const metaPanel=read('../frontend/src/components/MetaLeadAdsPanel.jsx');
-assert(leads.includes('aria-label="Classification industry"'),'Classification rules must be configurable per industry');
-assert(leads.includes('industryRules?.[classificationIndustryId]'),'Industry rules must load separately from the all-industries fallback');
-assert(leads.includes('Text / choice')&&leads.includes('not_contains'),'Classification must support text answers from any industry form');
+assert(!leads.includes('BASIC / PREMIUM CLASSIFICATION'),'Classification editor must stay off Manage Leads');
+assert(metaPage.includes('<LeadClassificationRulesPanel/>'),'Classification editor must appear on the Meta Leads page');
+assert(classificationPanel.includes('aria-label="Classification industry"'),'Classification rules must be configurable per industry');
+assert(classificationPanel.includes('industryRules?.[industryId]'),'Industry rules must load separately from the all-industries fallback');
+assert(classificationPanel.includes('Text / choice')&&classificationPanel.includes('not_contains'),'Classification must support text answers from any industry form');
 assert(metaPanel.includes('whose Basic/Premium rules should classify this form'),'Meta form linking must explain default-industry rule selection');
 
 const {classify,numericValue}=require('../src/services/leadClassificationService');
@@ -105,4 +109,4 @@ assert(classify({'Project type':'Full Home Interior'},settings,3)==='premium','I
 assert(classify({Budget:'15 lakh'},settings,4)==='premium','Budget answers must use the selected industry rule');
 assert(classify({Budget:'15 lakh'},settings,5)==='basic','Other industries must use the shared fallback when no override exists');
 assert(numericValue('G+3','floors')===4,'Floors must parse G+3 as four levels');
-console.log('Premium Manage Leads regression test passed.');
+console.log('Meta lead classification regression test passed.');
