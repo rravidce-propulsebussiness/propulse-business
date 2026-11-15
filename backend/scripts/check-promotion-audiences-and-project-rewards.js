@@ -28,7 +28,7 @@ assert.match(couponUi,/Basic \+ Premium/);
 assert.match(couponUi,/wallet_topup/);
 assert.match(entitlementUi,/Completed projects with approved videos/);
 assert.match(entitlementUi,/minCompletedProjects/);
-assert.match(grants,/min_completed_projects>0/);
+assert.match(grants,/Number\(c\.min_completed_projects\)>0/,'Project campaign qualification checks its configured project threshold');
 assert.match(grants,/p.is_published=TRUE/);
 assert.match(grants,/cpd.status='verified'/);
 assert.match(grants,/ON CONFLICT DO NOTHING/);
