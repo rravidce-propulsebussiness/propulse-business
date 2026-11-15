@@ -5,7 +5,6 @@ const read=relative=>fs.readFileSync(path.join(root,relative),'utf8');
 const assert=(condition,message)=>{if(!condition)throw new Error(message)};
 
 const service=read('src/services/adminSystemHealthService.js');
-const sheetService=read('src/services/googleSheetService.js');
 const controller=read('src/controllers/adminController.js');
 const routes=read('src/routes/adminRoutes.js');
 const layout=read('../frontend/src/admin/components/AdminLayout.jsx');
@@ -33,12 +32,10 @@ assert(emailService.includes('function configurationHealth()')&&emailService.inc
 assert(page.includes('Email delivery')&&page.includes('TEST SENDER'),'Admin System Health UI must show email delivery state');
 assert(envExample.includes('verified in Resend')&&!envExample.includes('RESEND_FROM_EMAIL=ProPulse Business <onboarding@resend.dev>'),'Production env example must not recommend the Resend test sender');
 assert(service.includes('schema_migrations'),'System Health must report migration state');
-assert(service.includes('lead_partner_sheet_connections')&&service.includes('admin_google_sheet_connections'),'System Health must report both sheet-sync systems');
-assert(service.includes("persistentConnectionErrors>0?'degraded'")&&service.includes("connectionErrors>0||failing>0?'attention'"),'Temporary sheet issues must be attention while persistent connection failures degrade health');
+assert(!service.includes('lead_partner_sheet_connections')&&!service.includes('admin_google_sheet_connections'),'System Health must not query removed Sheets connections');
 assert(service.includes("let status='healthy'")&&service.includes("maxStatus(status,issue.severity)"),'Overall System Health must aggregate healthy, attention and degraded states');
 assert(service.includes('issues:sortedIssues')&&service.includes('degradedCount')&&service.includes('attentionCount'),'System Health must return actionable issue summaries');
 assert(service.includes("Boolean(String(process.env.UPLOAD_STORAGE_ROOT||'').trim())"),'System Health may report whether persistent storage is configured without returning its path');
-assert(sheetService.includes('networkErrorMessage')&&sheetService.includes('Google Sheets DNS lookup failed'),'Google Sheet network failures must preserve safe diagnostics instead of generic fetch failed');
 for(const secret of ['DB_PASSWORD','JWT_SECRET','RESEND_API_KEY','GOOGLE_CLIENT_SECRET'])assert(!service.includes('process.env.'+secret),'System Health must not read or expose '+secret);
 assert(layout.includes("{to:'/admin/system-health',label:'System Health'}"),'Admin System navigation must include System Health');
 assert(layout.includes("'healthy','attention','degraded'"),'Admin top bar must preserve the attention state');

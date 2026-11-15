@@ -9,8 +9,6 @@ const leads=read('../frontend/src/admin/pages/AdminLeadsV9.jsx');
 const css=read('../frontend/src/admin/pages/AdminLeadsV9.css');
 const app=read('../frontend/src/App.jsx');
 const upload=read('../frontend/src/admin/pages/AdminLeadUpload.jsx');
-const sheets=read('../frontend/src/admin/pages/AdminLeadSheets.jsx');
-const sheetSync=read('../frontend/src/admin/pages/GoogleSheetAutoSync.jsx');
 const entitlements=read('../frontend/src/admin/pages/AdminLeadEntitlements.jsx');
 const entitlementsCss=read('../frontend/src/admin/pages/AdminLeadEntitlements.css');
 
@@ -51,22 +49,9 @@ assert(css.includes('/* Premium Upload Leads workspace */'),'Premium Upload Lead
 assert(css.includes('.v9-upload-hero'),'Premium Upload Leads hero styling must remain');
 assert(css.includes('.v9-upload-flow'),'Upload workflow rail styling must remain');
 assert(css.includes('.v9-import-guidance'),'Upload import guidance styling must remain');
-assert(css.includes('/* Premium Google Sheets workspace */'),'Premium Google Sheets styling must remain');
-assert(css.includes('.v9-sheet-console'),'Google Sheets sync console styling must remain');
-assert(css.includes('.v9-sheet-source-card'),'Connected sheet cards must retain premium styling');
 
 assert(app.includes('<Route path="/admin/leads/upload" element={<AdminLeadUpload/>}/>'),'Upload Leads must stay on a dedicated route');
-assert(app.includes('<Route path="/admin/leads/sheets" element={<AdminLeadSheets/>}/>'),'Google Sheets must stay on a dedicated route');
 assert(upload.includes('<AdminLeadsV9 mode="upload"/>'),'Upload page must keep shared lead import logic');
-assert(sheets.includes('<GoogleSheetAutoSync/>'),'Google Sheets page must keep shared sync logic');
-assert(sheets.includes('v9-sheet-workspace'),'Premium Google Sheets page shell must remain');
-assert(sheets.includes('LEAD OPERATIONS / AUTOMATION'),'Google Sheets premium hero must remain');
-assert(sheetSync.includes('v9-sheet-console'),'Premium Google Sheets sync console must remain');
-assert(sheetSync.includes('Analyze Sheet')&&sheetSync.includes('Activate Sync'),'Google Sheets must require Analyze → Activate before creating a connection');
-assert(sheetSync.includes('Check All Now'),'Google Sheets manual sync action must remain');
-assert(sheetSync.includes('v9-sheet-source-card'),'Connected Google Sheet cards must remain');
-assert(sheetSync.includes('No Google Sheets connected yet'),'Google Sheets empty state must remain');
-assert(sheetSync.includes('Import precedence'),'Google Sheets precedence guidance must remain');
 
 assert(entitlements.includes('LEAD OPERATIONS / ACCESS CONTROL'),'Lead Entitlements premium hero must remain');
 assert(entitlements.includes('entitlement-policy-status'),'Lead Entitlements active-rule status must remain');

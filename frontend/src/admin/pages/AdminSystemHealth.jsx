@@ -66,33 +66,6 @@ function ActiveIssues({data}){
   </section>
 }
 
-function SheetHealth({title,subtitle,data}){
-  const problems=Array.isArray(data?.recentProblems)?data.recentProblems:[]
-  const issueCount=(Number(data?.failing)||0)+(Number(data?.connectionErrors)||0)
-  const tone=stateTone(data?.status||'healthy')
-  return <section className="system-health-panel sheet-health-panel">
-    <header>
-      <div><span>SHEET AUTOMATION</span><h2>{title}</h2><p>{subtitle}</p></div>
-      <span className={'system-health-pill '+tone}>{statusLabel(data?.status||'healthy')}</span>
-    </header>
-    <div className="sheet-health-metrics">
-      <div><span>Active connections</span><strong>{Number(data?.active)||0}</strong></div>
-      <div><span>Rows failing</span><strong>{Number(data?.failing)||0}</strong></div>
-      <div><span>Connection errors</span><strong>{Number(data?.connectionErrors)||0}</strong></div>
-      <div><span>Last successful sync</span><strong>{fmtDate(data?.lastSyncedAt)}</strong></div>
-    </div>
-    {problems.length>0?<div className="system-health-problems">
-      {problems.map(item=><article key={item.id} className={item.persistent?'persistent':''}>
-        <span>Connection #{item.id}</span>
-        <strong>{item.failureCount?item.failureCount+' failed attempt'+(item.failureCount===1?'':'s'):item.failedRows+' invalid row'+(item.failedRows===1?'':'s')}</strong>
-        <small>{item.error||'Row-level validation failures need review.'}</small>
-        <b>{item.nextRetryAt?'Retry '+fmtDate(item.nextRetryAt):fmtDate(item.errorAt||item.lastSyncedAt)}</b>
-      </article>)}
-    </div>:<div className="system-health-empty">No active sync problems reported.</div>}
-    {issueCount>0&&<div className="system-health-sheet-note">Temporary connection errors and invalid rows are shown as attention. A connection becomes platform-degrading after {Number(data?.persistentFailureThreshold)||3} consecutive sync failures.</div>}
-  </section>
-}
-
 export default function AdminSystemHealth(){
   const[data,setData]=useState(null)
   const[loading,setLoading]=useState(true)
@@ -179,7 +152,7 @@ export default function AdminSystemHealth(){
       </section>
 
       <section className="system-health-panel worker-panel">
-        <header><div><span>BACKGROUND AUTOMATION</span><h2>Worker heartbeat</h2><p>The sheet-sync worker must remain fresh in dedicated-worker production.</p></div><span className={'system-health-pill '+stateTone(data?.worker?.status)}>{data?.worker?.status||'—'}</span></header>
+        <header><div><span>BACKGROUND AUTOMATION</span><h2>Worker heartbeat</h2><p>Scheduled jobs run in the web process or a dedicated worker, depending on production settings.</p></div><span className={'system-health-pill '+stateTone(data?.worker?.status)}>{data?.worker?.status||'—'}</span></header>
         <div className="worker-health-timeline">
           <div><span>Last heartbeat</span><strong>{fmtDate(data?.worker?.lastSeenAt)}</strong></div>
           <div><span>Heartbeat age</span><strong>{data?.worker?.ageSeconds!=null?data.worker.ageSeconds+' seconds':'—'}</strong></div>
@@ -189,10 +162,7 @@ export default function AdminSystemHealth(){
       </section>
     </section>
 
-    <section className="system-health-sheets-grid">
-      <SheetHealth title="Lead Partner sheets" subtitle="Live Lead Partner inventory sources and import validation health." data={data?.sheets?.leadPartner}/>
-      <SheetHealth title="Admin sheets" subtitle="Admin-managed lead sources and automatic sync health." data={data?.sheets?.admin}/>
-    </section>
+
 
     <section className="system-health-release">
       <div><span>RELEASE CHECK</span><h2>Deployment signals</h2></div>
@@ -203,7 +173,6 @@ export default function AdminSystemHealth(){
         <span className={data?.storage?.privateObjects?.status==='ready'?'ok':'bad'}>Private objects</span>
         <span className={data?.worker?.status==='fresh'?'ok':'bad'}>Worker</span>
         <span className={data?.migrations?.status==='current'?'ok':'bad'}>Migrations</span>
-        <span className={data?.sheets?.leadPartner?.status==='healthy'&&data?.sheets?.admin?.status==='healthy'?'ok':data?.sheets?.leadPartner?.status==='degraded'||data?.sheets?.admin?.status==='degraded'?'bad':'warn'}>Sheet connections</span>
         <span className={financial.status==='healthy'?'ok':['warning','stale','not_run'].includes(financial.status)?'warn':'bad'}>Financial reconciliation</span>
         <span className={backups.status==='healthy'?'ok':['not_run','stale'].includes(backups.status)?'warn':'bad'}>Backup verification</span>
       </div>
