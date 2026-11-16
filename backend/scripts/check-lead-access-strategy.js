@@ -6,6 +6,7 @@ const read=relative=>fs.readFileSync(path.join(root,relative),'utf8');
 const assert=(condition,message)=>{if(!condition)throw new Error(message)};
 
 const migration=read('src/database/migrations/20260926_lead_access_strategy.sql');
+const earlyAccessMigration=read('src/database/migrations/20261117_pro_early_access_settings.sql');
 const access=read('src/services/leadAccessStrategyService.js');
 const leadService=read('src/services/leadService.js');
 const leadRead=read('src/services/leadReadService.js');
@@ -24,13 +25,18 @@ assert(migration.includes('buyer_capacity BETWEEN 1 AND 3'),'Buyer capacity must
 assert(migration.includes("('basic','auto_release',3,24,48)"),'Basic default aging must be 1→2 at 24h and →3 at 48h');
 assert(migration.includes("('premium','auto_release',3,48,96)"),'Premium default aging must keep exclusivity longer');
 assert(migration.includes('lead_effective_buyer_capacity'),'Database must expose one effective-capacity function');
+assert(earlyAccessMigration.includes('pro_early_access_days INTEGER NOT NULL DEFAULT 1'),'Basic early access must default to one day');
+assert(earlyAccessMigration.includes("WHERE lead_type='premium'"),'Premium early access must receive its longer default');
 
 assert(access.includes('permanent_single')&&access.includes('auto_release')&&access.includes('shared'),'Shared access service must own all access strategies');
 assert(access.includes('fallback.accessStrategy??fallback.defaultStrategy'),'Normalized Admin access settings must remain valid as lead defaults');
+assert(access.includes('pro_early_access_days'),'Access rules must persist Pro Early Access duration by lead type');
+assert(access.includes('proEarlyAccessDays'),'Access configuration must return the configured Pro Early Access window');
 assert(access.includes('access_capacity_locked=COALESCE(access_capacity_locked,$1)'),'First acquisition must lock the current capacity stage');
 assert(access.includes("UPDATE leads SET status='sold'"),'Lead must close when the locked capacity is filled');
 
 assert(leadService.includes('accessService.resolveForLead'),'Lead creation must reuse the shared access configuration');
+assert(leadService.includes('access.proEarlyAccessDays'),'Exclusive lead creation must default from the configured access rule');
 assert(leadService.includes("accessSource==='import'||accessSource==='rule'"),'Lead updates must resolve uploaded/config access from one shared configuration');
 assert(leadService.includes('Lead pricing must include exactly 1, 2 and 3 buyer tiers'),'Admin pricing must be fixed to 1/2/3 buyer stages');
 
@@ -57,6 +63,8 @@ assert(partnerPricing.includes('buildFixedPartnerPricing'),'Lead Partner sheet p
 
 assert(adminPricing.includes('BUYER_TIERS=[1,2,3]'),'Admin pricing UI must expose only 1/2/3 buyer tiers');
 assert(adminPricing.includes('BUYER ACCESS DEFAULTS'),'Admin pricing must manage Basic/Premium access defaults');
+assert(adminPricing.includes('Pro Early Access window (days)'),'Admin pricing must expose configurable early access duration by lead type');
+assert(adminLeads.includes('earlyAccessDays[d.leadType]'),'Lead editor must use the configured duration when marking a lead for Pro Early Access');
 assert(adminLeads.includes("'Access Strategy'")&&adminLeads.includes("'Release to 2 Hours'"),'Admin lead sample must include access strategy timing fields');
 assert(partnerUi.includes("'Access Strategy'")&&partnerUi.includes("'Pro 1 Buyer'"),'Lead Partner sample must include access strategy and partner base price');
 assert(partnerUi.includes('lead.effective_buyer_capacity||lead.buyer_capacity||3'),'Lead Partner UI must show the current buyer stage instead of only the configured maximum');
