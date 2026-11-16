@@ -5,6 +5,7 @@ const requireAdmin = require('../middleware/adminMiddleware');
 const rateLimit = require('../middleware/rateLimitMiddleware');
 
 const router = express.Router();
+require('../utils/numericRouteParams').numericRouteParams(router,'id');
 const writeLimit = rateLimit({ windowMs: 60 * 1000, max: 30 });
 router.use(requireAuth);
 router.get('/', controller.listPublic);

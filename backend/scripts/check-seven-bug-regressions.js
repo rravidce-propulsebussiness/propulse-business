@@ -51,6 +51,7 @@ async function testNoChargePayments() {
   const originalLoad = Module._load;
   let debits = 0, reserves = 0;
   Module._load = function(request, parent, isMain) {
+    if (request === '../config/database') return {query:async()=>({rows:[]})};
     if (parent && parent.filename.endsWith('paymentService.js')) {
       if (request === './walletService') return {debitForPayment:async()=>{debits++;throw new Error('Zero checkouts may not debit wallets');}};
       if (request === './couponService') return {reserveRedemption:async()=>{reserves++;}};

@@ -42,13 +42,13 @@ function loadService({summary,investments,revenueByInvestment}) {
 async function main(){
   {
     const {service,calls,updates}=loadService({summary:{non_auto_earnings_withdrawable:6000},investments:[101],revenueByInvestment:{101:10000}});
-    await assert.rejects(service.transferInvestorEarnings({userId:7,adminId:1,transferReference:'UTR-1',proofUrl:'proof'}),error=>error && error.code==='NO_REALIZED_AMOUNT');
+    await assert.rejects(service.transferInvestorEarnings({userId:7,adminId:1,transferReference:'UTR-1',proofUrl:'https://example.org/transfer-proof.png'}),error=>error && error.code==='NO_REALIZED_AMOUNT');
     assert.strictEqual(updates.length,0,'A partially available investment must not be marked paid');
     assert(calls.indexOf('LOCK_INVESTOR_FINANCIALS')>=0,'Transfer-all must acquire the investor financial lock');
   }
   {
     const {service,updates}=loadService({summary:{non_auto_earnings_withdrawable:6000},investments:[101,102],revenueByInvestment:{101:4000,102:7000}});
-    const result=await service.transferInvestorEarnings({userId:7,adminId:1,transferReference:'UTR-2',proofUrl:'proof'});
+    const result=await service.transferInvestorEarnings({userId:7,adminId:1,transferReference:'UTR-2',proofUrl:'https://example.org/transfer-proof.png'});
     assert.strictEqual(result.transferred_amount,4000,'Transfer-all must not exceed the remaining withdrawable earnings');
     assert.deepStrictEqual(updates,[{id:101,amount:4000}]);
   }
