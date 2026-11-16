@@ -67,7 +67,8 @@ global.fetch = async (url, init = {}) => {
 const graph = require(src('services/metaGraphClient'));
 const leadImportMapping = require(src('services/leadImportMappingService'));
 const { parseCsvRecords } = require(src('utils/csvRecords'));
-const service = require(src('services/metaLeadAdsService'));\nconst metaPricing = require(src('services/metaAdPricingService'));
+const service = require(src('services/metaLeadAdsService'));
+const metaPricing = require(src('services/metaAdPricingService'));
 
 (async () => {
   // Configuration reporting names only
@@ -167,7 +168,8 @@ const service = require(src('services/metaLeadAdsService'));\nconst metaPricing 
   assert.ok(!app.includes('path="/admin/leads/sheets"'), 'The retired Google Sheets route is removed');
   const guide = fs.readFileSync(path.resolve(__dirname, '../../docs/META-LEAD-ADS.md'), 'utf8');
   assert.doesNotMatch(guide, /Google Sheets?/i, 'Meta setup guide contains no obsolete Google Sheets instructions');
-  const migrationDir = path.resolve(__dirname, '../src/database/migrations');\n  const metaShareMigration = fs.readFileSync(path.join(migrationDir, '20261116_zzzz_meta_ad_share_pricing.sql'), 'utf8');
+  const migrationDir = path.resolve(__dirname, '../src/database/migrations');
+  const metaShareMigration = fs.readFileSync(path.join(migrationDir, '20261116_zzzz_meta_ad_share_pricing.sql'), 'utf8');
   assert.match(metaShareMigration, /two_share_percent NUMERIC\(5,2\) NOT NULL DEFAULT 60/);
   assert.match(metaShareMigration, /three_share_percent NUMERIC\(5,2\) NOT NULL DEFAULT 45/);
 
