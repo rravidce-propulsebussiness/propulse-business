@@ -2,6 +2,7 @@ const express = require('express');
 const controller = require('../controllers/subcityController');
 const requireAdmin = require('../middleware/adminMiddleware');
 const router = express.Router();
+require('../utils/numericRouteParams').numericRouteParams(router,'id','cityId');
 
 router.get('/', controller.get);
 router.post('/', requireAdmin, controller.create);
