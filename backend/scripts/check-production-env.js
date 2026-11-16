@@ -112,9 +112,10 @@ function boundedInteger(key,fallback,min,max){
 }
 const requestTimeout=boundedInteger('HTTP_REQUEST_TIMEOUT_MS',60000,5000,300000);
 const headersTimeout=boundedInteger('HTTP_HEADERS_TIMEOUT_MS',15000,5000,300000);
-boundedInteger('HTTP_KEEP_ALIVE_TIMEOUT_MS',5000,1000,60000);
+const keepAliveTimeout=boundedInteger('HTTP_KEEP_ALIVE_TIMEOUT_MS',5000,1000,60000);
 boundedInteger('HTTP_MAX_REQUESTS_PER_SOCKET',1000,1,10000);
 if(headersTimeout>requestTimeout)fail('HTTP_HEADERS_TIMEOUT_MS must not exceed HTTP_REQUEST_TIMEOUT_MS');
+if(headersTimeout<=keepAliveTimeout)fail('HTTP_HEADERS_TIMEOUT_MS must be greater than HTTP_KEEP_ALIVE_TIMEOUT_MS');
 
 const dbPoolMax=boundedInteger('DB_POOL_MAX',5,2,10);
 boundedInteger('DB_IDLE_TIMEOUT_MS',30000,1000,300000);

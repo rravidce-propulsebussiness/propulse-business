@@ -1,5 +1,6 @@
 const path=require('path');
 const fs=require('fs');
+const crypto=require('crypto');
 const s3=require('../services/s3PrivateObjectStorageService');
 
 const configuredRoot=String(process.env.UPLOAD_STORAGE_ROOT||'').trim();
@@ -28,7 +29,7 @@ async function probeUploadStorage(){
     return true;
   }
   await fs.promises.mkdir(uploadRoot,{recursive:true,mode:0o700});
-  const probe=path.join(uploadRoot,`.propulse-storage-probe-${process.pid}-${Date.now()}`);
+  const probe=path.join(uploadRoot,`.propulse-storage-probe-${process.pid}-${crypto.randomBytes(8).toString('hex')}`);
   try{
     await fs.promises.writeFile(probe,'ok',{flag:'wx',mode:0o600});
     const value=await fs.promises.readFile(probe,'utf8');

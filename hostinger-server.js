@@ -105,12 +105,16 @@ function proxyToBackend(req,res){
     method:req.method,
     path:req.originalUrl,
     headers,
+    timeout:60000,
   },upstreamResponse=>{
     res.statusCode=upstreamResponse.statusCode||502;
     for(const [name,value] of Object.entries(upstreamResponse.headers)){
       if(value!==undefined)res.setHeader(name,value);
     }
     upstreamResponse.pipe(res);
+  });
+  upstream.on('timeout',()=>{
+    upstream.destroy(Object.assign(new Error('Gateway timeout'),{code:'ETIMEDOUT'}));
   });
   upstream.on('error',error=>{
     console.error('Hostinger backend proxy failed:',error.message);
