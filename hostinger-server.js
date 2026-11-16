@@ -90,7 +90,7 @@ function publicDynamicFrontendPath(requestPath){return /^\/offers\/[a-z0-9-]+\/(
 function knownSpaFrontendPath(requestPath){return privateFrontendPath(requestPath)||publicSpaFrontendPaths.has(requestPath)||publicDynamicFrontendPath(requestPath);}
 
 function proxyToBackend(req,res){
-  const forwardedProto=String(req.headers['x-forwarded-proto']||'').split(',')[0].trim()||(req.socket.encrypted?'https':'https');
+  const forwardedProto=String(req.headers['x-forwarded-proto']||'').split(',')[0].trim()||(req.socket.encrypted?'https':'http');
   const forwardedHost=String(req.headers['x-forwarded-host']||req.headers.host||'').split(',')[0].trim();
   const headers={
     ...req.headers,

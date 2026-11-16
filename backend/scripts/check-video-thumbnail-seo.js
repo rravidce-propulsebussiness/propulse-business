@@ -86,7 +86,8 @@ assert(worker.includes('backfill_existing_thumbnail(connection,client)'));
 assert(worker.includes('video_thumbnail_source_url=%s'));
 assert(worker.includes('"ContentType":"image/jpeg"'));
 assert(!worker.includes('detect_contact_boxes'),'Video thumbnails must not reintroduce masking');
-const syntax=spawnSync('python3',['-c','import ast, pathlib; ast.parse(pathlib.Path("video-redactor/worker.py").read_text())'],
+const pythonBin=['python3','python','py'].find(cmd=>{const r=spawnSync(cmd,['--version']);return !r.error&&r.status===0})||'python3';
+const syntax=spawnSync(pythonBin,['-c','import ast, pathlib; ast.parse(pathlib.Path("video-redactor/worker.py").read_text())'],
   {cwd:root,encoding:'utf8',timeout:10000});
 if(syntax.error&&syntax.error.code!=='ENOENT')throw syntax.error;
 if(!syntax.error)assert.equal(syntax.status,0,'Python video thumbnail worker must parse: '+syntax.stderr);

@@ -149,7 +149,8 @@ assert.match(antiAbuse,/createHmac\('sha256'/);
 assert.doesNotMatch(antiAbuse,/userAgent|localStorage|X-Forwarded-For/);
 
 // Parse the Python worker without importing optional R2 libraries.
-const pythonCheck=spawnSync('python3',['-c',String.raw`
+const pythonBin=['python3','python','py'].find(cmd=>{const r=spawnSync(cmd,['--version']);return !r.error&&r.status===0})||'python3';
+const pythonCheck=spawnSync(pythonBin,['-c',String.raw`
 import ast, pathlib
 source = pathlib.Path('video-redactor/worker.py').read_text()
 tree = ast.parse(source)
