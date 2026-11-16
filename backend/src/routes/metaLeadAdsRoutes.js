@@ -20,6 +20,7 @@ function ownerRouter(scope, guard) {
   const router = express.Router();
   // Meta page IDs are provider strings, not local 32-bit integer IDs.
   require('../utils/numericRouteParams').numericRouteParams(router,'id');
+  router.param('pageId',(req,res,next,value)=>/^[1-9]\d{0,24}$/.test(String(value))?next():res.status(404).json({error:'Not found'}));
   router.use(...guard);
   const owner = req => ({ userId: req.user.id, scope });
   router.get('/status', handle(req => service.getStatus(owner(req))));
