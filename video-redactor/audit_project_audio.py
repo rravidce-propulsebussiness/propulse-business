@@ -39,6 +39,8 @@ def audio_metrics(path):
     chunks = [samples[i:i+slice_size] for i in range(0,len(samples),slice_size)
               if len(samples[i:i+slice_size]) >= slice_size//2]
     rms = np.array([float(np.sqrt(np.mean(x*x))) for x in chunks])
+    if rms.size == 0:
+        return {"track": True, "decoded": True, "status": "silent", "reason": "too_short", "duration_seconds": round(len(samples)/16000, 2)}
     return {
         "track": True,
         "decoded": True,
