@@ -1,21 +1,31 @@
 const authService=require('../services/authService');
+const supabaseAuthService=require('../services/supabaseAuthService');
 
+// Optional access must resolve the same Propulse and Supabase identities as requireAuth.
+// Invalid credentials remain anonymous; they must not break public endpoints.
 async function optionalAuth(req,res,next){
-  try{
-    const header=String(req.headers.authorization||'');
-    const cookieHeader=String(req.headers.cookie||'');
-    const cookieToken=cookieHeader.split(';').map(part=>part.trim()).find(part=>part.startsWith('propulse_auth='))?.slice('propulse_auth='.length);
-    const decodedCookieToken=cookieToken?decodeURIComponent(cookieToken):null;
-    const token=header.startsWith('Bearer ')?header.slice(7):decodedCookieToken;
-    if(!token){req.user=null;return next();}
-    const tokenUser=authService.verifyToken(token);
-    const currentUser=await authService.getAuthenticatedUser(tokenUser.id,tokenUser.auth_version);
-    req.user=currentUser||null;
-    return next();
-  }catch{
-    req.user=null;
-    return next();
+  const header=String(req.headers.authorization||'');
+  const bearer=header.startsWith('Bearer ')?header.slice(7).trim():'';
+  const cookie=String(req.headers.cookie||'').split(';').map(part=>part.trim())
+    .find(part=>part.startsWith('propulse_auth='))?.slice('propulse_auth='.length);
+  let cookieToken='';
+  try{cookieToken=cookie?decodeURIComponent(cookie):''}catch{}
+  req.user=null;
+  for(const token of [...new Set([bearer,cookieToken].filter(Boolean))]){
+    try{
+      const tokenUser=authService.verifyToken(token);
+      const current=await authService.getAuthenticatedUser(tokenUser.id,tokenUser.auth_version);
+      if(current){req.user=current;req.authProvider='propulse';return next();}
+    }catch{}
   }
+  if(bearer&&supabaseAuthService.isConfigured()){
+    try{
+      const supabaseUser=await supabaseAuthService.verifyAccessToken(bearer);
+      const current=await authService.getAuthenticatedUserBySupabaseId(supabaseUser.id);
+      if(current){req.user=current;req.supabaseUser=supabaseUser;req.authProvider='supabase';}
+    }catch{}
+  }
+  return next();
 }
 
 module.exports=optionalAuth;
