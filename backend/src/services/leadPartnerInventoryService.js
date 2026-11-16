@@ -421,7 +421,8 @@ async function importCsv({ userId, csv }) {
       const basePricing = adminConfigured?.shares?.length ? adminConfigured : (createdLead.pricing || { shares: [] });
       const configured = await partnerPricing.applyConfiguredPricingToLead(userId, createdLead.id, basePricing, lead.industryId, lead.cityId, lead.leadType);
       const effectivePricing=sheetPricing||configured||basePricing;
-      const overridden=JSON.stringify(effectivePricing)!==JSON.stringify(basePricing);
+      // Only a partner-supplied sheet price is a manual override; configured rules remain managed.
+       const overridden=Boolean(sheetPricing);
       await pool.query(
         `UPDATE leads SET partner_base_pricing=$1::jsonb,partner_pricing_overridden=$2,partner_pricing_updated_at=$3,pricing=$4::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND created_by=$6`,
         [JSON.stringify(basePricing), overridden, overridden ? new Date() : null, JSON.stringify(effectivePricing), createdLead.id, userId]
