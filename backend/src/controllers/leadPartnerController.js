@@ -28,10 +28,17 @@ async function adminPartners(req,res){try{return res.json(await leadPartnerServi
 async function adminPartnerFinancials(req,res){try{return res.json(await earningsService.getAdminPartnerFinancials(req.params.partnerId));}catch(e){return sendError(res,e.code==='PARTNER_NOT_FOUND'?404:500,e,'Failed to load Lead Partner financials',{code:e.code});}}
 async function adminUpdateStatus(req,res){try{return res.json(await leadPartnerService.updateStatus(req.params.partnerId,req.body?.status,req.user?.id));}catch(e){return sendError(res,e.code==='PARTNER_NOT_FOUND'?404:400,e,'Failed to update Lead Partner status',{code:e.code});}}
 async function pricing(req,res){try{return res.json(await pricingService.list(req.user.id,req.query||{}));}catch(e){const status=e.code==='INVALID_STATUS'?400:500;if(status===500)console.error('Lead Partner pricing workspace failed:',e.message);return sendError(res,status,e,'Failed to load partner pricing',{code:e.code});}}
-async function savePricingRule(req,res){try{return res.json(await pricingService.saveRule(req.user.id,{...(req.body||{}),id:req.params.ruleId}));}catch(e){return sendError(res,500,e,'Failed to process Lead Partner request');}}
-async function createPricingRule(req,res){try{return res.status(201).json(await pricingService.saveRule(req.user.id,req.body||{}));}catch(e){return sendError(res,500,e,'Failed to process Lead Partner request');}}
-async function deletePricingRule(req,res){try{return res.json(await pricingService.deleteRule(req.user.id,req.params.ruleId));}catch(e){return sendError(res,400,e,'Lead Partner request failed',{code:e.code});}}
-async function updatePricing(req,res){try{return res.json(await pricingService.update(req.user.id,req.params.leadId,req.body||{}));}catch(e){return sendError(res,500,e,'Failed to process Lead Partner request');}}
+function pricingErrorStatus(error) {
+  if (error.code === 'NOT_FOUND') return 404;
+  if (['PRICING_SCOPE_EXISTS', 'PRICING_LOCKED', '23505'].includes(error.code)) return 409;
+  if (['PARTNER_NOT_FOUND', 'PARTNER_NOT_ACTIVE'].includes(error.code)) return 403;
+  if (['INVALID_PRICING', 'INVALID_PRICING_CONFIG', 'INVALID_LEAD_ID', 'INVALID_STATUS'].includes(error.code)) return 400;
+  return 500;
+}
+async function savePricingRule(req,res){try{return res.json(await pricingService.saveRule(req.user.id,{...(req.body||{}),id:req.params.ruleId}));}catch(e){return sendError(res,pricingErrorStatus(e),e,'Failed to process Lead Partner request',{code:e.code});}}
+async function createPricingRule(req,res){try{return res.status(201).json(await pricingService.saveRule(req.user.id,req.body||{}));}catch(e){return sendError(res,pricingErrorStatus(e),e,'Failed to process Lead Partner request',{code:e.code});}}
+async function deletePricingRule(req,res){try{return res.json(await pricingService.deleteRule(req.user.id,req.params.ruleId));}catch(e){return sendError(res,pricingErrorStatus(e),e,'Lead Partner request failed',{code:e.code});}}
+async function updatePricing(req,res){try{return res.json(await pricingService.update(req.user.id,req.params.leadId,req.body||{}));}catch(e){return sendError(res,pricingErrorStatus(e),e,'Failed to process Lead Partner request',{code:e.code});}}
 async function payoutAccount(req,res){try{return res.json(await payoutAccountService.get(req.user.id));}catch(e){return res.status(500).json({error:'Failed to load payout account'});}}
 async function savePayoutAccount(req,res){try{return res.json(await payoutAccountService.save({userId:req.user.id,...(req.body||{}),ifscCode:String(req.body?.ifscCode||'').toUpperCase()}));}catch(e){return sendError(res,e.code==='INVALID_PARTNER_PAYOUT_ACCOUNT'?400:500,e,'Failed to save payout account',{code:e.code});}}
 async function funds(req,res){try{return res.json(await payoutService.getFunds(req.user.id));}catch(e){const s=['PARTNER_NOT_FOUND','PARTNER_NOT_ACTIVE'].includes(e.code)?403:500;return sendError(res,s,e,'Lead Partner request failed',{code:e.code});}}
