@@ -3,13 +3,14 @@ const criticalActionAudit=require('./criticalActionAuditService');
 
 const STRATEGIES=Object.freeze(['permanent_single','auto_release','shared']);
 const DEFAULTS=Object.freeze({
-  basic:{leadType:'basic',defaultStrategy:'auto_release',maxBuyerCapacity:3,releaseToTwoAfterHours:24,releaseToThreeAfterHours:48},
-  premium:{leadType:'premium',defaultStrategy:'auto_release',maxBuyerCapacity:3,releaseToTwoAfterHours:48,releaseToThreeAfterHours:96},
+  basic:{leadType:'basic',defaultStrategy:'auto_release',maxBuyerCapacity:3,releaseToTwoAfterHours:24,releaseToThreeAfterHours:48,proEarlyAccessDays:1},
+  premium:{leadType:'premium',defaultStrategy:'auto_release',maxBuyerCapacity:3,releaseToTwoAfterHours:48,releaseToThreeAfterHours:96,proEarlyAccessDays:2},
 });
 
 const clampCapacity=value=>{const n=Number(value);return Number.isFinite(n)?Math.min(3,Math.max(1,Math.floor(n))):3};
 const normalizeStrategy=(value,fallback='shared')=>STRATEGIES.includes(String(value||'').trim().toLowerCase())?String(value).trim().toLowerCase():fallback;
 const optionalHours=value=>{if(value===undefined||value===null||value==='')return null;const n=Number(value);return Number.isFinite(n)&&n>=0?Math.floor(n):null};
+const earlyAccessDays=(value,fallback=1)=>{const n=Number(value??fallback);return Number.isFinite(n)?Math.max(1,Math.min(365,Math.floor(n))):fallback};
 
 function normalizeConfig(input={},fallback=DEFAULTS.basic){
   const fallbackStrategy=fallback.accessStrategy??fallback.defaultStrategy??'auto_release';
@@ -26,7 +27,8 @@ function normalizeConfig(input={},fallback=DEFAULTS.basic){
     if(maxBuyerCapacity>=3&&releaseToThreeAfterHours===null)releaseToThreeAfterHours=Math.max(48,releaseToTwoAfterHours||0);
     if(releaseToTwoAfterHours!==null&&releaseToThreeAfterHours!==null&&releaseToThreeAfterHours<releaseToTwoAfterHours)throw Object.assign(new Error('Release-to-3 time must be after release-to-2 time'),{code:'INVALID_ACCESS_SETTINGS'});
   }
-  return{accessStrategy:strategy,buyerCapacity:maxBuyerCapacity,releaseToTwoAfterHours,releaseToThreeAfterHours};
+  const proEarlyAccessDays=earlyAccessDays(input.proEarlyAccessDays,fallback.proEarlyAccessDays??1);
+  return{accessStrategy:strategy,buyerCapacity:maxBuyerCapacity,releaseToTwoAfterHours,releaseToThreeAfterHours,proEarlyAccessDays};
 }
 
 function effectiveCapacity(lead,at=new Date()){
@@ -61,7 +63,7 @@ function pricingForCapacity(pricing,capacity){
 }
 
 async function getSettings(){
-  const rows=(await pool.query(`SELECT lead_type,default_strategy,max_buyer_capacity,release_to_two_after_hours,release_to_three_after_hours FROM lead_access_settings ORDER BY lead_type`)).rows;
+  const rows=(await pool.query(`SELECT lead_type,default_strategy,max_buyer_capacity,release_to_two_after_hours,release_to_three_after_hours,pro_early_access_days FROM lead_access_settings ORDER BY lead_type`)).rows;
   const out={};
   for(const type of ['basic','premium']){
     const row=rows.find(x=>x.lead_type===type);
@@ -71,6 +73,7 @@ async function getSettings(){
       maxBuyerCapacity:row.max_buyer_capacity,
       releaseToTwoAfterHours:row.release_to_two_after_hours,
       releaseToThreeAfterHours:row.release_to_three_after_hours,
+      proEarlyAccessDays:row.pro_early_access_days,
     },fallback):normalizeConfig({},fallback);
   }
   return out;
@@ -91,11 +94,11 @@ async function updateSettings(input={},adminUserId=null){
     for(const type of ['basic','premium']){
       const fallback=DEFAULTS[type];
       const cfg=normalizeConfig(input[type]||{},fallback);
-      const row=(await client.query(`INSERT INTO lead_access_settings(lead_type,default_strategy,max_buyer_capacity,release_to_two_after_hours,release_to_three_after_hours,updated_at)
-        VALUES($1,$2,$3,$4,$5,CURRENT_TIMESTAMP)
-        ON CONFLICT(lead_type) DO UPDATE SET default_strategy=EXCLUDED.default_strategy,max_buyer_capacity=EXCLUDED.max_buyer_capacity,release_to_two_after_hours=EXCLUDED.release_to_two_after_hours,release_to_three_after_hours=EXCLUDED.release_to_three_after_hours,updated_at=CURRENT_TIMESTAMP
-        RETURNING *`,[type,cfg.accessStrategy,cfg.buyerCapacity,cfg.releaseToTwoAfterHours,cfg.releaseToThreeAfterHours])).rows[0];
-      result[type]=normalizeConfig({defaultStrategy:row.default_strategy,maxBuyerCapacity:row.max_buyer_capacity,releaseToTwoAfterHours:row.release_to_two_after_hours,releaseToThreeAfterHours:row.release_to_three_after_hours},fallback);
+      const row=(await client.query(`INSERT INTO lead_access_settings(lead_type,default_strategy,max_buyer_capacity,release_to_two_after_hours,release_to_three_after_hours,pro_early_access_days,updated_at)
+        VALUES($1,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP)
+        ON CONFLICT(lead_type) DO UPDATE SET default_strategy=EXCLUDED.default_strategy,max_buyer_capacity=EXCLUDED.max_buyer_capacity,release_to_two_after_hours=EXCLUDED.release_to_two_after_hours,release_to_three_after_hours=EXCLUDED.release_to_three_after_hours,pro_early_access_days=EXCLUDED.pro_early_access_days,updated_at=CURRENT_TIMESTAMP
+        RETURNING *`,[type,cfg.accessStrategy,cfg.buyerCapacity,cfg.releaseToTwoAfterHours,cfg.releaseToThreeAfterHours,cfg.proEarlyAccessDays])).rows[0];
+      result[type]=normalizeConfig({defaultStrategy:row.default_strategy,maxBuyerCapacity:row.max_buyer_capacity,releaseToTwoAfterHours:row.release_to_two_after_hours,releaseToThreeAfterHours:row.release_to_three_after_hours,proEarlyAccessDays:row.pro_early_access_days},fallback);
     }
     await criticalActionAudit.record(client,{actorId:adminUserId,category:'pricing',action:'pricing.access_settings',entityType:'lead_access_settings',entityId:'defaults',beforeData:before,afterData:result,source:'lead_access_strategy'});
     await client.query('COMMIT');
