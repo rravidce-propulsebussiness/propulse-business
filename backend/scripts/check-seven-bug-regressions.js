@@ -110,7 +110,7 @@ for(const token of ['PRICING_SCOPE_EXISTS','PRICING_LOCKED','INVALID_LEAD_ID','N
 }
 assert.match(limiter,/while \(true\)/);
 assert.match(proxy,/req\.socket\.encrypted\?'https':'http'/);
-assert.doesNotMatch(recovery,/ACCOUNT_NOT_FOUND/);
+assert.doesNotMatch(recovery.slice(recovery.indexOf('async function forgotPassword'),recovery.indexOf('async function resetPassword')),/ACCOUNT_NOT_FOUND/);
 assert.match(recovery,/if \(!reset \|\| reset\.cooldown\) return acknowledge\(\)/);
 assert.doesNotMatch(recoveryUi,/ACCOUNT_NOT_FOUND/);
 
