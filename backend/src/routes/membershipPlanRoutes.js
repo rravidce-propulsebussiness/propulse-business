@@ -3,6 +3,7 @@ const membershipPlanController = require('../controllers/membershipPlanControlle
 const requireAuth = require('../middleware/authMiddleware');
 
 const router = express.Router();
+require('../utils/numericRouteParams').numericRouteParams(router,'id');
 
 function requireAdmin(req, res, next) {
   if (req.user?.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
