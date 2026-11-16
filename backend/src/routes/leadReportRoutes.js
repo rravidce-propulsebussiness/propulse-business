@@ -3,6 +3,7 @@ const controller=require('../controllers/leadReportController');
 const requireAuth=require('../middleware/authMiddleware');
 const requireAdmin=require('../middleware/adminMiddleware');
 const router=express.Router();
+require('../utils/numericRouteParams').numericRouteParams(router,'leadId','id','userId');
 router.get('/mine',requireAuth,controller.mine);
 router.get('/control',requireAuth,controller.myControl);
 router.post('/leads/:leadId',requireAuth,controller.create);
