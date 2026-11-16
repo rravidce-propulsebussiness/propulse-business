@@ -72,7 +72,11 @@ function leadsToCsv({ formName = '', questions = [], leads = [] }) {
         case 'Meta Ad Spend Total': return lead.__propulsePricing?.totalSpend ?? '';
         case 'Meta Ad Spend Delta': return lead.__propulsePricing?.spendDelta ?? '';
         case 'Normal 1 Buyer Price': return lead.__propulsePricing?.nonMemberPrice ?? '';
-        case 'Pro 1 Buyer Price': return lead.__propulsePricing?.memberPrice ?? '';\n        case 'Normal 2 Buyers Price': return lead.__propulsePricing?.nonMemberTwoSharePrice ?? '';\n        case 'Pro 2 Buyers Price': return lead.__propulsePricing?.memberTwoSharePrice ?? '';\n        case 'Normal 3 Buyers Price': return lead.__propulsePricing?.nonMemberThreeSharePrice ?? '';\n        case 'Pro 3 Buyers Price': return lead.__propulsePricing?.memberThreeSharePrice ?? '';
+        case 'Pro 1 Buyer Price': return lead.__propulsePricing?.memberPrice ?? '';
+        case 'Normal 2 Buyers Price': return lead.__propulsePricing?.nonMemberTwoSharePrice ?? '';
+        case 'Pro 2 Buyers Price': return lead.__propulsePricing?.memberTwoSharePrice ?? '';
+        case 'Normal 3 Buyers Price': return lead.__propulsePricing?.nonMemberThreeSharePrice ?? '';
+        case 'Pro 3 Buyers Price': return lead.__propulsePricing?.memberThreeSharePrice ?? '';
         default: return byHeader.get(header) ?? '';
       }
     });
