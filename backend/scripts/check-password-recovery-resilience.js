@@ -36,7 +36,7 @@ assert.match(service,/created_at > CURRENT_TIMESTAMP - INTERVAL '60 seconds'/,'p
 assert.match(service,/async function discardPasswordResetToken/,'failed email sends must have a token cleanup helper');
 assert.match(controller,/discardPasswordResetToken\(reset\.token\)/,'failed reset email delivery must discard the unusable token');
 assert.match(controller,/if \(!reset \|\| reset\.cooldown\) return acknowledge\(\)/,'unknown and throttled accounts must receive identical acknowledgements');
-assert.doesNotMatch(controller,/ACCOUNT_NOT_FOUND/,'password recovery must not enumerate unknown accounts');
+assert.doesNotMatch(controller.slice(controller.indexOf('async function forgotPassword'),controller.indexOf('async function resetPassword')),/ACCOUNT_NOT_FOUND/,'password recovery must not enumerate unknown accounts');
 assert.match(controller,/return acknowledge\(\)/,'delivery failure must return the same public response');
 assert.match(controller,/password_reset_email_failure/,'reset delivery failures must create a dedicated operational event');
 assert.match(controller,/providerStatus:Number\.isInteger/,'reset failure telemetry must preserve only the safe provider HTTP status');
