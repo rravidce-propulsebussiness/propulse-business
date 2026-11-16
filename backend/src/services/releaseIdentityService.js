@@ -29,7 +29,7 @@ function rawCommit(){
 }
 function commit(){return rawCommit()||'local'}
 function shortCommit(){const value=commit();return value==='local'?value:value.slice(0,12)}
-function deploymentEnvironment(){return String(bakedRelease()?.environment||process.env.DEPLOY_ENVIRONMENT||process.env.NODE_ENV||'development').trim().toLowerCase()}
+function deploymentEnvironment(){return String(process.env.DEPLOY_ENVIRONMENT||bakedRelease()?.environment||process.env.NODE_ENV||'development').trim().toLowerCase()}
 function nodeEnvironment(){return String(process.env.NODE_ENV||'development').trim().toLowerCase()}
 function releaseId(){return String(process.env.RELEASE_ID||'').trim()||null}
 function snapshot(){
