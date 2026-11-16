@@ -26,7 +26,7 @@ assert(migration.includes("('basic','auto_release',3,24,48)"),'Basic default agi
 assert(migration.includes("('premium','auto_release',3,48,96)"),'Premium default aging must keep exclusivity longer');
 assert(migration.includes('lead_effective_buyer_capacity'),'Database must expose one effective-capacity function');
 assert(earlyAccessMigration.includes('pro_early_access_days INTEGER NOT NULL DEFAULT 1'),'Basic early access must default to one day');
-assert(/WHERE lead_type\\s*=\\s*'premium'/.test(earlyAccessMigration),'Premium early access must receive its longer default');
+assert(/WHERE lead_type\s*=\s*'premium'/.test(earlyAccessMigration),'Premium early access must receive its longer default');
 
 assert(access.includes('permanent_single')&&access.includes('auto_release')&&access.includes('shared'),'Shared access service must own all access strategies');
 assert(access.includes('fallback.accessStrategy??fallback.defaultStrategy'),'Normalized Admin access settings must remain valid as lead defaults');
