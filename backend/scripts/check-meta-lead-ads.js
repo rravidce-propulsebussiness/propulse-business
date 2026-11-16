@@ -67,7 +67,7 @@ global.fetch = async (url, init = {}) => {
 const graph = require(src('services/metaGraphClient'));
 const leadImportMapping = require(src('services/leadImportMappingService'));
 const { parseCsvRecords } = require(src('utils/csvRecords'));
-const service = require(src('services/metaLeadAdsService'));
+const service = require(src('services/metaLeadAdsService'));\nconst metaPricing = require(src('services/metaAdPricingService'));
 
 (async () => {
   // Configuration reporting names only
@@ -79,6 +79,17 @@ const service = require(src('services/metaLeadAdsService'));
   assert.strictEqual(graph.decryptToken(sealed), 'test-token');
   const parts = sealed.split(':'); parts[3] = Buffer.from('tampered').toString('base64');
   assert.throws(() => graph.decryptToken(parts.join(':')), 'Tampered ciphertext must not decrypt');
+
+  // Meta share tiers use the same percentage-of-1-share model as partner pricing.
+  assert.deepStrictEqual(metaPricing.withSharePricing({ nonMemberPrice: 237, memberPrice: 207 }, { twoSharePercent: 60, threeSharePercent: 45 }), {
+    nonMemberPrice: 237, memberPrice: 207, nonMemberTwoSharePrice: 142, memberTwoSharePrice: 124,
+    nonMemberThreeSharePrice: 107, memberThreeSharePrice: 93,
+  });
+  const tierCsv = service.leadsToCsv({ leads: [{ id: 'tier', __propulsePricing: { nonMemberPrice: 237, memberPrice: 207, nonMemberTwoSharePrice: 142, memberTwoSharePrice: 124, nonMemberThreeSharePrice: 107, memberThreeSharePrice: 93 } }] });
+  for (const [header, value] of [['Normal 2 Buyers Price','142'],['Pro 2 Buyers Price','124'],['Normal 3 Buyers Price','107'],['Pro 3 Buyers Price','93']]) {
+    assert.ok(tierCsv.includes(header), 'Meta import CSV has '+header);
+    assert.ok(tierCsv.includes(value), 'Meta import CSV carries '+value);
+  }
 
   // Lead -> CSV -> existing mapping: standard Meta fields map automatically
   const csv = service.leadsToCsv({ formName: 'Form A', questions: [], leads: [{ id: '42', created_time: 't', field_data: [{ name: 'full_name', values: ['Asha Rao'] }, { name: 'phone_number', values: ['+919876543210'] }, { name: 'email', values: ['a@b.co'] }, { name: 'zip_code', values: ['500081'] }, { name: 'city', values: ['Hyderabad'] }] }] });
@@ -156,7 +167,10 @@ const service = require(src('services/metaLeadAdsService'));
   assert.ok(!app.includes('path="/admin/leads/sheets"'), 'The retired Google Sheets route is removed');
   const guide = fs.readFileSync(path.resolve(__dirname, '../../docs/META-LEAD-ADS.md'), 'utf8');
   assert.doesNotMatch(guide, /Google Sheets?/i, 'Meta setup guide contains no obsolete Google Sheets instructions');
-  const migrationDir = path.resolve(__dirname, '../src/database/migrations');
+  const migrationDir = path.resolve(__dirname, '../src/database/migrations');\n  const metaShareMigration = fs.readFileSync(path.join(migrationDir, '20261116_zzzz_meta_ad_share_pricing.sql'), 'utf8');
+  assert.match(metaShareMigration, /two_share_percent NUMERIC\(5,2\) NOT NULL DEFAULT 60/);
+  assert.match(metaShareMigration, /three_share_percent NUMERIC\(5,2\) NOT NULL DEFAULT 45/);
+
   const retiredMigrations = fs.readdirSync(migrationDir).filter(name => /google_sheet|lead_partner_sheet/i.test(name) && !['20261116_zz_remove_google_sheets.sql', '20261116_zzz_remove_google_sheet_leads.sql'].includes(name));
   assert.deepStrictEqual(retiredMigrations, [], 'Retired Google Sheets migration history is removed');
   const cleanup = fs.readFileSync(path.join(migrationDir, '20261116_zz_remove_google_sheets.sql'), 'utf8');
