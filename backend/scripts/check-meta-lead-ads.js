@@ -86,6 +86,7 @@ const metaPricing = require(src('services/metaAdPricingService'));
     nonMemberPrice: 237, memberPrice: 207, nonMemberTwoSharePrice: 142, memberTwoSharePrice: 124,
     nonMemberThreeSharePrice: 107, memberThreeSharePrice: 93,
   });
+  assert.strictEqual(metaPricing.withSharePricing({ nonMemberPrice: 10, memberPrice: 1 }, { twoSharePercent: 0, threeSharePercent: 0 }).nonMemberTwoSharePrice, 0, 'Zero share percentages match partner pricing');
   const tierCsv = service.leadsToCsv({ leads: [{ id: 'tier', __propulsePricing: { nonMemberPrice: 237, memberPrice: 207, nonMemberTwoSharePrice: 142, memberTwoSharePrice: 124, nonMemberThreeSharePrice: 107, memberThreeSharePrice: 93 } }] });
   for (const [header, value] of [['Normal 2 Buyers Price','142'],['Pro 2 Buyers Price','124'],['Normal 3 Buyers Price','107'],['Pro 3 Buyers Price','93']]) {
     assert.ok(tierCsv.includes(header), 'Meta import CSV has '+header);
