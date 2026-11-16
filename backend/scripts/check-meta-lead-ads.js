@@ -173,6 +173,10 @@ const metaPricing = require(src('services/metaAdPricingService'));
   const metaShareMigration = fs.readFileSync(path.join(migrationDir, '20261116_zzzz_meta_ad_share_pricing.sql'), 'utf8');
   assert.match(metaShareMigration, /two_share_percent NUMERIC\(5,2\) NOT NULL DEFAULT 60/);
   assert.match(metaShareMigration, /three_share_percent NUMERIC\(5,2\) NOT NULL DEFAULT 45/);
+  const metaShareBoundsMigration = fs.readFileSync(path.join(migrationDir, '20261116_zzzzz_meta_ad_share_percent_bounds.sql'), 'utf8');
+  assert.match(metaShareBoundsMigration, /two_share_percent >= 0 AND two_share_percent <= 100/);
+  assert.match(metaShareBoundsMigration, /three_share_percent >= 0 AND three_share_percent <= 100/);
+
 
   const retiredMigrations = fs.readdirSync(migrationDir).filter(name => /google_sheet|lead_partner_sheet/i.test(name) && !['20261116_zz_remove_google_sheets.sql', '20261116_zzz_remove_google_sheet_leads.sql'].includes(name));
   assert.deepStrictEqual(retiredMigrations, [], 'Retired Google Sheets migration history is removed');
