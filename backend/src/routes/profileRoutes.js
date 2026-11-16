@@ -4,6 +4,7 @@ const requireAuth = require('../middleware/authMiddleware');
 const rateLimit = require('../middleware/rateLimitMiddleware');
 
 const router = express.Router();
+require('../utils/numericRouteParams').numericRouteParams(router,'id','quoteId');
 router.use(requireAuth);
 router.post('/projects/video/uploads/start', profileController.startProjectVideoUpload);
 router.post('/projects/video/uploads/part-url', profileController.signProjectVideoPart);
