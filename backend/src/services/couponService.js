@@ -550,7 +550,24 @@ async function redeemForPayment(client,paymentId){
 async function releaseForPayment(client,paymentId){
   const row=(await client.query('SELECT * FROM coupon_redemptions WHERE payment_id=$1 FOR UPDATE',[paymentId])).rows[0];
   if(!row||row.status==='released')return row||null;
-  if(row.status==='redeemed')await client.query('UPDATE coupons SET used_count=GREATEST(0,used_count-1),updated_at=CURRENT_TIMESTAMP WHERE id=$1',[row.coupon_id]);
+  if(row.status==='redeemed'){
+    // Rewards are separate from discount redemptions. Revoke unspent grants or
+    // reverse wallet credits in the same transaction before releasing the coupon.
+    const reward=(await client.query('SELECT * FROM coupon_rewards WHERE payment_id=$1 FOR UPDATE',[paymentId])).rows[0];
+    if(reward?.reward_type==='lead_bonus'&&reward.lead_grant_id){
+      await client.query('UPDATE lead_entitlement_grants SET shared_quantity=0,premium_quantity=0,expires_at=CURRENT_TIMESTAMP WHERE id=$1',[reward.lead_grant_id]);
+    }
+    if(reward?.reward_type==='wallet_bonus'&&Number(reward.reward_amount)>0){
+      const wallet=(await client.query('SELECT id,balance FROM wallets WHERE user_id=$1 FOR UPDATE',[reward.user_id])).rows[0];
+      const amount=Number(reward.reward_amount);
+      if(!wallet||Number(wallet.balance)<amount)throw Object.assign(new Error('Wallet promotion bonus has already been spent; manual recovery is required'),{code:'COUPON_REWARD_RECOVERY_REQUIRED'});
+      const balance=moneyValue(Number(wallet.balance)-amount);
+      await client.query('UPDATE wallets SET balance=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2',[balance,wallet.id]);
+      await client.query(`INSERT INTO wallet_transactions(wallet_id,user_id,type,amount,balance_after,reference_type,reference_id,payment_id,description)
+        VALUES($1,$2,'debit',$3,$4,'promotion',$5,$6,$7)`,[wallet.id,reward.user_id,amount,balance,reward.coupon_id,paymentId,'Reversal of refunded coupon bonus']);
+    }
+    await client.query('UPDATE coupons SET used_count=GREATEST(0,used_count-1),updated_at=CURRENT_TIMESTAMP WHERE id=$1',[row.coupon_id]);
+  }
   if(!['reserved','redeemed'].includes(row.status))return row;
   return(await client.query(`UPDATE coupon_redemptions SET status='released',released_at=CURRENT_TIMESTAMP WHERE id=$1 RETURNING *`,[row.id])).rows[0];
 }
