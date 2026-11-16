@@ -12,8 +12,8 @@ async function getSettings() {
 function withSharePricing(pricing, settings=DEFAULTS) {
  const price=(base, percent)=> {
   const amount=Number(base)||0;
-  if(amount<=0)return 0;
-  return Math.max(1,Math.round(amount*Number(percent||0)/100));
+  if(amount<=0||Number(percent)<=0)return 0;
+  return Math.round(amount*Number(percent)/100);
  };
  return {...pricing,
   nonMemberTwoSharePrice:price(pricing.nonMemberPrice,settings.twoSharePercent),
