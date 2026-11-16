@@ -35,9 +35,9 @@ assert.match(limiter,/RateLimit-Reset/,'429 responses must expose reset timing')
 assert.match(service,/created_at > CURRENT_TIMESTAMP - INTERVAL '60 seconds'/,'password reset email resend cooldown must be enforced');
 assert.match(service,/async function discardPasswordResetToken/,'failed email sends must have a token cleanup helper');
 assert.match(controller,/discardPasswordResetToken\(reset\.token\)/,'failed reset email delivery must discard the unusable token');
-assert.match(controller,/PASSWORD_RESET_EMAIL_UNAVAILABLE/,'reset email failures must use a stable error code');
-assert.match(controller,/ACCOUNT_NOT_FOUND/,'unknown recovery emails must return an explicit account-not-found code');
-assert.match(controller,/No user found with this email address\./,'unknown recovery emails must show the requested missing-user message');
+assert.match(controller,/if \(!reset \|\| reset\.cooldown\) return acknowledge\(\)/,'unknown and throttled accounts must receive identical acknowledgements');
+assert.doesNotMatch(controller,/ACCOUNT_NOT_FOUND/,'password recovery must not enumerate unknown accounts');
+assert.match(controller,/return acknowledge\(\)/,'delivery failure must return the same public response');
 assert.match(controller,/password_reset_email_failure/,'reset delivery failures must create a dedicated operational event');
 assert.match(controller,/providerStatus:Number\.isInteger/,'reset failure telemetry must preserve only the safe provider HTTP status');
 assert.match(controller,/senderMode:emailService\.configurationHealth\(\)\.senderMode/,'reset failure telemetry must capture only a safe sender mode');
@@ -46,9 +46,8 @@ assert.match(controller,/process\.env\.PUBLIC_APP_URL[\s\S]*process\.env\.FRONTE
 assert.match(forgot,/submittingRef/,'forgot-password form must block duplicate in-flight requests');
 assert.match(forgot,/setCooldown\(60\)/,'forgot-password form must enforce a short resend cooldown');
 assert.match(forgot,/Try again in/,'forgot-password form must show a retry countdown');
-assert.match(forgot,/PASSWORD_RESET_EMAIL_UNAVAILABLE/,'forgot-password form must show a delivery-specific error');
-assert.match(forgot,/ACCOUNT_NOT_FOUND/,'forgot-password form must handle missing accounts explicitly');
-assert.match(forgot,/Reset link sent\. Please check your email\./,'forgot-password form must show an explicit successful send message');
+assert.doesNotMatch(forgot,/ACCOUNT_NOT_FOUND/,'forgot-password UI must not disclose account existence');
+assert.match(forgot,/If an account exists for this email/,'forgot-password form must show a neutral acknowledgement');
 assert.match(forgot,/Not in your inbox\? Check Spam or Promotions\./,'forgot-password success must guide users to spam/promotions');
 assert.match(forgot,/prefers-reduced-motion/,'typing hint must respect reduced-motion preferences');
 assert.match(forgot,/queueMicrotask\(\(\) => \{/,'typing hint state changes must be deferred out of the effect body');
