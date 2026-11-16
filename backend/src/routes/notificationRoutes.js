@@ -1,4 +1,5 @@
 const router=require('express').Router();
+require('../utils/numericRouteParams').numericRouteParams(router,'id');
 const auth=require('../middleware/authMiddleware');
 const c=require('../controllers/notificationController');
 const rateLimit=require('../middleware/rateLimitMiddleware');
