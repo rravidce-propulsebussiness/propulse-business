@@ -10,6 +10,9 @@ const cleanupTimer = setInterval(() => {
   for (const [key, bucket] of buckets) {
     if (now - bucket.startedAt >= bucket.windowMs) buckets.delete(key);
   }
+  for (const [key, lease] of sharedLeases) {
+    if (lease.expiresAt <= now) sharedLeases.delete(key);
+  }
 }, CLEANUP_INTERVAL_MS);
 cleanupTimer.unref?.();
 
