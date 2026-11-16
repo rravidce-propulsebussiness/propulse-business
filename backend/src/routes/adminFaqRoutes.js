@@ -2,6 +2,7 @@ const express=require('express');
 const auth=require('../middleware/authMiddleware');
 const controller=require('../controllers/faqController');
 const router=express.Router();
+require('../utils/numericRouteParams').numericRouteParams(router,'id');
 router.use(auth,(req,res,next)=>req.user?.role==='admin'?next():res.status(403).json({error:'Admin access required'}));
 router.get('/',controller.adminList);
 router.post('/',controller.create);

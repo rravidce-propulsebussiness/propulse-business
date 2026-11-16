@@ -10,7 +10,7 @@ const notificationService = require('./notificationService');
 const paymentAvailability = require('./paymentAvailabilityService');
 
 async function createWalletFirstPayment(client,{userId,totalAmount,purchaseType,purchaseId,membershipPlanId=null,notes,coupon=null,subtotalAmount=null,useWallet=true,membershipChangeType=null,membershipPreviousPlanId=null,membershipCredit=0,membershipTargetStartsAt=null,membershipTargetExpiresAt=null,membershipPricingRuleId=null,membershipLeadEntitlements=null,membershipEffectivePrice=null}) {
-  const total=Number(totalAmount); if(!Number.isFinite(total)||total<=0) throw Object.assign(new Error('Amount must be greater than zero'),{code:'INVALID_AMOUNT'});
+  const total=Number(totalAmount); if(!Number.isFinite(total)||total<0||(total===0&&!['membership','lead'].includes(purchaseType))) throw Object.assign(new Error('Amount must be greater than zero'),{code:'INVALID_AMOUNT'});
   if(!['membership','lead','investment'].includes(purchaseType)) throw Object.assign(new Error('Invalid purchase type'),{code:'INVALID_PURCHASE'});
   if(!Number.isInteger(Number(purchaseId))||Number(purchaseId)<=0) throw Object.assign(new Error('Invalid purchase reference'),{code:'INVALID_REFERENCE'});
   await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`purchase:${userId}:${purchaseType}:${purchaseId}`]);
@@ -18,7 +18,9 @@ async function createWalletFirstPayment(client,{userId,totalAmount,purchaseType,
   if(pending) throw Object.assign(new Error('A payment for this purchase is already pending'),{code:'PAYMENT_PENDING',paymentId:pending.id});
   const created=(await client.query(`INSERT INTO payments(user_id,membership_plan_id,amount,payment_method,status,wallet_amount,external_amount,purchase_type,purchase_id,notes,coupon_id,coupon_code,subtotal_amount,discount_amount,membership_change_type,membership_previous_plan_id,membership_credit,membership_target_starts_at,membership_target_expires_at,membership_pricing_rule_id,membership_lead_entitlements,membership_effective_price) VALUES($1,$2,$3,'manual','pending',0,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING *`,[userId,membershipPlanId,total,purchaseType,purchaseId,notes||'Purchase payment',coupon?.coupon?.id||null,coupon?.coupon?.code||null,subtotalAmount==null?total:Number(subtotalAmount),coupon?.discountAmount||0,membershipChangeType,membershipPreviousPlanId,membershipCredit,membershipTargetStartsAt,membershipTargetExpiresAt,membershipPricingRuleId,membershipLeadEntitlements?JSON.stringify(membershipLeadEntitlements):null,membershipEffectivePrice==null?null:Number(membershipEffectivePrice)])).rows[0];
   if(coupon) await couponService.reserveRedemption(client,{couponId:coupon.coupon.id,userId,paymentId:created.id,purchaseType,purchaseId,discountAmount:coupon.discountAmount});
-  const allocation=useWallet
+  const allocation=total===0
+    ? {walletAmount:0,externalAmount:0,balanceAfter:null,walletTransactionId:null}
+    : useWallet
     ? await walletService.debitForPayment(client,{userId,amount:total,paymentId:created.id,referenceType:purchaseType,referenceId:purchaseId,description:`${purchaseType==='membership'?'Membership':purchaseType==='lead'?'Lead':'Investment'} purchase`})
     : {walletAmount:0,externalAmount:total,balanceAfter:null,walletTransactionId:null};
   const method=allocation.externalAmount<=0?'wallet':'manual',status=allocation.externalAmount<=0?'paid':'pending';
@@ -164,10 +166,21 @@ async function finalizePaymentStatus({id,status,actorId=null,notes=null,source='
         const row=(await client.query(`SELECT * FROM investments WHERE id=$1 AND user_id=$2 FOR UPDATE`,[payment.purchase_id,payment.user_id])).rows[0];
         if(!row)throw Object.assign(new Error('Investment payment target not found'),{code:'INVESTMENT_NOT_FOUND'});
         if(row.status!=='pending')throw Object.assign(new Error('Investment payment target is no longer pending'),{code:'INVESTMENT_NOT_PENDING'});
-        const rule=(await client.query(`SELECT maturity_days FROM investment_industry_rules WHERE industry_id=$1 AND is_active=TRUE`,[row.industry_id])).rows[0];
-        const maturityDays=Number(row.maturity_days||rule?.maturity_days||30);
+        const investmentService=require('./investmentService');
+        // Serialize with other investments and recheck location capacity at settlement time.
+        await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`investment-user:${Number(row.user_id)}`]);
+        const rule=(await client.query(`SELECT maturity_days,maximum_amount FROM investment_industry_rules WHERE industry_id=$1 AND is_active=TRUE FOR SHARE`,[row.industry_id])).rows[0];
+        if(!rule)throw Object.assign(new Error('Investment industry is unavailable'),{code:'INDUSTRY_UNAVAILABLE'});
+        await investmentService.assertIndustryLocationCapacity(client,{industryId:row.industry_id,stateId:row.state_id,cityId:row.city_id,userId:row.user_id});
+        if(Number(row.amount)>Number(rule.maximum_amount))throw Object.assign(new Error('Investment amount is above the current industry limit'),{code:'MAXIMUM_CAPITAL_REACHED'});
+        if(row.cycle_id!=null){
+          const contributed=(await client.query(`SELECT COALESCE(SUM(amount),0)::numeric AS amount FROM investments WHERE cycle_id=$1 AND parent_investment_id IS NULL AND status IN ('pending','active','matured','paid')`,[row.cycle_id])).rows[0];
+          if(Number(contributed?.amount||0)>Number(rule.maximum_amount))throw Object.assign(new Error('Investment cycle exceeds the current maximum amount'),{code:'MAXIMUM_CAPITAL_REACHED'});
+        }
+        const rawMaturity=row.maturity_days??rule.maturity_days??30;
+        const maturityDays=Number.isFinite(Number(rawMaturity))?Number(rawMaturity):30;
         const starts=new Date(),matures=new Date(starts);matures.setDate(matures.getDate()+maturityDays);
-        investment=(await client.query(`UPDATE investments SET status='active',payment_id=$1,starts_at=CURRENT_TIMESTAMP,matures_at=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING *`,[payment.id,matures,row.id])).rows[0];
+        investment=(await client.query(`UPDATE investments SET status=$1,payment_id=$2,starts_at=CURRENT_TIMESTAMP,matures_at=$3,updated_at=CURRENT_TIMESTAMP WHERE id=$4 RETURNING *`,[maturityDays===0?'matured':'active',payment.id,matures,row.id])).rows[0];
         await client.query(`INSERT INTO investment_transactions(investment_id,user_id,type,amount,reference_type,reference_id) VALUES($1,$2,'investment',$3,'payment',$4)`,[row.id,row.user_id,Number(row.amount),payment.id]);
       }else if(payment.purchase_type==='wallet_topup'){
         gatewayTopup=await walletService.completeGatewayTopup(client,{topupId:payment.purchase_id,paymentId:payment.id});

@@ -10,6 +10,9 @@ const cleanupTimer = setInterval(() => {
   for (const [key, bucket] of buckets) {
     if (now - bucket.startedAt >= bucket.windowMs) buckets.delete(key);
   }
+  for (const [key, lease] of sharedLeases) {
+    if (lease.expiresAt <= now) sharedLeases.delete(key);
+  }
 }, CLEANUP_INTERVAL_MS);
 cleanupTimer.unref?.();
 
@@ -69,6 +72,9 @@ async function consumeSharedBucket(key, windowMs, increment = 1) {
 }
 
 async function consumeSharedLeasedBucket(key, windowMs, chunkSize) {
+  // Each awaited reservation may be shared by more callers than its chunk size.
+  // Recheck available counts synchronously after every await before consuming.
+  while (true) {
   const now = Date.now();
   const existing = sharedLeases.get(key);
   if (existing && existing.expiresAt > now && existing.nextCount <= existing.endCount) {
@@ -93,9 +99,9 @@ async function consumeSharedLeasedBucket(key, windowMs, chunkSize) {
     sharedLeasePromises.set(key, reservation);
   }
 
-  const lease = await reservation;
-  const count = lease.nextCount++;
-  return { request_count: count, retry_after: Math.max(1, Math.ceil((lease.expiresAt - Date.now()) / 1000)) };
+  await reservation;
+  // Loop back: if another waiter exhausted this lease, reserve a new chunk.
+  }
 }
 
 function rateLimit({ windowMs = 15 * 60 * 1000, max = 100, scope = 'route', shared = true, sharedChunkSize = 1, keyGenerator = null, skip = null } = {}) {

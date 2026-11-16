@@ -8,13 +8,15 @@ const end=source.indexOf('async function saveRule',start);
 assert(start>=0&&end>start,'Lead Partner pricing apply function must exist');
 const block=source.slice(start,end);
 
-assert(block.includes('UPDATE leads SET pricing=$1::jsonb'),'Pricing rule application must update matching leads set-wise');
+assert(block.includes('UPDATE leads AS l'),'Pricing rules must be applied with one set-wise UPDATE');
 assert(!block.includes('SELECT id FROM leads'),'Pricing rule application must not prefetch every lead ID');
 assert(!/for\s*\(const lead of rows\)/.test(block),'Pricing rule application must not issue one UPDATE per lead');
-assert(block.includes("COALESCE(partner_pricing_overridden,FALSE)=FALSE"),'Set-wise update must preserve partner override protection');
-assert(block.includes("status IN ('available','paused')"),'Set-wise update must preserve eligible lead statuses');
-assert(/industry_id=\$\$\{params\.length\}/.test(block),'Industry scope must remain parameterized');
-assert(/city_id=\$\$\{params\.length\}/.test(block),'City scope must remain parameterized');
+assert(block.includes("COALESCE(l.partner_pricing_overridden,FALSE)=FALSE"),'Set-wise update must preserve manual pricing overrides');
+assert(block.includes("l.status IN ('available','paused')"),'Set-wise update must preserve eligible lead statuses');
+assert(block.includes('r.industry_id IS NULL OR r.industry_id=l.industry_id'),'Industry rule matching must retain specificity');
+assert(block.includes('r.city_id IS NULL OR r.city_id=l.city_id'),'City rule matching must retain specificity');
+assert(block.includes("r.lead_type=l.lead_type"),'Rules must match the lead type');
+assert(block.includes("l.partner_base_pricing, l.pricing"),'Deactivated or deleted rules must revert to the base pricing');
 
 const listStart=source.indexOf('async function list(userId,');
 const listEnd=source.indexOf('function validateRuleInput',listStart);

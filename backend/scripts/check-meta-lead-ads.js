@@ -157,13 +157,17 @@ const service = require(src('services/metaLeadAdsService'));
   const guide = fs.readFileSync(path.resolve(__dirname, '../../docs/META-LEAD-ADS.md'), 'utf8');
   assert.doesNotMatch(guide, /Google Sheets?/i, 'Meta setup guide contains no obsolete Google Sheets instructions');
   const migrationDir = path.resolve(__dirname, '../src/database/migrations');
-  const retiredMigrations = fs.readdirSync(migrationDir).filter(name => /google_sheet|lead_partner_sheet/i.test(name) && name !== '20261116_zz_remove_google_sheets.sql');
+  const retiredMigrations = fs.readdirSync(migrationDir).filter(name => /google_sheet|lead_partner_sheet/i.test(name) && !['20261116_zz_remove_google_sheets.sql', '20261116_zzz_remove_google_sheet_leads.sql'].includes(name));
   assert.deepStrictEqual(retiredMigrations, [], 'Retired Google Sheets migration history is removed');
   const cleanup = fs.readFileSync(path.join(migrationDir, '20261116_zz_remove_google_sheets.sql'), 'utf8');
   for (const table of ['google_sheet_import_previews', 'lead_partner_sheet_connections', 'admin_google_sheet_connections', 'google_sheet_sync_settings']) {
     assert.match(cleanup, new RegExp('DROP TABLE IF EXISTS ' + table), 'Cleanup drops the retired ' + table + ' table');
   }
   assert.match(cleanup, /DELETE FROM schema_migrations/, 'Cleanup forgets retired Sheets migration records');
+  const sourcedLeadCleanup = fs.readFileSync(path.join(migrationDir, '20261116_zzz_remove_google_sheet_leads.sql'), 'utf8');
+  assert.match(sourcedLeadCleanup, /DELETE FROM leads/i, 'Cleanup removes retired Sheet-sourced lead records');
+  assert.ok(sourcedLeadCleanup.includes("COALESCE(source, '') ~*"), 'Lead deletion uses the source field to target only Sheet imports');
+  assert.ok(sourcedLeadCleanup.includes('google[[:space:]_-]*sheets?'), 'Lead deletion matches Google Sheets source labels');
 
   console.log('Meta Lead Ads OAuth, encryption, webhook signature, idempotent import and mapping checks passed.');
 })().catch(error => { console.error(error); process.exit(1); });

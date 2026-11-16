@@ -6,6 +6,8 @@ const rateLimit = require('../middleware/rateLimitMiddleware');
 const idempotency = require('../middleware/idempotencyMiddleware');
 
 const router = express.Router();
+const NUMERIC_PAYMENT_ID = /^[1-9]\d{0,9}$/;
+const INVESTMENT_DRAFT_ID = /^draft_[a-f0-9]{36}$/;
 require('../utils/numericRouteParams').numericRouteParams(router,'id','userId');
 const paymentWriteLimit = rateLimit({ windowMs: 60 * 1000, max: 20 });
 const adminPaymentWriteLimit = rateLimit({ windowMs: 60 * 1000, max: 60 });
@@ -14,7 +16,13 @@ router.post('/checkout/membership', paymentWriteLimit, idempotency('membership.c
 router.get('/gateways', paymentController.getGateways);
 router.post('/gateway-order', paymentWriteLimit, idempotency('payment.gateway_order'), paymentController.createGatewayOrder);
 router.post('/:id/gateway-confirm', paymentWriteLimit, idempotency('payment.gateway_confirm'), paymentController.confirmGatewayPayment);
-router.post('/:id/reference', paymentWriteLimit, paymentController.submitPaymentReference);
+router.post('/:referenceId/reference', paymentWriteLimit, (req, res, next) => {
+  const id = String(req.params.referenceId || '');
+  if (!NUMERIC_PAYMENT_ID.test(id) && !INVESTMENT_DRAFT_ID.test(id)) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  return next();
+}, paymentController.submitPaymentReference);
 router.get('/membership/current', paymentController.getCurrentMembership);
 router.get('/membership/history', paymentController.getUserMembershipPayments);
 router.get('/memberships/customers', requireAdmin, paymentController.getMembershipCustomers);

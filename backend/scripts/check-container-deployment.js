@@ -24,7 +24,7 @@ assert(frontend.includes('nginxinc/nginx-unprivileged'),'Frontend runtime must u
 assert(frontend.includes('VITE_API_URL=/api'),'Frontend production build must remain same-origin');
 assert(nginx.includes('location ^~ /api/'),'Frontend proxy must route API traffic internally');
 assert(nginx.includes('location ^~ /health/'),'Frontend proxy must expose backend health probes');
-assert(nginx.includes('client_max_body_size 10m'),'Reverse proxy must allow the application upload envelope');
+assert(nginx.includes('client_max_body_size 55m'),'Reverse proxy must allow the application upload envelope');
 assert(nginx.includes('try_files $uri $uri.html $uri/ /index.html'),'SPA fallback must prefer route-specific SEO HTML before index.html');
 
 assert(compose.includes('backend:')&&compose.includes('worker:')&&compose.includes('frontend:'),'Deployment must keep web, worker and frontend as distinct supervised services');

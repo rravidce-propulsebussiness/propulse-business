@@ -4,8 +4,9 @@ services:
     restart: unless-stopped
     init: true
     read_only: true
-    tmpfs:
-      - /tmp:size=2g,mode=1777
+    # Disk-backed workspace: original and transcoded copies can exceed 2 GiB.
+    volumes:
+      - project_video_tmp:/tmp
     environment:
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL must be configured}
       PRIVATE_OBJECT_STORAGE_ENDPOINT: ${PRIVATE_OBJECT_STORAGE_ENDPOINT:?R2 endpoint required}
@@ -20,3 +21,6 @@ services:
     pids_limit: 200
     mem_limit: 3g
     cpus: 2.0
+
+volumes:
+  project_video_tmp:

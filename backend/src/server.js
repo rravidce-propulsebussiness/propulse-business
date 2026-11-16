@@ -177,6 +177,9 @@ app.use('/api/customer-flows/:key/:leadId/attachments',largeJsonFor('POST'));
 app.use('/api/customer-flows/:key/:leadId/quotation-email',largeJsonFor('POST'));
 app.use('/api/customer-flows',express.json({limit:'64kb'}));
 app.use(express.json({limit:DEFAULT_JSON_BYTES}));
+// Express 5 leaves req.body undefined for requests without parsed content.
+// Keep signed raw webhook bodies unchanged: those routes are mounted above.
+app.use('/api',(req,res,next)=>{if(req.body==null)req.body={};next();});
 app.use('/api',(req,res,next)=>{res.setHeader('Cache-Control','no-store, private');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');next();});
 app.use('/api',(req,res,next)=>{
   if(startupReady)return next();
