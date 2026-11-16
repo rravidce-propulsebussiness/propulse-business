@@ -14,7 +14,7 @@ const {MAX_PROOF_BYTES,validatePaymentProof}=require('../utils/paymentProofValid
 async function checkoutMembership(req,res){try{const result=await paymentService.createMembershipCheckout({userId:req.user.id,membershipPlanId:req.body.membershipPlanId,couponCode:req.body.couponCode});res.status(201).json(result)}catch(error){console.error('Membership checkout failed:',error.message);const status=error.code==='PAYMENT_PENDING'||error.code==='DUPLICATE_COUPON_REDEMPTION'?409:['INVALID_PLAN','PLAN_NOT_FOUND','INVALID_AMOUNT','PRO_REQUIRED','COUPON_NOT_FOUND','COUPON_INACTIVE','COUPON_NOT_STARTED','COUPON_EXPIRED','MIN_ORDER','PURCHASE_NOT_ELIGIBLE','PLAN_NOT_ELIGIBLE','USER_NOT_ELIGIBLE','INDUSTRY_NOT_ELIGIBLE','USAGE_LIMIT','USER_USAGE_LIMIT','INVALID_AMOUNT','COUPON_REDEMPTION_INVALID'].includes(error.code)?400:500;sendError(res,status,error,'Failed to create membership payment',{code:error.code})}}
 async function submitPaymentReference(req,res){
   try {
-    const draftId=String(req.params.id||'');
+    const draftId=String(req.params.referenceId||'');
     const manualReference=String(req.body.manualReference||'').trim();
     const proofUrl=req.body.proofUrl;
     if(!manualReference)return res.status(400).json({error:'Payment reference / UTR is required',code:'REFERENCE_REQUIRED'});
@@ -27,7 +27,7 @@ async function submitPaymentReference(req,res){
         await telegramPaymentReviewService.notifyPaymentReview(updated.id).catch(error=>console.error('Telegram payment review notification failed:',error.message));
         return res.json(updated);
       }
-      const result=await paymentService.submitPaymentReference({userId:req.user.id,paymentId:req.params.id,manualReference,proofUrl:storedProof,notes:req.body.notes});
+      const result=await paymentService.submitPaymentReference({userId:req.user.id,paymentId:draftId,manualReference,proofUrl:storedProof,notes:req.body.notes});
       await telegramPaymentReviewService.notifyPaymentReview(result.id).catch(error=>console.error('Telegram payment review notification failed:',error.message));
       return res.json(result);
     }catch(error){
