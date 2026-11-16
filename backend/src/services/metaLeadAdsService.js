@@ -18,7 +18,7 @@ const RETURN_PATHS = { admin: '/admin/leads/meta', lead_partner: '/lead-partner/
 const SAMPLE_LEADS = 25;
 const BACKFILL_DAYS = 30;
 const BACKFILL_MAX = 500;
-const FIXED_HEADERS = ['Lead ID', 'Created At', 'Source', 'Meta Form', 'Meta Ad', 'Meta Campaign', 'Meta Platform', 'Meta Ad ID', 'Meta Ad Spend Total', 'Meta Ad Spend Delta', 'Normal 1 Buyer Price', 'Pro 1 Buyer Price'];
+const FIXED_HEADERS = ['Lead ID', 'Created At', 'Source', 'Meta Form', 'Meta Ad', 'Meta Campaign', 'Meta Platform', 'Meta Ad ID', 'Meta Ad Spend Total', 'Meta Ad Spend Delta', 'Normal 1 Buyer Price', 'Pro 1 Buyer Price', 'Normal 2 Buyers Price', 'Pro 2 Buyers Price', 'Normal 3 Buyers Price', 'Pro 3 Buyers Price'];
 
 function clean(value) { return String(value ?? '').trim(); }
 function stateSecret() {
@@ -73,6 +73,10 @@ function leadsToCsv({ formName = '', questions = [], leads = [] }) {
         case 'Meta Ad Spend Delta': return lead.__propulsePricing?.spendDelta ?? '';
         case 'Normal 1 Buyer Price': return lead.__propulsePricing?.nonMemberPrice ?? '';
         case 'Pro 1 Buyer Price': return lead.__propulsePricing?.memberPrice ?? '';
+        case 'Normal 2 Buyers Price': return lead.__propulsePricing?.nonMemberTwoSharePrice ?? '';
+        case 'Pro 2 Buyers Price': return lead.__propulsePricing?.memberTwoSharePrice ?? '';
+        case 'Normal 3 Buyers Price': return lead.__propulsePricing?.nonMemberThreeSharePrice ?? '';
+        case 'Pro 3 Buyers Price': return lead.__propulsePricing?.memberThreeSharePrice ?? '';
         default: return byHeader.get(header) ?? '';
       }
     });
@@ -349,7 +353,7 @@ async function processLead({ leadgenId, formId, lead = null }) {
     let pricing = null;
     if (connection.owner_scope === 'admin') {
       if (claimed.normal_price !== null && claimed.normal_price !== undefined && claimed.member_price !== null && claimed.member_price !== undefined) {
-        pricing = { adId: claimed.ad_id, totalSpend: Number(claimed.total_spend), spendDelta: Number(claimed.spend_delta), nonMemberPrice: Number(claimed.normal_price), memberPrice: Number(claimed.member_price) };
+        pricing = metaAdPricing.withSharePricing({ adId: claimed.ad_id, totalSpend: Number(claimed.total_spend), spendDelta: Number(claimed.spend_delta), nonMemberPrice: Number(claimed.normal_price), memberPrice: Number(claimed.member_price) }, await metaAdPricing.getSettings());
       } else {
         const result = await metaAdPricing.priceLead({ adId: fullLead.ad_id, userTokenEncrypted: connection.meta_user_token_encrypted });
         pricing = result.pricing;
