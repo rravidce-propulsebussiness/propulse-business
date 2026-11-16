@@ -156,24 +156,19 @@ async function googleLogin(req, res) {
 
 async function forgotPassword(req, res) {
   let reset = null;
+  // Identical public responses for unknown, cooling-down, delivered and failed emails.
+  // Delivery errors remain visible only in internal operational monitoring.
+  const acknowledge = () => res.json({
+    message: 'If an account exists for this email, a reset link will be sent. Check your inbox.',
+    sent: true,
+    cooldown: false,
+  });
   try {
     const email = String(req.body?.email || '').trim();
     if (!email) return res.status(400).json({ error: 'Email address is required' });
 
     reset = await authService.createPasswordReset(email);
-    if (!reset) {
-      return res.status(404).json({
-        error: 'No user found with this email address.',
-        code: 'ACCOUNT_NOT_FOUND',
-      });
-    }
-    if (reset.cooldown) {
-      return res.json({
-        message: 'Reset link already sent. Please check your email.',
-        sent: true,
-        cooldown: true,
-      });
-    }
+    if (!reset || reset.cooldown) return acknowledge();
 
     const baseUrl = String(
       process.env.PUBLIC_APP_URL
@@ -185,11 +180,7 @@ async function forgotPassword(req, res) {
     if (!baseUrl) throw new Error('Public application URL is not configured');
     const resetUrl = `${baseUrl}/reset-password#token=${encodeURIComponent(reset.token)}`;
     await sendPasswordResetEmail({ to: reset.user.email, name: reset.user.name, resetUrl });
-    return res.json({
-      message: 'Reset link sent. Please check your email.',
-      sent: true,
-      cooldown: false,
-    });
+    return acknowledge();
   } catch (error) {
     if (reset?.token) {
       await authService.discardPasswordResetToken(reset.token).catch((cleanupError) => {
@@ -212,10 +203,7 @@ async function forgotPassword(req, res) {
         senderMode:emailService.configurationHealth().senderMode,
       },
     }).catch(monitorError=>console.error('Password reset email failure telemetry failed:',monitorError.message));
-    return res.status(503).json({
-      error: 'Password reset email could not be sent right now. Please try again later.',
-      code: 'PASSWORD_RESET_EMAIL_UNAVAILABLE',
-    });
+    return acknowledge();
   }
 }
 
