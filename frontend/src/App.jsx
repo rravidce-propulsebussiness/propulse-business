@@ -17,7 +17,7 @@ const LeadPartnerApprovalPending=lazy(()=>import('./pages/LeadPartnerApprovalPen
 // Paths whose rendering depends on knowing the signed-in user. These keep
 // waiting for /auth/session exactly as before. Mirrors privateFrontendPath()
 // in hostinger-server.js. Returning signed-in browsers (hint) also wait.
-const SESSION_GATED_PATH=/^\/(admin|login|signup|forgot-password|reset-password|profile|wallet|membership|notifications|purchased-leads|my-leads|investment|lead-partner|requirements|estimate|professional-contact|professional-requests|professionals|upcoming-features|dashboard)(\/|$)/;
+const SESSION_GATED_PATH=/^\/(admin|login|signup|forgot-password|reset-password|profile|wallet|membership|notifications|purchased-leads|my-leads|investment|lead-partner|requirements|estimate|professional-contact|professional-faq|professional-upcoming-features|professional-requests|professionals|upcoming-features|dashboard)(\/|$)/;
 function mustWaitForSession(){return hasSessionHint()||SESSION_GATED_PATH.test(window.location.pathname)}
 function SessionBootstrap({children}){const [gated]=useState(mustWaitForSession);const [state,setState]=useState(gated?'checking':'optimistic');const [generation,setGeneration]=useState(0);const fallBackToAnonymous=()=>clearSession({revoke:false}).finally(()=>setState('ready'));useEffect(()=>{
   let frame=0;let next=0;
