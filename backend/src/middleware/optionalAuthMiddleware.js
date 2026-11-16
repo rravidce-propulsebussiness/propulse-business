@@ -11,18 +11,26 @@ async function optionalAuth(req,res,next){
   let cookieToken='';
   try{cookieToken=cookie?decodeURIComponent(cookie):''}catch{}
   req.user=null;
-  for(const token of [...new Set([bearer,cookieToken].filter(Boolean))]){
+  // Explicit bearer credentials take precedence over incidental cookies.
+  if(bearer){
     try{
-      const tokenUser=authService.verifyToken(token);
+      const tokenUser=authService.verifyToken(bearer);
       const current=await authService.getAuthenticatedUser(tokenUser.id,tokenUser.auth_version);
       if(current){req.user=current;req.authProvider='propulse';return next();}
     }catch{}
+    if(supabaseAuthService.isConfigured()){
+      try{
+        const supabaseUser=await supabaseAuthService.verifyAccessToken(bearer);
+        const current=await authService.getAuthenticatedUserBySupabaseId(supabaseUser.id);
+        if(current){req.user=current;req.supabaseUser=supabaseUser;req.authProvider='supabase';return next();}
+      }catch{}
+    }
   }
-  if(bearer&&supabaseAuthService.isConfigured()){
+  if(cookieToken){
     try{
-      const supabaseUser=await supabaseAuthService.verifyAccessToken(bearer);
-      const current=await authService.getAuthenticatedUserBySupabaseId(supabaseUser.id);
-      if(current){req.user=current;req.supabaseUser=supabaseUser;req.authProvider='supabase';}
+      const tokenUser=authService.verifyToken(cookieToken);
+      const current=await authService.getAuthenticatedUser(tokenUser.id,tokenUser.auth_version);
+      if(current){req.user=current;req.authProvider='propulse';return next();}
     }catch{}
   }
   return next();
