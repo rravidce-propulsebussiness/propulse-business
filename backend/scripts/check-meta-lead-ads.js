@@ -157,7 +157,7 @@ const service = require(src('services/metaLeadAdsService'));
   const guide = fs.readFileSync(path.resolve(__dirname, '../../docs/META-LEAD-ADS.md'), 'utf8');
   assert.doesNotMatch(guide, /Google Sheets?/i, 'Meta setup guide contains no obsolete Google Sheets instructions');
   const migrationDir = path.resolve(__dirname, '../src/database/migrations');
-  const retiredMigrations = fs.readdirSync(migrationDir).filter(name => /google_sheet|lead_partner_sheet/i.test(name) && name !== '20261116_zz_remove_google_sheets.sql');
+  const retiredMigrations = fs.readdirSync(migrationDir).filter(name => /google_sheet|lead_partner_sheet/i.test(name) && !['20261116_zz_remove_google_sheets.sql', '20261116_zzz_remove_google_sheet_leads.sql'].includes(name));
   assert.deepStrictEqual(retiredMigrations, [], 'Retired Google Sheets migration history is removed');
   const cleanup = fs.readFileSync(path.join(migrationDir, '20261116_zz_remove_google_sheets.sql'), 'utf8');
   for (const table of ['google_sheet_import_previews', 'lead_partner_sheet_connections', 'admin_google_sheet_connections', 'google_sheet_sync_settings']) {
