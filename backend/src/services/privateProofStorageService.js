@@ -23,6 +23,7 @@ function byteLength(payload){const padding=payload.endsWith('==')?2:payload.ends
 
 async function storeDataUrl(value,{category='proof',maxBytes=DEFAULT_MAX_BYTES}={}){
   const source=String(value||'').trim();
+  if(!source)return null;
   if(!source.startsWith('data:')){
     if(/^https?:\/\//i.test(source)||privateReference(source))return source;
     throw Object.assign(new Error('Proof must be an HTTPS/HTTP URL or valid uploaded proof'),{code:'INVALID_PRIVATE_PROOF'});
