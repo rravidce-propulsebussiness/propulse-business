@@ -166,8 +166,8 @@ const service = require(src('services/metaLeadAdsService'));
   assert.match(cleanup, /DELETE FROM schema_migrations/, 'Cleanup forgets retired Sheets migration records');
   const sourcedLeadCleanup = fs.readFileSync(path.join(migrationDir, '20261116_zzz_remove_google_sheet_leads.sql'), 'utf8');
   assert.match(sourcedLeadCleanup, /DELETE FROM leads/i, 'Cleanup removes retired Sheet-sourced lead records');
-  assert.match(sourcedLeadCleanup, /COALESCE\\(source,\\s*''\\)\\s*~\\*/i, 'Lead deletion uses the source field to target only Sheet imports');
-  assert.match(sourcedLeadCleanup, /google\\[\\[:space:\\]_-\\]\\*sheets\\?/i, 'Lead deletion matches Google Sheets source labels');
+  assert.ok(sourcedLeadCleanup.includes("COALESCE(source, '') ~*"), 'Lead deletion uses the source field to target only Sheet imports');
+  assert.ok(sourcedLeadCleanup.includes('google[[:space:]_-]*sheets?'), 'Lead deletion matches Google Sheets source labels');
 
   console.log('Meta Lead Ads OAuth, encryption, webhook signature, idempotent import and mapping checks passed.');
 })().catch(error => { console.error(error); process.exit(1); });
