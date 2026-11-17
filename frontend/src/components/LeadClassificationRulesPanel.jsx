@@ -61,9 +61,9 @@ export default function LeadClassificationRulesPanel() {
   return <section className="v9-panel v9-classification-panel" style={panelStyle}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap', marginBottom: 12 }}>
       <div>
-        <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '.12em', color: '#bc5c3f' }}>BASIC / PREMIUM CLASSIFICATION</span>
+        <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '.12em', color: '#bc5c3f' }}>BASIC / PREMIUM / EXCLUSIVE CLASSIFICATION</span>
         <strong style={{ display: 'block', marginTop: 5, fontSize: 16, color: '#163253' }}>Classify new Meta leads from their form answers</strong>
-        <small style={{ display: 'block', marginTop: 5, color: '#64748b' }}>Choose the industry for this form, then match its question names. These rules also apply to admin CSV imports.</small>
+        <small style={{ display: 'block', marginTop: 5, color: '#64748b' }}>Set Premium criteria first, then a stricter Exclusive tier for the strongest leads. Rules are scoped per industry and apply to Meta and admin CSV imports.</small>
       </div>
       {draft && <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 750, color: '#334155' }}>
         <input type="checkbox" checked={Boolean(draft.enabled)} onChange={event => setDraft(value => ({ ...value, enabled: event.target.checked }))} />
@@ -111,6 +111,43 @@ export default function LeadClassificationRulesPanel() {
           <button type="button" aria-label={`Remove condition ${index + 1}`} onClick={() => setDraft(value => ({ ...value, premiumConditions: value.premiumConditions.filter((_, position) => position !== index) }))} style={{ padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: 8, background: '#fff', color: '#64748b' }}>Remove</button>
         </div>)}
       </div>
+
+      <section aria-label="Exclusive lead classification" style={{ marginTop: 20, padding: 16, border: '1px solid #fed7aa', borderRadius: 12, background: '#fffaf5' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+          <div>
+            <strong style={{ color: '#9a3412', fontSize: 15 }}>Exclusive leads · above Premium</strong>
+            <small style={{ display: 'block', marginTop: 4, color: '#64748b' }}>An Exclusive lead must first meet the Premium rules, then match these stricter rules too.</small>
+          </div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9a3412', fontWeight: 750 }}>
+            <input type="checkbox" checked={Boolean(draft.exclusiveEnabled)} onChange={event => setDraft(value => ({ ...value, exclusiveEnabled: event.target.checked }))} />
+            Enable Exclusive classification
+          </label>
+        </div>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '12px 0', fontSize: 13, fontWeight: 700, color: '#334155' }}>
+          Exclusive when
+          <select aria-label="Exclusive match mode" value={draft.exclusiveMatchMode || 'all'} onChange={event => setDraft(value => ({ ...value, exclusiveMatchMode: event.target.value }))} style={selectStyle}>
+            <option value="all">all exclusive conditions match (AND)</option>
+            <option value="any">any exclusive condition matches (OR)</option>
+          </select>
+        </label>
+        <div style={{ display: 'grid', gap: 9 }}>
+          {(draft.exclusiveConditions || []).map((condition, index) => <div key={index} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 8, alignItems: 'center' }}>
+            <input aria-label={`Exclusive field ${index + 1}`} value={condition.field || ''} placeholder="Form question, e.g. Budget" onChange={event => setDraft(value => ({ ...value, exclusiveConditions: value.exclusiveConditions.map((item, position) => position === index ? { ...item, field: event.target.value } : item) }))} style={inputStyle} />
+            <select aria-label={`Exclusive comparison ${index + 1}`} value={condition.operator || 'gt'} onChange={event => setDraft(value => ({ ...value, exclusiveConditions: value.exclusiveConditions.map((item, position) => position === index ? { ...item, operator: event.target.value } : item) }))} style={selectStyle}>
+              {condition.fieldType === 'text' ? <><option value="eq">equals</option><option value="contains">contains</option><option value="not_contains">does not contain</option></> : <><option value="gt">greater than</option><option value="gte">at least</option><option value="lt">less than</option><option value="lte">at most</option><option value="eq">equals</option></>}
+            </select>
+            <input aria-label={`Exclusive threshold ${index + 1}`} value={condition.value ?? ''} placeholder={condition.fieldType === 'text' ? 'Answer text' : 'Threshold'} onChange={event => setDraft(value => ({ ...value, exclusiveConditions: value.exclusiveConditions.map((item, position) => position === index ? { ...item, value: event.target.value } : item) }))} style={inputStyle} />
+            <select aria-label={`Exclusive value type ${index + 1}`} value={condition.fieldType || 'number'} onChange={event => { const fieldType = event.target.value; setDraft(value => ({ ...value, exclusiveConditions: value.exclusiveConditions.map((item, position) => position === index ? { ...item, fieldType, operator: fieldType === 'text' ? 'eq' : item.operator } : item) })) }} style={selectStyle}>
+              <option value="number">Number</option><option value="floors">Floors (G+3 = 4)</option><option value="text">Text / choice</option>
+            </select>
+            <button type="button" aria-label={`Remove exclusive condition ${index + 1}`} onClick={() => setDraft(value => ({ ...value, exclusiveConditions: value.exclusiveConditions.filter((_, position) => position !== index) }))} style={{ padding: '8px 10px', border: '1px solid #fed7aa', borderRadius: 8, background: '#fff', color: '#9a3412' }}>Remove</button>
+          </div>)}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginTop: 12 }}>
+          <small style={{ color: '#64748b' }}>Add up to 12 stricter conditions. An empty rule set creates no Exclusive leads.</small>
+          <button type="button" disabled={(draft.exclusiveConditions || []).length >= 12} onClick={() => setDraft(value => ({ ...value, exclusiveConditions: [...(value.exclusiveConditions || []), { field: '', operator: 'gt', value: '', fieldType: 'number' }] }))} style={{ padding: '8px 12px', border: '1px solid #fed7aa', borderRadius: 8, background: '#fff', color: '#9a3412', fontWeight: 750 }}>Add Exclusive condition</button>
+        </div>
+      </section>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginTop: 12 }}>
         <div style={{ fontSize: 12, color: '#64748b' }}>Add up to 12 conditions. Example: Plot Size &gt; 150 sq yd and Floors &gt; G+3.</div>
