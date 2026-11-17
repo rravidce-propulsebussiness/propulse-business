@@ -10,19 +10,26 @@ export default function LeadClassificationRulesPanel() {
   const [settings, setSettings] = useState(null)
   const [draft, setDraft] = useState(null)
   const [industryId, setIndustryId] = useState('')
+  const [accessSettings, setAccessSettings] = useState(null)
+  const [earlyAccessDays, setEarlyAccessDays] = useState('2')
   const [busy, setBusy] = useState(false)
+  const [accessBusy, setAccessBusy] = useState(false)
   const [message, setMessage] = useState('')
+  const [accessMessage, setAccessMessage] = useState('')
 
   useEffect(() => {
     let active = true
     Promise.all([
       authRequest('/leads/classification/settings'),
       authRequest('/industries'),
-    ]).then(([rules, catalog]) => {
+      authRequest('/leads/access-settings'),
+    ]).then(([rules, catalog, access]) => {
       if (!active) return
       setSettings(rules)
       setDraft(rules)
       setIndustries(Array.isArray(catalog) ? catalog : [])
+      setAccessSettings(access)
+      setEarlyAccessDays(String(access?.premium?.proEarlyAccessDays ?? 2))
     }).catch(error => {
       if (active) setMessage(error.message || 'Unable to load lead classification rules')
     })
@@ -39,6 +46,28 @@ export default function LeadClassificationRulesPanel() {
     premiumConditions: current.premiumConditions.map((condition, position) =>
       position === index ? { ...condition, [key]: value } : condition)
   }))
+
+  async function saveEarlyAccessWindow() {
+    if (!accessSettings?.basic || !accessSettings?.premium) return
+    setAccessBusy(true)
+    setAccessMessage('')
+    try {
+      const saved = await authRequest('/leads/access-settings', {
+        method: 'PUT',
+        body: JSON.stringify({
+          basic: accessSettings.basic,
+          premium: { ...accessSettings.premium, proEarlyAccessDays: Number(earlyAccessDays) }
+        })
+      })
+      setAccessSettings(saved)
+      setEarlyAccessDays(String(saved?.premium?.proEarlyAccessDays ?? earlyAccessDays))
+      setAccessMessage('Pro Early Access window saved')
+    } catch (error) {
+      setAccessMessage(error.message || 'Unable to save Pro Early Access window')
+    } finally {
+      setAccessBusy(false)
+    }
+  }
 
   async function saveRules() {
     if (!draft) return
@@ -123,13 +152,24 @@ export default function LeadClassificationRulesPanel() {
             Enable Exclusive classification
           </label>
         </div>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '12px 0', fontSize: 13, fontWeight: 700, color: '#334155' }}>
-          Exclusive when
-          <select aria-label="Exclusive match mode" value={draft.exclusiveMatchMode || 'all'} onChange={event => setDraft(value => ({ ...value, exclusiveMatchMode: event.target.value }))} style={selectStyle}>
-            <option value="all">all exclusive conditions match (AND)</option>
-            <option value="any">any exclusive condition matches (OR)</option>
-          </select>
-        </label>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, flexWrap: 'wrap', margin: '12px 0', fontSize: 13, fontWeight: 700, color: '#334155' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            Exclusive when
+            <select aria-label="Exclusive match mode" value={draft.exclusiveMatchMode || 'all'} onChange={event => setDraft(value => ({ ...value, exclusiveMatchMode: event.target.value }))} style={selectStyle}>
+              <option value="all">all exclusive conditions match (AND)</option>
+              <option value="any">any exclusive condition matches (OR)</option>
+            </select>
+          </label>
+          <label style={{ display: 'grid', gap: 5 }}>
+            Pro Early Access window (days)
+            <input aria-label="Pro Early Access window in days" type="number" min="1" max="365" value={earlyAccessDays} onChange={event => setEarlyAccessDays(event.target.value)} style={{ ...inputStyle, width: 190 }} />
+            <small style={{ color: '#64748b', fontWeight: 500 }}>Applies to Premium leads that also meet the Exclusive rules.</small>
+          </label>
+          <button type="button" disabled={accessBusy || !accessSettings} onClick={saveEarlyAccessWindow} style={{ padding: '9px 14px', border: 0, borderRadius: 8, background: '#9a3412', color: '#fff', fontWeight: 800 }}>
+            {accessBusy ? 'Saving…' : 'Save access window'}
+          </button>
+        </div>
+        {accessMessage && <p role="status" style={{ margin: '0 0 10px', color: accessMessage.includes('Unable') ? '#b91c1c' : '#166534' }}>{accessMessage}</p>}
         <div style={{ display: 'grid', gap: 9 }}>
           {(draft.exclusiveConditions || []).map((condition, index) => <div key={index} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 8, alignItems: 'center' }}>
             <input aria-label={`Exclusive field ${index + 1}`} value={condition.field || ''} placeholder="Form question, e.g. Budget" onChange={event => setDraft(value => ({ ...value, exclusiveConditions: value.exclusiveConditions.map((item, position) => position === index ? { ...item, field: event.target.value } : item) }))} style={inputStyle} />
