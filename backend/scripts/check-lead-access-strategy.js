@@ -44,7 +44,7 @@ assert(exclusiveClassificationMigration.includes('exclusive_conditions')&&exclus
 assert(leadClassification.includes('function classifyExclusive')&&leadClassification.includes("classify(custom,settings,industryId)!=='premium'"),'Exclusive classification must be a stricter tier that requires Premium first');
 assert(leadService.includes('classifyExclusive(cleanJson(customFields)')&&leadService.includes('classifyExclusive(sanitizeCustomFields(customFields)'),'Lead create and update must apply Exclusive rules to captured answers');
 assert(leadImport.includes('leadClassificationService.classifyExclusive(custom,classificationSettings'),'Lead imports must apply configured Exclusive rules');
-assert(classificationUi.includes('Exclusive leads · above Premium')&&classificationUi.includes('Enable Exclusive classification'),'Admins must be able to configure stricter Exclusive lead rules');
+assert(classificationUi.includes('EXCLUSIVE · ABOVE PREMIUM')&&classificationUi.includes('Enable Exclusive classification'),'Admins must be able to configure stricter Exclusive lead rules');
 assert(leadService.includes('access.proEarlyAccessDays'),'Exclusive lead creation must default from the configured access rule');
 assert(leadService.includes("accessSource==='import'||accessSource==='rule'"),'Lead updates must resolve uploaded/config access from one shared configuration');
 assert(leadService.includes('Lead pricing must include exactly 1, 2 and 3 buyer tiers'),'Admin pricing must be fixed to 1/2/3 buyer stages');
@@ -72,7 +72,7 @@ assert(partnerPricing.includes('buildFixedPartnerPricing'),'Lead Partner sheet p
 
 assert(adminPricing.includes('BUYER_TIERS=[1,2,3]'),'Admin pricing UI must expose only 1/2/3 buyer tiers');
 assert(adminPricing.includes('BUYER ACCESS DEFAULTS'),'Admin pricing must manage Basic/Premium access defaults');
-assert(classificationUi.includes('Pro Early Access window (days)')&&!adminPricing.includes('Pro Early Access window (days)'),'Pro Early Access duration must be configured alongside Exclusive criteria, not in Lead Pricing');
+assert(classificationUi.includes('Pro Early Access window')&&!adminPricing.includes('Pro Early Access window (days)'),'Pro Early Access duration must be configured alongside Exclusive criteria, not in Lead Pricing');
 assert(classificationUi.includes("authRequest('/leads/access-settings')")&&classificationUi.includes('saveEarlyAccessWindow'),'Meta lead classification must persist the Pro Early Access window');
 assert(adminLeads.includes('earlyAccessDays[d.leadType]'),'Lead editor must use the configured duration when marking a lead for Pro Early Access');
 assert(adminLeads.includes("'Access Strategy'")&&adminLeads.includes("'Release to 2 Hours'"),'Admin lead sample must include access strategy timing fields');
