@@ -9,6 +9,7 @@ const migration=read('src/database/migrations/20260926_lead_access_strategy.sql'
 const earlyAccessMigration=read('src/database/migrations/20261117_pro_early_access_settings.sql');
 const access=read('src/services/leadAccessStrategyService.js');
 const leadService=read('src/services/leadService.js');
+const leadImport=read('src/services/adminLeadCsvImportService.js');
 const leadRead=read('src/services/leadReadService.js');
 const purchase=read('src/services/leadPurchaseService.js');
 const entitlement=read('src/services/leadEntitlementService.js');
@@ -36,6 +37,8 @@ assert(access.includes('access_capacity_locked=COALESCE(access_capacity_locked,$
 assert(access.includes("UPDATE leads SET status='sold'"),'Lead must close when the locked capacity is filled');
 
 assert(leadService.includes('accessService.resolveForLead'),'Lead creation must reuse the shared access configuration');
+assert(leadService.includes("const exclusive=type==='premium'||Boolean(isExclusive)"),'Premium-classified leads must automatically receive Pro Early Access on create and update');
+assert(leadImport.includes("autoLeadType)==='premium'"),'Lead imports must use the Premium classifier to automatically enable Pro Early Access');
 assert(leadService.includes('access.proEarlyAccessDays'),'Exclusive lead creation must default from the configured access rule');
 assert(leadService.includes("accessSource==='import'||accessSource==='rule'"),'Lead updates must resolve uploaded/config access from one shared configuration');
 assert(leadService.includes('Lead pricing must include exactly 1, 2 and 3 buyer tiers'),'Admin pricing must be fixed to 1/2/3 buyer stages');
