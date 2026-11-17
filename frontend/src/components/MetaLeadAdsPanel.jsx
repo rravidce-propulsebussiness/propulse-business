@@ -7,7 +7,7 @@ import './MetaLeadAdsPanel.css'
 // scope: 'admin' (ProPulse admin leads) or 'partner' (Lead Partner inventory).
 const fmtDate = value => value ? new Date(value).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—'
 
-export default function MetaLeadAdsPanel({ scope = 'partner' }) {
+export default function MetaLeadAdsPanel({ scope = 'partner', onStatusChange }) {
   const base = scope === 'admin' ? '/meta-leads/admin' : '/meta-leads/partner'
   const [status, setStatus] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -23,10 +23,18 @@ export default function MetaLeadAdsPanel({ scope = 'partner' }) {
   const [stale, setStale] = useState(false)
 
   const load = useCallback(async () => {
-    try { setLoading(true); setStatus(await authRequest(base + '/status')) }
-    catch (e) { setMessage({ type: 'error', text: e.message }) }
+    try {
+      setLoading(true)
+      const nextStatus = await authRequest(base + '/status')
+      setStatus(nextStatus)
+      onStatusChange?.({
+        pageCount: Array.isArray(nextStatus?.pages) ? nextStatus.pages.length : 0,
+        formCount: Array.isArray(nextStatus?.connections) ? nextStatus.connections.length : 0,
+        configured: Boolean(nextStatus?.configured)
+      })
+    } catch (e) { setMessage({ type: 'error', text: e.message }) }
     finally { setLoading(false) }
-  }, [base])
+  }, [base, onStatusChange])
 
   useEffect(() => {
     let active = true

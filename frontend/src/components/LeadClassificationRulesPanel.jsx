@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
 import { authRequest } from '../utils/auth'
+import './LeadClassificationRulesPanel.css'
 
-const panelStyle = { margin: '0 0 18px', padding: 18, border: '1px solid #dce5ef', borderRadius: 14, background: '#fff', boxShadow: '0 8px 24px rgba(15,45,82,.045)' }
-const selectStyle = { padding: '9px 8px', border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff' }
-const inputStyle = { minWidth: 0, padding: '9px 10px', border: '1px solid #cbd5e1', borderRadius: 8 }
+const operatorLabels = { gt: '>', gte: '≥', lt: '<', lte: '≤', eq: '=', contains: 'contains', not_contains: 'does not contain' }
 
-export default function LeadClassificationRulesPanel() {
+export default function LeadClassificationRulesPanel({ onStatusChange }) {
   const [industries, setIndustries] = useState([])
   const [settings, setSettings] = useState(null)
   const [draft, setDraft] = useState(null)
@@ -41,10 +40,24 @@ export default function LeadClassificationRulesPanel() {
     setDraft(industryId ? settings.industryRules?.[industryId] || settings : settings)
   }, [settings, industryId])
 
-  const updateCondition = (index, key, value) => setDraft(current => ({
+  useEffect(() => {
+    onStatusChange?.({ enabled: Boolean(draft?.enabled) })
+  }, [draft?.enabled, onStatusChange])
+
+  const updateCondition = (tier, index, key, value) => setDraft(current => ({
     ...current,
-    premiumConditions: current.premiumConditions.map((condition, position) =>
+    [tier]: current[tier].map((condition, position) =>
       position === index ? { ...condition, [key]: value } : condition)
+  }))
+
+  const addCondition = tier => setDraft(current => ({
+    ...current,
+    [tier]: [...(current[tier] || []), { field: '', operator: 'gt', value: '', fieldType: 'number' }]
+  }))
+
+  const removeCondition = (tier, index) => setDraft(current => ({
+    ...current,
+    [tier]: current[tier].filter((_, position) => position !== index)
   }))
 
   async function saveEarlyAccessWindow() {
@@ -79,6 +92,7 @@ export default function LeadClassificationRulesPanel() {
         body: JSON.stringify({ ...draft, industryId: industryId || null })
       })
       setSettings(saved)
+      setDraft(industryId ? saved.industryRules?.[industryId] || saved : saved)
       setMessage(industryId ? 'Industry-specific rules saved' : 'All-industries fallback rules saved')
     } catch (error) {
       setMessage(error.message || 'Unable to save lead classification rules')
@@ -87,116 +101,178 @@ export default function LeadClassificationRulesPanel() {
     }
   }
 
-  return <section className="v9-panel v9-classification-panel" style={panelStyle}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap', marginBottom: 12 }}>
-      <div>
-        <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '.12em', color: '#bc5c3f' }}>BASIC / PREMIUM / EXCLUSIVE CLASSIFICATION</span>
-        <strong style={{ display: 'block', marginTop: 5, fontSize: 16, color: '#163253' }}>Classify new Meta leads from their form answers</strong>
-        <small style={{ display: 'block', marginTop: 5, color: '#64748b' }}>Set Premium criteria first, then a stricter Exclusive tier for the strongest leads. Rules are scoped per industry and apply to Meta and admin CSV imports.</small>
-      </div>
-      {draft && <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 750, color: '#334155' }}>
-        <input type="checkbox" checked={Boolean(draft.enabled)} onChange={event => setDraft(value => ({ ...value, enabled: event.target.checked }))} />
-        Auto-classify new imports
-      </label>}
+  const summarize = (conditions, mode) => {
+    if (!conditions?.length) return 'No conditions configured yet.'
+    return conditions.slice(0, 2).map(condition => {
+      const field = condition.field || 'Question'
+      const operator = operatorLabels[condition.operator] || '>'
+      const value = condition.value || 'value'
+      return fieldTypeIsText(condition.fieldType) ? field + ' ' + operator + ' “' + value + '”' : field + ' ' + operator + ' ' + value
+    }).join(mode === 'any' ? ' or ' : ' and ')
+  }
+
+  const fieldTypeIsText = type => type === 'text'
+  const conditionRows = (tier, conditions, prefix) => (conditions || []).map((condition, index) => (
+    <div className="mla-condition-row" key={prefix + '-' + index}>
+      <input aria-label={prefix + ' field ' + (index + 1)} value={condition.field || ''} placeholder="Form question, e.g. Plot Size" onChange={event => updateCondition(tier, index, 'field', event.target.value)} />
+      <select aria-label={prefix + ' comparison ' + (index + 1)} value={condition.operator || 'gt'} onChange={event => updateCondition(tier, index, 'operator', event.target.value)}>
+        {condition.fieldType === 'text'
+          ? <><option value="eq">equals</option><option value="contains">contains</option><option value="not_contains">does not contain</option></>
+          : <><option value="gt">greater than</option><option value="gte">at least</option><option value="lt">less than</option><option value="lte">at most</option><option value="eq">equals</option></>}
+      </select>
+      <input aria-label={prefix + ' threshold ' + (index + 1)} value={condition.value ?? ''} placeholder={condition.fieldType === 'text' ? 'Answer text' : 'Threshold'} onChange={event => updateCondition(tier, index, 'value', event.target.value)} />
+      <select aria-label={prefix + ' value type ' + (index + 1)} value={condition.fieldType || 'number'} onChange={event => {
+        const fieldType = event.target.value
+        setDraft(value => ({ ...value, [tier]: value[tier].map((item, position) => position === index
+          ? { ...item, fieldType, operator: fieldType === 'text' ? 'eq' : item.operator }
+          : item) }))
+      }}>
+        <option value="number">Number</option>
+        <option value="floors">Floors (G+3 = 4)</option>
+        <option value="text">Text / choice</option>
+      </select>
+      <button type="button" className="mla-condition-remove" aria-label={'Remove ' + prefix.toLowerCase() + ' condition ' + (index + 1)} onClick={() => removeCondition(tier, index)}>Remove</button>
     </div>
+  ))
 
-    {!draft ? <p className="mla-muted">Loading classification rules…</p> : <>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0 12px', fontSize: 13, fontWeight: 700, color: '#334155' }}>
-        Rules for
-        <select aria-label="Classification industry" value={industryId} onChange={event => setIndustryId(event.target.value)} style={selectStyle}>
-          <option value="">All industries (fallback)</option>
-          {industries.map(item => <option key={item.id} value={String(item.id)}>{item.name}</option>)}
-        </select>
-      </label>
-      {industryId && !settings?.industryRules?.[industryId] && <small style={{ display: 'block', margin: '-4px 0 12px', color: '#64748b' }}>This industry inherits the fallback until you save its own rules.</small>}
+  return <section className="mla-classification">
+    {!draft ? <div className="mla-rules-loading">Loading classification rules…</div> : <>
+      <div className="mla-classification-layout">
+        <section className="mla-rule-builder">
+          <header className="mla-rules-heading">
+            <div>
+              <span className="mla-rules-kicker">BASIC / PREMIUM / EXCLUSIVE CLASSIFICATION</span>
+              <h2>Rules Configuration</h2>
+              <p>Classify new Meta leads from their form answers.</p>
+            </div>
+            <label className="mla-auto-toggle">
+              <span>Auto-classify new imports</span>
+              <input type="checkbox" checked={Boolean(draft.enabled)} onChange={event => setDraft(value => ({ ...value, enabled: event.target.checked }))} />
+              <i aria-hidden="true" />
+            </label>
+          </header>
 
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0 14px', fontSize: 13, fontWeight: 700, color: '#334155' }}>
-        Premium when
-        <select aria-label="Premium match mode" value={draft.matchMode || 'all'} onChange={event => setDraft(value => ({ ...value, matchMode: event.target.value }))} style={selectStyle}>
-          <option value="all">all conditions match (AND)</option>
-          <option value="any">any condition matches (OR)</option>
-        </select>
-      </label>
-
-      <div style={{ display: 'grid', gap: 9 }}>
-        {(draft.premiumConditions || []).map((condition, index) => <div key={index} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 8, alignItems: 'center' }}>
-          <input aria-label={`Premium field ${index + 1}`} value={condition.field || ''} placeholder="Form question, e.g. Plot Size" onChange={event => updateCondition(index, 'field', event.target.value)} style={inputStyle} />
-          <select aria-label={`Premium comparison ${index + 1}`} value={condition.operator || 'gt'} onChange={event => updateCondition(index, 'operator', event.target.value)} style={selectStyle}>
-            {condition.fieldType === 'text'
-              ? <><option value="eq">equals</option><option value="contains">contains</option><option value="not_contains">does not contain</option></>
-              : <><option value="gt">greater than</option><option value="gte">at least</option><option value="lt">less than</option><option value="lte">at most</option><option value="eq">equals</option></>}
-          </select>
-          <input aria-label={`Premium threshold ${index + 1}`} value={condition.value ?? ''} placeholder={condition.fieldType === 'text' ? 'Answer text' : 'Threshold'} onChange={event => updateCondition(index, 'value', event.target.value)} style={inputStyle} />
-          <select aria-label={`Premium value type ${index + 1}`} value={condition.fieldType || 'number'} onChange={event => {
-            const fieldType = event.target.value
-            setDraft(value => ({ ...value, premiumConditions: value.premiumConditions.map((item, position) => position === index
-              ? { ...item, fieldType, operator: fieldType === 'text' ? 'eq' : item.operator }
-              : item) }))
-          }} style={selectStyle}>
-            <option value="number">Number</option>
-            <option value="floors">Floors (G+3 = 4)</option>
-            <option value="text">Text / choice</option>
-          </select>
-          <button type="button" aria-label={`Remove condition ${index + 1}`} onClick={() => setDraft(value => ({ ...value, premiumConditions: value.premiumConditions.filter((_, position) => position !== index) }))} style={{ padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: 8, background: '#fff', color: '#64748b' }}>Remove</button>
-        </div>)}
-      </div>
-
-      <section aria-label="Exclusive lead classification" style={{ marginTop: 20, padding: 16, border: '1px solid #fed7aa', borderRadius: 12, background: '#fffaf5' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
-          <div>
-            <strong style={{ color: '#9a3412', fontSize: 15 }}>Exclusive leads · above Premium</strong>
-            <small style={{ display: 'block', marginTop: 4, color: '#64748b' }}>An Exclusive lead must first meet the Premium rules, then match these stricter rules too.</small>
+          <div className="mla-rule-settings-row">
+            <label className="mla-meta-field mla-industry-field">
+              <span>Rules for</span>
+              <select aria-label="Classification industry" value={industryId} onChange={event => setIndustryId(event.target.value)}>
+                <option value="">All industries (fallback)</option>
+                {industries.map(item => <option key={item.id} value={String(item.id)}>{item.name}</option>)}
+              </select>
+            </label>
+            <label className="mla-meta-field mla-match-field">
+              <span>Premium when</span>
+              <select aria-label="Premium match mode" value={draft.matchMode || 'all'} onChange={event => setDraft(value => ({ ...value, matchMode: event.target.value }))}>
+                <option value="all">All conditions match (AND)</option>
+                <option value="any">Any condition matches (OR)</option>
+              </select>
+            </label>
           </div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9a3412', fontWeight: 750 }}>
-            <input type="checkbox" checked={Boolean(draft.exclusiveEnabled)} onChange={event => setDraft(value => ({ ...value, exclusiveEnabled: event.target.checked }))} />
-            Enable Exclusive classification
-          </label>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, flexWrap: 'wrap', margin: '12px 0', fontSize: 13, fontWeight: 700, color: '#334155' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            Exclusive when
-            <select aria-label="Exclusive match mode" value={draft.exclusiveMatchMode || 'all'} onChange={event => setDraft(value => ({ ...value, exclusiveMatchMode: event.target.value }))} style={selectStyle}>
-              <option value="all">all exclusive conditions match (AND)</option>
-              <option value="any">any exclusive condition matches (OR)</option>
-            </select>
-          </label>
-          <label style={{ display: 'grid', gap: 5 }}>
-            Pro Early Access window (days)
-            <input aria-label="Pro Early Access window in days" type="number" min="1" max="365" value={earlyAccessDays} onChange={event => setEarlyAccessDays(event.target.value)} style={{ ...inputStyle, width: 190 }} />
-            <small style={{ color: '#64748b', fontWeight: 500 }}>Applies to Premium leads that also meet the Exclusive rules.</small>
-          </label>
-          <button type="button" disabled={accessBusy || !accessSettings} onClick={saveEarlyAccessWindow} style={{ padding: '9px 14px', border: 0, borderRadius: 8, background: '#9a3412', color: '#fff', fontWeight: 800 }}>
-            {accessBusy ? 'Saving…' : 'Save access window'}
-          </button>
-        </div>
-        {accessMessage && <p role="status" style={{ margin: '0 0 10px', color: accessMessage.includes('Unable') ? '#b91c1c' : '#166534' }}>{accessMessage}</p>}
-        <div style={{ display: 'grid', gap: 9 }}>
-          {(draft.exclusiveConditions || []).map((condition, index) => <div key={index} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 8, alignItems: 'center' }}>
-            <input aria-label={`Exclusive field ${index + 1}`} value={condition.field || ''} placeholder="Form question, e.g. Budget" onChange={event => setDraft(value => ({ ...value, exclusiveConditions: value.exclusiveConditions.map((item, position) => position === index ? { ...item, field: event.target.value } : item) }))} style={inputStyle} />
-            <select aria-label={`Exclusive comparison ${index + 1}`} value={condition.operator || 'gt'} onChange={event => setDraft(value => ({ ...value, exclusiveConditions: value.exclusiveConditions.map((item, position) => position === index ? { ...item, operator: event.target.value } : item) }))} style={selectStyle}>
-              {condition.fieldType === 'text' ? <><option value="eq">equals</option><option value="contains">contains</option><option value="not_contains">does not contain</option></> : <><option value="gt">greater than</option><option value="gte">at least</option><option value="lt">less than</option><option value="lte">at most</option><option value="eq">equals</option></>}
-            </select>
-            <input aria-label={`Exclusive threshold ${index + 1}`} value={condition.value ?? ''} placeholder={condition.fieldType === 'text' ? 'Answer text' : 'Threshold'} onChange={event => setDraft(value => ({ ...value, exclusiveConditions: value.exclusiveConditions.map((item, position) => position === index ? { ...item, value: event.target.value } : item) }))} style={inputStyle} />
-            <select aria-label={`Exclusive value type ${index + 1}`} value={condition.fieldType || 'number'} onChange={event => { const fieldType = event.target.value; setDraft(value => ({ ...value, exclusiveConditions: value.exclusiveConditions.map((item, position) => position === index ? { ...item, fieldType, operator: fieldType === 'text' ? 'eq' : item.operator } : item) })) }} style={selectStyle}>
-              <option value="number">Number</option><option value="floors">Floors (G+3 = 4)</option><option value="text">Text / choice</option>
-            </select>
-            <button type="button" aria-label={`Remove exclusive condition ${index + 1}`} onClick={() => setDraft(value => ({ ...value, exclusiveConditions: value.exclusiveConditions.filter((_, position) => position !== index) }))} style={{ padding: '8px 10px', border: '1px solid #fed7aa', borderRadius: 8, background: '#fff', color: '#9a3412' }}>Remove</button>
-          </div>)}
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginTop: 12 }}>
-          <small style={{ color: '#64748b' }}>Add up to 12 stricter conditions. An empty rule set creates no Exclusive leads.</small>
-          <button type="button" disabled={(draft.exclusiveConditions || []).length >= 12} onClick={() => setDraft(value => ({ ...value, exclusiveConditions: [...(value.exclusiveConditions || []), { field: '', operator: 'gt', value: '', fieldType: 'number' }] }))} style={{ padding: '8px 12px', border: '1px solid #fed7aa', borderRadius: 8, background: '#fff', color: '#9a3412', fontWeight: 750 }}>Add Exclusive condition</button>
-        </div>
-      </section>
+          {industryId && !settings?.industryRules?.[industryId] && <p className="mla-inherit-note">This industry inherits the fallback until you save its own rules.</p>}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginTop: 12 }}>
-        <div style={{ fontSize: 12, color: '#64748b' }}>Add up to 12 conditions. Example: Plot Size &gt; 150 sq yd and Floors &gt; G+3.</div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button type="button" disabled={(draft.premiumConditions || []).length >= 12} onClick={() => setDraft(value => ({ ...value, premiumConditions: [...(value.premiumConditions || []), { field: '', operator: 'gt', value: '', fieldType: 'number' }] }))} style={{ padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', color: '#173b70', fontWeight: 750 }}>Add condition</button>
-          <button type="button" disabled={busy} onClick={saveRules} style={{ padding: '8px 14px', border: 0, borderRadius: 8, background: '#0b2d63', color: '#fff', fontWeight: 800 }}>{busy ? 'Saving…' : 'Save rules'}</button>
-        </div>
+          <section className="mla-rule-group">
+            <div className="mla-rule-group-heading">
+              <strong>Premium Rules</strong>
+              <span>classifies lead as Premium</span>
+            </div>
+            <div className="mla-condition-list">{conditionRows('premiumConditions', draft.premiumConditions, 'Premium')}</div>
+            <p className="mla-rule-help">Add up to 12 conditions. Example: Plot Size &gt; 150 sq yd and Floors &gt; G+3.</p>
+          </section>
+
+          <section className="mla-exclusive-card" aria-label="Exclusive lead classification">
+            <header className="mla-exclusive-heading">
+              <span className="mla-crown" aria-hidden="true">♛</span>
+              <div>
+                <h3>EXCLUSIVE · ABOVE PREMIUM</h3>
+                <p>Premium leads that also meet these stricter conditions get Pro Early Access.</p>
+              </div>
+              <label className="mla-exclusive-toggle">
+                <span>Enable Exclusive classification</span>
+                <input type="checkbox" checked={Boolean(draft.exclusiveEnabled)} onChange={event => setDraft(value => ({ ...value, exclusiveEnabled: event.target.checked }))} />
+                <i aria-hidden="true" />
+              </label>
+            </header>
+
+            <label className="mla-meta-field mla-exclusive-match">
+              <span>Exclusive when</span>
+              <select aria-label="Exclusive match mode" value={draft.exclusiveMatchMode || 'all'} onChange={event => setDraft(value => ({ ...value, exclusiveMatchMode: event.target.value }))}>
+                <option value="all">All exclusive conditions match (AND)</option>
+                <option value="any">Any exclusive condition matches (OR)</option>
+              </select>
+            </label>
+
+            <div className="mla-rule-group mla-exclusive-rules">
+              <div className="mla-rule-group-heading">
+                <strong>Exclusive Rules</strong>
+                <span>applies only to Premium leads</span>
+              </div>
+              <div className="mla-condition-list">{conditionRows('exclusiveConditions', draft.exclusiveConditions, 'Exclusive')}</div>
+            </div>
+
+            <div className="mla-access-window">
+              <label className="mla-early-access-label" htmlFor="mla-early-access-days">Pro Early Access window</label>
+              <div className="mla-access-input-wrap">
+                <input id="mla-early-access-days" aria-label="Pro Early Access window in days" type="number" min="1" max="365" value={earlyAccessDays} onChange={event => setEarlyAccessDays(event.target.value)} />
+                <span>days</span>
+              </div>
+              <p>Early access applies only to Premium leads that meet every Exclusive rule.</p>
+              <button type="button" disabled={accessBusy || !accessSettings} onClick={saveEarlyAccessWindow}>{accessBusy ? 'Saving…' : 'Save access window'}</button>
+            </div>
+            {accessMessage && <p role="status" className={'mla-inline-message ' + (accessMessage.includes('Unable') ? 'error' : 'success')}>{accessMessage}</p>}
+            <div className="mla-exclusive-footer">
+              <small>Add up to 12 stricter conditions. An empty rule set creates no Exclusive leads.</small>
+              <button type="button" className="mla-add-exclusive" disabled={(draft.exclusiveConditions || []).length >= 12} onClick={() => addCondition('exclusiveConditions')}>＋ Add Exclusive condition</button>
+            </div>
+          </section>
+
+          <footer className="mla-rule-actions">
+            <button type="button" className="mla-add-condition" disabled={(draft.premiumConditions || []).length >= 12} onClick={() => addCondition('premiumConditions')}>＋ Add condition</button>
+            <button type="button" className="mla-save-rules" disabled={busy} onClick={saveRules}>{busy ? 'Saving…' : 'Save classification rules'}</button>
+          </footer>
+          {message && <p role="status" className={'mla-inline-message ' + (message.includes('Unable') ? 'error' : 'success')}>{message}</p>}
+        </section>
+
+        <aside className="mla-classification-preview">
+          <header>
+            <h2>Classification preview</h2>
+            <p>How incoming Meta leads will be classified with the current rules.</p>
+          </header>
+          <ol className="mla-tier-flow">
+            <li className="mla-tier-step basic">
+              <span className="mla-tier-dot" />
+              <article>
+                <strong>Basic</strong>
+                <p>Default classification when Premium rules are not met.</p>
+              </article>
+            </li>
+            <li className="mla-tier-step premium">
+              <span className="mla-tier-dot" />
+              <article>
+                <strong>Premium</strong>
+                <p><b>✓</b> {draft.premiumConditions?.length ? 'Premium rules matched' : 'Premium rules are ready to configure.'}</p>
+                {draft.premiumConditions?.length > 0 && <small>{summarize(draft.premiumConditions, draft.matchMode)}</small>}
+              </article>
+            </li>
+            <li className={'mla-tier-step exclusive ' + (draft.exclusiveEnabled ? 'enabled' : 'disabled')}>
+              <span className="mla-tier-dot" />
+              <article>
+                <strong><span aria-hidden="true">♛</span> Exclusive</strong>
+                <p><b>{draft.exclusiveEnabled ? '✓' : '○'}</b> {draft.exclusiveEnabled ? 'Stricter rules matched' : 'Exclusive classification is off.'}</p>
+                {draft.exclusiveEnabled && draft.exclusiveConditions?.length > 0 && <small>{summarize(draft.exclusiveConditions, draft.exclusiveMatchMode)}</small>}
+                {draft.exclusiveEnabled && <p><b>✓</b> {earlyAccessDays || 2}-day Pro Early Access.</p>}
+              </article>
+            </li>
+          </ol>
+          <div className="mla-preview-note">
+            <span aria-hidden="true">ⓘ</span>
+            <p>After the early access window, the lead continues using the standard configured buyer-release rules.</p>
+          </div>
+          <div className="mla-preview-note floors">
+            <span aria-hidden="true">▦</span>
+            <p>Floors answers support formats like G+3, G+5, G+6.</p>
+          </div>
+        </aside>
       </div>
     </>}
-    {message && <p role="status" className="mla-muted" style={{ marginBottom: 0 }}>{message}</p>}
   </section>
 }
