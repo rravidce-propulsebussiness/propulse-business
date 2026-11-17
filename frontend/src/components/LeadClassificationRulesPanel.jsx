@@ -61,9 +61,9 @@ export default function LeadClassificationRulesPanel() {
   return <section className="v9-panel v9-classification-panel" style={panelStyle}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap', marginBottom: 12 }}>
       <div>
-        <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '.12em', color: '#bc5c3f' }}>BASIC / PREMIUM CLASSIFICATION</span>
+        <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '.12em', color: '#bc5c3f' }}>BASIC / PREMIUM / EXCLUSIVE CLASSIFICATION</span>
         <strong style={{ display: 'block', marginTop: 5, fontSize: 16, color: '#163253' }}>Classify new Meta leads from their form answers</strong>
-        <small style={{ display: 'block', marginTop: 5, color: '#64748b' }}>Choose the industry for this form, then match its question names. These rules also apply to admin CSV imports.</small>
+        <small style={{ display: 'block', marginTop: 5, color: '#64748b' }}>Set Premium criteria first, then a stricter Exclusive tier for the strongest leads. Rules are scoped per industry and apply to Meta and admin CSV imports.</small>
       </div>
       {draft && <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 750, color: '#334155' }}>
         <input type="checkbox" checked={Boolean(draft.enabled)} onChange={event => setDraft(value => ({ ...value, enabled: event.target.checked }))} />
