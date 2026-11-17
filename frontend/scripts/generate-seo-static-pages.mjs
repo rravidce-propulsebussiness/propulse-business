@@ -54,8 +54,7 @@ function absolute(urlPath){
 }
 
 function baseLinks(route){
-  const links=[['Home','/'],['Festival Offers','/offers'],['Hyderabad','/hyderabad'],['Guides','/guides'],['Get Quote','/quote'],['Find Professionals','/experts'],['Technology','/technology'],['Packages','/packages'],['Projects','/projects'],['How It Works','/how-it-works'],['About','/about'],['Contact','/contact']]
-  if(route.type==='interior-hub'||route.type==='interior-locality'||route.type==='interior-state-hub'||route.type==='interior-district')links.push(['Interior Solutions','/hyderabad/interior-designers'])
+  const links=[['Home','/'],['Construction','/hyderabad/construction'],['Interiors','/hyderabad/interior-designers'],['Technology','/technology'],['Packages','/packages'],['Projects','/projects'],['Find Professionals','/experts'],['Contact','/contact'],['Festival Offers','/offers'],['Hyderabad','/hyderabad'],['Guides','/guides'],['Get Quote','/quote'],['How It Works','/how-it-works'],['About','/about']]
   if(route.type==='city-service'||route.type==='local-service')links.push(['Compare Hyderabad options','/hyderabad/'+route.serviceSlug+'/compare-options'])
   return links
 }
