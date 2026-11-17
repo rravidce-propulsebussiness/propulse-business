@@ -97,7 +97,12 @@ assert(buildScript.includes('data-seo-static-fallback'),'Static SEO pages must c
 assert(buildScript.includes('businessIdentityContent(route)'),'Static SEO HTML must explain direct ProPulse services and technology');
 assert(buildScript.includes("route.path==='/technology'"),'Technology page must include crawlable Business OS content');
 assert(app.includes('path="/technology" element={<Technology/>}'),'Technology page must be accessible in the SPA');
-assert(publicChrome.includes("{ to: '/technology', label: 'Products & Services'"),'Technology must be present in public navigation');
+for(const [label,route] of [['Construction','/hyderabad/construction'],['Interiors','/hyderabad/interior-designers'],['Technology','/technology']]){
+  assert(publicChrome.includes("{ to: '"+route+"', label: '"+label+"'"),label+' must be present in public navigation');
+  assert(buildScript.includes("['"+label+"','"+route+"']"),label+' must be discoverable in generated SEO navigation');
+}
+assert(!publicChrome.includes('Products & Services'),'Retired Products & Services navigation label must not return');
+assert(publicChrome.includes('NAV_ITEMS.map(item')&&publicChrome.match(/NAV_ITEMS\.map\(item/g).length===2,'Desktop and mobile navigation must use the same entries');
 assert(home.includes('Direct Home Construction')&&home.includes('Direct Interior Execution'),'Homepage must disclose direct execution');
 assert(home.includes('Professional Marketplace')&&home.includes("title: 'Technology'")&&home.includes('Business OS'),'Homepage must disclose marketplace and technology');
 assert(!landing.includes("a:'No. ProPulse is a requirement and discovery platform"),'Hyderabad FAQ must not deny ProPulse direct construction services');
