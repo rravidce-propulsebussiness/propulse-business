@@ -54,7 +54,7 @@ html{
   .public-site-login,.public-site-join{padding-left:8px;padding-right:8px}
 }
 
-@media(max-width:1020px){
+@media(max-width:1240px){
   .public-site-header{
     top:34px !important;
   }
