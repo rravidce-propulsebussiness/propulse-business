@@ -89,7 +89,7 @@ const metaPage=read('../frontend/src/admin/pages/AdminLeadMeta.jsx');
 const classificationPanel=read('../frontend/src/components/LeadClassificationRulesPanel.jsx');
 const metaPanel=read('../frontend/src/components/MetaLeadAdsPanel.jsx');
 assert(!leads.includes('BASIC / PREMIUM CLASSIFICATION'),'Classification editor must stay off Manage Leads');
-assert(metaPage.includes('<LeadClassificationRulesPanel/>'),'Classification editor must appear on the Meta Leads page');
+assert(metaPage.includes('<LeadClassificationRulesPanel onStatusChange={reportRulesStatus}/>'),'Classification editor must appear on the Meta Leads page');
 assert(classificationPanel.includes('aria-label="Classification industry"'),'Classification rules must be configurable per industry');
 assert(classificationPanel.includes('industryRules?.[industryId]'),'Industry rules must load separately from the all-industries fallback');
 assert(classificationPanel.includes('Text / choice')&&classificationPanel.includes('not_contains'),'Classification must support text answers from any industry form');
