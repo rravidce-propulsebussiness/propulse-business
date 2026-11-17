@@ -7,9 +7,12 @@ const assert=(condition,message)=>{if(!condition)throw new Error(message)};
 
 const migration=read('src/database/migrations/20260926_lead_access_strategy.sql');
 const earlyAccessMigration=read('src/database/migrations/20261117_pro_early_access_settings.sql');
+const exclusiveClassificationMigration=read('src/database/migrations/20261117_z_exclusive_lead_classification.sql');
 const access=read('src/services/leadAccessStrategyService.js');
 const leadService=read('src/services/leadService.js');
 const leadImport=read('src/services/adminLeadCsvImportService.js');
+const leadClassification=read('src/services/leadClassificationService.js');
+const classificationUi=read('../frontend/src/components/LeadClassificationRulesPanel.jsx');
 const leadRead=read('src/services/leadReadService.js');
 const purchase=read('src/services/leadPurchaseService.js');
 const entitlement=read('src/services/leadEntitlementService.js');
@@ -37,8 +40,11 @@ assert(access.includes('access_capacity_locked=COALESCE(access_capacity_locked,$
 assert(access.includes("UPDATE leads SET status='sold'"),'Lead must close when the locked capacity is filled');
 
 assert(leadService.includes('accessService.resolveForLead'),'Lead creation must reuse the shared access configuration');
-assert(leadService.includes("const exclusive=type==='premium'||Boolean(isExclusive)"),'Premium-classified leads must automatically receive Pro Early Access on create and update');
-assert(leadImport.includes("autoLeadType)==='premium'"),'Lead imports must use the Premium classifier to automatically enable Pro Early Access');
+assert(exclusiveClassificationMigration.includes('exclusive_conditions')&&exclusiveClassificationMigration.includes('exclusive_enabled'),'Exclusive classification rules must be stored independently from Premium rules');
+assert(leadClassification.includes('function classifyExclusive')&&leadClassification.includes("classify(custom,settings,industryId)!=='premium'"),'Exclusive classification must be a stricter tier that requires Premium first');
+assert(leadService.includes('classifyExclusive(cleanJson(customFields)')&&leadService.includes('classifyExclusive(sanitizeCustomFields(customFields)'),'Lead create and update must apply Exclusive rules to captured answers');
+assert(leadImport.includes('leadClassificationService.classifyExclusive(custom,classificationSettings'),'Lead imports must apply configured Exclusive rules');
+assert(classificationUi.includes('Exclusive leads · above Premium')&&classificationUi.includes('Enable Exclusive classification'),'Admins must be able to configure stricter Exclusive lead rules');
 assert(leadService.includes('access.proEarlyAccessDays'),'Exclusive lead creation must default from the configured access rule');
 assert(leadService.includes("accessSource==='import'||accessSource==='rule'"),'Lead updates must resolve uploaded/config access from one shared configuration');
 assert(leadService.includes('Lead pricing must include exactly 1, 2 and 3 buyer tiers'),'Admin pricing must be fixed to 1/2/3 buyer stages');
