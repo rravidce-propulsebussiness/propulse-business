@@ -5,10 +5,12 @@ import './PublicSiteChromeFix.css'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Home', match: path => path === '/' },
+  { to: '/hyderabad/construction', label: 'Construction', match: path => path === '/hyderabad/construction' || path.startsWith('/hyderabad/construction/') },
+  { to: '/hyderabad/interior-designers', label: 'Interiors', match: path => path === '/hyderabad/interior-designers' || path.startsWith('/hyderabad/interior-designers/') },
+  { to: '/technology', label: 'Technology', match: path => path.startsWith('/technology') },
   { to: '/packages', label: 'Packages', match: path => path.startsWith('/packages') },
   { to: '/projects', label: 'Projects', match: path => path.startsWith('/projects') },
-  // Cost & Guides, About and FAQ live in the footer only.
-  { to: '/technology', label: 'Products & Services', match: path => path.startsWith('/technology') },
+  { to: '/experts', label: 'Find Professionals', match: path => path.startsWith('/experts') },
   { to: '/contact', label: 'Contact', match: path => path.startsWith('/contact') },
 ]
 
@@ -31,7 +33,7 @@ export function PublicHeader() {
 
   useEffect(() => { setOpen(false) }, [pathname, location.hash])
   useEffect(() => {
-    const onResize = () => { if (window.innerWidth > 1020) setOpen(false) }
+    const onResize = () => { if (window.innerWidth > 1240) setOpen(false) }
     const onKeyDown = event => { if (event.key === 'Escape') setOpen(false) }
     window.addEventListener('keydown', onKeyDown); window.addEventListener('resize', onResize)
     return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('resize', onResize) }
@@ -56,9 +58,7 @@ export function PublicHeader() {
       <div className="public-site-header__inner">
         <Link className="public-site-logo" to="/" aria-label="ProPulse home"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
         <nav className="public-site-nav" aria-label="Main navigation">
-          {NAV_ITEMS.slice(0, 3).map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
-          <Link className={pathname.startsWith('/experts') ? 'active' : ''} to="/experts" aria-current={pathname.startsWith('/experts') ? 'page' : undefined}>Find Professionals</Link>
-          {NAV_ITEMS.slice(3).map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
+          {NAV_ITEMS.map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
         </nav>
         <div className="public-site-actions">
           <Link className="public-site-login" to="/login">Professional Login</Link>
@@ -72,7 +72,6 @@ export function PublicHeader() {
           <div className="public-site-mobile-menu-head"><span>Explore ProPulse</span><button type="button" onClick={closeMenu} aria-label="Close menu">×</button></div>
           <nav aria-label="Mobile navigation">
             {NAV_ITEMS.map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} onClick={closeMenu} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
-            <Link to="/experts" onClick={closeMenu}>Find Professionals</Link>
             <Link to="/professionals" onClick={closeMenu}>Join as a Professional</Link>
             <Link to="/login" onClick={closeMenu}>Professional Login</Link>
           </nav>
@@ -96,7 +95,7 @@ export function PublicFooter({ phone = '', email = '', address = 'Hyderabad, Ind
     <div className="public-site-footer__inner">
       <div className="public-site-footer-brand"><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>{description}</p></div>
       <div><b>Homeowners</b><Link to="/">Home</Link><Link to="/experts">Find Professionals</Link></div>
-      <div><b>Services</b><Link to="/contact">Direct ProPulse Projects</Link><Link to="/technology">Products &amp; Services</Link><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/offers">Festive Offers</Link><Link to="/hyderabad/construction-cost">Construction Cost Guide</Link></div>
+      <div><b>Services</b><Link to="/contact">Direct ProPulse Projects</Link><Link to="/technology">Technology</Link><Link to="/hyderabad/construction">Home Construction</Link><Link to="/hyderabad/interior-designers">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/offers">Festive Offers</Link><Link to="/hyderabad/construction-cost">Construction Cost Guide</Link></div>
       <div><b>Support</b><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/faq">FAQ</Link><Link to="/blog">Blog</Link><Link to="/contact">Contact</Link></div>
       <div><b>Contact</b><a href={phoneHref}>{displayPhone}</a><a href={'mailto:' + displayEmail}>{displayEmail}</a><span><PinIcon/>{address}</span></div>
     </div>
