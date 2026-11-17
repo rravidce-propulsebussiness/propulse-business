@@ -23,8 +23,8 @@ function normalizeCondition(condition={}){
   const requestedType=clean(condition.fieldType);
   const fieldType=['floors','text'].includes(requestedType)?requestedType:'number';
   const value=clean(condition.value).slice(0,60);
-  if(!field)throw Object.assign(new Error('Enter the form question name for every Premium condition'),{code:'INVALID_LEAD_CLASSIFICATION_SETTINGS'});
-  if(!value)throw Object.assign(new Error('Enter a value for every Premium condition'),{code:'INVALID_LEAD_CLASSIFICATION_SETTINGS'});
+  if(!field)throw Object.assign(new Error('Enter the form question name for every classification condition'),{code:'INVALID_LEAD_CLASSIFICATION_SETTINGS'});
+  if(!value)throw Object.assign(new Error('Enter a value for every classification condition'),{code:'INVALID_LEAD_CLASSIFICATION_SETTINGS'});
   if(fieldType==='text'){
     if(!['eq','contains','not_contains'].includes(operator))throw Object.assign(new Error('Text conditions support equals, contains, or does not contain'),{code:'INVALID_LEAD_CLASSIFICATION_SETTINGS'});
   }else if(numericValue(value,fieldType)===null){
@@ -36,10 +36,16 @@ function normalizeSettings(row={}){
   let conditions=row.premium_conditions??row.premiumConditions??DEFAULT_CONDITIONS;
   if(typeof conditions==='string'){try{conditions=JSON.parse(conditions)}catch{conditions=DEFAULT_CONDITIONS}}
   if(!Array.isArray(conditions))conditions=DEFAULT_CONDITIONS;
+  let exclusiveConditions=row.exclusive_conditions??row.exclusiveConditions??[];
+  if(typeof exclusiveConditions==='string'){try{exclusiveConditions=JSON.parse(exclusiveConditions)}catch{exclusiveConditions=[]}}
+  if(!Array.isArray(exclusiveConditions))exclusiveConditions=[];
   return{
     enabled:row.enabled===undefined?true:Boolean(row.enabled),
     matchMode:['all','any'].includes(clean(row.match_mode??row.matchMode))?clean(row.match_mode??row.matchMode):'all',
     premiumConditions:conditions.slice(0,12).map(normalizeCondition),
+    exclusiveEnabled:row.exclusive_enabled===undefined?(row.exclusiveEnabled===undefined?false:Boolean(row.exclusiveEnabled)):Boolean(row.exclusive_enabled),
+    exclusiveMatchMode:['all','any'].includes(clean(row.exclusive_match_mode??row.exclusiveMatchMode))?clean(row.exclusive_match_mode??row.exclusiveMatchMode):'all',
+    exclusiveConditions:exclusiveConditions.slice(0,12).map(normalizeCondition),
     updatedAt:row.updated_at||null
   };
 }
@@ -61,14 +67,19 @@ async function updateSettings(data={},adminUserId){
     const settings=normalizeSettings({
       enabled:data.enabled===undefined?inherited.enabled:Boolean(data.enabled),
       matchMode:data.matchMode??inherited.matchMode,
-      premiumConditions:data.premiumConditions??inherited.premiumConditions
+      premiumConditions:data.premiumConditions??inherited.premiumConditions,
+      exclusiveEnabled:data.exclusiveEnabled===undefined?inherited.exclusiveEnabled:Boolean(data.exclusiveEnabled),
+      exclusiveMatchMode:data.exclusiveMatchMode??inherited.exclusiveMatchMode,
+      exclusiveConditions:data.exclusiveConditions??inherited.exclusiveConditions
     });
     await pool.query(
-      `INSERT INTO lead_classification_industry_settings(industry_id,enabled,match_mode,premium_conditions,updated_by,updated_at)
-       VALUES($1,$2,$3,$4::jsonb,$5,CURRENT_TIMESTAMP)
+      `INSERT INTO lead_classification_industry_settings(industry_id,enabled,match_mode,premium_conditions,exclusive_enabled,exclusive_match_mode,exclusive_conditions,updated_by,updated_at)
+       VALUES($1,$2,$3,$4::jsonb,$5,$6,$7::jsonb,$8,CURRENT_TIMESTAMP)
        ON CONFLICT(industry_id) DO UPDATE SET enabled=EXCLUDED.enabled,match_mode=EXCLUDED.match_mode,
-         premium_conditions=EXCLUDED.premium_conditions,updated_by=EXCLUDED.updated_by,updated_at=CURRENT_TIMESTAMP`,
-      [industryId,settings.enabled,settings.matchMode,JSON.stringify(settings.premiumConditions),adminUserId||null]
+         premium_conditions=EXCLUDED.premium_conditions,exclusive_enabled=EXCLUDED.exclusive_enabled,
+         exclusive_match_mode=EXCLUDED.exclusive_match_mode,exclusive_conditions=EXCLUDED.exclusive_conditions,
+         updated_by=EXCLUDED.updated_by,updated_at=CURRENT_TIMESTAMP`,
+      [industryId,settings.enabled,settings.matchMode,JSON.stringify(settings.premiumConditions),settings.exclusiveEnabled,settings.exclusiveMatchMode,JSON.stringify(settings.exclusiveConditions),adminUserId||null]
     );
     return getSettings();
   }
@@ -76,14 +87,19 @@ async function updateSettings(data={},adminUserId){
   const settings=normalizeSettings({
     enabled:data.enabled===undefined?current.enabled:Boolean(data.enabled),
     matchMode:data.matchMode??current.matchMode,
-    premiumConditions:data.premiumConditions??current.premiumConditions
+    premiumConditions:data.premiumConditions??current.premiumConditions,
+    exclusiveEnabled:data.exclusiveEnabled===undefined?current.exclusiveEnabled:Boolean(data.exclusiveEnabled),
+    exclusiveMatchMode:data.exclusiveMatchMode??current.exclusiveMatchMode,
+    exclusiveConditions:data.exclusiveConditions??current.exclusiveConditions
   });
   await pool.query(
-    `INSERT INTO lead_classification_settings(id,enabled,match_mode,premium_conditions,updated_by,updated_at)
-     VALUES(1,$1,$2,$3::jsonb,$4,CURRENT_TIMESTAMP)
+    `INSERT INTO lead_classification_settings(id,enabled,match_mode,premium_conditions,exclusive_enabled,exclusive_match_mode,exclusive_conditions,updated_by,updated_at)
+     VALUES(1,$1,$2,$3::jsonb,$4,$5,$6::jsonb,$7,CURRENT_TIMESTAMP)
      ON CONFLICT(id) DO UPDATE SET enabled=EXCLUDED.enabled,match_mode=EXCLUDED.match_mode,
-       premium_conditions=EXCLUDED.premium_conditions,updated_by=EXCLUDED.updated_by,updated_at=CURRENT_TIMESTAMP`,
-    [settings.enabled,settings.matchMode,JSON.stringify(settings.premiumConditions),adminUserId||null]
+       premium_conditions=EXCLUDED.premium_conditions,exclusive_enabled=EXCLUDED.exclusive_enabled,
+       exclusive_match_mode=EXCLUDED.exclusive_match_mode,exclusive_conditions=EXCLUDED.exclusive_conditions,
+       updated_by=EXCLUDED.updated_by,updated_at=CURRENT_TIMESTAMP`,
+    [settings.enabled,settings.matchMode,JSON.stringify(settings.premiumConditions),settings.exclusiveEnabled,settings.exclusiveMatchMode,JSON.stringify(settings.exclusiveConditions),adminUserId||null]
   );
   return getSettings();
 }
@@ -127,4 +143,11 @@ function classify(custom,settings,industryId=null){
   const result=scoped.matchMode==='any'?conditions.some(condition=>matchesCondition(custom,condition)):conditions.every(condition=>matchesCondition(custom,condition));
   return result?'premium':'basic';
 }
-module.exports={getSettings,updateSettings,classify,normalizeSettings,numericValue,matchesCondition};
+function classifyExclusive(custom,settings,industryId=null){
+  const scoped=settings?.industryRules?.[String(industryId)]||settings;
+  if(classify(custom,settings,industryId)!=='premium'||scoped?.exclusiveEnabled!==true)return false;
+  const conditions=Array.isArray(scoped.exclusiveConditions)?scoped.exclusiveConditions:[];
+  if(!conditions.length)return false;
+  return scoped.exclusiveMatchMode==='any'?conditions.some(condition=>matchesCondition(custom,condition)):conditions.every(condition=>matchesCondition(custom,condition));
+}
+module.exports={getSettings,updateSettings,classify,classifyExclusive,normalizeSettings,numericValue,matchesCondition};
