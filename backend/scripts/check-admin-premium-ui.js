@@ -311,16 +311,23 @@ assert(!dashboard.includes('Live data'),'Redundant live-data pill must stay remo
 
 const expertDirectory=read('../frontend/src/admin/pages/AdminExpertDirectory.jsx');
 const expertDirectoryCss=read('../frontend/src/admin/pages/AdminExpertDirectory.css');
+const videoProcessingSettings=read('../frontend/src/admin/pages/AdminVideoProcessingSettings.jsx');
+const videoProcessingSettingsCss=read('../frontend/src/admin/pages/AdminVideoProcessingSettings.css');
 const completedProjects=read('../frontend/src/admin/pages/AdminCompletedProjects.jsx');
-assert(expertDirectory.includes("section==='featured'?'Featured Professionals':section==='pending'?'Video Approvals':'Expert Directory'")&&!expertDirectory.includes('Manage professionals, project-video lead-credit reviews and public directory settings.'),'Expert Directory views must use compact titles without explanatory copy');
+assert(expertDirectory.includes("section==='featured'?'Featured Professionals':section==='pending'?'Video Approvals':section==='settings'?'Directory Settings':'Expert Directory'")&&!expertDirectory.includes('Manage professionals, project-video lead-credit reviews and public directory settings.'),'Expert Directory views must use compact titles without explanatory copy');
 assert(expertDirectory.includes('expert-v2--compact')&&expertDirectory.includes('Search professionals'),'Expert Directory must use the compact directory layout');
-assert(expertDirectory.includes("section==='pending'?'Video Approvals':'Expert Directory'")&&expertDirectory.includes('Review queue'),'Video approvals must use its focused compact title and queue');
+assert(expertDirectory.includes("section==='pending'?'Video Approvals':section==='settings'?'Directory Settings':'Expert Directory'")&&expertDirectory.includes('Review queue'),'Video approvals must use its focused compact title and queue');
 assert(expertDirectory.includes('No videos pending review')&&expertDirectory.includes('Select a project'),'Video approvals empty state must be concise');
 assert(expertDirectory.includes('Pending credit')&&expertDirectory.includes('Search projects or professionals'),'Video approvals must keep its focused queue filters and search');
 assert(expertDirectory.includes('stats.approved_video_reviews')&&expertDirectory.includes("filter={reviewFilter==='published'?'published':reviewFilter==='video'?'video':'pending'}"),'Video queue must show approved counts and preserve project review filters');
 assert(expertDirectoryCss.includes('.expert-v2--pending .expert-v2-metrics')&&expertDirectoryCss.includes('.expert-v2-pending-preview'),'Video Approvals must use the compact queue styling');
 assert(!expertDirectory.includes('Active business accounts')&&!expertDirectory.includes('Prioritized profiles'),'Expert Directory KPI cards must not repeat explanatory subtitles');
 assert(expertDirectory.includes('compact/>')&&completedProjects.includes('compact=false'),'Expert Directory project review must support its compact mode');
+assert(expertDirectory.includes('expert-v2--settings')&&expertDirectory.includes("['directoryEnabled','Enable public directory']")&&expertDirectory.includes('Save Settings'),'Directory Settings must preserve its compact controls and save action');
+assert(!expertDirectory.includes('Control public listing eligibility, project visibility and subscription rules.')&&!expertDirectory.includes('Make /experts available'),'Directory Settings must omit explanatory copy');
+assert(videoProcessingSettings.includes('Project video quality')&&videoProcessingSettings.includes('Compress videos')&&videoProcessingSettings.includes('Save video settings'),'Video quality settings must keep actionable controls');
+assert(!videoProcessingSettings.includes('Applies to videos processed from now on.')&&!videoProcessingSettings.includes('Only formats browsers cannot play are converted.')&&!videoProcessingSettings.includes('A video is kept at original quality'),'Video quality settings must omit helper paragraphs');
+assert(expertDirectoryCss.includes('.expert-v2--settings .video-quality-options')&&expertDirectoryCss.includes('button:disabled{display:none}'),'Video quality options must match the compact settings layout');
 assert(completedProjects.includes('Approve lead credit')&&completedProjects.includes('Reject lead credit'),'Compact project review must retain lead-credit actions');
 assert(expertDirectoryCss.includes('.expert-v2--compact .expert-v2-metrics')&&expertDirectoryCss.includes('background:#edfaf1'),'Expert Directory must retain compact pastel card styling');
 
