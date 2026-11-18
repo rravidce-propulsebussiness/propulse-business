@@ -317,7 +317,7 @@ assert(expertDirectory.includes('expert-v2--compact')&&expertDirectory.includes(
 assert(!expertDirectory.includes('Active business accounts')&&!expertDirectory.includes('Prioritized profiles'),'Expert Directory KPI cards must not repeat explanatory subtitles');
 assert(expertDirectory.includes('compact/>')&&completedProjects.includes('compact=false'),'Expert Directory project review must support its compact mode');
 assert(completedProjects.includes('Approve lead credit')&&completedProjects.includes('Reject lead credit'),'Compact project review must retain lead-credit actions');
-assert(expertDirectoryCss.includes('.expert-v2--compact .expert-v2-metrics')&&expertDirectoryCss.includes('background:#eaf8ef'),'Expert Directory must retain compact pastel card styling');
+assert(expertDirectoryCss.includes('.expert-v2--compact .expert-v2-metrics')&&expertDirectoryCss.includes('background:#edfaf1'),'Expert Directory must retain compact pastel card styling');
 
 assert(adminLeadPartners.includes('Lead Partner master')&&adminLeadPartners.includes('PARTNER OPERATIONS / FINANCE'),'Lead Partners must remain a single master operations and finance view');
 assert(adminLeadPartners.includes('Related leads')&&adminLeadPartners.includes('Earnings')&&adminLeadPartners.includes('Payouts'),'Partner detail must keep related leads, earnings and payout history together');
