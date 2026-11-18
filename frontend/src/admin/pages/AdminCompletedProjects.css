@@ -57,3 +57,25 @@
 .expert-review-grant-summary{margin:10px 0;padding:12px 14px;border:1px solid #c7ead7;border-radius:12px;background:#f0fbf5;color:#176b43;font-size:13px;font-weight:700;line-height:1.5}
 .expert-review-card-title>span.approved{max-width:220px;text-align:center}
 @media(max-width:640px){.expert-review-grant-summary{font-size:12px}.expert-review-card-title>span.approved{max-width:150px}}
+
+.expert-review-workspace.is-compact .expert-review-heading{margin-bottom:9px}
+.expert-review-workspace.is-compact .expert-review-heading p,.expert-review-workspace.is-compact .expert-review-heading>a{display:none}
+.expert-review-workspace.is-compact .expert-review-heading h3{font-size:15px}
+.expert-review-workspace.is-compact .expert-review-filter{gap:6px;margin-bottom:9px}
+.expert-review-workspace.is-compact .expert-review-filter button{padding:7px 9px;border-radius:8px;font-size:10px}
+.expert-review-workspace.is-compact .expert-review-card{grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);border-color:#e1e8f0;border-radius:12px;box-shadow:none}
+.expert-review-workspace.is-compact .expert-review-media{min-height:190px;background:#f2f6fa}
+.expert-review-workspace.is-compact .expert-review-card-body{gap:6px;padding:11px}
+.expert-review-workspace.is-compact .expert-review-card-title{gap:6px}
+.expert-review-workspace.is-compact .expert-review-card-title strong{font-size:13px}
+.expert-review-workspace.is-compact .expert-review-card-title span{padding:4px 7px;font-size:9px}
+.expert-review-workspace.is-compact .expert-review-processing,.expert-review-workspace.is-compact .expert-review-privacy-status{padding:6px 8px;font-size:10px;line-height:1.35}
+.expert-review-workspace.is-compact .expert-review-privacy-confirm{gap:7px!important;padding:8px}
+.expert-review-workspace.is-compact .expert-review-privacy-confirm span{font-size:10px;line-height:1.4}
+.expert-review-workspace.is-compact .expert-review-privacy-confirm input{width:15px!important;height:15px}
+.expert-review-workspace.is-compact .expert-review-actions{gap:7px;padding-top:8px}
+.expert-review-workspace.is-compact .expert-review-actions label{font-size:10px}
+.expert-review-workspace.is-compact .expert-review-actions input{padding:8px;font-size:11px}
+.expert-review-workspace.is-compact .expert-review-actions button{flex-basis:95px;padding:8px 7px;font-size:10px}
+.expert-review-workspace.is-compact .expert-review-grant-summary{margin:4px 0;padding:8px 10px;font-size:10px}
+@container (max-width:570px){.expert-review-workspace.is-compact .expert-review-card{grid-template-columns:minmax(0,1fr)}.expert-review-workspace.is-compact .expert-review-media{min-height:0;aspect-ratio:16/9}.expert-review-workspace.is-compact .expert-review-card-body{padding:11px}}
