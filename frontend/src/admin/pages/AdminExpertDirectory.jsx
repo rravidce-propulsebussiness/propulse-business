@@ -69,7 +69,7 @@ export default function AdminExpertDirectory(){
     const requested=new URLSearchParams(pageLocation.search).get('view')||'all'
     const view=allowed.has(requested)?requested:'all'
     setSection(view)
-    setProfileTab(requested==='badges'?'badges':requested==='verified'?'profile':'projects')
+    setProfileTab(requested==='badges'?'badges':requested==='verified'||requested==='featured'?'profile':'projects')
   },[pageLocation.search])
 
   useEffect(()=>{
@@ -147,31 +147,37 @@ export default function AdminExpertDirectory(){
   }
 
   if(loading)return <main className="expert-v2"><BootLoader contained message="Loading Expert Directory" /></main>
-  return <main className={'expert-v2'+(section==='settings'?'':' expert-v2--compact')}>
+  return <main className={'expert-v2'+(section==='settings'?'':' expert-v2--compact')+(section==='featured'?' expert-v2--featured':'')}>
     <div className="expert-v2-heading">
-      <div><h1>Expert Directory</h1></div>
-      <a href="/experts" target="_blank" rel="noopener noreferrer" className="expert-v2-main-action">View Public Directory <span aria-hidden="true">↗</span></a>
+      <div><h1>{section==='featured'?'Featured Professionals':'Expert Directory'}</h1></div>
+      {section!=='featured'&&<a href="/experts" target="_blank" rel="noopener noreferrer" className="expert-v2-main-action">View Public Directory <span aria-hidden="true">↗</span></a>}
     </div>
 
     {error&&<div className="expert-v2-alert error" role="alert">{error}</div>}
     {message&&<div className="expert-v2-alert success" role="status">{message}</div>}
     <div className="expert-v2-metrics">
-      <article><span className="expert-v2-metric-icon orange">♧</span><div><small>Total Professionals</small><strong>{stats.active_businesses||0}</strong></div></article>
-      <article><span className="expert-v2-metric-icon green">✓</span><div><small>Verified Professionals</small><strong>{stats.verified_businesses||0}</strong></div></article>
-      <article><span className="expert-v2-metric-icon coral">▣</span><div><small>Projects with Video</small><strong>{stats.video_projects||0}</strong></div></article>
-      <article><span className="expert-v2-metric-icon gold">☆</span><div><small>Featured Professionals</small><strong>{stats.featured_businesses||0}</strong></div></article>
+      {section==='featured'?<>
+        <article><span className="expert-v2-metric-icon gold">☆</span><div><small>Featured</small><strong>{stats.featured_businesses||0}</strong></div></article>
+        <article><span className="expert-v2-metric-icon green">✓</span><div><small>Verified</small><strong>{stats.verified_businesses||0}</strong></div></article>
+        <article><span className="expert-v2-metric-icon coral">▣</span><div><small>Projects</small><strong>{stats.video_projects||0}</strong></div></article>
+      </>:<>
+        <article><span className="expert-v2-metric-icon orange">♧</span><div><small>Total Professionals</small><strong>{stats.active_businesses||0}</strong></div></article>
+        <article><span className="expert-v2-metric-icon green">✓</span><div><small>Verified Professionals</small><strong>{stats.verified_businesses||0}</strong></div></article>
+        <article><span className="expert-v2-metric-icon coral">▣</span><div><small>Projects with Video</small><strong>{stats.video_projects||0}</strong></div></article>
+        <article><span className="expert-v2-metric-icon gold">☆</span><div><small>Featured Professionals</small><strong>{stats.featured_businesses||0}</strong></div></article>
+      </>}
     </div>
 
     {section!=='settings'&&<div className="expert-v2-workspace">
       <section className="expert-v2-list-panel" aria-label="Search and filter professionals">
-        <div className="expert-v2-section-heading"><h2>Search professionals</h2><span>{pagination.total||0} accounts</span></div>
+        <div className="expert-v2-section-heading"><h2>{section==='featured'?'Featured Professionals':'Search professionals'}</h2><span>{pagination.total||0} {section==='featured'?'':'accounts'}</span></div>
         <div className="expert-v2-search"><span>⌕</span><input aria-label="Search professionals" value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search by name, company, location..."/></div>
         <div className="expert-v2-filters">
           <label><span>Location</span><select value={location} onChange={e=>setLocation(e.target.value)}><option value="">All Locations</option>{locations.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
-          <label><span>Services</span><select value={service} onChange={e=>setService(e.target.value)}><option value="">All Services</option>{serviceLabels.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
+          {section!=='featured'&&<label><span>Services</span><select value={service} onChange={e=>setService(e.target.value)}><option value="">All Services</option>{serviceLabels.map(x=><option key={x} value={x}>{x}</option>)}</select></label>}
           <label><span>Status</span><select value={status} onChange={e=>setStatus(e.target.value)}><option value="">All Status</option><option value="verified">Verified</option><option value="unverified">Unverified</option><option value="visible">Public eligible</option><option value="hidden">Hidden</option><option value="official">Official ProPulse</option></select></label>
           <label><span>Badges</span><select value={badgeFilter} onChange={e=>setBadgeFilter(e.target.value)}><option value="">All Badges</option><option value="official">Official ProPulse</option><option value="verified">Verified</option><option value="featured">Featured</option></select></label>
-          <label><span>Video Status</span><select value={videoStatus} onChange={e=>setVideoStatus(e.target.value)}><option value="">All Videos</option><option value="with">With Video</option><option value="pending">Pending Review</option></select></label>
+          {section!=='featured'&&<label><span>Video Status</span><select value={videoStatus} onChange={e=>setVideoStatus(e.target.value)}><option value="">All Videos</option><option value="with">With Video</option><option value="pending">Pending Review</option></select></label>}
           <label><span>Sort by</span><select value={sort} onChange={e=>setSort(e.target.value)}><option value="featured">Featured first</option><option value="projects">Most projects</option><option value="latest">Recently joined</option><option value="name">Company name</option></select></label>
         </div>
         <div className="expert-v2-list-label">Showing {visible.length} on this page <small>of {pagination.total||0} professionals</small></div>
@@ -186,6 +192,8 @@ export default function AdminExpertDirectory(){
             </span>
             <span className="expert-v2-person-side">
               {item.is_official?<Badge type="official">♛ Official ProPulse</Badge>:item.is_verified?<Badge type="verified">✓ Verified</Badge>:null}
+              {section==='featured'&&item.is_verified&&<Badge type="verified">✓ Verified</Badge>}
+              {section==='featured'&&item.is_featured&&<Badge type="featured">☆ Featured</Badge>}
               <Badge type={item.is_hidden||!item.is_active?'muted':'active'}>{item.is_hidden?'Hidden':item.is_active?'Active':'Inactive'}</Badge>
             </span><span className="expert-v2-arrow">›</span>
           </button>)}
@@ -214,12 +222,14 @@ export default function AdminExpertDirectory(){
           <div className="expert-v2-profile-metrics">
             <div><strong>{selected.project_count||0}</strong><small>Projects</small></div>
             <div><strong>{selected.video_count||0}</strong><small>Videos</small></div>
-            <div><strong>{selected.pending_video_count||0}</strong><small>Pending review</small></div>
-            <div><strong>{selected.plan_group?String(selected.plan_group).toUpperCase():'—'}</strong><small>Membership</small></div>
+            {section!=='featured'&&<>
+              <div><strong>{selected.pending_video_count||0}</strong><small>Pending review</small></div>
+              <div><strong>{selected.plan_group?String(selected.plan_group).toUpperCase():'—'}</strong><small>Membership</small></div>
+            </>}
             <div><strong>{formatDate(selected.created_at)}</strong><small>Joined</small></div>
           </div>
           <div className="expert-v2-detail-tabs" role="tablist" aria-label="Professional details">
-            {[['profile','Profile Details'],['projects','Projects & Media'],['badges','Badges & Status'],['activity','Activity']].map(([key,title])=>
+            {(section==='featured'?[['profile','Profile'],['projects','Projects'],['badges','Badges']]:[['profile','Profile Details'],['projects','Projects & Media'],['badges','Badges & Status'],['activity','Activity']]).map(([key,title])=>
               <button key={key} role="tab" type="button" aria-selected={profileTab===key} className={profileTab===key?'active':''} onClick={()=>setProfileTab(key)}>{title}</button>)}
           </div>
           <div className="expert-v2-profile-content">
