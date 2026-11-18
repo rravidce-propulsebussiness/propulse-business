@@ -52,3 +52,9 @@ assert(metaPanel.includes('<details className="mla-disclosure mla-connect-disclo
 assert(metaPanel.includes('<details className="mla-disclosure mla-connections">'), 'Connected forms must be expandable')
 assert(metaPanel.includes('Auto-detect is on'), 'Automatic form discovery status must stay visible')
 assert(!metaPanel.includes('No sheet refresh or polling is needed'), 'Remove the long Meta setup explanation')
+
+const metaPage = read('src/admin/pages/AdminLeadMeta.jsx')
+assert(!metaPage.includes('LEAD SOURCES / META'), 'Remove the redundant Meta page kicker')
+assert(!metaPage.includes('Connect forms and classify incoming leads by value.'), 'Remove the Meta page explanation')
+assert(metaPage.indexOf('<MetaLeadAdsPanel') < metaPage.indexOf('<LeadClassificationRulesPanel'), 'Show form management before classification rules')
+assert(classificationRules.includes('settings.industryRules?.[industryId]'), 'Creating a rule must not overwrite an existing industry rule')
