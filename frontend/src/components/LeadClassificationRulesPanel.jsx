@@ -103,6 +103,14 @@ export default function LeadClassificationRulesPanel({ onStatusChange }) {
 
   async function saveRules() {
     if (!draft || !settings) return
+    if (editorMode === 'create' && !industryId) {
+      setMessage('Choose an industry for this rule.')
+      return
+    }
+    if (editorMode === 'create' && settings.industryRules?.[industryId]) {
+      setMessage('A rule already exists for this industry. Edit the saved rule instead.')
+      return
+    }
     if (!accessSettings?.basic || !accessSettings?.premium) {
       setMessage('Settings are still loading.')
       return
@@ -190,13 +198,15 @@ export default function LeadClassificationRulesPanel({ onStatusChange }) {
       <button type="button" className="mla-editor-close" onClick={cancelEdit} aria-label="Cancel rule editing">Cancel</button>
     </div>
     <div className="mla-editor-settings">
-      <label className="mla-meta-field">
-        <span>Industry</span>
-        <select aria-label="Classification industry" value={industryId} onChange={event => setIndustryId(event.target.value)}>
-          <option value="">All industries</option>
-          {industries.map(item => <option key={item.id} value={String(item.id)}>{item.name}</option>)}
-        </select>
-      </label>
+      {editorMode === 'create'
+        ? <label className="mla-meta-field">
+          <span>Industry</span>
+          <select aria-label="Classification industry" value={industryId} onChange={event => setIndustryId(event.target.value)}>
+            <option value="">Choose an industry</option>
+            {industries.filter(item => !settings?.industryRules?.[String(item.id)]).map(item => <option key={item.id} value={String(item.id)}>{item.name}</option>)}
+          </select>
+        </label>
+        : <div className="mla-editor-industry"><span>Industry</span><strong>{industries.find(item => String(item.id) === industryId)?.name || 'All industries'}</strong></div>}
       <label className="mla-meta-field">
         <span>Premium match</span>
         <select aria-label="Premium match mode" value={draft.matchMode || 'all'} onChange={event => setDraft(value => ({ ...value, matchMode: event.target.value }))}>
