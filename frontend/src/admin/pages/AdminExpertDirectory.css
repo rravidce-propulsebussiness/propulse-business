@@ -103,3 +103,70 @@
 @media(max-width:620px){.expert-v2-heading{align-items:flex-start;flex-direction:column}.expert-v2-main-action{width:100%}.expert-v2-metrics{gap:9px}.expert-v2-metrics article{gap:8px;padding:11px}.expert-v2-metric-icon{flex-basis:34px;width:34px;height:34px;font-size:22px}.expert-v2-metrics article small{font-size:10px}.expert-v2-metrics article strong{font-size:22px}.expert-v2-list-panel{padding:12px}.expert-v2-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.expert-v2-person{gap:7px;padding:8px}.expert-v2-person-side{max-width:98px}.expert-v2-person-copy strong{font-size:11px}.expert-v2-profile-header{padding:13px;gap:10px;flex-wrap:wrap}.expert-v2-profile-avatar{width:53px;flex-basis:53px;height:53px}.expert-v2-profile-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.expert-v2-profile-content{padding:12px}.expert-v2-switches{grid-template-columns:1fr}.expert-v2-settings-footer{flex-direction:column;align-items:stretch}.expert-v2-settings-footer>div{flex-wrap:wrap}}
 
 .expert-v2-avatar img,.expert-v2-profile-avatar img{width:100%;height:100%;object-fit:contain;padding:3px;border-radius:inherit;background:#fff}
+
+/* Compact light Expert Directory */
+.expert-v2--compact .expert-v2-heading{align-items:center;margin-bottom:13px}
+.expert-v2--compact .expert-v2-heading h1{margin:0;color:#293a50;font-size:28px}
+.expert-v2--compact .expert-v2-main-action{min-height:39px;padding:9px 14px;border-radius:10px;box-shadow:none}
+.expert-v2--compact .expert-v2-metrics{gap:10px;margin-bottom:12px}
+.expert-v2--compact .expert-v2-metrics article{gap:10px;padding:11px 13px;border-color:#e1e8f0;border-radius:14px;box-shadow:0 6px 16px rgba(36,51,72,.035)}
+.expert-v2--compact .expert-v2-metric-icon{flex-basis:39px;width:39px;height:39px;border-radius:11px;font-size:22px}
+.expert-v2--compact .expert-v2-metric-icon.orange{background:#fff2ea;color:#ee783f}
+.expert-v2--compact .expert-v2-metric-icon.green{background:#edfaf1;color:#31a66a}
+.expert-v2--compact .expert-v2-metric-icon.coral{background:#fff2eb;color:#ec7041}
+.expert-v2--compact .expert-v2-metric-icon.gold{background:#fff8ec;color:#d99a3a}
+.expert-v2--compact .expert-v2-metrics article small{font-size:11px;color:#53677f}
+.expert-v2--compact .expert-v2-metrics article strong{font-size:22px;color:#2c4059}
+.expert-v2--compact .expert-v2-workspace{grid-template-columns:minmax(0,.88fr) minmax(0,1.2fr);gap:12px}
+.expert-v2--compact .expert-v2-list-panel,.expert-v2--compact .expert-v2-detail-panel{border-color:#e1e8f0;border-radius:14px;box-shadow:0 7px 18px rgba(36,51,72,.035)}
+.expert-v2--compact .expert-v2-list-panel{padding:13px;gap:10px}
+.expert-v2--compact .expert-v2-section-heading h2{font-size:14px;color:#30445d}
+.expert-v2--compact .expert-v2-search{height:39px;background:#fcfdff;border-color:#e2e9f0}
+.expert-v2--compact .expert-v2-filters{gap:7px}
+.expert-v2--compact .expert-v2-filters select{height:34px;border-color:#e1e7ee}
+.expert-v2--compact .expert-v2-list-label{font-size:10px}
+.expert-v2--compact .expert-v2-person{min-height:70px;padding:8px;border-radius:10px}
+.expert-v2--compact .expert-v2-avatar{width:39px;height:39px;flex-basis:39px;background:#fff5ee;border-color:#f6e4d7}
+.expert-v2--compact .expert-v2-person.selected{border-color:#ff996a;background:#fff8f3;box-shadow:none}
+.expert-v2--compact .expert-v2-profile-header{align-items:center;gap:12px;padding:14px 16px}
+.expert-v2--compact .expert-v2-profile-avatar{width:58px;height:58px;flex-basis:58px;border-color:#e7edf3;background:#f7faff}
+.expert-v2--compact .expert-v2-profile-title h2{margin:0 0 7px;color:#2c4059;font-size:18px}
+.expert-v2--compact .expert-v2-profile-title p,.expert-v2--compact .expert-v2-profile-title small{display:none}
+.expert-v2--compact .expert-v2-profile-metrics{gap:6px;padding:10px 12px 12px}
+.expert-v2--compact .expert-v2-profile-metrics>div{min-height:54px;padding:6px 4px;background:#f8fafc;border:1px solid #eef2f5}
+.expert-v2--compact .expert-v2-profile-metrics strong{font-size:13px;color:#324761}
+.expert-v2--compact .expert-v2-profile-metrics small{font-size:9px}
+.expert-v2--compact .expert-v2-detail-tabs{gap:5px;padding:0 12px}
+.expert-v2--compact .expert-v2-detail-tabs button{padding:11px 6px 9px;font-size:10px}
+.expert-v2--compact .expert-v2-profile-content{min-height:0;padding:12px}
+.expert-v2--compact .expert-review-heading{margin-bottom:9px}
+.expert-v2--compact .expert-review-heading p,.expert-v2--compact .expert-review-heading>a{display:none}
+.expert-v2--compact .expert-review-heading h3{font-size:15px}
+.expert-v2--compact .expert-review-filter{gap:6px;margin-bottom:9px}
+.expert-v2--compact .expert-review-filter button{padding:7px 9px;border-radius:8px;font-size:10px}
+.expert-v2--compact .expert-review-card{grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);border-color:#e1e8f0;border-radius:12px;box-shadow:none}
+.expert-v2--compact .expert-review-media{min-height:190px;background:#f2f6fa}
+.expert-v2--compact .expert-review-card-body{gap:6px;padding:11px}
+.expert-v2--compact .expert-review-card-title{gap:6px}
+.expert-v2--compact .expert-review-card-title strong{font-size:13px}
+.expert-v2--compact .expert-review-card-title span{padding:4px 7px;font-size:9px}
+.expert-v2--compact .expert-review-card-body>small{font-size:10px}
+.expert-v2--compact .expert-review-processing,.expert-v2--compact .expert-review-privacy-status{padding:6px 8px;font-size:10px;line-height:1.35}
+.expert-v2--compact .expert-review-privacy-confirm{gap:7px!important;padding:8px}
+.expert-v2--compact .expert-review-privacy-confirm span{font-size:10px;line-height:1.4}
+.expert-v2--compact .expert-review-privacy-confirm input{width:15px!important;height:15px}
+.expert-v2--compact .expert-review-actions{gap:7px;padding-top:8px}
+.expert-v2--compact .expert-review-actions label{font-size:10px}
+.expert-v2--compact .expert-review-actions input{padding:8px;font-size:11px}
+.expert-v2--compact .expert-review-actions button{flex-basis:95px;padding:8px 7px;font-size:10px}
+.expert-v2--compact .expert-review-grant-summary{margin:4px 0;padding:8px 10px;font-size:10px}
+@media(max-width:1160px){.expert-v2--compact .expert-v2-workspace{grid-template-columns:1fr}}
+@media(max-width:620px){
+  .expert-v2--compact .expert-v2-heading{align-items:flex-start;flex-direction:row;gap:8px}
+  .expert-v2--compact .expert-v2-heading h1{font-size:24px}
+  .expert-v2--compact .expert-v2-main-action{width:auto;min-height:36px;padding:8px 10px;font-size:10px}
+  .expert-v2--compact .expert-v2-metrics article{align-items:center}
+  .expert-v2--compact .expert-v2-metric-icon{width:34px;height:34px;flex-basis:34px;font-size:19px}
+  .expert-v2--compact .expert-review-card{grid-template-columns:minmax(0,1fr)}
+  .expert-v2--compact .expert-review-media{min-height:0;aspect-ratio:16/9}
+}
