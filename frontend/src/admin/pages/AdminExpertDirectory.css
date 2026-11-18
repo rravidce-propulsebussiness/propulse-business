@@ -184,3 +184,29 @@
   .expert-v2--featured .expert-v2-filters{grid-template-columns:repeat(2,minmax(0,1fr))}
   .expert-v2--featured .expert-v2-profile-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+
+
+/* Video Approvals: compact queue and review preview */
+.expert-v2--pending .expert-v2-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+.expert-v2--pending .expert-v2-workspace{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px}
+.expert-v2--pending .expert-v2-list-panel,.expert-v2--pending .expert-v2-detail-panel{min-height:370px}
+.expert-v2--pending .expert-v2-list-panel{padding:17px}
+.expert-v2--pending .expert-v2-section-heading span{font-size:12px;color:#6b7b8c;font-weight:700}
+.expert-v2--pending .expert-v2-search{margin:14px 0 12px}
+.expert-v2--pending .expert-review-filter{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.expert-v2--pending .expert-review-filter button{min-height:36px;padding:7px 13px;border:1px solid #e2e7ec;border-radius:999px;background:#fff;color:#43566d;font-size:12px;font-weight:700;cursor:pointer}
+.expert-v2--pending .expert-review-filter button.selected{border-color:#f45b24;background:#fff5ef;color:#db4c1b}
+.expert-v2--pending .expert-v2-empty{min-height:110px;display:flex;align-items:center;justify-content:center;margin:0;padding:22px;border:1px dashed #e8d8cf;border-radius:14px;background:#fffaf7;color:#728095;text-align:center;font-size:13px}
+.expert-v2-pending-preview{min-height:370px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+.expert-v2-pending-preview>span{display:grid;place-items:center;width:66px;height:66px;border-radius:18px;background:#fff1e7;color:#f45b24;font-size:30px}
+.expert-v2-pending-preview strong{color:#172f4d;font-size:19px}
+@media(max-width:900px){.expert-v2--pending .expert-v2-workspace{grid-template-columns:1fr}}
+@media(max-width:620px){
+ .expert-v2--pending .expert-v2-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .expert-v2--pending .expert-v2-metrics article{padding:9px 7px;gap:6px}
+ .expert-v2--pending .expert-v2-metric-icon{width:28px;height:28px;flex-basis:28px;font-size:15px}
+ .expert-v2--pending .expert-v2-list-panel,.expert-v2--pending .expert-v2-detail-panel{min-height:280px}
+ .expert-v2--pending .expert-review-filter{gap:6px}
+ .expert-v2--pending .expert-review-filter button{padding:6px 10px;font-size:11px}
+ .expert-v2-pending-preview{min-height:280px}
+}
