@@ -23,6 +23,7 @@ assert.match(migration,/COUNT\(\*\) FROM candidate\)=1/,'No ambiguous company-na
 assert.match(directory,/COALESCE\(beds.is_official,FALSE\) AS is_official/)
 assert.match(directory,/video_projects/)
 assert.match(directory,/pending_video_reviews/)
+assert.match(directory,/approved_video_reviews/,'Video Approvals summary must include approved lead-credit reviews')
 assert.match(directory,/video_count/)
 assert.match(listings,/COALESCE\(beds.is_official,FALSE\) AS is_official/)
 assert.match(expertPublic,/Official ProPulse/)
