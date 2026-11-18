@@ -1293,3 +1293,63 @@
 /* Page title above the live lead count */
 .v9-inventory-copy .admin-page-title{margin:0 0 8px}
 .v9-inventory-copy .admin-page-title+div strong{color:#3b5578;font-size:15px}
+
+
+/* Compact light inventory header and quality controls */
+.v9-inventory-head{
+  min-height:0;
+  margin:0 0 14px;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+.v9-inventory-head .admin-page-title{
+  margin:0;
+  color:#102b54;
+  font-size:clamp(22px,2.4vw,30px);
+  line-height:1.2;
+}
+.v9-inventory-copy>span,
+.v9-inventory-copy>div,
+.v9-live-indicator{display:none!important}
+.v9-inventory-head .v9-refresh-btn{
+  height:38px;
+  border-color:#d9e1e8;
+  color:#344960;
+  box-shadow:none;
+}
+.v9-stats{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.v9-stat{padding:12px 14px;border-radius:12px;box-shadow:none}
+.v9-stat span{font-size:10px}
+.v9-stat strong{margin-top:4px;font-size:22px}
+.v9-quality-gate-bar{
+  grid-template-columns:auto auto auto auto;
+  justify-content:start;
+  gap:18px;
+  margin-bottom:12px;
+  padding:12px 14px;
+  border-color:#e5e9ed;
+  border-radius:12px;
+  background:#fff;
+}
+.v9-quality-gate-bar>div>span{color:#da5b2c}
+.v9-quality-gate-bar>div>strong,
+.v9-quality-gate-bar>div>small{display:none}
+.v9-quality-gate-bar label{color:#344960}
+.v9-quality-gate-bar>button{background:#f45a24}
+.v9-quality-gate-bar>button:hover{background:#df4d1d}
+.v9-filterbar{background:#fff}
+.v9-filter-search input::placeholder{color:transparent}
+.v9-tier-filters button.active{background:#f45a24;border-color:#f45a24;box-shadow:0 4px 10px rgba(244,90,36,.16)}
+@media(max-width:900px){
+  .v9-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:600px){
+  .v9-inventory-head{align-items:center;gap:10px}
+  .v9-inventory-head .admin-page-title{font-size:22px}
+  .v9-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .v9-quality-gate-bar{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .v9-quality-gate-bar>button{width:100%}
+}
