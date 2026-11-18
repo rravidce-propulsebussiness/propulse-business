@@ -340,7 +340,7 @@ export default function Membership() {
       {loading ? <BootLoader contained message="Loading membership options" /> : <>
         <section id="membership-plans" className="membership-plans membership-plans-two">
           {[{ key: 'grow', label: 'GROW', plans: growPlans, selected: selectedGrowPlan, benefits: growBenefits, copy: 'Best Lead Pricing + Exclusive Leads + Investment Unlocked', action: 'Choose GROW' },
-            { key: 'scale', label: 'SCALE', plans: scalePlans, selected: selectedScalePlan, benefits: scaleBenefits, copy: 'Everything in GROW + Website + SEO + Maintenance', action: 'Upgrade to SCALE' }].map((level) => {
+            { key: 'scale', label: 'SCALE', plans: scalePlans, selected: selectedScalePlan, benefits: scaleBenefits, copy: 'Everything in GROW + Website + SEO + Maintenance', action: 'Choose SCALE' }].map((level) => {
               const isCurrent = Boolean(currentMembership?.membership_plan_id) && currentGroup === level.key;
               const canUpgrade = Boolean(currentMembership?.membership_plan_id) && level.key === 'scale' && currentGroup === 'grow';
               return <article className={`membership-plan ${level.key === 'grow' ? 'starter-plan grow-plan' : 'scale-membership-plan'}`} key={level.key}>
