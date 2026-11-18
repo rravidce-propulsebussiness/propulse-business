@@ -312,7 +312,7 @@ assert(!dashboard.includes('Live data'),'Redundant live-data pill must stay remo
 const expertDirectory=read('../frontend/src/admin/pages/AdminExpertDirectory.jsx');
 const expertDirectoryCss=read('../frontend/src/admin/pages/AdminExpertDirectory.css');
 const completedProjects=read('../frontend/src/admin/pages/AdminCompletedProjects.jsx');
-assert(expertDirectory.includes("section==='featured'?'Featured Professionals':'Expert Directory'")&&!expertDirectory.includes('Manage professionals, project-video lead-credit reviews and public directory settings.'),'Expert Directory views must use compact titles without explanatory copy');
+assert(expertDirectory.includes("section==='featured'?'Featured Professionals':section==='pending'?'Video Approvals':'Expert Directory'")&&!expertDirectory.includes('Manage professionals, project-video lead-credit reviews and public directory settings.'),'Expert Directory views must use compact titles without explanatory copy');
 assert(expertDirectory.includes('expert-v2--compact')&&expertDirectory.includes('Search professionals'),'Expert Directory must use the compact directory layout');
 assert(expertDirectory.includes("section==='pending'?'Video Approvals':'Expert Directory'")&&expertDirectory.includes('Review queue'),'Video approvals must use its focused compact title and queue');
 assert(expertDirectory.includes('No videos pending review')&&expertDirectory.includes('Select a project'),'Video approvals empty state must be concise');
