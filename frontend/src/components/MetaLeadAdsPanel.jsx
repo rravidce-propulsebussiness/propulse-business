@@ -176,7 +176,7 @@ export default function MetaLeadAdsPanel({ scope = 'partner', onStatusChange }) 
           {stale && <button type="button" className="mla-btn" disabled={Boolean(busy)} onClick={() => analyze(mappings)}>Re-analyze with this mapping</button>}
           <button type="button" className="mla-btn primary" disabled={stale || Boolean(busy)} onClick={connectForm}>{busy === 'connect' ? 'Connecting…' : 'Connect this lead form'}</button>
         </div>
-      </div>
+      </div>}
         </div>
       </details>}
 
