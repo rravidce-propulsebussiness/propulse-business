@@ -14,7 +14,7 @@ process.env.JWT_SECRET = 'jwt-secret-for-meta-tests-0123456789';
 process.env.META_LEADS_PUBLIC_ORIGIN = 'https://propulsetechnologies.online';
 
 // ---- stubs ---------------------------------------------------------------
-const db = { pages: [], events: new Map(), imports: [], queries: [] };
+const db = { pages: [], adminPages: [], connections: [], events: new Map(), imports: [], queries: [] };
 const connectionRow = () => ({
   id: 7, owner_user_id: 42, owner_scope: 'lead_partner', meta_page_id: 3, page_id: '111222333', form_id: '987654321',
   form_name: 'Hyderabad interiors', column_mappings: {}, defaults: {}, default_industry_id: null,
@@ -23,6 +23,17 @@ const connectionRow = () => ({
 const pool = {
   async query(sql, params = []) {
     db.queries.push(sql);
+    if (/SELECT \* FROM meta_lead_pages WHERE owner_scope='admin' ORDER BY id/.test(sql)) return { rows: db.adminPages };
+    if (/SELECT form_id FROM meta_lead_connections WHERE status='active' AND form_id=ANY/.test(sql)) {
+      const ids = new Set(params[0] || []);
+      return { rows: db.connections.filter(row => row.status === 'active' && ids.has(row.form_id)).map(row => ({ form_id: row.form_id })) };
+    }
+    if (/INSERT INTO meta_lead_connections/.test(sql)) {
+      const row = { id: 8, owner_user_id: params[0], owner_scope: 'admin', meta_page_id: params[1], page_id: params[2], form_id: params[3], form_name: params[4], column_mappings: JSON.parse(params[5]), defaults: {}, default_industry_id: null, status: 'active' };
+      if (db.connections.some(item => item.status === 'active' && item.form_id === row.form_id)) return { rows: [] };
+      db.connections.push(row);
+      return { rows: [row] };
+    }
     if (/SELECT id, role FROM users/.test(sql)) return { rows: [{ id: params[0], role: 'lead_partner' }] };
     if (/INSERT INTO meta_lead_pages/.test(sql)) { db.pages.push({ owner: params[0], scope: params[1], pageId: params[2], token: params[4] }); return { rows: [] }; }
     if (/FROM meta_lead_connections c JOIN meta_lead_pages p[\s\S]*WHERE c.form_id=\$1/.test(sql)) return { rows: params[0] === '987654321' ? [connectionRow()] : [] };
@@ -56,6 +67,16 @@ global.fetch = async (url, init = {}) => {
   if (u.pathname.endsWith('/oauth/access_token')) return json({ access_token: u.searchParams.get('grant_type') ? 'long-user-token' : 'short-user-token' });
   if (u.pathname.endsWith('/me')) return json({ id: '55500' });
   if (u.pathname.endsWith('/me/accounts')) return json({ data: [{ id: '111222333', name: 'ProPulse Interiors', access_token: 'test-token' }] });
+  if (u.pathname.endsWith('/111222333/leadgen_forms')) return json({ data: [
+    { id: '222333444555', name: 'New construction form', status: 'ACTIVE' },
+    { id: '222333444556', name: 'Draft form', status: 'DRAFT' },
+  ] });
+  if (u.pathname.endsWith('/111222333/subscribed_apps') && init.method === 'POST') return json({ success: true });
+  if (u.pathname.endsWith('/222333444555')) return json({ id: '222333444555', name: 'New construction form', page: { id: '111222333' }, questions: [
+    { key: 'full_name', label: 'Full name', type: 'FULL_NAME' },
+    { key: 'phone_number', label: 'Phone number', type: 'PHONE' },
+    { key: 'city', label: 'City', type: 'CITY' },
+  ] });
   if (u.pathname.endsWith('/5550001112223')) {
     assert.ok(u.searchParams.get('appsecret_proof'), 'Every token call must include appsecret_proof');
     return json({ id: '5550001112223', created_time: '2026-11-08T10:00:00+0000', ad_name: 'Diwali offer', campaign_name: 'Interiors Q4', platform: 'ig',
@@ -132,6 +153,26 @@ const metaPricing = require(src('services/metaAdPricingService'));
   assert.match(await service.finishOauth({ code: 'X', state: 'forged.state.value' }), /meta=error/, 'Forged state must be rejected');
   assert.match(await service.finishOauth({ state: dialog.searchParams.get('state'), error: 'access_denied' }), /meta=cancelled/);
 
+  // Background discovery auto-connects new active forms, stores exact
+  // suggested mappings and skips drafts and forms already active.
+  db.adminPages.push({ id: 9, owner_user_id: 43, owner_scope: 'admin', page_id: '111222333', page_name: 'ProPulse Interiors', page_token_encrypted: graph.encryptToken('admin-page-token') });
+  const nativeSetImmediate = global.setImmediate;
+  const pendingBackfills = [];
+  global.setImmediate = callback => { pendingBackfills.push(callback); };
+  const discovery = await service.autoConnectNewAdminForms();
+  global.setImmediate = nativeSetImmediate;
+  assert.strictEqual(discovery.connected, 1, 'A newly discovered active form is automatically connected');
+  assert.strictEqual(db.connections.length, 1, 'The active form creates exactly one connection');
+  assert.strictEqual(db.connections[0].form_id, '222333444555');
+  assert.strictEqual(db.connections[0].column_mappings.customerName, 'full name');
+  assert.strictEqual(db.connections[0].column_mappings.customerPhone, 'phone number');
+  assert.strictEqual(db.connections[0].column_mappings.city, 'city');
+  assert.strictEqual(pendingBackfills.length, 1, 'New connections start a recent-lead backfill');
+  assert.ok(graphCalls.some(call => call.path.endsWith('/111222333/subscribed_apps') && call.method === 'POST'), 'Discovery subscribes the Page to leadgen events');
+  const repeatedDiscovery = await service.autoConnectNewAdminForms();
+  assert.strictEqual(repeatedDiscovery.connected, 0, 'Repeated scans do not duplicate active connections');
+  assert.strictEqual(db.connections.length, 1);
+
   // Webhook: bad signature rejected; valid one imports the lead once
   const body = Buffer.from(JSON.stringify({ object: 'page', entry: [{ id: '111222333', changes: [{ field: 'leadgen', value: { leadgen_id: '5550001112223', form_id: '987654321', page_id: '111222333' } }] }] }));
   const sign = buf => 'sha256=' + crypto.createHmac('sha256', process.env.META_APP_SECRET).update(buf).digest('hex');
@@ -190,5 +231,5 @@ const metaPricing = require(src('services/metaAdPricingService'));
   assert.ok(sourcedLeadCleanup.includes("COALESCE(source, '') ~*"), 'Lead deletion uses the source field to target only Sheet imports');
   assert.ok(sourcedLeadCleanup.includes('google[[:space:]_-]*sheets?'), 'Lead deletion matches Google Sheets source labels');
 
-  console.log('Meta Lead Ads OAuth, encryption, webhook signature, idempotent import and mapping checks passed.');
+  console.log('Meta Lead Ads OAuth, encryption, webhook, mapping and auto-discovery checks passed.');
 })().catch(error => { console.error(error); process.exit(1); });
