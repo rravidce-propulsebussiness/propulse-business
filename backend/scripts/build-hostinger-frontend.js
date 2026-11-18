@@ -25,7 +25,13 @@ if(!fs.existsSync(frontendRoot)){
   console.log('Hostinger frontend source not present; skipping frontend build.');
   process.exit(0);
 }
-if(!fs.existsSync(viteBin))throw new Error('Vite is missing from backend/node_modules');
+if(!fs.existsSync(viteBin)){
+  if(fs.existsSync(bundledIndex)){
+    console.log('Prebuilt Hostinger frontend found; skipping the Vite build because build dependencies are omitted.');
+    process.exit(0);
+  }
+  throw new Error('Vite is missing from backend/node_modules. Install build dependencies or deploy a prebuilt frontend bundle.');
+}
 if(!fs.existsSync(frontendNodeModules)){
   fs.symlinkSync(backendNodeModules,frontendNodeModules,'dir');
   linked=true;
