@@ -288,7 +288,7 @@ assert(servicePricingRemoval.includes('DROP TABLE IF EXISTS service_pricing'),'F
 
 
 assert(/const revenue\s*=\s*stats\?\.revenue\s*\|\|\s*(EMPTY_OBJECT|\{\})/.test(dashboard),'Overview must use the backend revenue summary');
-assert(/const \[revenuePeriod,\s*setRevenuePeriod\]=useState\('month'\)/.test(dashboard),'Overview must keep the revenue period filter');
+assert(/const\s+\[revenuePeriod,\s*setRevenuePeriod\]\s*=\s*useState\('month'\)/.test(dashboard),'Overview must keep the revenue period filter');
 assert(dashboard.includes('Total earnings')&&!dashboard.includes('REVENUE COMMAND CENTER'),'Overview must keep compact earnings without the old section kicker');
 assert(dashboard.includes("['today', 'Today']")&&dashboard.includes("['week', 'This Week']")&&dashboard.includes("['month', 'This Month']")&&dashboard.includes("['all', 'All Time']"),'Overview revenue filters must keep Today, This Week, This Month and All Time');
 assert(/ownGross:\s*propulse\.revenueWeek/.test(dashboard)&&/partnerCommission:\s*leadPartner\.revenueWeek/.test(dashboard)&&/investorCommission:\s*investor\.revenueWeek/.test(dashboard),'Weekly earnings must preserve source-level breakdown');
