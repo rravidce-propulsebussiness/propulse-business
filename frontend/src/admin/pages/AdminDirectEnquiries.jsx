@@ -44,9 +44,7 @@ export default function AdminDirectEnquiries(){
   return <section className="admin-direct-enquiries">
     <header className="admin-direct-header">
       <div>
-        <span>FIRST-PARTY PROJECT ENQUIRIES</span>
         <h1>Direct ProPulse Construction &amp; Interiors</h1>
-        <p>Customers requesting work from ProPulse itself. These enquiries are separate from the paid lead marketplace and are never listed for sale.</p>
       </div>
       <button type="button" onClick={load} disabled={loading}>Refresh</button>
     </header>
@@ -60,7 +58,7 @@ export default function AdminDirectEnquiries(){
       <span>{pagination.total} enquiries</span>
     </div>
     {error&&<p role="alert" className="admin-direct-error">{error}</p>}
-    {loading?<p role="status">Loading enquiries…</p>:items.length===0?<p className="admin-direct-empty">No direct ProPulse enquiries in this view.</p>:
+    {loading?<p role="status">Loading enquiries…</p>:items.length===0?<div className="admin-direct-empty" role="status"><span aria-hidden="true">⌑</span><p>No direct ProPulse enquiries in this view.</p></div>:
     <div className="admin-direct-table-wrap">
       <table>
         <thead><tr><th>Received</th><th>Customer</th><th>Service / Area</th><th>Requirement</th><th>Status</th></tr></thead>
@@ -75,10 +73,10 @@ export default function AdminDirectEnquiries(){
         </tr>)}</tbody>
       </table>
     </div>}
-    <div className="admin-direct-pagination">
+    {(pagination.totalPages||1)>1&&<div className="admin-direct-pagination">
       <button type="button" disabled={page<=1||loading} onClick={()=>setPage(p=>p-1)}>Previous</button>
       <span>Page {pagination.page||page} / {pagination.totalPages||1}</span>
       <button type="button" disabled={page>=(pagination.totalPages||1)||loading} onClick={()=>setPage(p=>p+1)}>Next</button>
-    </div>
+    </div>}
   </section>
 }
