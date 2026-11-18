@@ -36,3 +36,15 @@ assert.equal(resolve('sample-villa'), '', 'archived sample projects are not quot
 assert.equal(resolve('../admin'), '', 'unsafe keys are rejected')
 
 console.log('Lead form regressions (popup location, consent notice, quote link) passed.')
+
+
+// 4. Meta lead settings share one save action and keep form management compact.
+const classificationRules = read('src/components/LeadClassificationRulesPanel.jsx')
+assert(!classificationRules.includes('Save access window'), 'Early Access must not have a separate save button')
+assert(classificationRules.includes("authRequest('/leads/access-settings'"), 'The classification save must persist Early Access settings')
+assert(classificationRules.includes('Save classification rules'), 'Classification rules keep the unified save action')
+const metaPanel = read('src/components/MetaLeadAdsPanel.jsx')
+assert(metaPanel.includes('<details className="mla-disclosure mla-connect-disclosure">'), 'Form connection controls must be expandable')
+assert(metaPanel.includes('<details className="mla-disclosure mla-connections">'), 'Connected forms must be expandable')
+assert(metaPanel.includes('Auto-detect is on'), 'Automatic form discovery status must stay visible')
+assert(!metaPanel.includes('No sheet refresh or polling is needed'), 'Remove the long Meta setup explanation')
