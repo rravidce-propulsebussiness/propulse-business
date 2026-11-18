@@ -308,6 +308,17 @@ assert(!dashboard.includes('Propulse-owned, Lead Partner and Investor activity a
 assert(!dashboard.includes('General admin work not already summarized'),'Redundant operations explainer must stay removed');
 assert(!dashboard.includes('Live data'),'Redundant live-data pill must stay removed');
 
+
+const expertDirectory=read('../frontend/src/admin/pages/AdminExpertDirectory.jsx');
+const expertDirectoryCss=read('../frontend/src/admin/pages/AdminExpertDirectory.css');
+const completedProjects=read('../frontend/src/admin/pages/AdminCompletedProjects.jsx');
+assert(expertDirectory.includes('<h1>Expert Directory</h1>')&&!expertDirectory.includes('Manage professionals, project-video lead-credit reviews and public directory settings.'),'Expert Directory must use the compact title without explanatory copy');
+assert(expertDirectory.includes('expert-v2--compact')&&expertDirectory.includes('Search professionals'),'Expert Directory must use the compact directory layout');
+assert(!expertDirectory.includes('Active business accounts')&&!expertDirectory.includes('Prioritized profiles'),'Expert Directory KPI cards must not repeat explanatory subtitles');
+assert(expertDirectory.includes('compact/>')&&completedProjects.includes('compact=false'),'Expert Directory project review must support its compact mode');
+assert(completedProjects.includes('Approve lead credit')&&completedProjects.includes('Reject lead credit'),'Compact project review must retain lead-credit actions');
+assert(expertDirectoryCss.includes('.expert-v2--compact .expert-v2-metrics')&&expertDirectoryCss.includes('background:#eaf8ef'),'Expert Directory must retain compact pastel card styling');
+
 assert(adminLeadPartners.includes('Lead Partner master')&&adminLeadPartners.includes('PARTNER OPERATIONS / FINANCE'),'Lead Partners must remain a single master operations and finance view');
 assert(adminLeadPartners.includes('Related leads')&&adminLeadPartners.includes('Earnings')&&adminLeadPartners.includes('Payouts'),'Partner detail must keep related leads, earnings and payout history together');
 assert(adminLeadPartners.includes('TRANSFER DUE')&&adminLeadPartners.includes('EARNINGS GENERATED')&&adminLeadPartners.includes('TRANSFERRED'),'Partner list must expose generated earnings, transfer due and completed transfers');
