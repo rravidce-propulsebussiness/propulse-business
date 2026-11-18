@@ -338,7 +338,7 @@ export default function Membership() {
       {error && <div className="membership-error">{error}</div>}
 
       {loading ? <BootLoader contained message="Loading membership options" /> : <>
-        <section className="membership-plans membership-plans-two">
+        <section id="membership-plans" className="membership-plans membership-plans-two">
           {[{ key: 'grow', label: 'GROW', plans: growPlans, selected: selectedGrowPlan, benefits: growBenefits, copy: 'Best Lead Pricing + Exclusive Leads + Investment Unlocked', action: 'Choose GROW' },
             { key: 'scale', label: 'SCALE', plans: scalePlans, selected: selectedScalePlan, benefits: scaleBenefits, copy: 'Everything in GROW + Website + SEO + Maintenance', action: 'Upgrade to SCALE' }].map((level) => {
               const isCurrent = Boolean(currentMembership?.membership_plan_id) && currentGroup === level.key;
@@ -386,31 +386,28 @@ export default function Membership() {
 
         <section className="membership-plans membership-investor-access">
           <article className="membership-plan investor-plan investment-access-card">
-            <div className="membership-plan-top">
-              <div>
+            <div className="investor-heading">
+              <div className="investor-heading-title">
                 <span className="membership-stage">INVESTOR</span>
                 <h2>Investor</h2>
-                <p>Put capital behind lead generation, track your investment cycle, generated funds, linked leads and payouts from one workspace.</p>
               </div>
-              {isProMember ? <span className="popular-badge">UNLOCKED WITH PRO</span> : <span className="current-badge">PRO REQUIRED</span>}
+              {isProMember ? <span className="popular-badge">PRO ACTIVE</span> : <span className="current-badge">PRO REQUIRED</span>}
             </div>
 
-            <div className="investor-model">
-              <div><b>INVEST</b><span>Deploy capital within the investment limits configured by Propulse.</span></div>
-              <div><b>TRACK LEADS</b><span>Follow assigned and sold leads linked to your investor activity.</span></div>
-              <div><b>MANAGE EARNINGS</b><span>Review generated funds, cycle history and eligible payout requests.</span></div>
+            <div className="investor-model" aria-label="Investor features">
+              <div><span className="investor-feature-icon">₹</span><b>Invest</b></div>
+              <div><span className="investor-feature-icon">↗</span><b>Lead tracking</b></div>
+              <div><span className="investor-feature-icon">✓</span><b>Earnings & payouts</b></div>
             </div>
 
-            <div className="membership-divider" />
-            <ul>
-              <li><b>01</b><span>Active Pro membership unlocks the Investor workspace.</span></li>
-              <li><b>02</b><span>Investment availability still follows admin limits, industries and locations.</span></li>
-              <li><b>03</b><span>Returns depend on realized lead-sale activity and are not fixed or guaranteed.</span></li>
-            </ul>
+            <div className="investor-footnote">
+              <span>Investment limits apply</span>
+              <span>Returns depend on lead sales and are not guaranteed</span>
+            </div>
 
             {isProMember
               ? <a className="membership-primary" href="/investment">Open Investor <span>→</span></a>
-              : <button className="membership-primary current" disabled>🔒 Activate Pro first</button>}
+              : <a className="membership-primary investor-upgrade-link" href="#membership-plans">View Pro plans <span>→</span></a>}
           </article>
         </section>
 
