@@ -12,9 +12,7 @@ export default function LeadClassificationRulesPanel({ onStatusChange }) {
   const [accessSettings, setAccessSettings] = useState(null)
   const [earlyAccessDays, setEarlyAccessDays] = useState('2')
   const [busy, setBusy] = useState(false)
-  const [accessBusy, setAccessBusy] = useState(false)
   const [message, setMessage] = useState('')
-  const [accessMessage, setAccessMessage] = useState('')
 
   useEffect(() => {
     let active = true
@@ -60,30 +58,17 @@ export default function LeadClassificationRulesPanel({ onStatusChange }) {
     [tier]: current[tier].filter((_, position) => position !== index)
   }))
 
-  async function saveEarlyAccessWindow() {
-    if (!accessSettings?.basic || !accessSettings?.premium) return
-    setAccessBusy(true)
-    setAccessMessage('')
-    try {
-      const saved = await authRequest('/leads/access-settings', {
-        method: 'PUT',
-        body: JSON.stringify({
-          basic: accessSettings.basic,
-          premium: { ...accessSettings.premium, proEarlyAccessDays: Number(earlyAccessDays) }
-        })
-      })
-      setAccessSettings(saved)
-      setEarlyAccessDays(String(saved?.premium?.proEarlyAccessDays ?? earlyAccessDays))
-      setAccessMessage('Pro Early Access window saved')
-    } catch (error) {
-      setAccessMessage(error.message || 'Unable to save Pro Early Access window')
-    } finally {
-      setAccessBusy(false)
-    }
-  }
-
   async function saveRules() {
     if (!draft) return
+    if (!accessSettings?.basic || !accessSettings?.premium) {
+      setMessage('Settings are still loading. Try saving again in a moment.')
+      return
+    }
+    const days = Number(earlyAccessDays)
+    if (!Number.isInteger(days) || days < 1 || days > 365) {
+      setMessage('Pro Early Access must be between 1 and 365 days.')
+      return
+    }
     setBusy(true)
     setMessage('')
     try {
@@ -93,9 +78,20 @@ export default function LeadClassificationRulesPanel({ onStatusChange }) {
       })
       setSettings(saved)
       setDraft(industryId ? saved.industryRules?.[industryId] || saved : saved)
-      setMessage(industryId ? 'Industry-specific rules saved' : 'All-industries fallback rules saved')
+      if (days !== Number(accessSettings.premium.proEarlyAccessDays ?? 2)) {
+        const savedAccess = await authRequest('/leads/access-settings', {
+          method: 'PUT',
+          body: JSON.stringify({
+            basic: accessSettings.basic,
+            premium: { ...accessSettings.premium, proEarlyAccessDays: days }
+          })
+        })
+        setAccessSettings(savedAccess)
+        setEarlyAccessDays(String(savedAccess?.premium?.proEarlyAccessDays ?? days))
+      }
+      setMessage(industryId ? 'Industry rules saved' : 'Classification rules saved')
     } catch (error) {
-      setMessage(error.message || 'Unable to save lead classification rules')
+      setMessage(error.message || 'Unable to save lead settings')
     } finally {
       setBusy(false)
     }
@@ -143,7 +139,6 @@ export default function LeadClassificationRulesPanel({ onStatusChange }) {
             <div>
               <span className="mla-rules-kicker">BASIC / PREMIUM / EXCLUSIVE CLASSIFICATION</span>
               <h2>Rules Configuration</h2>
-              <p>Classify new Meta leads from their form answers.</p>
             </div>
             <label className="mla-auto-toggle">
               <span>Auto-classify new imports</span>
@@ -176,7 +171,6 @@ export default function LeadClassificationRulesPanel({ onStatusChange }) {
               <span>classifies lead as Premium</span>
             </div>
             <div className="mla-condition-list">{conditionRows('premiumConditions', draft.premiumConditions, 'Premium')}</div>
-            <p className="mla-rule-help">Add up to 12 conditions. Example: Plot Size &gt; 150 sq yd and Floors &gt; G+3.</p>
           </section>
 
           <section className="mla-exclusive-card" aria-label="Exclusive lead classification">
@@ -184,7 +178,6 @@ export default function LeadClassificationRulesPanel({ onStatusChange }) {
               <span className="mla-crown" aria-hidden="true">♛</span>
               <div>
                 <h3>EXCLUSIVE · ABOVE PREMIUM</h3>
-                <p>Premium leads that also meet these stricter conditions get Pro Early Access.</p>
               </div>
               <label className="mla-exclusive-toggle">
                 <span>Enable Exclusive classification</span>
@@ -204,23 +197,18 @@ export default function LeadClassificationRulesPanel({ onStatusChange }) {
             <div className="mla-rule-group mla-exclusive-rules">
               <div className="mla-rule-group-heading">
                 <strong>Exclusive Rules</strong>
-                <span>applies only to Premium leads</span>
               </div>
               <div className="mla-condition-list">{conditionRows('exclusiveConditions', draft.exclusiveConditions, 'Exclusive')}</div>
             </div>
 
             <div className="mla-access-window">
-              <label className="mla-early-access-label" htmlFor="mla-early-access-days">Pro Early Access window</label>
+              <label className="mla-early-access-label" htmlFor="mla-early-access-days">Pro Early Access</label>
               <div className="mla-access-input-wrap">
                 <input id="mla-early-access-days" aria-label="Pro Early Access window in days" type="number" min="1" max="365" value={earlyAccessDays} onChange={event => setEarlyAccessDays(event.target.value)} />
                 <span>days</span>
               </div>
-              <p>Early access applies only to Premium leads that meet every Exclusive rule.</p>
-              <button type="button" disabled={accessBusy || !accessSettings} onClick={saveEarlyAccessWindow}>{accessBusy ? 'Saving…' : 'Save access window'}</button>
             </div>
-            {accessMessage && <p role="status" className={'mla-inline-message ' + (accessMessage.includes('Unable') ? 'error' : 'success')}>{accessMessage}</p>}
             <div className="mla-exclusive-footer">
-              <small>Add up to 12 stricter conditions. An empty rule set creates no Exclusive leads.</small>
               <button type="button" className="mla-add-exclusive" disabled={(draft.exclusiveConditions || []).length >= 12} onClick={() => addCondition('exclusiveConditions')}>＋ Add Exclusive condition</button>
             </div>
           </section>
@@ -235,21 +223,18 @@ export default function LeadClassificationRulesPanel({ onStatusChange }) {
         <aside className="mla-classification-preview">
           <header>
             <h2>Classification preview</h2>
-            <p>How incoming Meta leads will be classified with the current rules.</p>
           </header>
           <ol className="mla-tier-flow">
             <li className="mla-tier-step basic">
               <span className="mla-tier-dot" />
               <article>
                 <strong>Basic</strong>
-                <p>Default classification when Premium rules are not met.</p>
               </article>
             </li>
             <li className="mla-tier-step premium">
               <span className="mla-tier-dot" />
               <article>
                 <strong>Premium</strong>
-                <p><b>✓</b> {draft.premiumConditions?.length ? 'Premium rules matched' : 'Premium rules are ready to configure.'}</p>
                 {draft.premiumConditions?.length > 0 && <small>{summarize(draft.premiumConditions, draft.matchMode)}</small>}
               </article>
             </li>
@@ -257,20 +242,11 @@ export default function LeadClassificationRulesPanel({ onStatusChange }) {
               <span className="mla-tier-dot" />
               <article>
                 <strong><span aria-hidden="true">♛</span> Exclusive</strong>
-                <p><b>{draft.exclusiveEnabled ? '✓' : '○'}</b> {draft.exclusiveEnabled ? 'Stricter rules matched' : 'Exclusive classification is off.'}</p>
                 {draft.exclusiveEnabled && draft.exclusiveConditions?.length > 0 && <small>{summarize(draft.exclusiveConditions, draft.exclusiveMatchMode)}</small>}
                 {draft.exclusiveEnabled && <p><b>✓</b> {earlyAccessDays || 2}-day Pro Early Access.</p>}
               </article>
             </li>
           </ol>
-          <div className="mla-preview-note">
-            <span aria-hidden="true">ⓘ</span>
-            <p>After the early access window, the lead continues using the standard configured buyer-release rules.</p>
-          </div>
-          <div className="mla-preview-note floors">
-            <span aria-hidden="true">▦</span>
-            <p>Floors answers support formats like G+3, G+5, G+6.</p>
-          </div>
         </aside>
       </div>
     </>}

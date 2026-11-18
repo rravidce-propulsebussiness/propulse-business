@@ -117,10 +117,9 @@ export default function MetaLeadAdsPanel({ scope = 'partner', onStatusChange }) 
     <header className="mla-head">
       <div>
         <span className="mla-kicker">META LEAD ADS</span>
-        <h2>Facebook &amp; Instagram lead forms</h2>
-        <p>Leads arrive in real time from Meta. No sheet refresh or polling is needed, and the same duplicate, quality and pricing rules apply.</p>
+        <h2>Meta lead forms</h2>
       </div>
-      <span className={'mla-badge ' + (status?.configured ? 'ok' : 'off')}>{status?.configured ? 'Live webhook' : 'Not set up'}</span>
+      <span className={'mla-badge ' + (status?.configured ? 'ok' : 'off')}>{status?.configured ? 'Connected' : 'Not set up'}</span>
     </header>
 
     {message && <div className={'mla-alert ' + message.type}>{message.text}</div>}
@@ -144,9 +143,11 @@ export default function MetaLeadAdsPanel({ scope = 'partner', onStatusChange }) 
         </div>
       </div>
 
-      {scope === 'admin' && <div className="mla-auto-sync-note">New active forms on connected Pages are detected and connected automatically. ProPulse checks for new forms every 5 minutes and applies suggested field mappings; unmatched answers remain available as custom fields.</div>}
+      {scope === 'admin' && <div className="mla-auto-sync-note"><span className="mla-sync-dot" aria-hidden="true" />Auto-detect is on <span>New active forms connect automatically</span></div>}
 
-      {pages.length > 0 && <div className="mla-setup-form">
+      {pages.length > 0 && <details className="mla-disclosure mla-connect-disclosure">
+        <summary><span>Connect a form</span><span className="mla-summary-meta">Choose a Page and lead form</span></summary>
+        <div className="mla-disclosure-content"><div className="mla-setup-form">
         <label>Facebook Page
           <select value={pageId} disabled={Boolean(busy)} onChange={e => choosePage(e.target.value)}>
             <option value="">Choose a Page</option>
@@ -166,23 +167,23 @@ export default function MetaLeadAdsPanel({ scope = 'partner', onStatusChange }) 
             <option value="">Use the form's answer</option>
             {industries.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
           </select>
-          {scope === 'admin' && <small className="mla-muted">Choose the industry whose Basic/Premium rules should classify this form when it does not provide an Industry answer.</small>}
         </label>
         <button type="button" className="mla-btn" disabled={!formId || Boolean(busy)} onClick={() => analyze()}>{busy === 'preview' ? 'Analyzing…' : preview ? 'Re-analyze' : 'Analyze form'}</button>
-      </div>}
-
-      {preview && <div className="mla-preview">
-        <p className="mla-muted">{preview.sampleCount ? `Checked ${preview.sampleCount} recent leads from “${preview.formName || selectedForm?.name}”.` : `No leads on “${preview.formName || selectedForm?.name}” yet. Map its questions now; new leads will follow this mapping.`} Make sure Pincode or City is mapped so leads can be placed.</p>
+      </div>
+        {preview && <div className="mla-preview">
         <LeadImportPreview preview={preview} mappings={mappings} stale={stale} disabled={Boolean(busy)} onMappingsChange={next => { setMappings(next); setStale(true) }}/>
         <div className="mla-actions end">
           {stale && <button type="button" className="mla-btn" disabled={Boolean(busy)} onClick={() => analyze(mappings)}>Re-analyze with this mapping</button>}
           <button type="button" className="mla-btn primary" disabled={stale || Boolean(busy)} onClick={connectForm}>{busy === 'connect' ? 'Connecting…' : 'Connect this lead form'}</button>
         </div>
       </div>}
+        </div>
+      </details>}
 
-      <div className="mla-connections">
-        <h3>Connected lead forms</h3>
-        {!connections.length && <p className="mla-muted">No lead forms connected yet.</p>}
+      <details className="mla-disclosure mla-connections">
+        <summary><span>Connected forms</span><span className="mla-summary-meta">{connections.length} connected</span></summary>
+        <div className="mla-disclosure-content">
+        {!connections.length && <p className="mla-muted">No forms connected</p>}
         {connections.map(c => <article key={c.id} className="mla-connection">
           <div className="mla-connection-main">
             <strong>{c.formName || c.formId}</strong>
@@ -199,7 +200,8 @@ export default function MetaLeadAdsPanel({ scope = 'partner', onStatusChange }) 
             <button type="button" className="mla-btn ghost" disabled={Boolean(busy)} onClick={() => disconnectConnection(c.id)}>Disconnect</button>
           </div>
         </article>)}
-      </div>
+        </div>
+      </details>
     </>}
   </section>
 }

@@ -39,3 +39,43 @@
 }
 
 .mla-auto-sync-note{padding:12px 14px;border-radius:10px;background:#edf5ff;border:1px solid #cfe1fa;color:#24476d;font-size:13px;line-height:1.5}
+
+/* Compact, expandable Meta setup */
+.mla-panel{gap:12px;padding:20px}
+.mla-head{align-items:center}
+.mla-head h2{margin:2px 0 0;font-size:20px}
+.mla-auto-sync-note{display:flex;align-items:center;gap:8px;padding:9px 12px;font-size:12px;line-height:1.3}
+.mla-auto-sync-note>span:last-child{margin-left:auto;color:#58708a}
+.mla-sync-dot{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:#22a05a;box-shadow:0 0 0 3px #d8f3e3}
+.mla-account{padding:10px 12px;font-size:13px}
+.mla-disclosure{min-width:0;border:1px solid #e1e8f0;border-radius:12px;background:#fff;overflow:hidden}
+.mla-disclosure>summary{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 13px;color:#183452;font-size:14px;font-weight:800;cursor:pointer;list-style:none}
+.mla-disclosure>summary::-webkit-details-marker{display:none}
+.mla-disclosure>summary:after{content:"";width:8px;height:8px;margin-left:4px;border-right:2px solid #718198;border-bottom:2px solid #718198;transform:rotate(45deg);transition:transform .16s ease}
+.mla-disclosure[open]>summary:after{transform:rotate(225deg)}
+.mla-summary-meta{margin-left:auto;color:#718198;font-size:12px;font-weight:600}
+.mla-disclosure-content{display:grid;gap:12px;padding:0 13px 13px}
+.mla-connect-disclosure[open]>summary{border-bottom:1px solid #edf1f5;margin-bottom:12px}
+.mla-connect-disclosure[open]>.mla-disclosure-content{padding-top:0}
+.mla-setup-form{gap:10px}
+.mla-setup-form label{font-size:12px}
+.mla-setup-form select{padding:8px 10px;font-size:13px}
+.mla-setup-form .mla-muted{display:none}
+.mla-preview{gap:8px}
+.mla-connections{display:block}
+.mla-connections[open]>summary{border-bottom:1px solid #edf1f5}
+.mla-connections .mla-disclosure-content{gap:8px;padding-top:10px}
+.mla-connection{padding:10px 12px;gap:10px}
+.mla-connection-main small{font-size:11px}
+.mla-stats{gap:10px}
+.mla-stats span{font-size:10px}
+.mla-stats b{font-size:15px}
+.mla-connections .mla-actions{justify-content:flex-end}
+@media(max-width:760px){
+  .mla-panel{padding:15px 13px}
+  .mla-auto-sync-note{align-items:flex-start;flex-wrap:wrap}
+  .mla-auto-sync-note>span:last-child{width:100%;margin-left:16px}
+  .mla-summary-meta{font-size:11px}
+  .mla-connection{grid-template-columns:1fr}
+  .mla-connections .mla-actions{justify-content:flex-start}
+}

@@ -93,7 +93,7 @@ assert(metaPage.includes('<LeadClassificationRulesPanel onStatusChange={reportRu
 assert(classificationPanel.includes('aria-label="Classification industry"'),'Classification rules must be configurable per industry');
 assert(classificationPanel.includes('industryRules?.[industryId]'),'Industry rules must load separately from the all-industries fallback');
 assert(classificationPanel.includes('Text / choice')&&classificationPanel.includes('not_contains'),'Classification must support text answers from any industry form');
-assert(metaPanel.includes('whose Basic/Premium rules should classify this form'),'Meta form linking must explain default-industry rule selection');
+assert(metaPanel.includes('<label>Default industry')&&metaPanel.includes("Use the form's answer"),'Meta form linking must retain the default-industry selector');
 
 const {classify,numericValue}=require('../src/services/leadClassificationService');
 const settings={
