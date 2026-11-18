@@ -26,7 +26,7 @@ assert(leads.includes("const id=setInterval(refresh,60000)"),'Manage Leads auto-
 assert(!leads.includes('All Leads</'),'Duplicate All Leads heading must stay removed');
 assert(!leads.includes('Newest leads appear first'),'Redundant inventory explainer must stay removed');
 assert(leads.includes('v9-inventory-head'),'Premium inventory command bar must remain');
-assert(leads.includes('Auto-refresh every 60s'),'Inventory refresh status must remain visible');
+assert(!leads.includes('Auto-refresh every 60s'),'Compact inventory must keep the removed auto-refresh label hidden');
 assert(leads.includes("refreshing?'Refreshing…':'Refresh data'"),'Manual refresh control must remain');
 
 assert(leads.includes('v9-upload-workspace'),'Premium Upload Leads workspace must remain');
