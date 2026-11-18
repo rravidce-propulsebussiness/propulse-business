@@ -287,20 +287,23 @@ assert(membershipController.includes('res.json(await s.getPlans(false))'),'Publi
 assert(servicePricingRemoval.includes('DROP TABLE IF EXISTS service_pricing'),'Final schema must remove the redundant Service Pricing table');
 
 
-assert(/const revenue=stats\?\.revenue\|\|(EMPTY_OBJECT|\{\})/.test(dashboard),'Overview must use the backend revenue summary');
-assert(dashboard.includes("const [revenuePeriod,setRevenuePeriod]=useState('month')"),'Overview must keep the revenue period filter');
-assert(dashboard.includes('REVENUE COMMAND CENTER')&&dashboard.includes('Total earnings'),'Overview must keep the top earnings command center');
-assert(dashboard.includes("['today','Today']")&&dashboard.includes("['week','This Week']")&&dashboard.includes("['month','This Month']")&&dashboard.includes("['all','All Time']"),'Overview revenue filters must keep Today, This Week, This Month and All Time');
-assert(dashboard.includes('ownGross:propulse.revenueWeek')&&dashboard.includes('partnerCommission:leadPartner.revenueWeek')&&dashboard.includes('investorCommission:investor.revenueWeek'),'Weekly earnings must preserve source-level breakdown');
-assert(dashboard.includes('Our gross')&&dashboard.includes('Partner commission')&&dashboard.includes('Investor commission'),'Total earnings must explain the Propulse revenue formula');
-assert(!dashboard.includes('note="Lead sales + platform commission"')&&dashboard.includes('label="Active businesses"'),'Overview KPI row must not duplicate the old total revenue KPI');
+assert(/const revenue\s*=\s*stats\?\.revenue\s*\|\|\s*(EMPTY_OBJECT|\{\})/.test(dashboard),'Overview must use the backend revenue summary');
+assert(/const \[revenuePeriod,\s*setRevenuePeriod\]=useState\('month'\)/.test(dashboard),'Overview must keep the revenue period filter');
+assert(dashboard.includes('Total earnings')&&!dashboard.includes('REVENUE COMMAND CENTER'),'Overview must keep compact earnings without the old section kicker');
+assert(dashboard.includes("['today', 'Today']")&&dashboard.includes("['week', 'This Week']")&&dashboard.includes("['month', 'This Month']")&&dashboard.includes("['all', 'All Time']"),'Overview revenue filters must keep Today, This Week, This Month and All Time');
+assert(/ownGross:\s*propulse\.revenueWeek/.test(dashboard)&&/partnerCommission:\s*leadPartner\.revenueWeek/.test(dashboard)&&/investorCommission:\s*investor\.revenueWeek/.test(dashboard),'Weekly earnings must preserve source-level breakdown');
+assert(dashboard.includes('Our Gross')&&dashboard.includes('Partner Commission')&&dashboard.includes('Investor Commission'),'Compact earnings must show each revenue source');
+assert(!dashboard.includes('Platform earnings from lead marketplace activity')&&!dashboard.includes('Propulse-owned lead gross + Lead Partner commission + Investor commission'),'Remove explanatory earnings copy');
+assert(dashboard.includes('label="Active businesses"'),'Overview KPI row must retain active businesses');
 assert(dashboard.includes('title="Our leads"')&&dashboard.includes('title="Lead Partners"'),'Overview must keep Propulse and Lead Partner businesses visually separate');
 assert(dashboard.includes('Investor activity'),'Overview must keep Investor activity visually separate');
 assert(dashboard.includes('leadPartner.partnerEarnings'),'Lead Partner earnings must remain separate from Propulse commission');
 assert(dashboard.includes('investor.investorAllocated'),'Investor allocation must remain separate from Propulse commission');
-assert(dashboard.includes("label:'Propulse commission',value:leadPartner.revenueTotal"),'Lead Partner Propulse commission must use platform revenue');
-assert(dashboard.includes("label:'Propulse commission',value:investor.revenueTotal"),'Investor Propulse commission must use platform revenue');
+assert(dashboard.includes("label: 'Propulse commission', value: show(money(leadPartner.revenueTotal))"),'Lead Partner Propulse commission must use platform revenue');
+assert(dashboard.includes("label: 'Propulse commission', value: show(money(investor.revenueTotal))"),'Investor Propulse commission must use platform revenue');
+assert(dashboard.includes('admin-dashboard-panels')&&dashboard.includes('title="Customers"')&&dashboard.includes('>Operations<'),'Compact overview must retain business, operations and customer panels');
 
+assert(!dashboard.includes('LIVE BUSINESS SNAPSHOT')&&!dashboard.includes('REVENUE COMMAND CENTER'),'Remove decorative section kickers');
 assert(!dashboard.includes('Propulse-owned, Lead Partner and Investor activity are separated so revenue and operations stay easy to understand.'),'Long Overview explainer must stay removed');
 assert(!dashboard.includes('General admin work not already summarized'),'Redundant operations explainer must stay removed');
 assert(!dashboard.includes('Live data'),'Redundant live-data pill must stay removed');
