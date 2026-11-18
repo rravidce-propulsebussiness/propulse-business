@@ -800,7 +800,7 @@
   padding-top:12px;
   border-top:1px solid #e7edf4;
   color:#7a899d;
-  font-size:11px;
+  font-size:12px;
   line-height:1.45;
 }
 .membership-investor-access .membership-primary{margin-top:16px}
@@ -817,6 +817,6 @@
     text-align:center;
   }
   .investor-feature-icon{flex-basis:30px;width:30px;height:30px}
-  .investor-model b{font-size:10px;line-height:1.25}
-  .investor-footnote{align-items:flex-start;flex-direction:column;gap:4px;font-size:10px}
+  .investor-model b{font-size:12px;line-height:1.25}
+  .investor-footnote{align-items:flex-start;flex-direction:column;gap:4px;font-size:12px}
 }

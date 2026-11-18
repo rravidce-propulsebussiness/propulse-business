@@ -61,6 +61,7 @@
   #root .lead-partner-nav>a{min-height:42px!important;padding:6px 8px!important;font-size:11px!important}
   #root .lead-partner-nav-icon{width:27px!important;height:27px!important;flex-basis:27px!important;font-size:12px!important}
   #root .lead-partner-help-block,#root .lead-partner-sidebar-bottom{display:none!important}
+  #root .lp-shell,#root .pricing-shell,#root .partner-shell,#root .withdrawals-shell,#root .reports-shell,#root .account-shell,#root .faq-shell{display:block!important}
   #root .lp-main,#root .pricing-main,#root .partner-main,#root .withdrawals-main,#root .reports-main,#root .account-main,#root .faq-main{margin-left:0!important;width:100%!important}
   #root .lp-topbar,#root .pricing-topbar,#root .partner-topbar,#root .withdrawals-topbar,#root .reports-topbar,#root .account-topbar,#root .faq-topbar{position:sticky!important;left:0!important;right:auto!important;padding:0 16px!important}
   #root .lp-content,#root .pricing-content,#root .partner-content,#root .withdrawals-content,#root .reports-content,#root .account-content,#root .faq-content{padding:18px 16px 34px!important}
