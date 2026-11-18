@@ -24,9 +24,10 @@ assert(rootIndex.includes("const frontendDist=path.join(frontendRoot,'dist')"),'
 assert(rootIndex.includes("buildFrontendAsync()"),'Hostinger entry builds the frontend asynchronously after server startup');
 assert(rootIndex.includes("if(prebuiltFrontendReady())return;"),'Hostinger root runtime skips building whenever either prebuilt frontend is present');
 assert(pkg.scripts?.start==='node index.js','Hostinger starts through the default index.js entrypoint');
-for(const dependency of ['express','compression','pg','bcryptjs','cors','dotenv','jsonwebtoken','react','react-dom','react-router-dom','vite','@vitejs/plugin-react']){
+for(const dependency of ['express','compression','pg','bcryptjs','cors','dotenv','jsonwebtoken','react','react-dom','react-router-dom']){
   assert(pkg.dependencies?.[dependency],'Hostinger root package must install '+dependency);
 }
+assert(pkg.devDependencies?.vite&&pkg.devDependencies?.['@vitejs/plugin-react'],'Vite and the React plugin must stay in build-only dependencies');
 assert(pkg.overrides?.['proxy-addr']==='2.0.8','Hostinger root must pin the patched proxy-addr release');
 assert(pkg.overrides?.['source-map-js']==='1.2.2','Hostinger root must pin the patched source-map-js release');
 assert(prebuildWorkflow.includes('npm audit --omit=dev --audit-level=high'),'Hostinger prebuild must block high/critical runtime dependency advisories');
@@ -62,9 +63,11 @@ assert(backendBuildScript.includes('fs.cpSync(frontendDist,bundledFrontend,{recu
 assert(backendBuildScript.includes('fs.unlinkSync(frontendNodeModules)'),'Hostinger build safely unlinks the temporary frontend dependency link');
 assert(backendServer.includes("const bundledFrontendDist=path.resolve(__dirname,'../hostinger-frontend')"),'Backend server prefers bundled Hostinger frontend');
 assert(backendIndex.includes("const bundledFrontendIndex=path.join(bundledFrontendDist,'index.html')"),'Backend runtime detects the published frontend bundle');
-for(const dependency of ['express','compression','pg','react','react-dom','react-router-dom','vite','@vitejs/plugin-react']){
+for(const dependency of ['express','compression','pg','react','react-dom','react-router-dom']){
   assert(backendPkg.dependencies?.[dependency],'Backend-root Hostinger package installs '+dependency);
 }
+assert(backendPkg.devDependencies?.vite&&backendPkg.devDependencies?.['@vitejs/plugin-react'],'Backend Vite tooling must be build-only');
+assert(backendBuildScript.includes('Prebuilt Hostinger frontend found; skipping the Vite build'),'Production install skips omitted Vite when the prebuilt bundle is present');
 assert(backendIndex.includes("require('./src/server')"),'Backend-root Hostinger entry launches the real API in-process');
 assert(!backendIndex.includes("spawn(process.execPath,['src/server.js']"),'Backend-root Hostinger entry must not launch a child backend process');
 assert(!backendIndex.includes('proxyToBackend'),'Backend-root Hostinger entry must not proxy API traffic over localhost');
