@@ -210,3 +210,42 @@
  .expert-v2--pending .expert-review-filter button{padding:6px 10px;font-size:11px}
  .expert-v2-pending-preview{min-height:280px}
 }
+
+
+/* Directory Settings: compact switch cards and quality controls */
+.expert-v2--settings .expert-v2-heading{margin-bottom:18px}
+.expert-v2--settings .expert-v2-directory-settings{padding:20px}
+.expert-v2--settings .expert-v2-switches{margin:0 0 18px;gap:10px}
+.expert-v2--settings .expert-v2-switches label{justify-content:space-between;min-height:58px;padding:12px 14px;background:#fff}
+.expert-v2--settings .expert-v2-switches label>span{flex:1;order:0;gap:0}
+.expert-v2--settings .expert-v2-switches strong{font-size:13px;line-height:1.3}
+.expert-v2--settings .expert-v2-switches input{appearance:none;position:relative;order:1;flex:0 0 42px;width:42px;height:24px;margin:0;border:0;border-radius:999px;background:#d9dee5;cursor:pointer;transition:background .18s ease}
+.expert-v2--settings .expert-v2-switches input:checked{background:#2fae62}
+.expert-v2--settings .expert-v2-switches input:before{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #17314a35;transition:transform .18s ease}
+.expert-v2--settings .expert-v2-switches input:checked:before{transform:translateX(18px)}
+.expert-v2--settings .expert-v2-settings-footer{padding-top:14px;border-top:1px solid #edf0f3}
+.expert-v2--settings .video-quality-settings{margin-top:16px;padding:18px;gap:14px}
+.expert-v2--settings .video-quality-heading h2{margin:0;font-size:18px}
+.expert-v2--settings .video-quality-switch{align-items:center;padding:12px 14px}
+.expert-v2--settings .video-quality-switch strong{font-size:13px}
+.expert-v2--settings .video-quality-options{display:grid;grid-template-columns:130px minmax(0,1fr);align-items:center;gap:12px}
+.expert-v2--settings .video-quality-options legend{margin:0;font-size:12px}
+.expert-v2--settings .video-quality-options>div{gap:8px}
+.expert-v2--settings .video-quality-options button{min-height:46px;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.expert-v2--settings .video-quality-options button b{font-size:13px}
+.expert-v2--settings .video-quality-options button:before{content:'';width:16px;height:16px;flex:none;border:1.5px solid #aab5c1;border-radius:50%;background:#fff}
+.expert-v2--settings .video-quality-options button.selected:before{border:5px solid #f45b24}
+.expert-v2--settings .video-quality-footer{justify-content:flex-end;min-height:0}
+.expert-v2--settings .video-quality-footer button:disabled{display:none}
+@media(max-width:900px){.expert-v2--settings .expert-v2-switches{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){
+ .expert-v2--settings .expert-v2-directory-settings{padding:14px}
+ .expert-v2--settings .expert-v2-switches{grid-template-columns:1fr;gap:8px}
+ .expert-v2--settings .expert-v2-switches label{min-height:52px}
+ .expert-v2--settings .expert-v2-settings-footer{align-items:flex-start;flex-direction:column;gap:12px}
+ .expert-v2--settings .expert-v2-settings-footer>.expert-v2-main-action{width:100%}
+ .expert-v2--settings .video-quality-settings{padding:14px}
+ .expert-v2--settings .video-quality-options{grid-template-columns:1fr;gap:8px}
+ .expert-v2--settings .video-quality-options>div{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .expert-v2--settings .video-quality-options button{justify-content:center;padding:8px 5px}
+}
