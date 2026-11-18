@@ -50,7 +50,7 @@ const EXCLUSIONS=[
   'Loose furniture, appliances, decorative light fixtures, fans and home-automation equipment unless specifically listed.',
   'Borewell, compound wall, lift, solar system, major external development and landscaping unless explicitly included.',
   'Rock excavation, dewatering, retaining systems, soil replacement or extraordinary foundation treatment unless priced after site/soil review.',
-  'GST or other applicable taxes unless the selected Admin rate configuration explicitly includes them.',
+  'GST or other applicable taxes unless the quoted package rate explicitly includes them.',
 ];
 
 const TERMS=[

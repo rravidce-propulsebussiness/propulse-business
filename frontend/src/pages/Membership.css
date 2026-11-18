@@ -820,3 +820,10 @@
   .investor-model b{font-size:12px;line-height:1.25}
   .investor-footnote{align-items:flex-start;flex-direction:column;gap:4px;font-size:12px}
 }
+/* Payment summaries: one label/value row per line instead of run-together text. */
+.manual-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:10px 14px}
+.manual-summary span{letter-spacing:.06em}
+.manual-summary strong{margin-top:0;text-align:right;overflow-wrap:anywhere}
+.coupon-proration-summary{grid-template-columns:minmax(0,1fr)!important}
+.coupon-proration-summary>div{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.coupon-proration-summary>div strong{text-align:right;white-space:nowrap}

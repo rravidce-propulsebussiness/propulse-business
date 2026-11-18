@@ -953,3 +953,6 @@ body:has(.lv2-shell){
 .lv2-requirement-full p{margin:0;color:#62748b}
 .lv2-requirement-full p+p{margin-top:10px;padding-top:10px;border-top:1px solid #e5ebf2}
 .lv2-requirement-extra{font-weight:600}
+@media(max-width:700px){.lv2-wallet-choice input{justify-self:end}.lv2-wallet-choice>strong{justify-self:end;white-space:nowrap}}
+.lv2-bottom-cta>a{box-sizing:border-box;max-width:100%}
+.lv2-empty p{max-width:420px;padding:0 16px;line-height:1.55}.lv2-empty p a{color:#f15a24;font-weight:800}

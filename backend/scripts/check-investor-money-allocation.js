@@ -35,6 +35,7 @@ async function main(){
     async query(sql,params=[]){
       calls.push({sql:String(sql),params});
       if(String(sql).includes('FROM investment_industry_rules')) return {rows:[{investor_revenue_share_percent:'95.00'}]};
+      if(String(sql).includes('SELECT l.lead_partner_id FROM lead_purchases')) return {rows:[{lead_partner_id:null}]};
       if(String(sql).includes('FROM investments WHERE industry_id=')) return {rows:[{id:11,amount:'60.00'},{id:12,amount:'40.00'}]};
       if(String(sql).includes('INSERT INTO investment_revenue_allocations')) return {rows:[],rowCount:2};
       throw new Error(`Unexpected allocation query: ${String(sql).slice(0,120)}`);
@@ -57,6 +58,26 @@ async function main(){
   assert.equal(inserts[0].params[3],3);
   assert.equal(inserts[0].params[4],100);
   assert.equal(inserts[0].params[5],95);
+
+  // Lead Partner leads pay the partner; investors must never also be allocated
+  // that revenue (it would pay out more than the sale amount).
+  const partnerCalls=[];
+  const partnerClient={
+    async query(sql,params=[]){
+      partnerCalls.push(String(sql));
+      if(String(sql).includes('FROM investment_industry_rules')) return {rows:[{investor_revenue_share_percent:'100.00'}]};
+      if(String(sql).includes('SELECT l.lead_partner_id FROM lead_purchases')) return {rows:[{lead_partner_id:4}]};
+      throw new Error(`Partner lead must not query investors: ${String(sql).slice(0,120)}`);
+    }
+  };
+  await allocateInvestmentRevenue(partnerClient,{leadPurchaseId:78,industryId:3,stateId:5,cityId:9,grossAmount:'800.00',investorUserId:9});
+  assert(!partnerCalls.some(sql=>sql.includes('INSERT INTO investment_revenue_allocations')),'Lead Partner lead revenue must not be allocated to investors');
+
+  const leadInvestorService=require('../src/services/leadInvestorService');
+  await assert.rejects(
+    leadInvestorService.assertInvestorLink({investorUserId:9,industryId:3,leadPartnerId:4}),
+    /Lead Partner leads cannot be linked to an investor/
+  );
 
   console.log('Investor money allocation and batch-write checks passed.');
 }
