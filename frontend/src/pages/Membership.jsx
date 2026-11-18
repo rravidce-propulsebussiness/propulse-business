@@ -92,6 +92,25 @@ const period = (plan) => {
   const months = Number(plan?.billing_months || 1)
   return months === 12 ? 'Yearly' : months === 6 ? 'Half-Yearly' : months === 3 ? 'Quarterly' : 'Monthly'
 }
+const leadEntitlementBenefits = (plan) => {
+  let entitlements = plan?.lead_entitlements
+  if (typeof entitlements === 'string') {
+    try { entitlements = JSON.parse(entitlements) } catch { entitlements = [] }
+  }
+  const months = Math.max(1, Number(plan?.billing_months || 1))
+  const labels = { shared: 'Basic', premium: 'Premium', exclusive: 'Exclusive' }
+  const items = (Array.isArray(entitlements) ? entitlements : []).map((item) => {
+    const type = String(item?.type || '').toLowerCase()
+    const monthly = Math.max(0, Number(item?.monthly_quantity ?? item?.quantity ?? item?.monthlyLimit ?? 0) || 0)
+    const total = Math.max(0, Number(item?.period_total_quantity ?? item?.periodTotal ?? item?.totalLimit ?? monthly * months) || 0)
+    const label = labels[type] || normalizeLabel(type)
+    if (!label || (monthly === 0 && total === 0)) return null
+    const monthlyText = `${monthly} ${label} lead${monthly === 1 ? '' : 's'} / month`
+    const totalText = `${total} / ${period(plan).toLowerCase()} cycle`
+    return `${monthlyText} · ${totalText}`
+  }).filter(Boolean)
+  return items.length ? items : ['No leads included']
+}
 const growBenefits = ['Best lead pricing', 'Exclusive Leads access', 'Investment access unlocked for eligible members']
 const scaleBenefits = ['Everything in GROW', 'Website development', 'SEO services', 'Website maintenance']
 
@@ -350,7 +369,7 @@ export default function Membership() {
                 {isCurrent && currentMembership && <div className="membership-current-details"><div><span>Current billing</span><strong>{period(currentMembership)}</strong></div><div><span>Started</span><strong>{dateLabel(currentMembership.starts_at)}</strong></div><div><span>Valid until</span><strong>{dateLabel(currentMembership.expires_at)}</strong></div><div><span>Remaining</span><strong>{daysLeft(currentMembership.expires_at)} days</strong></div></div>}
                 <div className="membership-divider" />
                 <details className="membership-fold" open><summary><span>{level.label} includes</span><b>+</b></summary>
-                  <ul>{level.benefits.map((item) => <li key={item}><b>✓</b><span>{item}</span></li>)}</ul>
+                  <ul>{leadEntitlementBenefits(level.selected).map((item) => <li key={`leads:${item}`}><b>✓</b><span>{item}</span></li>)}{level.benefits.map((item) => <li key={item}><b>✓</b><span>{item}</span></li>)}</ul>
                 </details>
                 {isCurrent
                   ? (String(currentMembership?.membership_plan_id) === String(level.selected?.id) || period(currentMembership).toLowerCase() === period(level.selected).toLowerCase())
