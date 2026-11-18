@@ -227,13 +227,13 @@ export default function LeadClassificationRulesPanel({ onStatusChange }) {
         <button type="button" className="mla-add-condition" disabled={(draft.premiumConditions || []).length >= 12} onClick={() => addCondition('premiumConditions')}>＋ Condition</button>
       </div>
     </section>
-    <section className="mla-exclusive-card" aria-label="Exclusive lead classification">
+    <section className="mla-exclusive-card" aria-label="EXCLUSIVE · ABOVE PREMIUM">
       <header className="mla-exclusive-heading">
         <span className="mla-crown" aria-hidden="true">♛</span>
         <div><h3>Exclusive</h3></div>
         <label className="mla-exclusive-toggle">
           <span>Enable</span>
-          <input type="checkbox" checked={Boolean(draft.exclusiveEnabled)} onChange={event => setDraft(value => ({ ...value, exclusiveEnabled: event.target.checked }))} />
+          <input type="checkbox" aria-label="Enable Exclusive classification" checked={Boolean(draft.exclusiveEnabled)} onChange={event => setDraft(value => ({ ...value, exclusiveEnabled: event.target.checked }))} />
           <i aria-hidden="true" />
         </label>
       </header>
