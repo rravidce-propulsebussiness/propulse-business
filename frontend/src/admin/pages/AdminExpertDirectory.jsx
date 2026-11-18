@@ -147,27 +147,24 @@ export default function AdminExpertDirectory(){
   }
 
   if(loading)return <main className="expert-v2"><BootLoader contained message="Loading Expert Directory" /></main>
-  return <main className="expert-v2">
+  return <main className={'expert-v2'+(section==='settings'?'':' expert-v2--compact')}>
     <div className="expert-v2-heading">
-      <div><span className="expert-v2-eyebrow">PROFESSIONAL DIRECTORY / MANAGEMENT</span>
-        <h1>Expert Directory</h1>
-        <p>Manage professionals, project-video lead-credit reviews and public directory settings.</p>
-      </div>
+      <div><h1>Expert Directory</h1></div>
       <a href="/experts" target="_blank" rel="noopener noreferrer" className="expert-v2-main-action">View Public Directory <span aria-hidden="true">↗</span></a>
     </div>
 
     {error&&<div className="expert-v2-alert error" role="alert">{error}</div>}
     {message&&<div className="expert-v2-alert success" role="status">{message}</div>}
     <div className="expert-v2-metrics">
-      <article><span className="expert-v2-metric-icon orange">♧</span><div><small>Total Professionals</small><strong>{stats.active_businesses||0}</strong><span>Active business accounts</span></div></article>
-      <article><span className="expert-v2-metric-icon green">✓</span><div><small>Verified Professionals</small><strong>{stats.verified_businesses||0}</strong><span>Proof approved</span></div></article>
-      <article><span className="expert-v2-metric-icon coral">▣</span><div><small>Projects with Video</small><strong>{stats.video_projects||0}</strong><span>Published project videos</span></div></article>
-      <article><span className="expert-v2-metric-icon gold">☆</span><div><small>Featured Professionals</small><strong>{stats.featured_businesses||0}</strong><span>Prioritized profiles</span></div></article>
+      <article><span className="expert-v2-metric-icon orange">♧</span><div><small>Total Professionals</small><strong>{stats.active_businesses||0}</strong></div></article>
+      <article><span className="expert-v2-metric-icon green">✓</span><div><small>Verified Professionals</small><strong>{stats.verified_businesses||0}</strong></div></article>
+      <article><span className="expert-v2-metric-icon coral">▣</span><div><small>Projects with Video</small><strong>{stats.video_projects||0}</strong></div></article>
+      <article><span className="expert-v2-metric-icon gold">☆</span><div><small>Featured Professionals</small><strong>{stats.featured_businesses||0}</strong></div></article>
     </div>
 
     {section!=='settings'&&<div className="expert-v2-workspace">
       <section className="expert-v2-list-panel" aria-label="Search and filter professionals">
-        <div className="expert-v2-section-heading"><h2>Search &amp; Filter Professionals</h2><span>{pagination.total||0} accounts</span></div>
+        <div className="expert-v2-section-heading"><h2>Search professionals</h2><span>{pagination.total||0} accounts</span></div>
         <div className="expert-v2-search"><span>⌕</span><input aria-label="Search professionals" value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search by name, company, location..."/></div>
         <div className="expert-v2-filters">
           <label><span>Location</span><select value={location} onChange={e=>setLocation(e.target.value)}><option value="">All Locations</option>{locations.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
@@ -210,8 +207,7 @@ export default function AdminExpertDirectory(){
               <div className="expert-v2-badge-line">{selected.is_official&&<Badge type="official">♛ Official ProPulse</Badge>}
                 {selected.is_verified&&<Badge type="verified">✓ Verified</Badge>}
                 {selected.is_featured&&<Badge type="featured">☆ Featured</Badge>}</div>
-              <p>{selected.public_headline||'Construction • Interior • Real Estate'}</p>
-              <small>⌖ {selected.city_names||'Location not specified'}</small>
+
             </div>
             <Badge type={selected.is_hidden?'muted':selected.is_active?'active':'muted'}>{selected.is_hidden?'Hidden':selected.is_active?'● Active':'Inactive'}</Badge>
           </div>
@@ -227,7 +223,7 @@ export default function AdminExpertDirectory(){
               <button key={key} role="tab" type="button" aria-selected={profileTab===key} className={profileTab===key?'active':''} onClick={()=>setProfileTab(key)}>{title}</button>)}
           </div>
           <div className="expert-v2-profile-content">
-            {profileTab==='projects'&&<AdminCompletedProjects key={selected.id} businessUserId={selected.id} filter={section==='pending'?'pending':'all'}/>}
+            {profileTab==='projects'&&<AdminCompletedProjects key={selected.id} businessUserId={selected.id} filter={section==='pending'?'pending':'all'} compact/>}
             {profileTab==='profile'&&<div className="expert-v2-info">
               <h3>Public Profile Details</h3><p>{selected.public_summary||'The professional has not added a profile summary yet.'}</p>
               <dl><div><dt>Business</dt><dd>{selected.business_name||'Not set'}</dd></div>
