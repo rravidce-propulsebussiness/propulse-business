@@ -154,9 +154,9 @@ export default function AdminExpertDirectory(){
   }
 
   if(loading)return <main className="expert-v2"><BootLoader contained message="Loading Expert Directory" /></main>
-  return <main className={'expert-v2'+(section==='settings'?'':' expert-v2--compact')+(section==='featured'?' expert-v2--featured':'')+(section==='pending'?' expert-v2--pending':'')}>
+  return <main className={'expert-v2'+(section==='settings'?' expert-v2--settings':' expert-v2--compact')+(section==='featured'?' expert-v2--featured':'')+(section==='pending'?' expert-v2--pending':'')}>
     <div className="expert-v2-heading">
-      <div><h1>{section==='featured'?'Featured Professionals':section==='pending'?'Video Approvals':'Expert Directory'}</h1></div>
+      <div><h1>{section==='featured'?'Featured Professionals':section==='pending'?'Video Approvals':section==='settings'?'Directory Settings':'Expert Directory'}</h1></div>
       {section!=='featured'&&section!=='pending'&&<a href="/experts" target="_blank" rel="noopener noreferrer" className="expert-v2-main-action">View Public Directory <span aria-hidden="true">↗</span></a>}
     </div>
 
@@ -283,12 +283,11 @@ export default function AdminExpertDirectory(){
     </div>}
 
     {section==='settings'&&<section className="expert-v2-directory-settings">
-      <div className="expert-v2-settings-heading"><div><h2>Directory Settings</h2><p>Control public listing eligibility, project visibility and subscription rules.</p></div>
-        <button type="button" onClick={()=>switchSection('all')} aria-label="Close directory settings">×</button></div>
+      
       <div className="expert-v2-switches">
-        {[['directoryEnabled','Enable public directory','Make /experts available'],['requireActiveMembership','Require active membership','Only subscribed professionals appear'],['requireVerified','Verified companies only','Require approved company documents'],['showProjects','Show completed projects','Display project portfolio'],['showVideos','Show project videos','Display videos on public pages'],['showPlans','Show service plans','Display published packages']].map(([key,title,description])=>
+        {[['directoryEnabled','Enable public directory'],['requireActiveMembership','Require active membership'],['requireVerified','Verified companies only'],['showProjects','Show completed projects'],['showVideos','Show project videos'],['showPlans','Show service plans']].map(([key,title])=>
           <label key={key}><input type="checkbox" checked={key==='requireVerified'?settings[key]===true:settings[key]!==false} onChange={e=>patchSetting(key,e.target.checked)}/>
-            <span><strong>{title}</strong><small>{description}</small></span></label>)}
+            <span><strong>{title}</strong></span></label>)}
       </div>
       <div className="expert-v2-settings-footer"><div><b>Membership groups</b><div>{planGroups.map(group=><button type="button" key={group} className={(settings.allowedPlanGroups||[]).includes(group)?'active':''} onClick={()=>togglePlan(group)}>{String(group).toUpperCase()}</button>)}</div></div>
         <button type="button" className="expert-v2-main-action" disabled={saving==='settings'} onClick={saveSettings}>{saving==='settings'?'Saving…':'Save Settings'}</button></div>
