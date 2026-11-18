@@ -144,6 +144,8 @@ export default function MetaLeadAdsPanel({ scope = 'partner', onStatusChange }) 
         </div>
       </div>
 
+      {scope === 'admin' && <div className="mla-auto-sync-note">New active forms on connected Pages are detected and connected automatically. ProPulse checks for new forms every 5 minutes and applies suggested field mappings; unmatched answers remain available as custom fields.</div>}
+
       {pages.length > 0 && <div className="mla-setup-form">
         <label>Facebook Page
           <select value={pageId} disabled={Boolean(busy)} onChange={e => choosePage(e.target.value)}>
