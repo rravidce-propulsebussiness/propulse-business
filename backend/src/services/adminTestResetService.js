@@ -144,10 +144,14 @@ async function launchPreview(db=pool){
       (SELECT COUNT(*)::int FROM investment_revenue_allocations) +
       (SELECT COUNT(*)::int FROM lead_partner_payout_requests) +
       (SELECT COUNT(*)::int FROM lead_partner_earning_adjustments) +
-      (SELECT COUNT(*)::int FROM lead_partner_earnings) AS financial_dependencies,
-      (SELECT COUNT(*)::int FROM admin_google_sheet_connections WHERE status='active') AS active_sheets
+      (SELECT COUNT(*)::int FROM lead_partner_earnings) AS financial_dependencies
   `);
-  const row=result.rows[0]||{};
+  // Google Sheets imports were removed (20261116_zz_remove_google_sheets.sql);
+  // only count legacy connections on databases that still have the table.
+  const activeSheets=(await hasAdminSheetConnections(db))
+    ?Number((await db.query("SELECT COUNT(*)::int AS total FROM admin_google_sheet_connections WHERE status='active'")).rows[0]?.total)||0
+    :0;
+  const row={...(result.rows[0]||{}),active_sheets:activeSheets};
   const counts=Object.fromEntries(Object.entries(row).map(([key,value])=>[key,Number(value)||0]));
   const blockedReasons=[];
   if(counts.active_admins<1) blockedReasons.push('No active administrator would remain.');
@@ -160,9 +164,13 @@ async function launchPreview(db=pool){
     allowed:blockedReasons.length===0,
     blockedReasons,
     confirmation:LAUNCH_CONFIRMATION,
-    preserved:['Every administrator account','Product configuration and pricing','Industry, service and location catalogs','Website content and media','Admin Google Sheet connection settings (sync disabled)'],
+    preserved:['Every administrator account','Product configuration and pricing','Industry, service and location catalogs','Website content and media'],
     warning:'Permanent account and lead deletion. Existing Business OS accounts connected through deleted ProPulse identities may need to be linked again. This action does not delete remote media files or backup copies.'
   };
+}
+
+async function hasAdminSheetConnections(client){
+  return Boolean((await client.query("SELECT to_regclass('public.admin_google_sheet_connections') AS name")).rows[0]?.name);
 }
 
 function launchError(message,code){
@@ -185,8 +193,9 @@ async function launchCleanup({confirmation,acknowledged,expected,adminId}={}){
     await client.query('SELECT pg_advisory_xact_lock($1)',[9062601]);
     // Hold a stable snapshot of the affected identities and sources. In-flight
     // signups or imports may not enter between preview re-check and deletion.
+    const sheetsTable=await hasAdminSheetConnections(client);
     await client.query(
-      'LOCK TABLE users, leads, payments, lead_purchases, admin_google_sheet_connections IN SHARE ROW EXCLUSIVE MODE'
+      `LOCK TABLE users, leads, payments, lead_purchases${sheetsTable?', admin_google_sheet_connections':''} IN SHARE ROW EXCLUSIVE MODE`
     );
     const admin=(await client.query(
       "SELECT id FROM users WHERE id=$1 AND role='admin' AND is_active=TRUE",
@@ -204,9 +213,9 @@ async function launchCleanup({confirmation,acknowledged,expected,adminId}={}){
 
     // Disable previously connected automatic imports, without deleting the
     // connection settings; otherwise removed leads immediately reappear.
-    const disabled=await client.query(
-      "UPDATE admin_google_sheet_connections SET status='disabled' WHERE status='active'"
-    );
+    const disabled=sheetsTable
+      ?await client.query("UPDATE admin_google_sheet_connections SET status='disabled' WHERE status='active'")
+      :{rowCount:0};
     // All remaining purchase/payment rows have passed the above safety checks:
     // cancelled purchases and rejected payments, not paid financial records.
     const purchases=await client.query('DELETE FROM lead_purchases');

@@ -1,15 +1,18 @@
 const pool=require('../config/database');
 
-async function assertInvestorLink({investorUserId,industryId}){
+async function assertInvestorLink({investorUserId,industryId,leadPartnerId=null}){
   if(investorUserId===undefined||investorUserId===null||investorUserId==='')return;
+  // Lead Partner leads are paid out to the partner; investor principal did not
+  // fund them, so they must not also earn investor revenue (double payout).
+  if(leadPartnerId!=null)throw Object.assign(new Error('Lead Partner leads cannot be linked to an investor'),{code:'INVESTOR_INDUSTRY_MISMATCH'});
   const result=await pool.query("SELECT 1 FROM investments WHERE user_id=$1 AND industry_id=$2 AND status IN ('active','matured') AND COALESCE(starts_at,created_at)<=CURRENT_TIMESTAMP LIMIT 1",[Number(investorUserId),Number(industryId)]);
   if(!result.rows.length)throw Object.assign(new Error('Selected investor has no eligible investment in this industry'),{code:'INVESTOR_INDUSTRY_MISMATCH'});
 }
 
 async function setInvestorLink(leadId,investorUserId){
-  const lead=(await pool.query('SELECT id,industry_id FROM leads WHERE id=$1',[Number(leadId)])).rows[0];
+  const lead=(await pool.query('SELECT id,industry_id,lead_partner_id FROM leads WHERE id=$1',[Number(leadId)])).rows[0];
   if(!lead)throw Object.assign(new Error('Lead not found'),{code:'NOT_FOUND'});
-  await assertInvestorLink({investorUserId,industryId:lead.industry_id});
+  await assertInvestorLink({investorUserId,industryId:lead.industry_id,leadPartnerId:lead.lead_partner_id});
   return (await pool.query('UPDATE leads SET investor_user_id=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *',[investorUserId===''||investorUserId===null||investorUserId===undefined?null:Number(investorUserId),leadId])).rows[0]||null;
 }
 

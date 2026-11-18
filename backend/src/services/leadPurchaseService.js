@@ -9,6 +9,10 @@ async function allocateInvestmentRevenue(client,{leadPurchaseId,industryId,state
   const rule=(await client.query(`SELECT investor_revenue_share_percent FROM investment_industry_rules WHERE industry_id=$1 AND is_active=TRUE FOR UPDATE`,[industryId])).rows[0];
   const distributableShare=Math.max(0,Math.min(100,Number(rule?.investor_revenue_share_percent??100)));
   if(distributableShare<=0)return;
+  // Lead Partner revenue is paid to the partner (lead_partner_earnings); it was
+  // not funded by investor principal, so investors receive no share of it.
+  const source=(await client.query(`SELECT l.lead_partner_id FROM lead_purchases lp JOIN leads l ON l.id=lp.lead_id WHERE lp.id=$1`,[Number(leadPurchaseId)])).rows[0];
+  if(source?.lead_partner_id!=null)return;
 
   let investors=[];
   if(investorUserId!=null){

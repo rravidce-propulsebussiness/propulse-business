@@ -111,6 +111,9 @@ function drawHero(page,title,subtitle,kicker='INDICATIVE QUOTATION'){
 }
 function drawSectionHeading(page,text,subtext=''){
   const{ctx}=page;
+  // Text is drawn on its baseline; when a section follows other content, leave
+  // room above it so the heading does not overlap the previous block.
+  if(page.y>196)page.y+=34;
   ctx.fillStyle='#ff5a1f';
   ctx.font='800 21px Arial, sans-serif';
   ctx.fillText(String(text).toUpperCase(),MARGIN,page.y);
@@ -181,7 +184,7 @@ function drawBullets(page,items){
     ctx.fillStyle='#ff5a1f';ctx.beginPath();ctx.arc(MARGIN+8,page.y+12,4,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#526b82';ctx.font='500 17px Arial, sans-serif';
     lines.forEach((line,index)=>ctx.fillText(line,MARGIN+24,page.y+18+index*23));
-    page.y+=h+5;
+    page.y+=h+(lines.length>1?12:5);
   });
 }
 function buildPdf(jpegs){

@@ -374,3 +374,4 @@
   color:#a64b28;
 }
 .rq-consent-note{margin:12px 0 0;color:#6b7a8c;font-size:12px;line-height:1.5}.rq-consent-note a{color:#0d4f9f;font-weight:700}
+.rq-success-actions>button:not(.rq-download-quote){border:0;border-radius:12px;padding:13px 20px;font-family:inherit;font-size:13px;font-weight:900;line-height:1.3;cursor:pointer}
