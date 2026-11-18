@@ -148,6 +148,7 @@ export default function AdminExpertDirectory(){
     navigate('/admin/expert-directory'+(value==='all'?'':'?view='+encodeURIComponent(value)))
     setSection(value)
     setReviewFilter('all')
+    if(value==='pending'){setLocation('');setService('');setStatus('');setBadgeFilter('');setVideoStatus('')}
     setError('')
     setProfileTab('projects')
   }
@@ -200,7 +201,7 @@ export default function AdminExpertDirectory(){
             <span className="expert-v2-person-copy">
               <strong>{item.business_name||item.name}</strong>
               <small>⌖ {item.city_names||'Locations not set'}</small>
-              <small>▣ {item.project_count||0} projects · ▶ {item.video_count||0} videos</small>
+              <small>{section==='pending'?`▶ ${item.pending_video_count||0} pending · ${item.video_count||0} videos`:`▣ ${item.project_count||0} projects · ▶ ${item.video_count||0} videos`}</small>
             </span>
             <span className="expert-v2-person-side">
               {item.is_official?<Badge type="official">♛ Official ProPulse</Badge>:item.is_verified?<Badge type="verified">✓ Verified</Badge>:null}
