@@ -5,6 +5,7 @@ const { startFinancialReconciliationScheduler } = require('./services/financialR
 const { startNotificationScheduler } = require('./services/notificationScheduler');
 const { startPrivateStorageBackupScheduler } = require('./services/privateStorageBackupScheduler');
 const { startDatabaseBackupScheduler } = require('./services/databaseBackupScheduler');
+const { startMetaLeadFormDiscoveryScheduler } = require('./services/metaLeadFormDiscoveryScheduler');
 const { envFlag } = require('./config/runtimeFlags');
 const workerHeartbeat = require('./services/backgroundWorkerHeartbeatService');
 const operationalMonitoringService = require('./services/operationalMonitoringService');
@@ -14,6 +15,7 @@ let stopFinancialReconciliation = async () => {};
 let stopNotifications = async () => {};
 let stopPrivateStorageBackup = async () => {};
 let stopDatabaseBackup = async () => {};
+let stopMetaLeadFormDiscovery = async () => {};
 let shuttingDown = false;
 
 async function recordFatalWorkerError(kind,error){
@@ -44,6 +46,7 @@ async function shutdown(signal, exitCode = 0) {
     await stopNotifications();
     await stopPrivateStorageBackup();
     await stopDatabaseBackup();
+    await stopMetaLeadFormDiscovery();
     await stopHeartbeat();
     await pool.end();
     clearTimeout(forceTimer);
@@ -70,6 +73,7 @@ async function start() {
   stopNotifications = startNotificationScheduler({ unref:false, runImmediately:true });
   stopPrivateStorageBackup = startPrivateStorageBackupScheduler({ unref:false, runImmediately:true });
   stopDatabaseBackup = startDatabaseBackupScheduler({ unref:false, runImmediately:true });
+  stopMetaLeadFormDiscovery = startMetaLeadFormDiscoveryScheduler({ unref:false, runImmediately:true });
   process.once('SIGTERM', () => shutdown('SIGTERM'));
   process.once('SIGINT', () => shutdown('SIGINT'));
   process.once('uncaughtException', error => { console.error('Uncaught exception:', error?.stack || error); void recordFatalWorkerError('uncaught_exception',error).finally(()=>shutdown('uncaughtException', 1)); });

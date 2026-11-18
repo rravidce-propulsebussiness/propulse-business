@@ -275,6 +275,94 @@ async function connectForm({ userId, scope, pageId, formId, columnMappings = {},
   return { ...toConnection({ ...row, page_name: page.page_name }), backfillStarted: true };
 }
 
+
+// Periodically discover active forms on connected admin Pages. Forms are
+// connected with the same exact-header mapping suggestions used by the manual
+// flow; the existing CSV importer still validates each lead before creation.
+async function autoConnectNewAdminForms() {
+  const missing = graph.missingConfig();
+  if (missing.length) return { configured: false, missing, pagesChecked: 0, formsFound: 0, connected: 0, skipped: 0, failed: 0 };
+
+  const pages = (await pool.query(
+    "SELECT * FROM meta_lead_pages WHERE owner_scope='admin' ORDER BY id"
+  )).rows;
+  const summary = { configured: true, pagesChecked: 0, formsFound: 0, connected: 0, skipped: 0, failed: 0 };
+
+  for (const page of pages) {
+    summary.pagesChecked += 1;
+    try {
+      const token = graph.decryptToken(page.page_token_encrypted);
+      const forms = await graph.graphList(`${page.page_id}/leadgen_forms`, {
+        params: { fields: 'id,name,status,created_time' },
+        token,
+        maxItems: 200,
+      });
+      const activeForms = forms.filter(form => clean(form?.id) && clean(form?.status).toUpperCase() === 'ACTIVE');
+      summary.formsFound += activeForms.length;
+      if (!activeForms.length) continue;
+
+      const existing = (await pool.query(
+        "SELECT form_id FROM meta_lead_connections WHERE status='active' AND form_id=ANY($1::varchar[])",
+        [activeForms.map(form => clean(form.id))]
+      )).rows;
+      const connectedIds = new Set(existing.map(row => clean(row.form_id)));
+      const candidates = activeForms.filter(form => !connectedIds.has(clean(form.id)));
+      if (!candidates.length) continue;
+
+      // leadgen is a Page subscription, so one subscription covers the newly
+      // discovered forms on that Page.
+      await graph.graphRequest(`${page.page_id}/subscribed_apps`, {
+        method: 'POST',
+        params: { subscribed_fields: 'leadgen' },
+        token,
+      });
+
+      for (const listedForm of candidates) {
+        try {
+          const form = await graph.graphRequest(clean(listedForm.id), {
+            params: { fields: 'id,name,page,questions{key,label,type}' },
+            token,
+          });
+          if (!form?.page?.id || clean(form.page.id) !== clean(page.page_id)) {
+            summary.skipped += 1;
+            continue;
+          }
+          const analysis = leadImportMapping.analyzeCsv(
+            leadsToCsv({ formName: clean(form.name), questions: form.questions || [], leads: [] }),
+            { scope: 'admin' }
+          );
+          const inserted = (await pool.query(
+            `INSERT INTO meta_lead_connections(owner_user_id,owner_scope,meta_page_id,page_id,form_id,form_name,column_mappings,defaults,default_industry_id)
+             VALUES($1,'admin',$2,$3,$4,$5,$6::jsonb,'{}'::jsonb,NULL)
+             ON CONFLICT (form_id) WHERE status='active' DO NOTHING
+             RETURNING *`,
+            [page.owner_user_id, page.id, page.page_id, clean(form.id), clean(form.name).slice(0, 255), JSON.stringify(analysis.effectiveMappings)]
+          )).rows[0];
+          if (!inserted) {
+            summary.skipped += 1;
+            continue;
+          }
+          summary.connected += 1;
+          setImmediate(() => {
+            backfillConnection({ connectionId: inserted.id }).catch(error =>
+              console.error('Meta auto-connect backfill failed:', error?.message || error)
+            );
+          });
+        } catch (error) {
+          summary.failed += 1;
+          console.error(`Meta form auto-connect failed for ${clean(listedForm.id)}:`, error?.message || error);
+        }
+      }
+    } catch (error) {
+      summary.failed += 1;
+      console.error(`Meta form discovery failed for Page ${clean(page.page_id)}:`, error?.message || error);
+    }
+  }
+
+  if (summary.connected || summary.failed) console.info('Meta form auto-sync:', summary);
+  return summary;
+}
+
 async function disconnectForm({ userId, scope, connectionId }) {
   const row = (await pool.query(
     `UPDATE meta_lead_connections SET status='disabled',updated_at=CURRENT_TIMESTAMP
@@ -429,5 +517,5 @@ async function backfillConnection({ connectionId, userId = null, scope = null, d
 
 module.exports = {
   assertScope, getStatus, startOauth, finishOauth, listForms, previewForm, connectForm, disconnectForm, disconnectAccount,
-  listConnections, backfillConnection, handleWebhook, verifyWebhookSubscription, processLead, leadsToCsv, returnPath, fillMissingPincodes,
+  listConnections, backfillConnection, autoConnectNewAdminForms, handleWebhook, verifyWebhookSubscription, processLead, leadsToCsv, returnPath, fillMissingPincodes,
 };
