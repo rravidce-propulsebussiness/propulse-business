@@ -59,3 +59,5 @@
 .mla-rules-loading{padding:16px;border-radius:10px;background:#f6f8fa;color:#7a899b;font-size:11px}
 @media(max-width:800px){.mla-condition-row{grid-template-columns:repeat(2,minmax(0,1fr))}.mla-condition-remove{grid-column:2;justify-self:end;width:100%}}
 @media(max-width:560px){.mla-classification{padding:13px}.mla-classification-head h2{font-size:16px}.mla-saved-rule-summary{gap:6px;padding:8px}.mla-rule-name{font-size:11px}.mla-rule-summary-text{display:none}.mla-editor-settings{align-items:stretch;flex-direction:column}.mla-meta-field{justify-content:space-between}.mla-meta-field select{flex:1}.mla-access-window{flex-wrap:wrap}}
+
+.mla-editor-industry{display:flex;align-items:center;gap:8px;color:#324b69;font-size:11px}.mla-editor-industry span{font-weight:800}.mla-editor-industry strong{padding:8px 10px;border:1px solid #d8e1eb;border-radius:9px;background:#f8fafc;font-size:11px}
