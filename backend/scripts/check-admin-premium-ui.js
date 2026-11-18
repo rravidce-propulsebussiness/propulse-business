@@ -327,7 +327,7 @@ assert(expertDirectory.includes('expert-v2--settings')&&expertDirectory.includes
 assert(!expertDirectory.includes('Control public listing eligibility, project visibility and subscription rules.')&&!expertDirectory.includes('Make /experts available'),'Directory Settings must omit explanatory copy');
 assert(videoProcessingSettings.includes('Project video quality')&&videoProcessingSettings.includes('Compress videos')&&videoProcessingSettings.includes('Save video settings'),'Video quality settings must keep actionable controls');
 assert(!videoProcessingSettings.includes('Applies to videos processed from now on.')&&!videoProcessingSettings.includes('Only formats browsers cannot play are converted.')&&!videoProcessingSettings.includes('A video is kept at original quality'),'Video quality settings must omit helper paragraphs');
-assert(videoProcessingSettingsCss.includes('.expert-v2--settings .video-quality-options')&&videoProcessingSettingsCss.includes('button:disabled{display:none}'),'Video quality options must match the compact settings layout');
+assert(expertDirectoryCss.includes('.expert-v2--settings .video-quality-options')&&expertDirectoryCss.includes('button:disabled{display:none}'),'Video quality options must match the compact settings layout');
 assert(completedProjects.includes('Approve lead credit')&&completedProjects.includes('Reject lead credit'),'Compact project review must retain lead-credit actions');
 assert(expertDirectoryCss.includes('.expert-v2--compact .expert-v2-metrics')&&expertDirectoryCss.includes('background:#edfaf1'),'Expert Directory must retain compact pastel card styling');
 
