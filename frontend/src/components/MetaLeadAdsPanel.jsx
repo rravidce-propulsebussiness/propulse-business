@@ -115,10 +115,7 @@ export default function MetaLeadAdsPanel({ scope = 'partner', onStatusChange }) 
 
   return <section className="mla-panel">
     <header className="mla-head">
-      <div>
-        <span className="mla-kicker">META LEAD ADS</span>
-        <h2>Meta lead forms</h2>
-      </div>
+      <div className="mla-head-title"><strong>Meta</strong></div>
       <span className={'mla-badge ' + (status?.configured ? 'ok' : 'off')}>{status?.configured ? 'Connected' : 'Not set up'}</span>
     </header>
 
