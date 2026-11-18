@@ -23,7 +23,7 @@ assert.match(sql,/l\.custom_fields->'_project_origin'->>'professionalUserId'=r\.
 assert.doesNotMatch(sql,/ORDER BY total_requests[^;]*LIMIT\s+\d+/i,'The grouped company totals must not be truncated');
 assert.match(ui,/\/admin\/professional-enquiries\/company-summary/);
 assert.match(ui,/Requests received by company/);
-assert.match(ui,/All-time totals from submitted requests/);
+assert.doesNotMatch(ui,/All-time totals from submitted requests/,'Compact company summary must omit explanatory copy');
 assert.match(ui,/Quote requests/);
 assert.match(ui,/Project callbacks/);
 assert.match(ui,/Profile callbacks/);

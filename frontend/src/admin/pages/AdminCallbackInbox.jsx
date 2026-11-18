@@ -112,8 +112,6 @@ export default function AdminCallbackInbox(){
     callbacks:total.callbacks+Number(item.project_callbacks||0)+Number(item.profile_callbacks||0),
     linked:total.linked+Number(item.linked_marketplace_leads||0),
   }),{received:0,quotes:0,callbacks:0,linked:0})
-  const selectedCompanyName=selectedCompany==='all'?'All companies':
-    companySummary.find(item=>String(item.company_id)===selectedCompany)?.business_name||'Selected company'
   async function update(id,status){
     setSaving('callback-'+id);setError('');setFeedback('')
     try{
@@ -155,9 +153,8 @@ export default function AdminCallbackInbox(){
   }
   return <section className="admin-callback-section admin-enquiry-workspace" aria-labelledby="admin-callback-title">
     <header className="admin-callback-heading admin-enquiry-hero">
-      <div><span>LEADS / PROFESSIONAL ENQUIRIES</span>
+      <div>
         <h2 id="admin-callback-title">Professional Enquiries</h2>
-        <p>Track requests received by every professional, quotation progress and verified marketplace leads in one place.</p>
       </div>
       <button onClick={()=>{setLoading(true);setReload(value=>value+1)}} disabled={loading} type="button">{loading?'Refreshing…':'↻ Refresh'}</button>
     </header>
@@ -167,20 +164,18 @@ export default function AdminCallbackInbox(){
 
     <div className="admin-enquiry-metrics" aria-label="All-time professional request totals">
       {[
-        ['Total requests',totals.received,'All enquiry types'],
-        ['Quote requests',totals.quotes,'Professional project quotations'],
-        ['Callbacks',totals.callbacks,'Projects + public profiles'],
-        ['Linked leads',totals.linked,'Shared or private, origin verified'],
-      ].map(([label,value,description])=><div className="admin-enquiry-metric" key={label}>
+        ['Total requests',totals.received],
+        ['Quote requests',totals.quotes],
+        ['Callbacks',totals.callbacks],
+        ['Linked leads',totals.linked],
+      ].map(([label,value])=><div className="admin-enquiry-metric" key={label}>
         <small>{label}</small><strong>{loading?'—':companyError?'—':Number(value).toLocaleString('en-IN')}</strong>
-        <span>{description}</span>
       </div>)}
     </div>
 
     <section className="admin-enquiry-companies" aria-label="Company enquiry summary">
       <div className="admin-enquiry-section-head"><div>
         <h3>Requests received by company</h3>
-        <p>All-time totals from submitted requests, not just the recent inbox. Verified links include private profile leads; they are not all available in the public marketplace.</p>
       </div><span>{companySummary.length} companies</span></div>
       {loading?<p className="admin-callback-empty">Loading company totals…</p>
         :companySummary.length===0?<p className="admin-callback-empty">{companyError?'Could not load company totals.':'No company enquiries received yet.'}</p>
@@ -202,7 +197,6 @@ export default function AdminCallbackInbox(){
     <section className="admin-enquiry-inbox" aria-label="Recent professional enquiries">
       <div className="admin-enquiry-section-head"><div>
         <h3>Recent enquiry inbox</h3>
-        <p>{selectedCompanyName} · Latest 200 quote requests and 150 callbacks are loaded. Company totals above cover all-time history.</p>
       </div></div>
       <div className="admin-enquiry-tabs" role="group" aria-label="Enquiry type">
         {[
