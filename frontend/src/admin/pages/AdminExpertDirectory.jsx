@@ -207,7 +207,7 @@ export default function AdminExpertDirectory(){
               <div className="expert-v2-badge-line">{selected.is_official&&<Badge type="official">♛ Official ProPulse</Badge>}
                 {selected.is_verified&&<Badge type="verified">✓ Verified</Badge>}
                 {selected.is_featured&&<Badge type="featured">☆ Featured</Badge>}</div>
-               
+
             </div>
             <Badge type={selected.is_hidden?'muted':selected.is_active?'active':'muted'}>{selected.is_hidden?'Hidden':selected.is_active?'● Active':'Inactive'}</Badge>
           </div>
