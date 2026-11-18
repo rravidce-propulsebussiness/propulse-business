@@ -147,7 +147,7 @@ export default function AdminExpertDirectory(){
   }
 
   if(loading)return <main className="expert-v2"><BootLoader contained message="Loading Expert Directory" /></main>
-  return <main className="expert-v2">
+  return <main className={'expert-v2'+(section==='settings'?'':' expert-v2--compact')}>
     <div className="expert-v2-heading">
       <div><h1>Expert Directory</h1></div>
       <a href="/experts" target="_blank" rel="noopener noreferrer" className="expert-v2-main-action">View Public Directory <span aria-hidden="true">↗</span></a>
