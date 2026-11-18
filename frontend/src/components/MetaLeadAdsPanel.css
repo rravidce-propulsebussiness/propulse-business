@@ -37,3 +37,5 @@
   .mla-connection{grid-template-columns:1fr}
   .mla-stats{justify-content:flex-start}
 }
+
+.mla-auto-sync-note{padding:12px 14px;border-radius:10px;background:#edf5ff;border:1px solid #cfe1fa;color:#24476d;font-size:13px;line-height:1.5}
