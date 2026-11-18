@@ -200,7 +200,8 @@ export default function MetaLeadAdsPanel({ scope = 'partner', onStatusChange }) 
             <button type="button" className="mla-btn ghost" disabled={Boolean(busy)} onClick={() => disconnectConnection(c.id)}>Disconnect</button>
           </div>
         </article>)}
-      </div>
+        </div>
+      </details>
     </>}
   </section>
 }
