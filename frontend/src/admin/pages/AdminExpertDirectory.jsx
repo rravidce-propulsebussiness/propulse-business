@@ -283,7 +283,7 @@ export default function AdminExpertDirectory(){
     </div>}
 
     {section==='settings'&&<section className="expert-v2-directory-settings">
-      
+
       <div className="expert-v2-switches">
         {[['directoryEnabled','Enable public directory'],['requireActiveMembership','Require active membership'],['requireVerified','Verified companies only'],['showProjects','Show completed projects'],['showVideos','Show project videos'],['showPlans','Show service plans']].map(([key,title])=>
           <label key={key}><input type="checkbox" checked={key==='requireVerified'?settings[key]===true:settings[key]!==false} onChange={e=>patchSetting(key,e.target.checked)}/>
