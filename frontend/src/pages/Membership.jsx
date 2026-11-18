@@ -338,7 +338,7 @@ export default function Membership() {
       {error && <div className="membership-error">{error}</div>}
 
       {loading ? <BootLoader contained message="Loading membership options" /> : <>
-        <section className="membership-plans membership-plans-two">
+        <section id="membership-plans" className="membership-plans membership-plans-two">
           {[{ key: 'grow', label: 'GROW', plans: growPlans, selected: selectedGrowPlan, benefits: growBenefits, copy: 'Best Lead Pricing + Exclusive Leads + Investment Unlocked', action: 'Choose GROW' },
             { key: 'scale', label: 'SCALE', plans: scalePlans, selected: selectedScalePlan, benefits: scaleBenefits, copy: 'Everything in GROW + Website + SEO + Maintenance', action: 'Upgrade to SCALE' }].map((level) => {
               const isCurrent = Boolean(currentMembership?.membership_plan_id) && currentGroup === level.key;
