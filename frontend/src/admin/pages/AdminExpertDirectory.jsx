@@ -23,6 +23,7 @@ export default function AdminExpertDirectory(){
   const [service,setService]=useState('')
   const [status,setStatus]=useState('')
   const [videoStatus,setVideoStatus]=useState('')
+  const [reviewFilter,setReviewFilter]=useState('all')
   const [badgeFilter,setBadgeFilter]=useState('')
   const [sort,setSort]=useState('featured')
   const [section,setSection]=useState('all')
@@ -98,7 +99,11 @@ export default function AdminExpertDirectory(){
       if(videoStatus==='with'&&!Number(item.video_count))return false
       if(videoStatus==='pending'&&!Number(item.pending_video_count))return false
       if(section==='featured'&&!item.is_featured)return false
-      if(section==='pending'&&!Number(item.pending_video_count))return false
+      if(section==='pending'){
+        if(reviewFilter==='published'&&(!Number(item.video_count)||Number(item.pending_video_count)))return false
+        if(reviewFilter!=='published'&&!Number(item.pending_video_count))return false
+        if(reviewFilter==='video'&&!Number(item.video_count))return false
+      }
       return true
     })
     if(sort==='projects')rows=rows.sort((a,b)=>Number(b.project_count)-Number(a.project_count))
@@ -106,7 +111,7 @@ export default function AdminExpertDirectory(){
     else if(sort==='name')rows=rows.sort((a,b)=>String(a.business_name||a.name).localeCompare(String(b.business_name||b.name)))
     else rows=rows.sort((a,b)=>Number(b.is_featured)-Number(a.is_featured)||Number(b.is_official)-Number(a.is_official))
     return rows
-  },[businesses,location,service,badgeFilter,status,videoStatus,section,sort])
+  },[businesses,location,service,badgeFilter,status,videoStatus,section,sort,reviewFilter])
   const selected=visible.find(item=>item.id===selectedId)||visible[0]||null
 
   function patchSetting(key,value){
@@ -142,21 +147,27 @@ export default function AdminExpertDirectory(){
   function switchSection(value){
     navigate('/admin/expert-directory'+(value==='all'?'':'?view='+encodeURIComponent(value)))
     setSection(value)
+    setReviewFilter('all')
+    if(value==='pending'){setLocation('');setService('');setStatus('');setBadgeFilter('');setVideoStatus('')}
     setError('')
     setProfileTab('projects')
   }
 
   if(loading)return <main className="expert-v2"><BootLoader contained message="Loading Expert Directory" /></main>
-  return <main className={'expert-v2'+(section==='settings'?'':' expert-v2--compact')+(section==='featured'?' expert-v2--featured':'')}>
+  return <main className={'expert-v2'+(section==='settings'?'':' expert-v2--compact')+(section==='featured'?' expert-v2--featured':'')+(section==='pending'?' expert-v2--pending':'')}>
     <div className="expert-v2-heading">
-      <div><h1>{section==='featured'?'Featured Professionals':'Expert Directory'}</h1></div>
-      {section!=='featured'&&<a href="/experts" target="_blank" rel="noopener noreferrer" className="expert-v2-main-action">View Public Directory <span aria-hidden="true">↗</span></a>}
+      <div><h1>{section==='featured'?'Featured Professionals':section==='pending'?'Video Approvals':'Expert Directory'}</h1></div>
+      {section!=='featured'&&section!=='pending'&&<a href="/experts" target="_blank" rel="noopener noreferrer" className="expert-v2-main-action">View Public Directory <span aria-hidden="true">↗</span></a>}
     </div>
 
     {error&&<div className="expert-v2-alert error" role="alert">{error}</div>}
     {message&&<div className="expert-v2-alert success" role="status">{message}</div>}
     <div className="expert-v2-metrics">
-      {section==='featured'?<>
+      {section==='pending'?<>
+        <article><span className="expert-v2-metric-icon orange">▶</span><div><small>Pending reviews</small><strong>{stats.pending_video_reviews||0}</strong></div></article>
+        <article><span className="expert-v2-metric-icon coral">▣</span><div><small>Videos</small><strong>{stats.video_projects||0}</strong></div></article>
+        <article><span className="expert-v2-metric-icon green">✓</span><div><small>Approved</small><strong>{stats.approved_video_reviews||0}</strong></div></article>
+      </>:section==='featured'?<>
         <article><span className="expert-v2-metric-icon gold">☆</span><div><small>Featured</small><strong>{stats.featured_businesses||0}</strong></div></article>
         <article><span className="expert-v2-metric-icon green">✓</span><div><small>Verified</small><strong>{stats.verified_businesses||0}</strong></div></article>
         <article><span className="expert-v2-metric-icon coral">▣</span><div><small>Projects</small><strong>{stats.video_projects||0}</strong></div></article>
@@ -169,18 +180,20 @@ export default function AdminExpertDirectory(){
     </div>
 
     {section!=='settings'&&<div className="expert-v2-workspace">
-      <section className="expert-v2-list-panel" aria-label="Search and filter professionals">
-        <div className="expert-v2-section-heading"><h2>{section==='featured'?'Featured Professionals':'Search professionals'}</h2><span>{pagination.total||0} {section==='featured'?'':'accounts'}</span></div>
-        <div className="expert-v2-search"><span>⌕</span><input aria-label="Search professionals" value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search by name, company, location..."/></div>
-        <div className="expert-v2-filters">
+      <section className="expert-v2-list-panel" aria-label={section==='pending'?'Video review queue':'Search and filter professionals'}>
+        <div className="expert-v2-section-heading"><h2>{section==='featured'?'Featured Professionals':section==='pending'?'Review queue':'Search professionals'}</h2><span>{section==='pending'?visible.length:`${pagination.total||0} ${section==='featured'?'':'accounts'}`}</span></div>
+        <div className="expert-v2-search"><span>⌕</span><input aria-label={section==='pending'?'Search projects or professionals':'Search professionals'} value={search} onChange={event=>setSearch(event.target.value)} placeholder={section==='pending'?'Search projects or professionals':'Search by name, company, location...'}/></div>
+        {section==='pending'?<div className="expert-review-filter" aria-label="Filter video reviews">
+          {[['all','All projects'],['video','With video'],['pending','Pending credit'],['published','Published']].map(([key,title])=><button key={key} type="button" className={reviewFilter===key?'selected':''} aria-pressed={reviewFilter===key} onClick={()=>setReviewFilter(key)}>{title}</button>)}
+        </div>:<div className="expert-v2-filters">
           <label><span>Location</span><select value={location} onChange={e=>setLocation(e.target.value)}><option value="">All Locations</option>{locations.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
-          {section!=='featured'&&<label><span>Services</span><select value={service} onChange={e=>setService(e.target.value)}><option value="">All Services</option>{serviceLabels.map(x=><option key={x} value={x}>{x}</option>)}</select></label>}
+          {section!=='featured'&&section!=='pending'&&<label><span>Services</span><select value={service} onChange={e=>setService(e.target.value)}><option value="">All Services</option>{serviceLabels.map(x=><option key={x} value={x}>{x}</option>)}</select></label>}
           <label><span>Status</span><select value={status} onChange={e=>setStatus(e.target.value)}><option value="">All Status</option><option value="verified">Verified</option><option value="unverified">Unverified</option><option value="visible">Public eligible</option><option value="hidden">Hidden</option><option value="official">Official ProPulse</option></select></label>
           <label><span>Badges</span><select value={badgeFilter} onChange={e=>setBadgeFilter(e.target.value)}><option value="">All Badges</option><option value="official">Official ProPulse</option><option value="verified">Verified</option><option value="featured">Featured</option></select></label>
-          {section!=='featured'&&<label><span>Video Status</span><select value={videoStatus} onChange={e=>setVideoStatus(e.target.value)}><option value="">All Videos</option><option value="with">With Video</option><option value="pending">Pending Review</option></select></label>}
+          {section!=='featured'&&section!=='pending'&&<label><span>Video Status</span><select value={videoStatus} onChange={e=>setVideoStatus(e.target.value)}><option value="">All Videos</option><option value="with">With Video</option><option value="pending">Pending Review</option></select></label>}
           <label><span>Sort by</span><select value={sort} onChange={e=>setSort(e.target.value)}><option value="featured">Featured first</option><option value="projects">Most projects</option><option value="latest">Recently joined</option><option value="name">Company name</option></select></label>
-        </div>
-        <div className="expert-v2-list-label">Showing {visible.length} on this page <small>of {pagination.total||0} professionals</small></div>
+        </div>}
+        {section!=='pending'&&<div className="expert-v2-list-label">Showing {visible.length} on this page <small>of {pagination.total||0} professionals</small></div>}
         <div className="expert-v2-list">
           {visible.map(item=><button type="button" className={'expert-v2-person'+(selected?.id===item.id?' selected':'')} key={item.id}
             onClick={()=>{setSelectedId(item.id);setProfileTab('projects')}} aria-pressed={selected?.id===item.id}>
@@ -188,7 +201,7 @@ export default function AdminExpertDirectory(){
             <span className="expert-v2-person-copy">
               <strong>{item.business_name||item.name}</strong>
               <small>⌖ {item.city_names||'Locations not set'}</small>
-              <small>▣ {item.project_count||0} projects · ▶ {item.video_count||0} videos</small>
+              <small>{section==='pending'?`▶ ${item.pending_video_count||0} pending · ${item.video_count||0} videos`:`▣ ${item.project_count||0} projects · ▶ ${item.video_count||0} videos`}</small>
             </span>
             <span className="expert-v2-person-side">
               {item.is_official?<Badge type="official">♛ Official ProPulse</Badge>:item.is_verified?<Badge type="verified">✓ Verified</Badge>:null}
@@ -197,7 +210,7 @@ export default function AdminExpertDirectory(){
               <Badge type={item.is_hidden||!item.is_active?'muted':'active'}>{item.is_hidden?'Hidden':item.is_active?'Active':'Inactive'}</Badge>
             </span><span className="expert-v2-arrow">›</span>
           </button>)}
-          {visible.length===0&&<p className="expert-v2-empty">No professionals match these filters. Try another search or reset filters.</p>}
+          {visible.length===0&&<p className="expert-v2-empty">{section==='pending'?(reviewFilter==='published'?'No published videos found.':'No videos pending review.'):'No professionals match these filters. Try another search or reset filters.'}</p>}
         </div>
         {pagination.totalPages>1&&<div className="expert-v2-pagination">
           <button type="button" disabled={!pagination.hasPreviousPage} onClick={()=>loadBusinesses(Math.max(1,pagination.page-1),search)}>← Previous</button>
@@ -206,8 +219,8 @@ export default function AdminExpertDirectory(){
         </div>}
       </section>
 
-      <section className="expert-v2-detail-panel" aria-label="Selected professional profile">
-        {!selected?<div className="expert-v2-empty">Select a professional to view its project portfolio and directory controls.</div>:<>
+      <section className="expert-v2-detail-panel" aria-label={section==='pending'?'Selected video review':'Selected professional profile'}>
+        {section==='pending'&&!selected?<div className="expert-v2-pending-preview"><span aria-hidden="true">▷</span><strong>Select a project</strong></div>:section==='pending'&&selected?<AdminCompletedProjects key={selected.id} businessUserId={selected.id} filter={reviewFilter==='published'?'published':reviewFilter==='video'?'video':'pending'} compact/>:!selected?<div className="expert-v2-empty">Select a professional to view its project portfolio and directory controls.</div>:<>
           <div className="expert-v2-profile-header">
             <span className="expert-v2-profile-avatar">{selected.is_official?<img src="/brand/propulse-logo.png" alt=""/>:initials(selected.business_name||selected.name)}</span>
             <div className="expert-v2-profile-title">
@@ -233,7 +246,7 @@ export default function AdminExpertDirectory(){
               <button key={key} role="tab" type="button" aria-selected={profileTab===key} className={profileTab===key?'active':''} onClick={()=>setProfileTab(key)}>{title}</button>)}
           </div>
           <div className="expert-v2-profile-content">
-            {profileTab==='projects'&&<AdminCompletedProjects key={selected.id} businessUserId={selected.id} filter={section==='pending'?'pending':'all'} compact/>}
+            {profileTab==='projects'&&<AdminCompletedProjects key={selected.id} businessUserId={selected.id} filter="all" compact/>}
             {profileTab==='profile'&&<div className="expert-v2-info">
               <h3>Public Profile Details</h3><p>{selected.public_summary||'The professional has not added a profile summary yet.'}</p>
               <dl><div><dt>Business</dt><dd>{selected.business_name||'Not set'}</dd></div>

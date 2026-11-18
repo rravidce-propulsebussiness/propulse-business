@@ -188,7 +188,11 @@ async function getOverview(){
        (SELECT COUNT(*)::int FROM business_profile_projects p
          WHERE p.is_published=TRUE AND p.completion_year IS NOT NULL
            AND NULLIF(TRIM(p.video_url),'') IS NOT NULL
-           AND p.video_reward_status='pending') AS pending_video_reviews
+           AND p.video_reward_status='pending') AS pending_video_reviews,
+       (SELECT COUNT(*)::int FROM business_profile_projects p
+         WHERE p.is_published=TRUE AND p.completion_year IS NOT NULL
+           AND NULLIF(TRIM(p.video_url),'') IS NOT NULL
+           AND p.video_reward_status='approved') AS approved_video_reviews
      FROM users u
      LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id`
   )).rows[0]||{};
