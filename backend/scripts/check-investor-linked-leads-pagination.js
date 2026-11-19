@@ -10,8 +10,9 @@ const ui=read('../frontend/src/pages/InvestorInvestmentSection.jsx');
 
 assert(service.includes("availability='all'"),'Linked-lead service must support server-side available/sold filtering');
 assert(service.includes("['all','available','sold']"),'Linked-lead availability filter must be validated');
-assert(service.includes("COUNT(*) FILTER(WHERE purchased_buyer_count < buyer_capacity)"),'Linked-lead stats must count available leads server-side');
-assert(service.includes("COUNT(*) FILTER(WHERE purchased_buyer_count >= buyer_capacity)"),'Linked-lead stats must count sold leads server-side');
+assert(service.includes("COUNT(*) FILTER(WHERE NOT is_sold)"),'Linked-lead stats must count available leads server-side');
+assert(service.includes("COUNT(*) FILTER(WHERE is_sold)"),'Linked-lead stats must count sold leads server-side');
+assert(service.includes("const soldSql=`(l.status='sold' OR ${buyerCountSql} >= ${capacitySql})`"),'A lead closed early (single-buyer access) must count as sold for investors');
 assert(service.includes("saleState==='sold'")&&service.includes("saleState==='available'"),'Data query must filter sold/available leads before pagination');
 assert(service.includes('LIMIT $')&&service.includes('OFFSET $'),'Linked-lead query must be server-paginated');
 assert(service.includes('Math.min(Math.max(Number(limit)||50,1),100)'),'Linked-lead pagination must cap page size at 100');

@@ -28,7 +28,7 @@ const remainingCapacity = item => Math.max(0, buyerCapacity(item) - buyerCount(i
 
 const pageMeta = {
   leads: { kicker:'AVAILABLE LEADS', title:'Leads from your investment', text:'Open any assigned lead to view the complete marketplace information. All details are read-only.' },
-  sold: { kicker:'SOLD LEADS', title:'Sold leads', text:'Leads that have reached their full buyer capacity are moved here automatically.' },
+  sold: { kicker:'SOLD LEADS', title:'Sold leads', text:'Leads that reached their buyer capacity, or were bought with single-buyer access, are moved here automatically.' },
   history: { kicker:'INVESTMENT HISTORY', title:'Your investment history', text:'Review every cycle, invested amount, realized revenue, payout and maturity.' },
   payouts: { kicker:'PAYOUTS', title:'Your payout transfers', text:'Track revenue made available for payout and transfers completed by Propulse.' },
 }
@@ -59,7 +59,7 @@ function LeadDetails({ item, sold }) {
       <div className="investor-lead-summary-side">
         <span className={`investor-sale-badge ${sold ? 'sold' : ''}`}>{sold ? 'SOLD' : 'AVAILABLE'}</span>
         <div className="investor-share-count"><b>{purchased}/{capacity}</b><span>BUYERS</span></div>
-        <small>{sold ? 'Buyer capacity reached' : `${remaining} buyer${remaining === 1 ? '' : 's'} still available`}</small>
+        <small>{sold ? (purchased >= capacity ? 'Buyer capacity reached' : 'Closed — bought with single-buyer access') : `${remaining} buyer${remaining === 1 ? '' : 's'} still available`}</small>
         <button type="button" className="investor-lead-open" onClick={()=>setOpen(value=>!value)}>{open ? 'Hide details ↑' : 'View full details →'}</button>
       </div>
     </div>
