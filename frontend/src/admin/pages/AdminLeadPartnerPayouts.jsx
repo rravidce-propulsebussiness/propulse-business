@@ -142,10 +142,8 @@ export default function AdminLeadPartnerPayouts(){
   async function submitDirect(){
     setError('');setMessage('');
     const amount=Number(directAmount);
-    const available=Number(directDetails?.availableEarnings??selectedDirectPartner?.available_earnings??0);
     if(!directPartnerId){setError('Select a Lead Partner.');return}
     if(!Number.isFinite(amount)||amount<=0){setError('Enter a valid transfer amount.');return}
-    if(amount>available+0.001){setError(`Transfer cannot exceed the available balance of ${money(available)}.`);return}
     if(!directTransfer.reference.trim()){setError('Transfer reference / UTR is required.');return}
     if(!directTransfer.proof){setError('Upload the payment proof screenshot.');return}
     setBusy('direct');
@@ -165,7 +163,7 @@ export default function AdminLeadPartnerPayouts(){
       <div>
         <span>PARTNER FINANCE / PAYOUT CONTROL</span>
         <h1>Partner payouts</h1>
-        <p>Settle partner withdrawal requests or make a direct transfer from available earnings. Both actions use the same payout ledger, earning allocation and transfer history.</p>
+        <p>Partner lead sales are collected by ProPulse. Pay partners manually with Transfer amount, or settle withdrawal requests against an earlier earnings balance. Both use the same transfer history.</p>
       </div>
       <button type="button" onClick={()=>setDirectOpen(true)}><span>₹</span><div><b>Transfer amount</b><small>Pay a partner directly</small></div></button>
     </section>
@@ -230,13 +228,13 @@ export default function AdminLeadPartnerPayouts(){
 
     {directOpen&&<div className="alpp-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget&&!busy)closeDirect()}}>
       <section className="alpp-modal direct">
-        <header><div><span>DIRECT PARTNER TRANSFER</span><h2>Transfer available earnings</h2><p>This creates and settles a payout in the existing ledger in one operation.</p></div><button onClick={closeDirect} disabled={!!busy}>×</button></header>
+        <header><div><span>DIRECT PARTNER TRANSFER</span><h2>Pay a partner manually</h2><p>Record a manual payment you have sent. Partner lead sales are ProPulse revenue, so the amount is not limited to the earnings balance.</p></div><button onClick={closeDirect} disabled={!!busy}>×</button></header>
         <div className="alpp-modal-body">
-          <label className="alpp-field"><span>Lead Partner</span><select value={directPartnerId} onChange={e=>chooseDirectPartner(e.target.value)}><option value="">Select partner</option>{partners.map(p=><option key={p.id} value={p.id}>{p.user_name||p.business_name||`Partner #${p.id}`} · {p.user_email} · Available {money(p.available_earnings)}</option>)}</select></label>
+          <label className="alpp-field"><span>Lead Partner</span><select value={directPartnerId} onChange={e=>chooseDirectPartner(e.target.value)}><option value="">Select partner</option>{partners.map(p=><option key={p.id} value={p.id}>{p.user_name||p.business_name||`Partner #${p.id}`} · {p.user_email} · Earlier balance {money(p.available_earnings)}</option>)}</select></label>
           {directLoading?<BootLoader contained compact message="Loading partner payout account" />:selectedDirectPartner&&<>
-            <div className="alpp-direct-summary"><article><span>AVAILABLE NOW</span><strong>{money(directDetails?.availableEarnings??selectedDirectPartner.available_earnings)}</strong><small>Excludes amounts reserved by pending requests</small></article><article><span>PENDING REQUESTS</span><strong>{money(directDetails?.pendingTransfer??selectedDirectPartner.pending_transfer)}</strong><small>{selectedDirectPartner.pending_payout_count||0} request{Number(selectedDirectPartner.pending_payout_count||0)===1?'':'s'}</small></article></div>
+            <div className="alpp-direct-summary"><article><span>EARLIER BALANCE</span><strong>{money(directDetails?.availableEarnings??selectedDirectPartner.available_earnings)}</strong><small>Excludes amounts reserved by pending requests</small></article><article><span>PENDING REQUESTS</span><strong>{money(directDetails?.pendingTransfer??selectedDirectPartner.pending_transfer)}</strong><small>{selectedDirectPartner.pending_payout_count||0} request{Number(selectedDirectPartner.pending_payout_count||0)===1?'':'s'}</small></article></div>
             <PayoutAccount snapshot={directDetails?.partner?.payout_method==='upi'?{method:'upi',upi_id:directDetails?.partner?.upi_id}:directDetails?.partner?.payout_method==='bank'?{method:'bank',account_holder_name:directDetails?.partner?.account_holder_name,account_number:directDetails?.partner?.account_number,ifsc_code:directDetails?.partner?.ifsc_code,bank_name:directDetails?.partner?.bank_name}:null}/>
-            <label className="alpp-field"><span>Transfer amount</span><div className="alpp-money-input"><b>₹</b><input type="number" min="0.01" step="0.01" max={Number((directDetails?.availableEarnings??selectedDirectPartner.available_earnings)||0)} value={directAmount} onChange={e=>setDirectAmount(e.target.value)} placeholder="0.00"/></div><small>Maximum available: {money(directDetails?.availableEarnings??selectedDirectPartner.available_earnings)}</small></label>
+            <label className="alpp-field"><span>Transfer amount</span><div className="alpp-money-input"><b>₹</b><input type="number" min="0.01" step="0.01" value={directAmount} onChange={e=>setDirectAmount(e.target.value)} placeholder="0.00"/></div><small>Any amount. An earlier earnings balance ({money(directDetails?.availableEarnings??selectedDirectPartner.available_earnings)}) is settled first.</small></label>
             <TransferFields value={directTransfer} setValue={setDirectTransfer} onProof={e=>readProof(e,setDirectTransfer)}/>
           </>}
         </div>

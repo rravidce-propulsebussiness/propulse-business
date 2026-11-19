@@ -91,9 +91,10 @@ async function leadPartnerPayoutIssues(){
            COALESCE(SUM(i.amount) FILTER(WHERE i.status='released'),0)::numeric AS released_amount
       FROM lead_partner_payout_requests r
       LEFT JOIN lead_partner_payout_items i ON i.payout_id=r.id
-     GROUP BY r.id,r.partner_id,r.user_id,r.status,r.amount
+     GROUP BY r.id,r.partner_id,r.user_id,r.status,r.amount,r.request_source
     HAVING (r.status='pending' AND ABS(COALESCE(SUM(i.amount) FILTER(WHERE i.status='reserved'),0)-r.amount)>0.009)
-        OR (r.status='paid' AND ABS(COALESCE(SUM(i.amount) FILTER(WHERE i.status='paid'),0)-r.amount)>0.009)
+        OR (r.status='paid' AND COALESCE(r.request_source,'partner')<>'admin' AND ABS(COALESCE(SUM(i.amount) FILTER(WHERE i.status='paid'),0)-r.amount)>0.009)
+        OR (r.status='paid' AND r.request_source='admin' AND COALESCE(SUM(i.amount) FILTER(WHERE i.status='paid'),0)>r.amount+0.009)
         OR (r.status='rejected' AND COALESCE(SUM(i.amount) FILTER(WHERE i.status<>'released'),0)>0.009)
      ORDER BY r.id DESC
      LIMIT 50
