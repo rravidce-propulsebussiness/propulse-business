@@ -228,9 +228,9 @@
 .expert-v2--settings .video-quality-heading h2{margin:0;font-size:18px}
 .expert-v2--settings .video-quality-switch{align-items:center;padding:12px 14px}
 .expert-v2--settings .video-quality-switch strong{font-size:13px}
-.expert-v2--settings .video-quality-options{display:grid;grid-template-columns:130px minmax(0,1fr);align-items:center;gap:12px}
-.expert-v2--settings .video-quality-options legend{margin:0;font-size:12px}
-.expert-v2--settings .video-quality-options>div{gap:8px}
+.expert-v2--settings .video-quality-options{display:block}
+.expert-v2--settings .video-quality-options legend{margin:0 0 8px;font-size:12px}
+.expert-v2--settings .video-quality-options>div{display:grid;grid-template-columns:repeat(3,minmax(0,220px));gap:8px}
 .expert-v2--settings .video-quality-options button{min-height:46px;padding:10px 12px;display:flex;align-items:center;gap:10px}
 .expert-v2--settings .video-quality-options button b{font-size:13px}
 .expert-v2--settings .video-quality-options button:before{content:'';width:16px;height:16px;flex:none;border:1.5px solid #aab5c1;border-radius:50%;background:#fff}

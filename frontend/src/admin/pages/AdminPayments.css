@@ -862,3 +862,4 @@
     flex:1;
   }
 }
+@media(max-width:700px){.premium-approval-switcher small{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.3}}

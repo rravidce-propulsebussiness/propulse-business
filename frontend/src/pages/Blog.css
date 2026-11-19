@@ -16,3 +16,4 @@
 .blog-topic-sources a:hover{text-decoration:underline}
 .blog-topic-group li small.blog-topic-unpublished{display:block;margin-top:4px;color:#87939a;font-size:10px;line-height:1.55;letter-spacing:0;text-transform:none}
 @media(max-width:650px){.blog-topic-answer{padding:12px 13px}.blog-topic-sources{gap:7px 11px}}
+.blog-topic-controls>*{min-width:0}.blog-topic-controls select{max-width:100%;min-width:0;width:100%;box-sizing:border-box;text-overflow:ellipsis}
