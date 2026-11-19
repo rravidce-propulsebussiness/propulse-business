@@ -8,7 +8,7 @@ function mapLead(row){
     paid_sale_count:Number(row.paid_sale_count||0),
     purchased_buyer_count:Number(row.purchased_buyer_count||0),
     buyer_capacity:Math.max(1,Number(row.buyer_capacity||1)),
-    remaining_buyer_slots:Math.max(0,Number(row.buyer_capacity||1)-Number(row.purchased_buyer_count||0)),
+    remaining_buyer_slots:row.status==='sold'?0:Math.max(0,Number(row.buyer_capacity||1)-Number(row.purchased_buyer_count||0)),
     investor_revenue:Number(row.investor_revenue||0)
   };
 }
@@ -25,10 +25,13 @@ async function getLinkedLeads({investorId,cycleId=null,page=null,limit=null,avai
   const cycleClause=cid==null?'':' AND l.cycle_id=$2';
   const buyerCountSql="COUNT(DISTINCT lp.user_id) FILTER (WHERE lp.status='paid')";
   const capacitySql='GREATEST(1,COALESCE(l.buyer_capacity,1))';
+  // A lead is sold when it reached buyer capacity or was closed earlier (for
+  // example a buyer took the single-buyer option on a 3-buyer lead).
+  const soldSql=`(l.status='sold' OR ${buyerCountSql} >= ${capacitySql})`;
   const havingSql=saleState==='sold'
-    ?` HAVING ${buyerCountSql} >= ${capacitySql}`
+    ?` HAVING ${soldSql}`
     :saleState==='available'
-      ?` HAVING ${buyerCountSql} < ${capacitySql}`
+      ?` HAVING NOT ${soldSql}`
       :'';
 
   let total=null;
@@ -40,15 +43,14 @@ async function getLinkedLeads({investorId,cycleId=null,page=null,limit=null,avai
   if(paginated){
     const statsRow=(await pool.query(`
       SELECT COUNT(*)::int AS total,
-             COUNT(*) FILTER(WHERE purchased_buyer_count < buyer_capacity)::int AS available,
-             COUNT(*) FILTER(WHERE purchased_buyer_count >= buyer_capacity)::int AS sold
+             COUNT(*) FILTER(WHERE NOT is_sold)::int AS available,
+             COUNT(*) FILTER(WHERE is_sold)::int AS sold
       FROM (
-        SELECT l.id,${capacitySql}::int AS buyer_capacity,
-               ${buyerCountSql}::int AS purchased_buyer_count
+        SELECT l.id,${soldSql} AS is_sold
         FROM leads l
         LEFT JOIN lead_purchases lp ON lp.lead_id=l.id
         WHERE l.investor_user_id=$1${cycleClause}
-        GROUP BY l.id,l.buyer_capacity
+        GROUP BY l.id,l.buyer_capacity,l.status
       ) q
     `,params)).rows[0]||{};
     stats={total:Number(statsRow.total||0),available:Number(statsRow.available||0),sold:Number(statsRow.sold||0)};

@@ -827,3 +827,4 @@
 .coupon-proration-summary{grid-template-columns:minmax(0,1fr)!important}
 .coupon-proration-summary>div{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
 .coupon-proration-summary>div strong{text-align:right;white-space:nowrap}
+.membership-notice{margin:0 0 14px;padding:12px 14px;border:1px solid #f6c9b4;border-radius:12px;background:#fff6f1;color:#8a3a14;font-size:13px;line-height:1.5}.membership-notice b{color:#7a2e0b}

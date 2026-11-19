@@ -1,5 +1,6 @@
 import BootLoader from '../components/BootLoader'
 import { useEffect, useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import UserHeader from '../components/UserHeader'
 import { authRequest, getToken, getUser, saveSession } from '../utils/auth'
 import { apiRequest } from '../utils/api'
@@ -115,6 +116,7 @@ const growBenefits = ['Best lead pricing', 'Exclusive Leads access', 'Investment
 const scaleBenefits = ['Everything in GROW', 'Website development', 'SEO services', 'Website maintenance']
 
 export default function Membership() {
+  const investmentRequired = Boolean(useLocation().state?.investmentRequired)
   const user = getUser()
   const userId = user?.id ?? null
   const token = getToken()
@@ -334,6 +336,7 @@ export default function Membership() {
   return <div className="membership-page-shell">
     <UserHeader />
     <main className="membership-page">
+      {investmentRequired && !currentMembership && <div className="membership-notice" role="status"><b>Investing needs an active GROW or SCALE membership.</b> Choose a plan below to unlock Investor access.</div>}
       {submitted && <div className="membership-success">{checkout?.requiresExternalPayment ? 'Wallet amount was applied and the remaining direct payment was submitted for verification.' : 'Payment completed from your wallet and membership access is active.'}</div>}
       {error && <div className="membership-error">{error}</div>}
 
