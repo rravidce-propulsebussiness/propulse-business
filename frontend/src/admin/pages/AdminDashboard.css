@@ -823,3 +823,7 @@
   .admin-dashboard-panels{grid-template-columns:1fr}
 }
 @media(max-width:420px){.admin-overview-grid{grid-template-columns:1fr}}
+/* Panel titles were cut to "Our l…" / "Lead…" in narrow columns: wrap instead of truncating. */
+.admin-dashboard-panel-head{flex-wrap:wrap;row-gap:8px}
+.admin-dashboard-panel-title h2{overflow:visible;white-space:normal;text-overflow:clip;line-height:1.25}
+.admin-dashboard-panel-head>a{font-size:10px;padding:5px 8px}

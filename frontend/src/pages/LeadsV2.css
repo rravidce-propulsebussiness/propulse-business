@@ -956,3 +956,4 @@ body:has(.lv2-shell){
 @media(max-width:700px){.lv2-wallet-choice input{justify-self:end}.lv2-wallet-choice>strong{justify-self:end;white-space:nowrap}}
 .lv2-bottom-cta>a{box-sizing:border-box;max-width:100%}
 .lv2-empty p{max-width:420px;padding:0 16px;line-height:1.55}.lv2-empty p a{color:#f15a24;font-weight:800}
+.lv2-facts b{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
