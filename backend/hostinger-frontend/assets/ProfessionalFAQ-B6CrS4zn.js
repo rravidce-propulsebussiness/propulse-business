@@ -1,0 +1,1 @@
+import{t as e}from"./UserHeader-Bfqn4C0S.js";import{t}from"./UserFAQ-CrpyS7Ok.js";import{t as n}from"./vendor-3C9MigTR.js";var r=n();function i(){return(0,r.jsxs)(`div`,{className:`website-faq-page professional-faq-page`,children:[(0,r.jsx)(e,{}),(0,r.jsx)(t,{variant:`page`,audience:`professional`})]})}export{i as default};
