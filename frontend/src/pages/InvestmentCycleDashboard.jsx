@@ -1,6 +1,6 @@
 import BootLoader from '../components/BootLoader'
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authRequest } from '../utils/auth'
 import PaymentMethodSelector from '../components/PaymentMethodSelector'
 import { loadPaymentOptions, runRazorpayCheckout } from '../utils/paymentGateway'
@@ -15,9 +15,10 @@ const INVESTED = new Set(['ACTIVE', 'MATURED', 'PAID'])
 const list = value => Array.isArray(value) ? value : Array.isArray(value?.data) ? value.data : Array.isArray(value?.rows) ? value.rows : []
 
 export default function InvestmentCycleDashboard() {
+  const navigate = useNavigate()
   const location = useLocation()
   const [cycle, setCycle] = useState(null), [rows, setRows] = useState([]), [loading, setLoading] = useState(true), [error, setError] = useState('')
-  const [rules, setRules] = useState([]), [wallet, setWallet] = useState(null), [_access, setAccess] = useState(null), [payoutAccount, setPayoutAccount] = useState(null), [funds, setFunds] = useState(null)
+  const [rules, setRules] = useState([]), [wallet, setWallet] = useState(null), [access, setAccess] = useState(null), [payoutAccount, setPayoutAccount] = useState(null), [funds, setFunds] = useState(null)
   const [showInvest, setShowInvest] = useState(() => new URLSearchParams(window.location.search).get('new') === '1'), [showWithdraw, setShowWithdraw] = useState(false)
   const [amount, setAmount] = useState(''), [withdrawAmount, setWithdrawAmount] = useState(''), [autoInvestChoice, setAutoInvestChoice] = useState(true), [busy, setBusy] = useState(false), [withdrawBusy, setWithdrawBusy] = useState(false)
   const [message, setMessage] = useState(''), [actionError, setActionError] = useState(''), [directPayment, setDirectPayment] = useState(null), [receiving, setReceiving] = useState([]), [paymentReference, setPaymentReference] = useState(''), [paymentProof, setPaymentProof] = useState(null), [paymentBusy, setPaymentBusy] = useState(false)
@@ -87,7 +88,7 @@ export default function InvestmentCycleDashboard() {
   const paid = active ? Number(cycle.payout_transferred ?? 0) : 0, reserved = active ? Number(cycle.payout_reserved ?? 0) : 0
   const closing = active && ['EXIT_REQUESTED', 'WAITING_FOR_LEADS'].includes(st(cycle.status)), walletBalance = Number(wallet?.balance || 0), withdrawValue = Number(withdrawAmount || 0)
 
-  const openInvest = () => { setAmount(''); setActionError(''); setMessage(''); setAutoInvestChoice(active ? auto : true); setShowInvest(true) }
+  const openInvest = () => { if (access && access.isPro !== true) { navigate('/membership', { state: { investmentRequired: true } }); return } setAmount(''); setActionError(''); setMessage(''); setAutoInvestChoice(active ? auto : true); setShowInvest(true) }
   const submitWalletInvestment = async () => {
     setActionError(''); const value = Number(amount)
     if (!Number.isFinite(value) || value <= 0) return setActionError('Enter an investment amount greater than zero.')

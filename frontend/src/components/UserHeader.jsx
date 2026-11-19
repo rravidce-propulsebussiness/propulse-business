@@ -6,8 +6,8 @@ import NotificationBell from './NotificationBell'
 
 export default function UserHeader({ variant } = {}) {
   const navigate = useNavigate(); const location = useLocation(); const user = getUser(); const token = getToken(); const loggedIn = Boolean(token && user)
-  const [open,setOpen]=useState(false); const [businessName,setBusinessName]=useState(user?.business_name||user?.businessName||''); const [isPro,setIsPro]=useState(false)
-  useEffect(()=>{if(!loggedIn||user?.role==='admin')return;let active=true;authRequest('/auth/me').then(account=>{if(!active)return;const name=account?.profile?.business_name||account?.business_name;if(name)setBusinessName(name);setIsPro(user?.role!=='lead_partner'&&Boolean(account?.is_pro_member))}).catch(()=>{if(active)setIsPro(false)});return()=>{active=false}},[loggedIn,user?.role])
+  const [open,setOpen]=useState(false); const [businessName,setBusinessName]=useState(user?.business_name||user?.businessName||''); const [isPro,setIsPro]=useState(false); const [hasInvestments,setHasInvestments]=useState(false)
+  useEffect(()=>{if(!loggedIn||user?.role==='admin')return;let active=true;authRequest('/auth/me').then(account=>{if(!active)return;const name=account?.profile?.business_name||account?.business_name;if(name)setBusinessName(name);const pro=user?.role!=='lead_partner'&&Boolean(account?.is_pro_member);setIsPro(pro);if(!pro&&user?.role==='business')authRequest('/investments/access').then(a=>{if(active)setHasInvestments(Boolean(a?.canViewInvestments))}).catch(()=>{})}).catch(()=>{if(active)setIsPro(false)});return()=>{active=false}},[loggedIn,user?.role])
   useEffect(()=>{setOpen(false)},[location.pathname,location.search])
   useEffect(()=>{
     const onKeyDown=event=>{if(event.key==='Escape')setOpen(false)}
@@ -54,7 +54,7 @@ export default function UserHeader({ variant } = {}) {
       <Link className={active("/wallet")} to="/wallet" onClick={()=>setOpen(false)}>Wallet</Link>
       <Link className={active("/membership")} to="/membership" onClick={()=>setOpen(false)}>Membership</Link>
       {user?.role==='business'&&<Link className="user-mobile-offers-link" to="/professionals?offers=1" onClick={()=>setOpen(false)}>Offers</Link>}
-      {isPro && <Link className={location.pathname.startsWith("/investment")?" active":""} to="/investment" onClick={()=>setOpen(false)}>Investor</Link>}
+      {(isPro||hasInvestments) && <Link className={location.pathname.startsWith("/investment")?" active":""} to="/investment" onClick={()=>setOpen(false)}>Investor</Link>}
       {!location.pathname.startsWith("/investment") && <Link className={active("/professional-contact")} to="/professional-contact" onClick={()=>setOpen(false)}>Contact</Link>}
       <Link className={active("/professional-upcoming-features")} to="/professional-upcoming-features" onClick={()=>setOpen(false)}>Upcoming Features</Link>
       <Link className={active("/professional-faq")} to="/professional-faq" onClick={()=>setOpen(false)}>FAQ</Link>

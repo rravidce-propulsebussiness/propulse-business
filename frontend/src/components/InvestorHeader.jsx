@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { authRequest } from '../utils/auth'
 import UserHeader from './UserHeader'
 import './InvestorHeader.css'
 
@@ -17,6 +19,12 @@ const INVESTOR_TABS = [
 export default function InvestorHeader() {
   const location = useLocation()
   const pathname = location.pathname.replace(/\/+$/, '') || '/'
+  const [lapsed, setLapsed] = useState(false)
+  useEffect(() => {
+    let active = true
+    authRequest('/investments/access').then(a => { if (active) setLapsed(a?.isPro !== true && a?.canViewInvestments === true) }).catch(() => {})
+    return () => { active = false }
+  }, [])
 
   return (
     <>
@@ -39,6 +47,7 @@ export default function InvestorHeader() {
           })}
         </div>
       </nav>
+      {lapsed && <div className="investor-lapsed-banner" role="status"><span><b>Your membership has expired.</b> You can still view your investments and withdraw earnings. Renew GROW or SCALE to invest more.</span><Link to="/membership">Renew membership</Link></div>}
     </>
   )
 }
