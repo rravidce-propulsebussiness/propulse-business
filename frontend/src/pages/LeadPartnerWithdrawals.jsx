@@ -80,7 +80,7 @@ export default function LeadPartnerWithdrawals() {
         </header>
 
         <div className="withdrawals-content">
-          <section className="withdrawals-heading premium-page-hero"><div className="withdrawals-hero-copy"><span>LEAD PARTNER / FINANCE</span><h1>Earnings &amp; withdrawals</h1><p>Review available earnings, submit withdrawal requests and track every payout from the existing partner ledger.</p><div className="withdrawals-hero-meta"><span><b>{loading?'—':money(available)}</b> available</span><span><b>{loading?'—':money(reserved)}</b> pending</span><span><b>{requests.length}</b> requests</span></div></div><button type="button" className="withdrawals-hero-refresh" onClick={load} disabled={loading}><span>↻</span><div><b>{loading?'Refreshing…':'Refresh funds'}</b><small>Reload balances and payouts</small></div></button></section>
+          <section className="withdrawals-heading premium-page-hero"><div className="withdrawals-hero-copy"><span>LEAD PARTNER / FINANCE</span><h1>Earnings &amp; withdrawals</h1><p>ProPulse pays Lead Partners manually. Track every payout sent to your bank or UPI account here.</p><div className="withdrawals-hero-meta"><span><b>{loading?'—':money(available)}</b> available</span><span><b>{loading?'—':money(reserved)}</b> pending</span><span><b>{requests.length}</b> requests</span></div></div><button type="button" className="withdrawals-hero-refresh" onClick={load} disabled={loading}><span>↻</span><div><b>{loading?'Refreshing…':'Refresh funds'}</b><small>Reload balances and payouts</small></div></button></section>
 
           {error && <div className="withdrawals-message error">{error}</div>}
           {message && <div className="withdrawals-message success">✓ {message}</div>}
@@ -97,9 +97,9 @@ export default function LeadPartnerWithdrawals() {
           ) : (
             <>
               <section className="withdrawals-summary">
-                <article><div className="summary-icon available">₹</div><div><span>Available Now</span><strong>{money(available)}</strong><small>Eligible for withdrawal</small></div></article>
+                <article><div className="summary-icon available">₹</div><div><span>Available Now</span><strong>{money(available)}</strong><small>Earlier earnings balance</small></div></article>
                 <article><div className="summary-icon pending">◷</div><div><span>Pending Payout</span><strong>{money(reserved)}</strong><small>Awaiting Admin processing</small></div></article>
-                <article><div className="summary-icon earned">↗</div><div><span>Total Earned</span><strong>{money(totalEarned)}</strong><small>Partner earnings to date</small></div></article>
+                <article><div className="summary-icon earned">↗</div><div><span>Total Earned</span><strong>{money(totalEarned)}</strong><small>Earlier automatic earnings</small></div></article>
                 <article><div className="summary-icon withdrawn">✓</div><div><span>Total Withdrawn</span><strong>{money(totalWithdrawn)}</strong><small>Successfully paid out</small></div></article>
               </section>
 
@@ -122,7 +122,7 @@ export default function LeadPartnerWithdrawals() {
                     </button>
                     {!account && <small className="form-warning">Add a payout account in Account before requesting a withdrawal.</small>}
                   </form>
-                  <div className="processing-note"><span>i</span><p><b>What happens next?</b> Your request is reserved immediately, then reviewed and processed by Admin.</p></div>
+                  <div className="processing-note"><span>i</span><p><b>How payments work:</b> lead sales are collected by ProPulse and partner payments are made manually by Admin to your payout account. Withdrawal requests apply only to an earlier earnings balance.</p></div>
                 </article>
 
                 <aside className="withdrawals-side-stack">

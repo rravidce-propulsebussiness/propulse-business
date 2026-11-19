@@ -139,12 +139,12 @@ export default function LeadPartnerPricing() {
         <header className="pricing-topbar"><div className="pricing-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Pricing & Revenue</strong></div></header>
 
         <div className="pricing-content">
-          <section className="pricing-hero premium-page-hero"><div className="pricing-hero-copy"><span>LEAD PARTNER / PRICING</span><h1>Pricing &amp; revenue</h1><p>Configure Pro pricing rules and lead-level overrides while keeping Admin-controlled commission, uplift and sharing ratios visible.</p><div className="pricing-hero-meta"><span><b>{rules.length}</b> pricing rules</span><span><b>{Number(pagination.total||0)}</b> leads available</span><span><b>{settings.commissionPercent??5}%</b> commission</span></div></div><button className="pricing-hero-refresh" type="button" onClick={load} disabled={loading}><span>↻</span><div><b>{loading?'Refreshing…':'Refresh pricing'}</b><small>Reload rules and lead prices</small></div></button></section>
+          <section className="pricing-hero premium-page-hero"><div className="pricing-hero-copy"><span>LEAD PARTNER / PRICING</span><h1>Pricing &amp; revenue</h1><p>Configure Pro pricing rules and lead-level overrides while keeping Admin-controlled uplift and sharing ratios visible.</p><div className="pricing-hero-meta"><span><b>{rules.length}</b> pricing rules</span><span><b>{Number(pagination.total||0)}</b> leads available</span><span><b>Manual</b> partner payouts</span></div></div><button className="pricing-hero-refresh" type="button" onClick={load} disabled={loading}><span>↻</span><div><b>{loading?'Refreshing…':'Refresh pricing'}</b><small>Reload rules and lead prices</small></div></button></section>
 
           {(error || success) && <div className={`pricing-message ${error ? 'error' : 'success'}`}>{error || success}</div>}
 
           <section className="pricing-kpis">
-            <article><div className="pricing-kpi-icon blue">%</div><div><span>ADMIN COMMISSION</span><strong>{settings.commissionPercent ?? 5}%</strong><p>Current partner transaction commission.</p></div></article>
+            <article><div className="pricing-kpi-icon blue">₹</div><div><span>PARTNER PAYOUTS</span><strong>Manual</strong><p>Lead sales are collected by ProPulse; Admin pays partners manually.</p></div></article>
             <article><div className="pricing-kpi-icon blue">₹</div><div><span>ADMIN UPLIFT</span><strong>+{money(uplift)}</strong><p>Added automatically when calculating Normal customer price.</p></div></article>
             <article><div className="pricing-kpi-icon blue">♟</div><div><span>ADMIN SHARE RATIOS</span><strong>100% · {sharePercent[2]}% · {sharePercent[3]}%</strong><p>1 share = 100% &nbsp;·&nbsp; 2 shares = {sharePercent[2]}% &nbsp;·&nbsp; 3 shares = {sharePercent[3]}%<br/>(Configured by Admin)</p></div></article>
           </section>

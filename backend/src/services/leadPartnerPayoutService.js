@@ -19,7 +19,10 @@ async function createPayoutRequest({userId,rawAmount,notes,client,source='partne
   const b=await balance(userId,client,true);
   const account=await payoutAccounts.getInternal(client,userId);
   if(!account)throw err('Add a Bank Account or UPI before requesting a withdrawal.','PAYOUT_ACCOUNT_REQUIRED');
-  if(requested>b.available+0.001)throw err('Withdrawal amount exceeds available earnings after recovery adjustments.','INSUFFICIENT_FUNDS');
+  // Admin direct payouts are manual payments decided by ProPulse and are not
+  // limited to the legacy earnings ledger. Partner-requested withdrawals are.
+  const manual=source==='admin';
+  if(!manual&&requested>b.available+0.001)throw err('Withdrawal amount exceeds available earnings after recovery adjustments.','INSUFFICIENT_FUNDS');
   const snapshot=account.method==='upi'
     ?{method:'upi',upi_id:account.upi_id}
     :{method:'bank',account_holder_name:account.account_holder_name,account_number:account.account_number,ifsc_code:account.ifsc_code,bank_name:account.bank_name};
@@ -46,7 +49,7 @@ async function createPayoutRequest({userId,rawAmount,notes,client,source='partne
     await client.query(`INSERT INTO lead_partner_payout_items(payout_id,earning_id,amount,status) VALUES($1,$2,$3,'reserved')`,[p.id,e.id,a]);
     remaining=money(remaining-a);
   }
-  if(remaining>.001)throw err('Available earnings changed while creating the withdrawal. Please try again.','INSUFFICIENT_FUNDS');
+  if(!manual&&remaining>.001)throw err('Available earnings changed while creating the withdrawal. Please try again.','INSUFFICIENT_FUNDS');
   return{...p,id:Number(p.id),amount:money(p.amount)};
 }
 
@@ -145,7 +148,9 @@ async function markPaid({client,r,adminId,transferReference,proofUrl,notes}){
   const validatedProof=proof(proofUrl);
   if((await client.query(`SELECT id FROM lead_partner_payout_requests WHERE transfer_reference=$1 AND id<>$2`,[ref,r.id])).rows[0])throw err('This transfer reference has already been used.','DUPLICATE_REFERENCE');
   const allocated=money((await client.query(`SELECT COALESCE(SUM(amount),0) total FROM lead_partner_payout_items WHERE payout_id=$1 AND status='reserved'`,[r.id])).rows[0].total);
-  if(allocated!==money(r.amount))throw err('Payout allocation does not match the requested amount.','PAYOUT_ALLOCATION_MISMATCH');
+  // Partner withdrawals must be fully backed by earnings; admin direct (manual)
+  // payouts only settle whatever legacy earnings they were able to reserve.
+  if(r.request_source==='admin'?allocated>money(r.amount):allocated!==money(r.amount))throw err('Payout allocation does not match the requested amount.','PAYOUT_ALLOCATION_MISMATCH');
   const storedProof=await privateProofStorage.storeDataUrl(validatedProof,{category:'lead-partner-payouts',maxBytes:MAX_PROOF_BYTES});
   try{
     const u=(await client.query(
