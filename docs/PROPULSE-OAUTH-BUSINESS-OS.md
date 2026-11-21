@@ -55,3 +55,9 @@ This requires Resend to be configured on the original ProPulse backend; failed e
 - Business OS does **not** grant new company memberships from provider email or OAuth claims.
 
 **Production safety:** never switch these toggles on until an end-to-end test with a disposable real ProPulse user succeeds. Do not apply new migrations or set credentials by guessing values. No production database rows should be automatically backfilled as email-verified.
+
+## Membership evidence for Business OS
+
+After successful OAuth consent, `/api/oauth/userinfo` includes `business_os_access` computed server-side from the currently active, unexpired ProPulse Pro membership (`plan_group=grow` maps to **growth**, `plan_group=scale` to **scale**). The claim also carries the membership expiration; inactive, expired or non-business users return `none`. User roles and purchases are not exposed. This is shared only with a valid OAuth bearer token and disclosed on the consent screen.
+
+Business OS Growth gets a template-based hosted website and **custom-domain connection** (users buy the domain themselves); Scale adds all OS modules. Package expiry is respected by Business OS entitlement expiry. Users reconnect via OAuth after upgrades or renewals until a signed subscription-change webhook is implemented. See the Business OS repo's `docs/WEBSITE-FIRST-GROWTH-SCALE.md`. The payment gateway and domain registrar are not part of this OAuth provider.

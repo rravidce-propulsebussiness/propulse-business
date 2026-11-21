@@ -7,6 +7,7 @@ const express = require('express');
 const crypto = require('crypto');
 const pool = require('../config/database');
 const authService = require('../services/authService');
+const { getCurrentProMembership } = require('../services/membershipAccessService');
 const rateLimit = require('../middleware/rateLimitMiddleware');
 const router = express.Router();
 
@@ -91,7 +92,8 @@ function consentPage(params, principal) {
     'box-shadow:0 20px 50px #13234220">' +
     '<h1 style="font-size:27px">Continue to ProPulse Business OS?</h1>' +
     '<p>Share your verified email, name, and registered business details ' +
-    '(company name, phone, services and locations) with Business OS. ' +
+    '(company name, phone, services and locations), and your active Growth/Scale ' +
+    'membership tier and expiry with Business OS. ' +
     'It will create or update your own workspace.</p>' +
     '<p style="padding:12px;background:#edf4ff;border-radius:8px">' +
     escapeHtml(principal.email)+'</p>' +
@@ -288,7 +290,15 @@ router.get('/userinfo', rateLimit({windowMs:60000,max:80}), async(req,res)=>{
         })),
       };
     }
+    // Entitlement evidence comes from active, unexpired ProPulse membership rows,
+    // never a browser-supplied plan name or a legacy user role.
+    const membership = company ? await getCurrentProMembership(user.id) : null;
+    const businessOsAccess = membership ? {
+      tier: membership.plan_group === 'scale' ? 'scale' : 'growth',
+      expires_at: new Date(membership.expires_at).toISOString(),
+    } : { tier: 'none', expires_at: null };
     return res.json({
+      business_os_access: businessOsAccess,
       sub:'propulse:'+String(user.id),
       id:'propulse:'+String(user.id),
       email:user.email,

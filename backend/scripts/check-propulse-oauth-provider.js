@@ -18,6 +18,8 @@ process.env.PROPULSE_OAUTH_REDIRECT_URI = 'https://testproject.supabase.co/auth/
 let verified = true;
 let active = true;
 let version = 0;
+let planGroup = 'grow';
+let membershipActive = true;
 const codes = new Map();
 const tokens = new Map();
 const user = { id: 5, email: 'verified@example.test', name: 'Verified Account', role: 'business' };
@@ -40,6 +42,9 @@ const pool = {
     if (sql.includes('INSERT INTO propulse_oauth_access_tokens')) {
       tokens.set(p[0],{user_id:p[1],client_id:p[2],auth_version:p[3],expires_at:Date.now()+300000});
       return {rows:[]};
+    }
+    if (sql.includes('FROM memberships m') && sql.includes('membership_plans p')) {
+      return {rows: membershipActive ? [{expires_at: new Date(Date.now()+86400000),plan_group:planGroup}] : []};
     }
     if (sql.includes('FROM business_profiles WHERE user_id=$1')) {
       return {rows:[{id:99,business_name:'Sample Interiors',business_details:'Interior design and execution',phone:'9000000000'}]};
@@ -168,10 +173,22 @@ async function main() {
     assert.equal(identity.company.phone,'9000000000');
     assert.equal(identity.company.services[0].industry,'Interior Design');
     assert.equal(identity.company.locations[0].city,'Hyderabad');
+    assert.equal(identity.business_os_access.tier,'growth');
+    assert.ok(Date.parse(identity.business_os_access.expires_at)>Date.now());
+    planGroup='scale';
+    response=await fetch(base+'/api/oauth/userinfo',{headers:{authorization:'Bearer '+token}});
+    assert.equal((await response.json()).business_os_access.tier,'scale','active Scale membership enables full OS');
+    membershipActive=false;
+    response=await fetch(base+'/api/oauth/userinfo',{headers:{authorization:'Bearer '+token}});
+    assert.deepEqual((await response.json()).business_os_access,{tier:'none',expires_at:null},'no membership denies paid package');
+    membershipActive=true;
+    planGroup='grow';
     assert.ok(!identity.role,'legacy role must never leak to business identity');
     user.role='user';
     response=await fetch(base+'/api/oauth/userinfo',{headers:{authorization:'Bearer '+token}});
-    assert.equal((await response.json()).company,null,'ordinary ProPulse users cannot supply a business profile');
+    const ordinary=await response.json();
+    assert.equal(ordinary.company,null,'ordinary ProPulse users cannot supply a business profile');
+    assert.equal(ordinary.business_os_access.tier,'none','non-business accounts cannot grant website access');
     user.role='business';
     version=1;
     response=await fetch(base+'/api/oauth/userinfo',{headers:{authorization:'Bearer '+token}});
