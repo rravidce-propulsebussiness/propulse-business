@@ -82,8 +82,8 @@ async function graphRequest(path, { method = 'GET', params = {}, token, timeoutM
     const init = { method, redirect: 'error', signal: controller.signal, headers: { Accept: 'application/json' } };
     if (method === 'GET' || method === 'DELETE') url.search = query.toString();
     else {
-      init.body = query;
-      init.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      init.body = JSON.stringify(params);
+      init.headers['Content-Type'] = 'application/json';
     }
     const response = await fetch(url, init);
     const body = await response.json().catch(() => ({}));
