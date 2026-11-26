@@ -138,13 +138,17 @@ const metaPricing = require(src('services/metaAdPricingService'));
   assert.strictEqual(service.verifyWebhookSubscription({ mode: 'subscribe', token: 'verify-token-0123456789', challenge: '12345' }), '12345');
   assert.strictEqual(service.verifyWebhookSubscription({ mode: 'subscribe', token: 'wrong-token-0123456789x', challenge: '12345' }), null);
 
-  // OAuth: start -> Facebook dialog with redirect + scopes; finish stores ENCRYPTED page tokens
+  // OAuth: start -> Facebook dialog with redirect + mandatory scopes; finish stores ENCRYPTED page tokens
+  // A custom scope list may add values but must not remove permissions required by this flow.
+  process.env.META_LEADS_OAUTH_SCOPES = 'business_management';
   const { url } = service.startOauth({ userId: 42, scope: 'lead_partner' });
   const dialog = new URL(url);
+  const requestedScopes = dialog.searchParams.get('scope').split(',');
   assert.strictEqual(dialog.origin, 'https://www.facebook.com');
   assert.strictEqual(dialog.searchParams.get('redirect_uri'), 'https://propulsetechnologies.online/api/meta-leads/oauth/callback');
-  assert.ok(dialog.searchParams.get('scope').includes('leads_retrieval'));
-  assert.ok(dialog.searchParams.get('scope').split(',').includes('pages_manage_ads'), 'Login must request pages_manage_ads (needed to list lead forms and read leads)');
+  for (const permission of ['pages_show_list', 'pages_read_engagement', 'pages_manage_metadata', 'pages_manage_ads', 'leads_retrieval', 'business_management', 'ads_read']) {
+    assert.ok(requestedScopes.includes(permission), `Login must request ${permission}`);
+  }
   const target = await service.finishOauth({ code: 'AUTHCODE', state: dialog.searchParams.get('state') });
   assert.strictEqual(target, '/lead-partner/inventory?meta=connected');
   assert.strictEqual(db.pages.length, 1);
