@@ -8,8 +8,10 @@ const crypto = require('crypto');
 const GRAPH_ORIGIN = 'https://graph.facebook.com';
 const DIALOG_ORIGIN = 'https://www.facebook.com';
 const DEFAULT_VERSION = 'v25.0';
-// pages_manage_ads is required by Meta to list a Page's lead forms and read their leads.
-const DEFAULT_SCOPES = ['pages_show_list', 'pages_read_engagement', 'pages_manage_metadata', 'pages_manage_ads', 'leads_retrieval', 'business_management'];
+// These are the permissions required by the Lead Ads flow below. Keep this
+// set mandatory even when META_LEADS_OAUTH_SCOPES is customized: a custom
+// value may add scopes, but must not silently remove scopes the app needs.
+const REQUIRED_SCOPES = ['pages_show_list', 'pages_read_engagement', 'pages_manage_metadata', 'pages_manage_ads', 'leads_retrieval', 'business_management', 'ads_read'];
 const REQUEST_TIMEOUT_MS = 12000;
 
 function clean(value) { return String(value ?? '').trim(); }
@@ -39,8 +41,8 @@ function publicOrigin() {
 function config() {
   const version = env('META_GRAPH_API_VERSION', 'META_LEADS_GRAPH_VERSION');
   const scopes = clean(process.env.META_LEADS_OAUTH_SCOPES);
-  const requestedScopes = scopes ? scopes.split(/[\s,]+/).filter(Boolean) : [...DEFAULT_SCOPES];
-  if (!requestedScopes.includes('ads_read')) requestedScopes.push('ads_read');
+  const configuredScopes = scopes ? scopes.split(/[\s,]+/).filter(Boolean) : [];
+  const requestedScopes = [...new Set([...REQUIRED_SCOPES, ...configuredScopes])];
   return {
     appId: env('META_APP_ID', 'META_LEADS_APP_ID'),
     appSecret: env('META_APP_SECRET', 'META_LEADS_APP_SECRET'),
